@@ -107,7 +107,7 @@
       border-color: var(--accent);
     }
     
-    /* MỚI: TRẠNG THÁI ACTIVE */
+    /* TRẠNG THÁI ACTIVE */
     .item.active {
       background: var(--accent-light);
       border-left: 4px solid var(--accent);
@@ -141,9 +141,16 @@
       transition: var(--theme-transition);
     }
 
-    iframe { width: 100%; height: 100%; border: 0; }
+    /* CẬP NHẬT: Iframe cho mobile */
+    iframe { 
+      width: 100%; 
+      height: 100%; 
+      border: 0; 
+      overflow: auto; 
+      -webkit-overflow-scrolling: touch; /* Giúp cuộn mượt trên iOS */
+    }
     
-    /* MỚI: ICON LOADING XOAY */
+    /* ICON LOADING XOAY */
     .loader {
       position: absolute;
       top: 50%;
@@ -210,16 +217,7 @@
       transition: var(--theme-transition);
     }
     
-    /* --- Responsive --- */
-    @media (max-width: 800px) {
-      .wrap { flex-direction: column; }
-      .sidebar { width: 100%; order: 2; border-right: none; border-top: 1px solid var(--border); padding: 16px; max-height: 40vh; }
-      .main { order: 1; padding: 16px; min-height: 60vh; }
-      .list { max-height: calc(40vh - 170px); }
-      .brand { margin-bottom: 16px; }
-    }
-    
-    /* --- MỚI: TOÀN BỘ CHẾ ĐỘ TỐI (DARK MODE) --- */
+    /* --- TOÀN BỘ CHẾ ĐỘ TỐI (DARK MODE) --- */
     [data-theme="dark"] {
       --accent: #2dd4bf; /* Teal sáng hơn cho dễ đọc */
       --accent-light: #115e59; /* Teal tối đậm */
@@ -250,6 +248,48 @@
     }
     [data-theme="dark"] .list::-webkit-scrollbar-thumb:hover {
       background: #64748b;
+    }
+    
+    /* --- CẬP NHẬT: Responsive cho Mobile --- */
+    @media (max-width: 800px) {
+      .wrap { 
+        flex-direction: column; 
+      }
+      .sidebar { 
+        width: 100%; 
+        order: 2; /* Đưa sidebar xuống dưới */
+        border-right: none; 
+        border-top: 1px solid var(--border); 
+        padding: 12px; /* GIẢM PADDING */
+        max-height: 35vh; /* GIẢM CHIỀU CAO SIDEBAR */
+        /* không cần set max-height cho .list, vì .list đã có flex:1 */
+      }
+      .main { 
+        order: 1; /* Đưa main lên trên */
+        padding: 12px; /* GIẢM PADDING */
+        min-height: 65vh; /* TĂNG CHIỀU CAO MAIN */
+      }
+      
+      .brand { 
+        margin-bottom: 12px; 
+        font-size: 18px; /* GIẢM FONT */
+      }
+      
+      .controls {
+        margin-bottom: 12px; /* GIẢM KHOẢNG CÁCH */
+      }
+      
+      #currentTitle {
+        font-size: 1rem; /* GIẢM FONT */
+      }
+      
+      .item .title {
+        font-size: 14px; /* GIẢM FONT */
+      }
+      
+      .item .desc {
+        font-size: 12px; /* GIẢM FONT */
+      }
     }
   </style>
 </head>
@@ -313,8 +353,8 @@
     const viewer = document.getElementById('viewer');
     const overlay = document.getElementById('overlay');
     const currentTitle = document.getElementById('currentTitle');
-    const loader = document.getElementById('loader'); // MỚI
-    const themeToggle = document.getElementById('themeToggle'); // MỚI
+    const loader = document.getElementById('loader'); 
+    const themeToggle = document.getElementById('themeToggle'); 
     let currentUrl = null;
 
     function renderList(){
@@ -327,7 +367,7 @@
       filtered.forEach(item=>{
         const it = document.createElement('div');
         it.className = 'item';
-        it.dataset.id = item.id; // MỚI: Thêm ID để quản lý active
+        it.dataset.id = item.id; // Thêm ID để quản lý active
         it.innerHTML = `<div class="title">${escapeHtml(item.title)}</div>
                         <div class="desc">${escapeHtml(item.desc || '')}</div>
                         <div class="tags small">${escapeHtml(item.tag || '')}</div>`;
@@ -349,9 +389,9 @@
       currentUrl = item.url;
       currentTitle.innerText = item.title;
       overlay.style.display = 'none';
-      loader.style.display = 'block'; // MỚI: Hiển thị loader
+      loader.style.display = 'block'; // Hiển thị loader
 
-      // MỚI: Quản lý trạng thái Active
+      // Quản lý trạng thái Active
       document.querySelectorAll('.item.active').forEach(activeItem => {
         activeItem.classList.remove('active');
       });
@@ -409,7 +449,7 @@
     function clearSearch(){ document.getElementById('q').value=''; filterList(); }
     function escapeHtml(str){ return (str||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-    // --- MỚI: QUẢN LÝ DARK MODE ---
+    // --- QUẢN LÝ DARK MODE ---
 
     // 1. Hàm bật/tắt theme
     function toggleTheme() {
@@ -437,7 +477,7 @@
 
     // --- KHỞI ĐỘNG ỨNG DỤNG ---
     window.addEventListener('DOMContentLoaded',()=>{
-      setupTheme(); // MỚI: Cài đặt theme trước
+      setupTheme(); // Cài đặt theme trước
       filtered = LINKS.slice();
       renderList();
       // Luôn mở app đầu tiên
