@@ -26,8 +26,6 @@
       --radius: 8px;
       --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
       --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-      
-      /* Thời gian chuyển động cho Dark Mode */
       --theme-transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     }
 
@@ -41,30 +39,39 @@
       transition: var(--theme-transition);
     }
 
-    .wrap { display: flex; min-height: 100vh; }
+    /* THAY ĐỔI: Chuyển sang layout CỘT */
+    .wrap { 
+      display: flex; 
+      flex-direction: column; /* Đổi từ row (ngang) sang column (dọc) */
+      min-height: 100vh; 
+    }
     
-    /* --- Sidebar --- */
+    /* THAY ĐỔI: Biến Sidebar thành Header */
     .sidebar {
-      width: 320px;
-      background: var(--card);
-      border-right: 1px solid var(--border);
-      padding: 24px;
+      /* Gỡ bỏ 'width: 320px;' */
+      /* Gỡ bỏ 'border-right' */
+      border-bottom: 1px solid var(--border); /* Thêm border dưới */
+      padding: 16px 24px; /* Tinh chỉnh padding */
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
       transition: var(--theme-transition);
+      background: var(--card);
+      
+      /* Đặt chiều cao cho thanh header */
+      height: 250px; /* Chiều cao cố định cho menu trên */
     }
 
     .brand {
       font-weight: 700;
       font-size: 20px;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
       background: linear-gradient(45deg, var(--accent), #0d9488);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .search { display: flex; gap: 8px; margin-bottom: 12px; }
+    .search { display: flex; gap: 8px; margin-bottom: 8px; }
 
     .search input {
       flex: 1;
@@ -82,7 +89,13 @@
     }
 
     /* --- Danh sách Links --- */
-    .list { overflow: auto; flex: 1; padding-right: 8px; margin-top: 8px; }
+    /* 'flex: 1' sẽ làm nó lấp đầy chiều cao còn lại của .sidebar (250px) */
+    .list { 
+      overflow: auto; 
+      flex: 1; 
+      padding-right: 8px; 
+      margin-top: 8px; 
+    }
     
     .list::-webkit-scrollbar { width: 6px; }
     .list::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
@@ -98,7 +111,7 @@
       border: 1px solid var(--border);
       cursor: pointer;
       transition: all 0.2s ease-in-out, var(--theme-transition);
-      border-left: 4px solid transparent; /* Chuẩn bị cho active state */
+      border-left: 4px solid transparent;
     }
 
     .item:hover {
@@ -107,7 +120,6 @@
       border-color: var(--accent);
     }
     
-    /* TRẠNG THÁI ACTIVE */
     .item.active {
       background: var(--accent-light);
       border-left: 4px solid var(--accent);
@@ -118,9 +130,9 @@
     .item .desc { font-size: 13px; color: var(--text-secondary); margin-top: 4px; transition: var(--theme-transition); }
     .tags { margin-top: 8px; font-size: 12px; color: #64748b; }
     
-    /* --- Khu vực Main Content --- */
+    /* THAY ĐỔI: Khu vực Main Content */
     .main {
-      flex: 1;
+      flex: 1; /* 'flex: 1' sẽ lấp đầy phần còn lại của màn hình (dưới header) */
       padding: 24px;
       box-sizing: border-box;
       display: flex;
@@ -131,26 +143,24 @@
     #currentTitle { font-weight: 700; font-size: 1.1rem; color: var(--text-primary); transition: var(--theme-transition); }
 
     .frameWrap {
-      flex: 1;
+      flex: 1; /* Lấp đầy không gian của .main */
       border-radius: var(--radius);
       overflow: hidden;
-      background: var(--card); /* Đổi từ white sang var(card) */
+      background: var(--card);
       border: 1px solid var(--border);
       position: relative;
       box-shadow: var(--shadow-md);
       transition: var(--theme-transition);
     }
 
-    /* Iframe cho mobile */
     iframe { 
       width: 100%; 
       height: 100%; 
       border: 0; 
       overflow: auto; 
-      -webkit-overflow-scrolling: touch; /* Giúp cuộn mượt trên iOS */
+      -webkit-overflow-scrolling: touch;
     }
     
-    /* ICON LOADING XOAY */
     .loader {
       position: absolute;
       top: 50%;
@@ -163,7 +173,7 @@
       border-radius: 50%;
       animation: spin 1s linear infinite;
       z-index: 10;
-      display: none; /* Mặc định ẩn */
+      display: none;
     }
     @keyframes spin {
       to { transform: rotate(360deg); }
@@ -192,7 +202,6 @@
     }
     .btn.ghost:hover { background: var(--accent-light); opacity: 1; box-shadow: none; }
 
-    /* --- Overlay --- */
     .overlay {
       position: absolute;
       inset: 0;
@@ -219,26 +228,25 @@
     
     /* --- TOÀN BỘ CHẾ ĐỘ TỐI (DARK MODE) --- */
     [data-theme="dark"] {
-      --accent: #2dd4bf; /* Teal sáng hơn cho dễ đọc */
-      --accent-light: #115e59; /* Teal tối đậm */
-      --bg: #0f172a; /* Nền (Slate 900) */
-      --card: #1e293b; /* Nền thẻ (Slate 800) */
-      --border: #334155; /* Viền (Slate 700) */
-      --text-primary: #f1f5f9; /* Chữ chính (Slate 100) */
-      --text-secondary: #94a3b8; /* Chữ phụ (Slate 400) */
+      --accent: #2dd4bf;
+      --accent-light: #115e59;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
     }
     
-    /* Tinh chỉnh riêng cho Dark Mode */
     [data-theme="dark"] .brand {
       background: linear-gradient(45deg, var(--accent), #5eead4);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
     [data-theme="dark"] .btn.ghost:hover {
-      background: #115e59; /* Màu nền hover của nút ghost */
+      background: #115e59;
     }
     [data-theme="dark"] .overlay {
-       background: rgba(15, 23, 42, 0.95); /* Nền overlay tối */
+       background: rgba(15, 23, 42, 0.95);
     }
     [data-theme="dark"] .list::-webkit-scrollbar-track {
       background: #1e293b;
@@ -250,43 +258,33 @@
       background: #64748b;
     }
     
-    /* --- Responsive cho Mobile --- */
-    /* Code này sẽ được kích hoạt trở lại khi dùng Lựa chọn 2 */
+    /* THAY ĐỔI: Đơn giản hóa Responsive */
     @media (max-width: 800px) {
-      .wrap { 
-        flex-direction: column; 
-      }
+      /* Gỡ bỏ các thay đổi về layout (flex-direction, order) 
+         vì layout cột (column) đã là mặc định */
+         
       .sidebar { 
-        width: 100%; 
-        order: 2; /* Đưa sidebar xuống dưới */
-        border-right: none; 
-        border-top: 1px solid var(--border); 
-        padding: 12px; 
-        max-height: 35vh; 
+        padding: 12px;
+        height: 40vh; /* Chỉ cần set chiều cao cho mobile */
       }
       .main { 
-        order: 1; /* Đưa main lên trên */
         padding: 12px; 
-        min-height: 65vh; 
+        /* Gỡ bỏ min-height, vì flex: 1 đã xử lý */
       }
       
       .brand { 
         margin-bottom: 12px; 
         font-size: 18px; 
       }
-      
       .controls {
         margin-bottom: 12px; 
       }
-      
       #currentTitle {
         font-size: 1rem; 
       }
-      
       .item .title {
         font-size: 14px; 
       }
-      
       .item .desc {
         font-size: 12px; 
       }
@@ -317,9 +315,7 @@
 
       <div class="frameWrap" id="frameWrap">
         <div class="loader" id="loader"></div>
-        
         <iframe id="viewer" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
-
         <div class="overlay" id="overlay" style="display:none">
           <div style="font-weight:700">Không thể hiển thị nội dung ở đây</div>
           <div class="small">Trang này có thể chặn việc nhúng (X-Frame-Options or CSP). Bạn có thể mở trang trong cùng tab.</div>
@@ -367,7 +363,7 @@
       filtered.forEach(item=>{
         const it = document.createElement('div');
         it.className = 'item';
-        it.dataset.id = item.id; // Thêm ID để quản lý active
+        it.dataset.id = item.id;
         it.innerHTML = `<div class="title">${escapeHtml(item.title)}</div>
                         <div class="desc">${escapeHtml(item.desc || '')}</div>
                         <div class="tags small">${escapeHtml(item.tag || '')}</div>`;
@@ -389,9 +385,8 @@
       currentUrl = item.url;
       currentTitle.innerText = item.title;
       overlay.style.display = 'none';
-      loader.style.display = 'block'; // Hiển thị loader
+      loader.style.display = 'block'; 
 
-      // Quản lý trạng thái Active
       document.querySelectorAll('.item.active').forEach(activeItem => {
         activeItem.classList.remove('active');
       });
@@ -400,33 +395,30 @@
         currentItemEl.classList.add('active');
       }
 
-      // Tải iframe và theo dỏi
       viewer.src = item.url;
       
-      // Tắt loader khi iframe tải xong (cho cả trường hợp thành công và bị chặn)
       viewer.onload = () => {
         loader.style.display = 'none';
       };
       
-      // Logic cũ để phát hiện X-Frame-Options (vẫn cần thiết)
       setTimeout(()=> {
         try {
           const doc = viewer.contentDocument || viewer.contentWindow.document;
           if(!doc || doc.location.href === 'about:blank'){
-            loader.style.display = 'none'; // Ẩn loader
+            loader.style.display = 'none'; 
             showBlockedOverlay(item);
           } else {
-            loader.style.display = 'none'; // Ẩn loader
+            loader.style.display = 'none'; 
             overlay.style.display = 'none';
           }
         } catch(e){
           setTimeout(()=>{
             const r = viewer.getBoundingClientRect();
             if(r.width < 100 || r.height < 50){
-              loader.style.display = 'none'; // Ẩn loader
+              loader.style.display = 'none'; 
               showBlockedOverlay(item);
             } else {
-              loader.style.display = 'none'; // Ẩn loader
+              loader.style.display = 'none'; 
               overlay.style.display = 'none';
             }
           },1200);
@@ -450,37 +442,26 @@
     function escapeHtml(str){ return (str||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
     // --- QUẢN LÝ DARK MODE ---
-
-    // 1. Hàm bật/tắt theme
     function toggleTheme() {
       const currentTheme = document.documentElement.getAttribute('data-theme');
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme); // Lưu vào bộ nhớ
-      
-      // Đổi icon
+      localStorage.setItem('theme', newTheme);
       themeToggle.innerText = newTheme === 'dark' ? '☀️' : '🌙';
     }
 
-    // 2. Hàm setup theme khi tải trang
     function setupTheme() {
-      // Lấy theme đã lưu, nếu không có thì mặc định là 'light'
       const savedTheme = localStorage.getItem('theme') || 'light'; 
       document.documentElement.setAttribute('data-theme', savedTheme);
-      
-      // Cập nhật icon cho đúng
       themeToggle.innerText = savedTheme === 'dark' ? '☀️' : '🌙';
-      
-      // Gán sự kiện click cho nút
       themeToggle.addEventListener('click', toggleTheme);
     }
 
     // --- KHỞI ĐỘNG ỨNG DỤNG ---
     window.addEventListener('DOMContentLoaded',()=>{
-      setupTheme(); // Cài đặt theme trước
+      setupTheme();
       filtered = LINKS.slice();
       renderList();
-      // Luôn mở app đầu tiên
       if(LINKS.length > 0){
         openLink(LINKS[0]);
       }
