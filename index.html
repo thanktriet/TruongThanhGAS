@@ -1,0 +1,450 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VINFAST TRƯƠNG THÀNH KIÊN GIANG - LINK HUB</title>
+
+  <style>
+    /* --- Import Google Font --- */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    .script-embed-error {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
+    /* --- Biến màu (Chế độ SÁNG mặc định) --- */
+    :root {
+      --accent: #0ea5a4;
+      --accent-light: #f0fdfa; 
+      --bg: #f8fafc; 
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --radius: 8px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      
+      /* Thời gian chuyển động cho Dark Mode */
+      --theme-transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, Segoe UI, Roboto, 'Helvetica Neue', Arial;
+      background: var(--bg);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: var(--theme-transition);
+    }
+
+    .wrap { display: flex; min-height: 100vh; }
+    
+    /* --- Sidebar --- */
+    .sidebar {
+      width: 320px;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      padding: 24px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      transition: var(--theme-transition);
+    }
+
+    .brand {
+      font-weight: 700;
+      font-size: 20px;
+      margin-bottom: 20px;
+      background: linear-gradient(45deg, var(--accent), #0d9488);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .search { display: flex; gap: 8px; margin-bottom: 12px; }
+
+    .search input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: all 0.2s ease;
+      background: var(--bg);
+      color: var(--text-primary);
+    }
+    .search input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(14, 165, 164, 0.15);
+    }
+
+    /* --- Danh sách Links --- */
+    .list { overflow: auto; flex: 1; padding-right: 8px; margin-top: 8px; }
+    
+    .list::-webkit-scrollbar { width: 6px; }
+    .list::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+    .list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    .item {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      background: var(--card);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s ease-in-out, var(--theme-transition);
+      border-left: 4px solid transparent; /* Chuẩn bị cho active state */
+    }
+
+    .item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--accent);
+    }
+    
+    /* MỚI: TRẠNG THÁI ACTIVE */
+    .item.active {
+      background: var(--accent-light);
+      border-left: 4px solid var(--accent);
+      border-color: var(--accent);
+    }
+
+    .item .title { font-weight: 600; font-size: 15px; color: var(--text-primary); transition: var(--theme-transition); }
+    .item .desc { font-size: 13px; color: var(--text-secondary); margin-top: 4px; transition: var(--theme-transition); }
+    .tags { margin-top: 8px; font-size: 12px; color: #64748b; }
+    
+    /* --- Khu vực Main Content --- */
+    .main {
+      flex: 1;
+      padding: 24px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .controls { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    #currentTitle { font-weight: 700; font-size: 1.1rem; color: var(--text-primary); transition: var(--theme-transition); }
+
+    .frameWrap {
+      flex: 1;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--card); /* Đổi từ white sang var(card) */
+      border: 1px solid var(--border);
+      position: relative;
+      box-shadow: var(--shadow-md);
+      transition: var(--theme-transition);
+    }
+
+    iframe { width: 100%; height: 100%; border: 0; }
+    
+    /* MỚI: ICON LOADING XOAY */
+    .loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 40px;
+      height: 40px;
+      margin: -20px 0 0 -20px;
+      border: 4px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      z-index: 10;
+      display: none; /* Mặc định ẩn */
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* --- Nút bấm (Buttons) --- */
+    .btn {
+      padding: 9px 16px;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      opacity: 0.85;
+      box-shadow: 0 4px 12px rgba(14, 165, 164, 0.2);
+    }
+    .btn.ghost {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    .btn.ghost:hover { background: var(--accent-light); opacity: 1; box-shadow: none; }
+
+    /* --- Overlay --- */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      gap: 12px;
+      border-radius: var(--radius);
+    }
+
+    .small { font-size: 13px; color: var(--text-secondary); }
+    .footer {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+      transition: var(--theme-transition);
+    }
+    
+    /* --- Responsive --- */
+    @media (max-width: 800px) {
+      .wrap { flex-direction: column; }
+      .sidebar { width: 100%; order: 2; border-right: none; border-top: 1px solid var(--border); padding: 16px; max-height: 40vh; }
+      .main { order: 1; padding: 16px; min-height: 60vh; }
+      .list { max-height: calc(40vh - 170px); }
+      .brand { margin-bottom: 16px; }
+    }
+    
+    /* --- MỚI: TOÀN BỘ CHẾ ĐỘ TỐI (DARK MODE) --- */
+    [data-theme="dark"] {
+      --accent: #2dd4bf; /* Teal sáng hơn cho dễ đọc */
+      --accent-light: #115e59; /* Teal tối đậm */
+      --bg: #0f172a; /* Nền (Slate 900) */
+      --card: #1e293b; /* Nền thẻ (Slate 800) */
+      --border: #334155; /* Viền (Slate 700) */
+      --text-primary: #f1f5f9; /* Chữ chính (Slate 100) */
+      --text-secondary: #94a3b8; /* Chữ phụ (Slate 400) */
+    }
+    
+    /* Tinh chỉnh riêng cho Dark Mode */
+    [data-theme="dark"] .brand {
+      background: linear-gradient(45deg, var(--accent), #5eead4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    [data-theme="dark"] .btn.ghost:hover {
+      background: #115e59; /* Màu nền hover của nút ghost */
+    }
+    [data-theme="dark"] .overlay {
+       background: rgba(15, 23, 42, 0.95); /* Nền overlay tối */
+    }
+    [data-theme="dark"] .list::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    [data-theme="dark"] .list::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+    [data-theme="dark"] .list::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="sidebar">
+      <div class="brand">VINFAST TRƯƠNG THÀNH KIÊN GIANG - LINK HUB</div>
+      <div class="search">
+        <input id="q" placeholder="Tìm app theo tên hoặc tag..." oninput="filterList()" />
+        <button class="btn ghost" onclick="clearSearch()">Clear</button>
+        <button class="btn ghost" id="themeToggle" style="width: 42px;">🌙</button>
+      </div>
+      <div class="tags small" id="tags">Tất cả</div>
+      <div class="list" id="linksList"></div>
+      <div class="footer">Ghi chú: nếu trang không hiển thị trong iframe, đó có thể do trang đó chặn embed (X-Frame-Options). Bạn có thể mở trong cùng tab bằng nút trong overlay.</div>
+    </div>
+
+    <div class="main">
+      <div class="controls">
+        <div id="currentTitle" style="font-weight:700">Đang mở app...</div>
+        <div style="flex:1"></div>
+        <button class="btn" onclick="openInSameTab()">Mở trong tab này</button>
+      </div>
+
+      <div class="frameWrap" id="frameWrap">
+        <div class="loader" id="loader"></div>
+        
+        <iframe id="viewer" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+
+        <div class="overlay" id="overlay" style="display:none">
+          <div style="font-weight:700">Không thể hiển thị nội dung ở đây</div>
+          <div class="small">Trang này có thể chặn việc nhúng (X-Frame-Options or CSP). Bạn có thể mở trang trong cùng tab.</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn" id="openSameBtn">Mở trong tab này</button>
+            <button class="btn ghost" onclick="closeOverlay()">Đóng overlay</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:8px;font-size:13px;color:#475569">
+        Lưu ý: link mặc định mở trong iframe. Nếu bạn muốn mở trang lớn bấm vào "mở trong tab này" góc phải ở trên màn hình.
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const LINKS = [
+      {id:'app0', title:'Báo cáo ngày', url:'https://script.google.com/macros/s/AKfycbysNXY9mB-1cesOKXzfh-r0QLD0xmdbQyxropMK7LJsCzcH6JG4Hg_MolDoIshzrobGSA/exec', desc:'Báo cáo ngày', tag:'Báo cáo ngày'},
+      {id:'app1', title:'Dashboard Doanh Số', url:'https://script.google.com/macros/s/AKfycbzgIUo156Jz_nawrRIkeig25Nenk7oOzgjxYOrEuumD0Yqi3CZjw8EY3ml7tKWsB_Eg/exec', desc:'Bảng theo dỏi doanh số', tag:'doanh số'},
+      {id:'app2', title:'Thông tin đơn hàng', url:'https://script.google.com/macros/s/AKfycbyTCSHuQWb_BgyVk8QqqkrIlz7J44kanIIX0X6AiRVDXkqQCo9FZKqI_Ltk5BwqPPjM/exec',desc:'Thông tin đơn hàng', tag:'thongtindonhang'},
+      {id:'app3', title:'Nhập thoả thuận hổ trợ LS', url:'https://script.google.com/macros/s/AKfycbyGvXnX2FOXvu5LXvgnnmh0pkLGdmTlBJU8jWkrZ0uFecgJD0GTV8nkuc_ehoG4gXMvVA/exec', desc:'Nhập thoả thuận hổ trợ LS', tag:'TTLS'},
+      {id:'app4', title:'Kho xe', url:'https://script.google.com/macros/s/AKfycbwAcUcDhf2zngEoKxTgk-cTCtCeZ_X7AeW-n4EaUV5gpuZPa0oFNgKRu7OousX8Dcx4sg/exec?pli=1', desc:'Kho xe yêu cầu đăng nhập', tag:'khoxe'},
+      {id:'app5', title:'Tìm xe', url:'https://script.google.com/macros/s/AKfycbzGJ0HtbV_h0GqB95N4gg9u2Jl4hmX6Lt4S40U9DzYGAauMzhAlKVCw_aoALtynG1xl/exec', desc:'Tìm xe trong kho', tag:'timxe'},
+      {id:'app6', title:'Chính sách', url:'https://script.google.com/macros/s/AKfycbwTE2s8GZq5N5mjlSN5Uo-l1GdtM0PZX6RDl6SxBI-g-N_h53rzqhxKs2cQceFyu9rO/exec', desc:'Chính sách VinFast', tag:'chinhsach'},
+      {id:'app7', title:'Tính lãi vay', url:'https://script.google.com/macros/s/AKfycbwOob8NhBYkgTg0zdBnJCyI6iWWTT0Abh7TQewQn2aixY-povZ10UVv9qGc7dFOG1G1/exec', desc:'Tính lãi vay', tag:'tinhlaivay'},
+    ];
+
+    let filtered = LINKS.slice();
+    const listEl = document.getElementById('linksList');
+    const viewer = document.getElementById('viewer');
+    const overlay = document.getElementById('overlay');
+    const currentTitle = document.getElementById('currentTitle');
+    const loader = document.getElementById('loader'); // MỚI
+    const themeToggle = document.getElementById('themeToggle'); // MỚI
+    let currentUrl = null;
+
+    function renderList(){
+      listEl.innerHTML = '';
+      if(filtered.length === 0){
+        listEl.innerHTML = '<div style="color:var(--text-secondary);padding:8px">Không tìm thấy kết quả</div>';
+        return;
+      }
+      
+      filtered.forEach(item=>{
+        const it = document.createElement('div');
+        it.className = 'item';
+        it.dataset.id = item.id; // MỚI: Thêm ID để quản lý active
+        it.innerHTML = `<div class="title">${escapeHtml(item.title)}</div>
+                        <div class="desc">${escapeHtml(item.desc || '')}</div>
+                        <div class="tags small">${escapeHtml(item.tag || '')}</div>`;
+        it.onclick = ()=> openLink(item);
+        listEl.appendChild(it);
+      });
+    }
+
+    function filterList(){
+      const q = (document.getElementById('q').value || '').toLowerCase().trim();
+      filtered = LINKS.filter(l=>{
+        return l.title.toLowerCase().includes(q) || (l.tag||'').toLowerCase().includes(q) || (l.desc||'').toLowerCase().includes(q);
+      });
+      document.getElementById('tags').innerText = q ? `Kết quả cho "${q}"` : 'Tất cả';
+      renderList();
+    }
+
+    function openLink(item){
+      currentUrl = item.url;
+      currentTitle.innerText = item.title;
+      overlay.style.display = 'none';
+      loader.style.display = 'block'; // MỚI: Hiển thị loader
+
+      // MỚI: Quản lý trạng thái Active
+      document.querySelectorAll('.item.active').forEach(activeItem => {
+        activeItem.classList.remove('active');
+      });
+      const currentItemEl = document.querySelector(`.item[data-id="${item.id}"]`);
+      if (currentItemEl) {
+        currentItemEl.classList.add('active');
+      }
+
+      // Tải iframe và theo dỏi
+      viewer.src = item.url;
+      
+      // Tắt loader khi iframe tải xong (cho cả trường hợp thành công và bị chặn)
+      viewer.onload = () => {
+        loader.style.display = 'none';
+      };
+      
+      // Logic cũ để phát hiện X-Frame-Options (vẫn cần thiết)
+      setTimeout(()=> {
+        try {
+          const doc = viewer.contentDocument || viewer.contentWindow.document;
+          if(!doc || doc.location.href === 'about:blank'){
+            loader.style.display = 'none'; // Ẩn loader
+            showBlockedOverlay(item);
+          } else {
+            loader.style.display = 'none'; // Ẩn loader
+            overlay.style.display = 'none';
+          }
+        } catch(e){
+          setTimeout(()=>{
+            const r = viewer.getBoundingClientRect();
+            if(r.width < 100 || r.height < 50){
+              loader.style.display = 'none'; // Ẩn loader
+              showBlockedOverlay(item);
+            } else {
+              loader.style.display = 'none'; // Ẩn loader
+              overlay.style.display = 'none';
+            }
+          },1200);
+        }
+      },700);
+    }
+
+    function showBlockedOverlay(item){
+      overlay.style.display = 'flex';
+      document.getElementById('openSameBtn').onclick = ()=> {
+        window.location.href = item.url;
+      };
+    }
+
+    function openInSameTab(){
+      if(currentUrl) window.location.href = currentUrl;
+      else alert('Chưa có app nào được chọn.');
+    }
+    function closeOverlay(){ overlay.style.display = 'none'; }
+    function clearSearch(){ document.getElementById('q').value=''; filterList(); }
+    function escapeHtml(str){ return (str||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+    // --- MỚI: QUẢN LÝ DARK MODE ---
+
+    // 1. Hàm bật/tắt theme
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme); // Lưu vào bộ nhớ
+      
+      // Đổi icon
+      themeToggle.innerText = newTheme === 'dark' ? '☀️' : '🌙';
+    }
+
+    // 2. Hàm setup theme khi tải trang
+    function setupTheme() {
+      // Lấy theme đã lưu, nếu không có thì mặc định là 'light'
+      const savedTheme = localStorage.getItem('theme') || 'light'; 
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      
+      // Cập nhật icon cho đúng
+      themeToggle.innerText = savedTheme === 'dark' ? '☀️' : '🌙';
+      
+      // Gán sự kiện click cho nút
+      themeToggle.addEventListener('click', toggleTheme);
+    }
+
+    // --- KHỞI ĐỘNG ỨNG DỤNG ---
+    window.addEventListener('DOMContentLoaded',()=>{
+      setupTheme(); // MỚI: Cài đặt theme trước
+      filtered = LINKS.slice();
+      renderList();
+      // Luôn mở app đầu tiên
+      if(LINKS.length > 0){
+        openLink(LINKS[0]);
+      }
+    });
+  </script>
+</body>
+</html>
