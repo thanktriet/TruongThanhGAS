@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=1024" />
   <title>VINFAST TRƯƠNG THÀNH KIÊN GIANG - LINK HUB</title>
 
   <style>
@@ -141,7 +141,7 @@
       transition: var(--theme-transition);
     }
 
-    /* CẬP NHẬT: Iframe cho mobile */
+    /* Iframe cho mobile */
     iframe { 
       width: 100%; 
       height: 100%; 
@@ -250,7 +250,9 @@
       background: #64748b;
     }
     
-    /* --- CẬP NHẬT: Responsive cho Mobile --- */
+    /* --- Responsive cho Mobile --- */
+    /* (Code này vẫn ở đây, nhưng sẽ không được kích hoạt trên điện thoại nữa
+       vì chúng ta đã đặt width=1024) */
     @media (max-width: 800px) {
       .wrap { 
         flex-direction: column; 
@@ -260,35 +262,34 @@
         order: 2; /* Đưa sidebar xuống dưới */
         border-right: none; 
         border-top: 1px solid var(--border); 
-        padding: 12px; /* GIẢM PADDING */
-        max-height: 35vh; /* GIẢM CHIỀU CAO SIDEBAR */
-        /* không cần set max-height cho .list, vì .list đã có flex:1 */
+        padding: 12px; 
+        max-height: 35vh; 
       }
       .main { 
         order: 1; /* Đưa main lên trên */
-        padding: 12px; /* GIẢM PADDING */
-        min-height: 65vh; /* TĂNG CHIỀU CAO MAIN */
+        padding: 12px; 
+        min-height: 65vh; 
       }
       
       .brand { 
         margin-bottom: 12px; 
-        font-size: 18px; /* GIẢM FONT */
+        font-size: 18px; 
       }
       
       .controls {
-        margin-bottom: 12px; /* GIẢM KHOẢNG CÁCH */
+        margin-bottom: 12px; 
       }
       
       #currentTitle {
-        font-size: 1rem; /* GIẢM FONT */
+        font-size: 1rem; 
       }
       
       .item .title {
-        font-size: 14px; /* GIẢM FONT */
+        font-size: 14px; 
       }
       
       .item .desc {
-        font-size: 12px; /* GIẢM FONT */
+        font-size: 12px; 
       }
     }
   </style>
