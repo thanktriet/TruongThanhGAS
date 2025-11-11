@@ -1,12 +1,15 @@
 /*
- * File: script.js
+ * File: script.js (của trang index.html)
  * Frontend logic để gọi API Backend
  */
 
-// DÁN URL WEB APP CỦA BẠN (từ Bước 1) VÀO ĐÂY
 const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyUS4aLRcEjqZfM_71ytnS4rH9mGOFoH-RrTQ_c5sgxlrNtmCQC7e_Ls5paCRt1eimPQQ/exec';
 
-// Lắng nghe sự kiện submit form
+// Chuyển hướng nếu đã đăng nhập rồi
+if (localStorage.getItem('sessionToken')) {
+    window.location.href = 'dashboard.html';
+}
+
 document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault(); // Ngăn form gửi theo cách truyền thống
 
@@ -15,37 +18,33 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     const messageDiv = document.getElementById('message');
     const loginButton = document.getElementById('loginButton');
 
-    // Hiển thị trạng thái đang tải
     messageDiv.textContent = 'Đang đăng nhập...';
     loginButton.disabled = true;
 
-    // Chuẩn bị dữ liệu gửi lên backend
     const data = {
-        action: 'login', // Cho backend biết chúng ta muốn làm gì
+        action: 'login',
         username: username,
         password: password
     };
 
-    // Gọi API của Apps Script bằng fetch
     fetch(GAS_WEB_APP_URL, {
         method: 'POST',
-        mode: 'cors', // Cần thiết để gọi API từ domain khác (GitHub -> Google)
+        mode: 'cors',
         headers: {
-            'Content-Type': 'text/plain;charset=utf-8', // Apps Script thường nhận text/plain
+            'Content-Type': 'text/plain;charset=utf-8',
         },
         body: JSON.stringify(data) // Gửi dữ liệu dưới dạng chuỗi JSON
     })
-    .then(response => response.json()) // Chuyển đổi phản hồi sang JSON
+    .then(response => response.json())
     .then(result => {
-        console.log(result); // Xem kết quả ở Console
         
-        if (result.status === 'success') {
-            // Đăng nhập thành công
-            messageDiv.textContent = result.message;
-            messageDiv.style.color = 'green';
+        if (result.status === 'success' && result.token) {
+            // LƯU TOKEN (VÉ VÀO CỬA)
+            localStorage.setItem('sessionToken', result.token);
             
-            // Chuyển hướng đến trang chính của ERP (ví dụ: dashboard.html)
-            // window.location.href = 'dashboard.html';
+            // CHUYỂN HƯỚNG TỚI DASHBOARD
+            window.location.href = 'dashboard.html';
+
         } else {
             // Đăng nhập thất bại
             messageDiv.textContent = result.message;
@@ -53,13 +52,11 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
         }
     })
     .catch(error => {
-        // Xử lý lỗi mạng hoặc lỗi phân tích JSON
         console.error('Lỗi:', error);
         messageDiv.textContent = 'Đã xảy ra lỗi. Vui lòng thử lại.';
         messageDiv.style.color = 'red';
     })
     .finally(() => {
-        // Kích hoạt lại nút bấm
         loginButton.disabled = false;
     });
 });
