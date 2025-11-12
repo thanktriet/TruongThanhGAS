@@ -5,19 +5,140 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Báo Cáo TVBH</title>
     <style>
+      /* =================================== */
+      /* CSS MỚI: CHO LAYOUT CHÍNH (VỎ BỌC) */
+      /* =================================== */
       :root {
         --primary-color: #005B9A; --primary-light: #E6F0F8; --accent-color: #0d6efd;
         --success-color: #198754; --danger-color: #dc3545; --bg-color: #f8f9fa;
         --border-color: #dee2e6; --text-color: #212529; --text-light: #6c757d;
         --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 6px 12px rgba(0,0,0,0.08);
         --border-radius: 12px;
+        --sidebar-width: 240px;
+        --topbar-height: 60px;
       }
       html { box-sizing: border-box; }
       *, *:before, *:after { box-sizing: inherit; }
+      
       body { 
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
         margin: 0; background-color: var(--bg-color); color: var(--text-color);
+        display: grid;
+        grid-template-columns: var(--sidebar-width) 1fr;
+        grid-template-rows: var(--topbar-height) 1fr;
+        grid-template-areas:
+          "sidebar topbar"
+          "sidebar content";
+        height: 100vh;
+        overflow: hidden; /* Ngăn body cuộn */
       }
+
+      .sidebar {
+        grid-area: sidebar;
+        background: #1e293b; /* Màu tối */
+        color: #cbd5e1;
+        padding: 20px 15px;
+        display: flex;
+        flex-direction: column;
+      }
+      .sidebar-header {
+        font-size: 1.5em;
+        font-weight: 700;
+        color: #fff;
+        text-align: center;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #334155;
+        margin-bottom: 20px;
+      }
+      .sidebar-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        flex-grow: 1;
+      }
+      .sidebar-menu li a {
+        display: block;
+        padding: 12px 15px;
+        color: #cbd5e1;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 500;
+        margin-bottom: 5px;
+        transition: all 0.2s ease;
+      }
+      .sidebar-menu li a:hover {
+        background-color: #334155;
+        color: #fff;
+      }
+      .sidebar-menu li a.active {
+        background-color: var(--primary-color);
+        color: #fff;
+        font-weight: 600;
+      }
+
+      .top-bar {
+        grid-area: topbar;
+        background: #fff;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end; /* Đẩy nội dung sang phải */
+        align-items: center;
+        padding: 0 30px;
+        box-shadow: var(--shadow-sm);
+      }
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      #username-display {
+        font-weight: 600;
+        color: var(--text-color);
+      }
+      #logout-button {
+        background-color: var(--danger-color);
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 0.9em;
+        transition: background-color 0.2s;
+      }
+      #logout-button:hover { background-color: #c82333; }
+
+      .content-area {
+        grid-area: content;
+        overflow-y: auto; /* CHỈ VÙNG NÀY ĐƯỢC CUỘN */
+        overflow-x: hidden;
+        background-color: var(--bg-color);
+        padding: 20px; /* Thêm padding cho vùng nội dung */
+      }
+      
+      @media (max-width: 768px) {
+        body {
+          grid-template-columns: 1fr; /* Sidebar ẩn */
+          grid-template-rows: var(--topbar-height) 1fr;
+          grid-template-areas:
+            "topbar"
+            "content";
+          overflow: auto; /* Cho phép cuộn trên di động */
+        }
+        .sidebar {
+          display: none; /* Ẩn sidebar trên di động */
+        }
+        .top-bar {
+          padding: 0 15px;
+        }
+        .content-area {
+          padding: 15px 0; /* Xóa padding ngang trên di động */
+        }
+      }
+
+      /* =================================== */
+      /* CSS CŨ: CHO NỘI DUNG BÁO CÁO (RUỘT) */
+      /* =================================== */
       
       /* --- THANH BỘ LỌC --- */
       .filter-bar {
@@ -90,6 +211,9 @@
       /* --- THANH ĐIỀU HƯỚNG TAB --- */
       .tab-nav {
         display: flex; background-color: #fff; box-shadow: var(--shadow-sm);
+        /* Sticky top = 0 (so với .content-area) 
+          Nếu .content-area có padding-top, bạn cần điều chỉnh giá trị 'top' này
+        */
         position: -webkit-sticky; position: sticky; top: 0; z-index: 1000;
       }
       .tab-button {
@@ -118,7 +242,9 @@
 
       .table-container {
         overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; 
-        max-height: 70vh; overflow-y: auto; border: 1px solid var(--border-color);
+        /* Giảm max-height để vừa vặn hơn trong layout mới */
+        max-height: 65vh; 
+        overflow-y: auto; border: 1px solid var(--border-color);
         border-radius: var(--border-radius);
       }
       table { border-collapse: collapse; width: 100%; background-color: #fff; }
@@ -133,7 +259,7 @@
         font-weight: 600;
         color: var(--primary-color);
         position: -webkit-sticky; position: sticky;
-        top: 0; /* Hàng đầu tiên dính ở top */
+        top: 0; /* Hàng đầu tiên dính ở top (so với .table-container) */
         z-index: 10;
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         text-align: center; /* Căn giữa tiêu đề */
@@ -205,7 +331,6 @@
       }
       
       /* --- CSS CHO CỘT XẾP HẠNG (MỚI) --- */
-      /* Áp dụng cho cột 1 của BẢNG MTD TỔNG */
       #mtd-total-report-container th:first-child,
       #mtd-total-report-container td:first-child {
         text-align: center;
@@ -214,8 +339,8 @@
         max-width: 80px;
       }
       /* Ghi đè vị trí dính cho bảng MTD Tổng */
-      #mtd-total-report-container .sticky-col-2 { left: 80px; } /* Cột 2 dính sau cột 1 (80px) */
-      #mtd-total-report-container .sticky-col-3 { left: 210px; } /* Cột 3 dính sau cột 2 (80+130) */
+      #mtd-total-report-container .sticky-col-2 { left: 80px; }
+      #mtd-total-report-container .sticky-col-3 { left: 210px; }
 
       /* --- CSS CHO CỘT % (MỚI) --- */
       .percent-col {
@@ -280,17 +405,9 @@
       #form-status.error, #export-status.error { color: var(--danger-color); background-color: #fdecea; display: block; }
 
       @media (max-width: 768px) {
-        .filter-bar { grid-template-columns: 1fr 1fr; }
-        .daily-filter-bar { grid-template-columns: 1fr 100px; }
-        .filter-buttons { grid-column: 1 / -1; }
-        .tab-button { font-size: 0.8em; padding: 12px 3px; }
-        .card { padding: 15px; border-radius: 0; border-left: 0; border-right: 0; box-shadow: none; }
-        .tab-content { padding: 15px 0 0 0; }
-        h2 { font-size: 1.4em; }
-        th, td { padding: 10px 12px; min-width: 110px; }
-        .input-grid { grid-template-columns: 1fr; } 
-        .sticky-col-2 { left: 110px; } 
-        .sticky-col-3 { left: 220px; } 
+        /* ... (CSS media query cũ của bạn giữ nguyên) ... */
+        .tab-content { padding: 15px 15px 0 15px; } /* Thêm padding cho card trên di động */
+        .card { padding: 15px; }
         
         #mtd-total-report-container th:first-child,
         #mtd-total-report-container td:first-child { min-width: 60px; max-width: 60px; }
@@ -300,141 +417,182 @@
     </style>
   </head>
   <body>
+    
+    <div class="layout-container">
+      
+      <nav class="sidebar">
+        <div class="sidebar-header">
+          ERP SYSTEM
+        </div>
+        <ul class="sidebar-menu">
+          <li>
+            <a href="#dashboard" class="active">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 10px; vertical-align: text-bottom;">
+                <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM1 10.5A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zM2.5 10a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM9 2.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zM10.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM9 10.5A1.5 1.5 0 0 1 10.5 9h3A1.5 1.5 0 0 1 15 10.5v3A1.5 1.5 0 0 1 13.5 15h-3A1.5 1.5 0 0 1 9 13.5v-3zM10.5 10a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z"/>
+              </svg>
+              Dashboard
+            </a>
+          </li>
+          <li>
+            <a href="#users">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 10px; vertical-align: text-bottom;">
+                <path d="M15 14s1 0 1-1-1-4-6-4-6 3-6 4 1 1 1 1h10zM8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+              </svg>
+              Quản lý Users
+            </a>
+          </li>
+          <li>
+            <a href="#products">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 10px; vertical-align: text-bottom;">
+                <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5z"/>
+              </svg>
+              Sản phẩm
+            </a>
+          </li>
+        </ul>
+        </nav>
 
-    <div class="tab-nav">
-      <button class="tab-button" onclick="showTab('entry')">✍️ Nhập Báo Cáo</button>
-      <button class="tab-button active" onclick="showTab('daily')">📊 Báo Cáo Ngày</button>
-      <button class="tab-button" onclick="showTab('mtd_total')">📈 MTD - Tổng</button>
-      <button class="tab-button" onclick="showTab('mtd_detail')">🚗 MTD - Chi tiết Xe</button>
-    </div>
+      <header class="top-bar">
+        <div class="user-info">
+          <span>Xin chào, <strong id="username-display">...</strong></span>
+          <button id="logout-button">Đăng xuất</button>
+        </div>
+      </header>
 
-    <div id="entry" class="tab-content">
-      <div class="card card-form">
-        <form id="entry-form" onsubmit="handleFormSubmit(event)">
-          <h2 id="entry-title">Báo Cáo Trong Ngày</h2>
-          <p class="subtitle">
-            Chọn nhóm và tên của bạn để nhập hoặc cập nhật báo cáo hôm nay.
-          </p>
-          
-          <div class="form-group">
-            <label for="group">Chọn Nhóm</label>
-            <select id="group" name="group" required onchange="populateTvbhEntryList(this.value)">
-              <option value="">Đang tải danh sách nhóm...</option>
-            </select>
+      <main class="content-area">
+        
+        <div class="tab-nav">
+          <button class="tab-button" onclick="showTab('entry')">✍️ Nhập Báo Cáo</button>
+          <button class="tab-button active" onclick="showTab('daily')">📊 Báo Cáo Ngày</button>
+          <button class="tab-button" onclick="showTab('mtd_total')">📈 MTD - Tổng</button>
+          <button class="tab-button" onclick="showTab('mtd_detail')">🚗 MTD - Chi tiết Xe</button>
+        </div>
+
+        <div id="entry" class="tab-content">
+          <div class="card card-form">
+            <form id="entry-form" onsubmit="handleFormSubmit(event)">
+              <h2 id="entry-title">Báo Cáo Trong Ngày</h2>
+              <p class="subtitle">
+                Chọn nhóm và tên của bạn để nhập hoặc cập nhật báo cáo hôm nay.
+              </p>
+              
+              <div class="form-group">
+                <label for="group">Chọn Nhóm</label>
+                <select id="group" name="group" required onchange="populateTvbhEntryList(this.value)">
+                  <option value="">Đang tải danh sách nhóm...</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="tvbh">Chọn TVBH</label>
+                <select id="tvbh" name="tvbh" required onchange="loadDailyData(this.value)" disabled>
+                  <option value="">-- Vui lòng chọn nhóm trước --</option>
+                </select>
+              </div>
+
+              <div id="form-fields" style="display:none;">
+                <div id="form-data-status">Vui lòng chọn tên của bạn...</div>
+                <hr style="border:0; border-top: 1px solid var(--border-color); margin: 25px 0;">
+                <div class="form-group">
+                  <label for="khtn" style="font-size: 1.1em; font-weight: 700; color: var(--text-color);">Tổng Khách Hàng Tiềm Năng (KHTN)</label>
+                  <input type="number" id="khtn" name="khtn" required min="0" value="0">
+                </div>
+                <hr style="border:0; border-top: 1px solid var(--border-color); margin: 25px 0;">
+                <div id="car-model-inputs">
+                  <p class="loading-placeholder">Đang tải danh sách dòng xe...</p>
+                </div>
+                <button type="submit" id="submitButton" class="form-button">Lưu Báo Cáo</button>
+                <div id="form-status"></div>
+              </div>
+            </form>
           </div>
+        </div>
 
-          <div class="form-group">
-            <label for="tvbh">Chọn TVBH</label>
-            <select id="tvbh" name="tvbh" required onchange="loadDailyData(this.value)" disabled>
-              <option value="">-- Vui lòng chọn nhóm trước --</option>
-            </select>
-          </div>
+        <div id="daily" class="tab-content active">
+          <div class="card">
+            <h2>Báo Cáo Ngày (Tổng hợp)</h2>
+            <p class="subtitle">
+              Mặc định hiển thị ngày hôm nay. Chọn ngày để xem lại.
+            </p>
 
-          <div id="form-fields" style="display:none;">
-            <div id="form-data-status">Vui lòng chọn tên của bạn...</div>
-            <hr style="border:0; border-top: 1px solid var(--border-color); margin: 25px 0;">
-            <div class="form-group">
-              <label for="khtn" style="font-size: 1.1em; font-weight: 700; color: var(--text-color);">Tổng Khách Hàng Tiềm Năng (KHTN)</label>
-              <input type="number" id="khtn" name="khtn" required min="0" value="0">
+            <div class="filter-bar daily-filter-bar">
+              <div class="filter-group">
+                <label for="daily-date-picker">Chọn ngày</label>
+                <input type="date" id="daily-date-picker">
+              </div>
+              <div class="filter-buttons">
+                <button id="daily-filter-btn" class="filter-button" onclick="loadDailyReportByDate()">Xem</button>
+              </div>
             </div>
-            <hr style="border:0; border-top: 1px solid var(--border-color); margin: 25px 0;">
-            <div id="car-model-inputs">
-              <p class="loading-placeholder">Đang tải danh sách dòng xe...</p>
+            
+            <div id="daily-report-container" class="table-container">
+              <div id="loading-daily" class="loading-placeholder">Đang tải dữ liệu...</div>
             </div>
-            <button type="submit" id="submitButton" class="form-button">Lưu Báo Cáo</button>
-            <div id="form-status"></div>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div id="daily" class="tab-content active">
-      <div class="card">
-        <h2>Báo Cáo Ngày (Tổng hợp)</h2>
-        <p class="subtitle">
-          Mặc định hiển thị ngày hôm nay. Chọn ngày để xem lại.
-        </p>
-
-        <div class="filter-bar daily-filter-bar">
-          <div class="filter-group">
-            <label for="daily-date-picker">Chọn ngày</label>
-            <input type="date" id="daily-date-picker">
-          </div>
-          <div class="filter-buttons">
-             <button id="daily-filter-btn" class="filter-button" onclick="loadDailyReportByDate()">Xem</button>
           </div>
         </div>
-        
-        <div id="daily-report-container" class="table-container">
-          <div id="loading-daily" class="loading-placeholder">Đang tải dữ liệu...</div>
-        </div>
-      </div>
-    </div>
 
-    <div id="mtd_total" class="tab-content">
-      <div class="card">
-        <h2>Báo Cáo MTD (Tổng hợp)</h2>
-         <p class="subtitle">
-          Số liệu tổng hợp tính từ đầu tháng đến hiện tại, xếp hạng theo doanh thu.
-        </p>
-        <div id="mtd-total-report-container" class="table-container">
-          <div id="loading-mtd-total" class="loading-placeholder">Đang tải dữ liệu...</div>
-        </div>
-      </div>
-    </div>
-
-    <div id="mtd_detail" class="tab-content">
-      <div class="card">
-        <h2>Báo Cáo MTD (Chi tiết Dòng Xe)</h2>
-         <p class="subtitle">
-          Chi tiết MTD theo TVBH (hàng) và Dòng Xe (cột).
-        </p>
-
-        <div class="filter-bar">
-          <div class="filter-group">
-            <label for="filter-group">Lọc theo Nhóm</label>
-            <select id="filter-group" onchange="populateTvbhFilter(this.value)">
-              <option value="">Tất cả các Nhóm</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label for="filter-tvbh">Lọc theo TVBH</label>
-            <select id="filter-tvbh">
-              <option value="">Tất cả TVBH</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label for="filter-car-model">Lọc theo Dòng Xe</label>
-            <select id="filter-car-model">
-              <option value="">Tất cả Dòng Xe</option>
-            </select>
-          </div>
-          <div class="filter-buttons">
-            <button id="filter-btn" class="filter-button" onclick="applyFilters()">Lọc</button>
-            <button id="reset-btn" class="reset-button" onclick="resetFilters()">Xóa Lọc</button>
-            <button id="export-btn" class="export-button" onclick="exportToExcel()">Excel</button>
+        <div id="mtd_total" class="tab-content">
+          <div class="card">
+            <h2>Báo Cáo MTD (Tổng hợp)</h2>
+            <p class="subtitle">
+              Số liệu tổng hợp tính từ đầu tháng đến hiện tại, xếp hạng theo doanh thu.
+            </p>
+            <div id="mtd-total-report-container" class="table-container">
+              <div id="loading-mtd-total" class="loading-placeholder">Đang tải dữ liệu...</div>
+            </div>
           </div>
         </div>
-        
-        <div id="export-status"></div>
-        
-        <div id="mtd-detail-report-container" class="table-container">
-          <div id="loading-mtd-detail" class="loading-placeholder">Đang tải dữ liệu...</div>
+
+        <div id="mtd_detail" class="tab-content">
+          <div class="card">
+            <h2>Báo Cáo MTD (Chi tiết Dòng Xe)</h2>
+            <p class="subtitle">
+              Chi tiết MTD theo TVBH (hàng) và Dòng Xe (cột).
+            </p>
+
+            <div class="filter-bar">
+              <div class="filter-group">
+                <label for="filter-group">Lọc theo Nhóm</label>
+                <select id="filter-group" onchange="populateTvbhFilter(this.value)">
+                  <option value="">Tất cả các Nhóm</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="filter-tvbh">Lọc theo TVBH</label>
+                <select id="filter-tvbh">
+                  <option value="">Tất cả TVBH</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="filter-car-model">Lọc theo Dòng Xe</label>
+                <select id="filter-car-model">
+                  <option value="">Tất cả Dòng Xe</option>
+                </select>
+              </div>
+              <div class="filter-buttons">
+                <button id="filter-btn" class="filter-button" onclick="applyFilters()">Lọc</button>
+                <button id="reset-btn" class="reset-button" onclick="resetFilters()">Xóa Lọc</button>
+                <button id="export-btn" class="export-button" onclick="exportToExcel()">Excel</button>
+              </div>
+            </div>
+            
+            <div id="export-status"></div>
+            
+            <div id="mtd-detail-report-container" class="table-container">
+              <div id="loading-mtd-detail" class="loading-placeholder">Đang tải dữ liệu...</div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-
-
-    <script>
+      
+      </main> </div> <script>
       /*
       * File: dashboard.js (Nội tuyến)
-      * ĐÃ VIẾT LẠI HOÀN TOÀN ĐỂ SỬ DỤNG API (FETCH) THAY VÌ GOOGLE.SCRIPT.RUN
+      * ĐÃ GỘP LOGIC BẢO MẬT (VerifyToken, Logout) VÀ LOGIC BÁO CÁO
       */
 
       // ===================================
       // CẤU HÌNH API
       // ===================================
-      // Đây là link Web App của Code.gs (đã có từ các bước trước)
       const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyUS4aLRcEjqZfM_71ytnS4rH9mGOFoH-RrTQ_c5sgxlrNtmCQC7e_Ls5paCRt1eimPQQ/exec';
 
       // Biến toàn cục
@@ -442,70 +600,105 @@
       let carModelList = [];
 
       // ===================================
-      // HÀM GỌI API TRỢ GIÚP (Hàm Mới)
+      // HÀM GỌI API TRỢ GIÚP (Quan trọng)
       // ===================================
-      /**
-      * Hàm trợ giúp để gọi API (doPost) một cách nhất quán
-      * @param {string} action - Tên hành động (vd: 'getDashboardData')
-      * @param {Object} [payload={}] - Dữ liệu gửi lên (vd: { filters: {...} })
-      * @returns {Promise<Object>} - Dữ liệu JSON trả về từ server
-      */
       async function callApi(action, payload = {}) {
         const token = localStorage.getItem('sessionToken');
         
-        // 1. Kiểm tra Token (Bảo mật)
         if (!token) {
           console.error("Không tìm thấy token. Đang chuyển hướng về trang đăng nhập.");
           window.location.href = 'index.html';
-          throw new Error('No token'); // Dừng hàm
+          throw new Error('No token'); 
         }
 
-        // 2. Gọi API bằng Fetch
         const response = await fetch(GAS_WEB_APP_URL, {
           method: 'POST',
           mode: 'cors',
           headers: {
-            'Content-Type': 'text/plain;charset=utf-8', // Apps Script thường nhận text/plain
+            'Content-Type': 'text/plain;charset=utf-8',
           },
           body: JSON.stringify({
-            action: action,  // Hành động mà Code.gs router sẽ bắt
-            token: token,    // Token xác thực
-            payload: payload // Tất cả dữ liệu khác
+            action: action,  
+            token: token,    
+            payload: payload 
           })
         });
         
         const result = await response.json();
 
-        // 3. Xử lý phản hồi
         if (result.status === 'error') {
-          // Nếu lỗi là token hết hạn, tự động đăng xuất
           if (result.message.includes('Phiên đăng nhập')) {
             localStorage.removeItem('sessionToken');
             window.location.href = 'index.html';
           }
-          // Ném lỗi để hàm .catch() bên ngoài bắt được
           throw new Error(result.message);
         }
-
-        return result; // Trả về dữ liệu nếu thành công (vd: result.daily, result.mtdTotal)
+        return result; 
       }
 
 
       // ===================================
-      // KHỞI CHẠY KHI TẢI TRANG
+      // KHỞI CHẠY KHI TẢI TRANG (ĐÃ CẬP NHẬT)
       // ===================================
       document.addEventListener("DOMContentLoaded", function() {
-        loadInitialData(); // Tải 2 báo cáo đầu
-        loadMtdDetailReport({}); // Tải MTD Chi tiết (không lọc)
-        loadFormInitData(); // Tải dữ liệu cho Form và Bộ Lọc
+        // 1. Kiểm tra bảo mật (HÀM MỚI)
+        verifyLogin();
+        
+        // 2. Gắn sự kiện cho nút Logout (HÀM MỚI)
+        document.getElementById('logout-button').addEventListener('click', handleLogout);
+
+        // 3. Tải dữ liệu báo cáo (Hàm cũ)
+        loadInitialData(); 
+        loadMtdDetailReport({}); 
+        loadFormInitData(); 
         
         document.getElementById('entry-title').innerText = 'Báo Cáo Ngày ' + new Date().toLocaleDateString('vi-VN');
-        setDatePickerToToday(); // Đặt ngày mặc định
-        showTab('daily'); // Bắt đầu ở tab 'daily'
+        setDatePickerToToday(); 
+        showTab('daily'); 
       });
+      
+      // ===================================
+      // LOGIC BẢO MẬT (HÀM MỚI)
+      // ===================================
+      
+      /**
+       * Kiểm tra token khi tải trang, hiển thị tên user
+       */
+      function verifyLogin() {
+        // Dùng callApi để tự động kiểm tra token
+        callApi('verifyToken') // Cần action 'verifyToken' trong Code.gs
+          .then(result => {
+            // Nếu thành công, 'result' sẽ chứa { status: 'success', username: '...' }
+            document.getElementById('username-display').textContent = result.username;
+          })
+          .catch(error => {
+            // Nếu lỗi (vd: token hết hạn), callApi đã tự xử lý chuyển hướng
+            console.error("Lỗi xác thực:", error.message);
+          });
+      }
+      
+      /**
+       * Xử lý đăng xuất
+       */
+      function handleLogout() {
+        const token = localStorage.getItem('sessionToken');
+        if (!token) {
+           window.location.href = 'index.html';
+           return;
+        }
+
+        // Báo cho backend biết để xóa token (không bắt buộc nhưng nên làm)
+        callApi('logout')
+          .catch(error => console.error("Lỗi khi gọi API logout:", error.message))
+          .finally(() => {
+            // Luôn xóa token ở frontend và chuyển hướng
+            localStorage.removeItem('sessionToken');
+            window.location.href = 'index.html';
+          });
+      }
 
       // ===================================
-      // LOGIC TAB
+      // LOGIC TAB (Giữ nguyên)
       // ===================================
       function showTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -516,7 +709,7 @@
       }
 
       // ===================================
-      // LOGIC LỌC BÁO CÁO MTD CHI TIẾT
+      // LOGIC LỌC BÁO CÁO MTD CHI TIẾT (Giữ nguyên)
       // ===================================
       function applyFilters() {
         const filters = {
@@ -524,27 +717,27 @@
           tvbh: document.getElementById('filter-tvbh').value,
           carModel: document.getElementById('filter-car-model').value
         };
-        loadMtdDetailReport(filters); // Chỉ gọi hàm tải MTD Chi tiết
+        loadMtdDetailReport(filters); 
       }
 
       function resetFilters() {
         document.getElementById('filter-group').value = "";
         document.getElementById('filter-tvbh').value = "";
         document.getElementById('filter-car-model').value = "";
-        populateTvbhFilter(""); // Đặt lại bộ lọc TVBH
-        loadMtdDetailReport({}); // Chỉ gọi hàm tải MTD Chi tiết (với bộ lọc rỗng)
+        populateTvbhFilter(""); 
+        loadMtdDetailReport({}); 
       }
 
       function toggleFilterButtons(enabled, text = "Lọc") {
         document.getElementById('filter-btn').disabled = !enabled;
         document.getElementById('reset-btn').disabled = !enabled;
-        document.getElementById('export-btn').disabled = !enabled; // Vô hiệu hóa cả nút Export
+        document.getElementById('export-btn').disabled = !enabled; 
         document.getElementById('filter-btn').innerText = enabled ? "Lọc" : text;
       }
 
       function populateTvbhFilter(selectedGroup) {
         const tvbhSelect = document.getElementById("filter-tvbh");
-        tvbhSelect.innerHTML = '<option value="">Tất cả TVBH</option>'; // Luôn có "Tất cả"
+        tvbhSelect.innerHTML = '<option value="">Tất cả TVBH</option>'; 
 
         if (selectedGroup && groupData[selectedGroup]) {
           const tvbhList = groupData[selectedGroup].sort();
@@ -566,33 +759,30 @@
       }
 
       // ===================================
-      // LOGIC TẢI DỮ LIỆU BÁO CÁO (ĐÃ CHUYỂN SANG API)
+      // LOGIC TẢI DỮ LIỆU BÁO CÁO (Giữ nguyên)
       // ===================================
 
-      // Hàm tải Báo cáo Ngày (hôm nay) và MTD Tổng (Chạy 1 lần)
       function loadInitialData() {
         document.getElementById("loading-daily").innerText = "Đang tải dữ liệu...";
         document.getElementById("loading-mtd-total").innerText = "Đang tải dữ liệu...";
         
-        callApi('getDashboardData') // <--- ĐÃ SỬA
-          .then(onInitialDataLoaded) // Hàm xử lý thành công
-          .catch(onInitialDataFailed); // Hàm xử lý thất bại
+        callApi('getDashboardData') 
+          .then(onInitialDataLoaded) 
+          .catch(onInitialDataFailed); 
       }
 
-      // Hàm tải CHỈ Bảng MTD Chi tiết (Chạy khi lọc)
       function loadMtdDetailReport(filters) {
         document.getElementById("mtd-detail-report-container").innerHTML = '<div id="loading-mtd-detail" class="loading-placeholder">Đang tải dữ liệu...</div>';
         toggleFilterButtons(false, "Đang tải...");
 
-        callApi('getMtdDetailReport', { filters: filters }) // <--- ĐÃ SỬA
+        callApi('getMtdDetailReport', { filters: filters }) 
           .then(onMtdDetailDataLoaded)
           .catch(onMtdDetailDataFailed);
       }
 
-      // Tải Báo cáo Ngày theo ngày được chọn
       function loadDailyReportByDate() {
         const datePicker = document.getElementById("daily-date-picker");
-        const dateString = datePicker.value; // "yyyy-MM-dd"
+        const dateString = datePicker.value; 
         if (!dateString) {
           alert("Vui lòng chọn ngày.");
           return;
@@ -601,74 +791,62 @@
         document.getElementById("daily-report-container").innerHTML = '<div id="loading-daily" class="loading-placeholder">Đang tải dữ liệu ngày ' + dateString + '...</div>';
         document.getElementById("daily-filter-btn").disabled = true;
         
-        callApi('getDailyReportForSpecificDate', { dateString: dateString }) // <--- ĐÃ SỬA
+        callApi('getDailyReportForSpecificDate', { dateString: dateString }) 
           .then(onDailyDataLoaded)
           .catch(onDailyDataFailed);
       }
 
-      // Hàm xử lý cho 2 bảng ĐẦU TIÊN
-      function onInitialDataLoaded(result) { // Nhận 'result' từ API
-        // Daily: dính 2 cột, tô đỏ
+      // Hàm xử lý (Giữ nguyên)
+      function onInitialDataLoaded(result) { 
         document.getElementById("daily-report-container").innerHTML = createHtmlTable(result.daily, 2, true); 
-        // MTD Total: dính 3 cột (Hạng, Nhóm, TVBH), không tô đỏ
-        document.getElementById("mtd-total-report-container").innerHTML = createMtdTotalTable(result.mtdTotal); // **GỌI HÀM MỚI**
+        document.getElementById("mtd-total-report-container").innerHTML = createMtdTotalTable(result.mtdTotal); 
       }
 
-      // Hàm xử lý lỗi cho 2 bảng ĐẦU TIÊN
       function onInitialDataFailed(error) {
         const errorMsg = "Lỗi khi tải dữ liệu: " + error.message;
         document.getElementById("loading-daily").innerText = errorMsg;
         document.getElementById("loading-mtd-total").innerText = errorMsg;
       }
 
-      // Hàm xử lý PHỤ: Chỉ cập nhật bảng MTD Chi tiết
-      function onMtdDetailDataLoaded(result) { // Nhận 'result' từ API
-        toggleFilterButtons(true); // Kích hoạt lại nút
-        // MTD Detail: dính 2 cột, không tô đỏ
+      function onMtdDetailDataLoaded(result) { 
+        toggleFilterButtons(true); 
         document.getElementById("mtd-detail-report-container").innerHTML = createHtmlTable(result.mtdDetail, 2, false);
       }
-
-      // Hàm xử lý PHỤ: Chỉ báo lỗi ở bảng MTD Chi tiết
+      
       function onMtdDetailDataFailed(error) {
-        toggleFilterButtons(true); // Kích hoạt lại nút
+        toggleFilterButtons(true); 
         const errorMsg = "Lỗi khi tải dữ liệu: " + error.message;
         document.getElementById("loading-mtd-detail").innerText = errorMsg;
       }
-
-      // Xử lý Báo cáo Ngày (khi chọn ngày)
-      function onDailyDataLoaded(result) { // Nhận 'result' từ API
+      
+      function onDailyDataLoaded(result) { 
         document.getElementById("daily-filter-btn").disabled = false;
-        // Daily (ngày cũ): dính 2 cột, tô đỏ
         document.getElementById("daily-report-container").innerHTML = createHtmlTable(result.daily, 2, true);
       }
-
-      // Xử lý lỗi Báo cáo Ngày
+      
       function onDailyDataFailed(error) {
         document.getElementById("daily-filter-btn").disabled = false;
         document.getElementById("loading-daily").innerText = "Lỗi: " + error.message;
       }
 
+      // ===================================
+      // LOGIC VẼ BẢNG (Giữ nguyên)
+      // ===================================
 
-      /**
-      * HÀM TẠO BẢNG CHUẨN (CHO BC NGÀY & MTD CHI TIẾT)
-      * (Giữ nguyên như code của bạn)
-      */
       function createHtmlTable(dataArray, stickyColCount = 0, checkNonReporters = false) {
         if (!dataArray || dataArray.length < 2) { 
           return "<p class='loading-placeholder'>Không có dữ liệu báo cáo (hoặc không tìm thấy kết quả lọc).</p>";
         }
         
         let html = "<table><thead><tr>";
-        // Header
         dataArray[0].forEach((cell, index) => {
           let stickyClass = '';
           if (index < stickyColCount) stickyClass = `sticky-col-${index + 1}`;
-          let colClass = cell.includes("(%)") ? 'percent-col' : ''; // Thêm class cho cột %
+          let colClass = cell.includes("(%)") ? 'percent-col' : ''; 
           html += `<th class="${stickyClass} ${colClass}">${cell}</th>`;
         });
         html += "</tr></thead><tbody>";
         
-        // Body
         for (let i = 1; i < dataArray.length; i++) {
           const rowData = dataArray[i];
           const isTotalRow = (rowData[0] === "TỔNG CỘNG" || rowData[1] === "TỔNG CỘNG");
@@ -692,7 +870,7 @@
           rowData.forEach((cell, index) => {
             let stickyClass = '';
             if (index < stickyColCount) stickyClass = `sticky-col-${index + 1}`;
-            let colClass = dataArray[0][index].includes("(%)") ? 'percent-col' : ''; // Thêm class cho cột %
+            let colClass = dataArray[0][index].includes("(%)") ? 'percent-col' : ''; 
             html += `<td class="${stickyClass} ${colClass}">${cell}</td>`;
           });
           html += "</tr>";
@@ -701,40 +879,33 @@
         return html;
       }
 
-      /**
-      * HÀM MỚI: TẠO BẢNG MTD TỔNG HỢP (CÓ GỘP HEADER)
-      * (Giữ nguyên như code của bạn)
-      */
       function createMtdTotalTable(dataArray) {
         if (!dataArray || dataArray.length < 2) { 
           return "<p class='loading-placeholder'>Không có dữ liệu báo cáo.</p>";
         }
         
-        const headers = dataArray[0]; // ["Hạng", "Nhóm", "TVBH", "KHTN (TĐ)", "KHTN (CT)", ...]
+        const headers = dataArray[0]; 
         
         let html = "<table><thead>";
         
-        // --- HÀNG TIÊU ĐỀ 1 (GỘP) ---
         html += "<tr>";
-        html += `<th rowspan="2" class="sticky-col-1">${headers[0]}</th>`; // Hạng
-        html += `<th rowspan="2" class="sticky-col-2">${headers[1]}</th>`; // Nhóm
-        html += `<th rowspan="2" class="sticky-col-3">${headers[2]}</th>`; // TVBH
+        html += `<th rowspan="2" class="sticky-col-1">${headers[0]}</th>`; 
+        html += `<th rowspan="2" class="sticky-col-2">${headers[1]}</th>`; 
+        html += `<th rowspan="2" class="sticky-col-3">${headers[2]}</th>`; 
         html += `<th colspan="3">Khách Hàng Tiềm Năng</th>`;
         html += `<th colspan="3">Hợp Đồng</th>`;
         html += `<th colspan="3">Xuất Hóa Đơn</th>`;
         html += `<th colspan="3">Doanh Thu</th>`;
         html += "</tr>";
         
-        // --- HÀNG TIÊU ĐỀ 2 (CON) ---
         html += "<tr class='sub-header'>";
-        for (let i = 0; i < 4; i++) { // Lặp 4 nhóm (KHTN, HĐ, XHĐ, Doanh Thu)
-          html += `<th>${headers[3 + i*3].split('(')[1].replace(')', '')}</th>`; // TĐ
-          html += `<th>${headers[4 + i*3].split('(')[1].replace(')', '')}</th>`; // CT
-          html += `<th class="percent-col">${headers[5 + i*3].split('(')[1].replace(')', '')}</th>`; // %
+        for (let i = 0; i < 4; i++) { 
+          html += `<th>${headers[3 + i*3].split('(')[1].replace(')', '')}</th>`; 
+          html += `<th>${headers[4 + i*3].split('(')[1].replace(')', '')}</th>`; 
+          html += `<th class="percent-col">${headers[5 + i*3].split('(')[1].replace(')', '')}</th>`; 
         }
         html += "</tr></thead>";
         
-        // --- BODY ---
         html += "<tbody>";
         for (let i = 1; i < dataArray.length; i++) {
           const rowData = dataArray[i];
@@ -744,8 +915,8 @@
           html += `<tr class="${rowClass}">`; 
           rowData.forEach((cell, index) => {
             let stickyClass = '';
-            if (index < 3) stickyClass = `sticky-col-${index + 1}`; // Dính 3 cột
-            let colClass = [5, 8, 11, 14].includes(index) ? 'percent-col' : ''; // Cột %
+            if (index < 3) stickyClass = `sticky-col-${index + 1}`; 
+            let colClass = [5, 8, 11, 14].includes(index) ? 'percent-col' : ''; 
             html += `<td class="${stickyClass} ${colClass}">${cell}</td>`;
           });
           html += "</tr>";
@@ -755,7 +926,7 @@
       }
 
       // ===================================
-      // LOGIC XUẤT EXCEL (ĐÃ CHUYỂN SANG API)
+      // LOGIC XUẤT EXCEL (Giữ nguyên)
       // ===================================
       function exportToExcel() {
         const filters = {
@@ -771,12 +942,12 @@
         toggleFilterButtons(false, "Lọc"); 
         document.getElementById("export-btn").innerText = "Đang xuất...";
         
-        callApi('exportAllReports', { filters: filters }) // <--- ĐÃ SỬA
+        callApi('exportAllReports', { filters: filters }) 
           .then(onExportSuccess)
           .catch(onExportFailed);
       }
 
-      function onExportSuccess(result) { // Nhận 'result' từ API
+      function onExportSuccess(result) { 
         toggleFilterButtons(true); 
         document.getElementById("export-btn").innerText = "Excel";
         const exportStatus = document.getElementById("export-status");
@@ -801,11 +972,11 @@
       }
 
       // ===================================
-      // LOGIC TAB 1: FORM NHẬP LIỆU (ĐÃ CHUYỂN SANG API)
+      // LOGIC TAB 1: FORM NHẬP LIỆU (Giữ nguyên)
       // ===================================
 
       function loadFormInitData() {
-        callApi('getFormInitData') // <--- ĐÃ SỬA
+        callApi('getFormInitData') 
           .then(result => {
               groupData = result.groups || {};
               const groupSelectEntry = document.getElementById("group"); 
@@ -848,7 +1019,6 @@
               }
           })
           .catch(error => {
-              // Lỗi nghiêm trọng khi tải dữ liệu form
               console.error("Lỗi tải FormInitData:", error.message);
               document.getElementById("entry").innerHTML = `<p class='loading-placeholder'>Lỗi nghiêm trọng khi tải dữ liệu form: ${error.message}</p>`;
           });
@@ -911,13 +1081,13 @@
         dataStatus.innerText = "Đang tải dữ liệu của bạn...";
         clearForm(); 
 
-        callApi('getTodaysReportForTvbh', { tvbhName: tvbhName }) // <--- ĐÃ SỬA
-          .then(populateForm) // Hàm populateForm sẽ nhận 'result'
-          .catch(onMtdDetailDataFailed); // Dùng chung hàm báo lỗi
+        callApi('getTodaysReportForTvbh', { tvbhName: tvbhName }) 
+          .then(populateForm) 
+          .catch(onMtdDetailDataFailed); 
       }
 
-      function populateForm(result) { // Nhận 'result' từ API
-        const data = result.data; // Dữ liệu báo cáo nằm trong 'result.data'
+      function populateForm(result) { 
+        const data = result.data; 
         const dataStatus = document.getElementById("form-data-status");
         clearForm(); 
 
@@ -978,25 +1148,23 @@
           modelEntry[field] = input.value;
         });
 
-        callApi('submitDailyReport', formData) // <--- ĐÃ SỬA
+        callApi('submitDailyReport', formData) 
           .then(onSubmissionSuccess)
           .catch(onSubmissionFailed);
       }
 
-      function onSubmissionSuccess(result) { // Nhận 'result' từ API
+      function onSubmissionSuccess(result) { 
         const button = document.getElementById("submitButton");
         const status = document.getElementById("form-status");
         
         button.disabled = false; button.innerText = "Lưu Báo Cáo";
         
-        // API trả về { status: 'success', message: '...' }
         status.innerText = result.message;
         status.className = "success";
         status.style.display = "block";
         
-        // LÀM MỚI TẤT CẢ CÁC BẢNG (Cách đơn giản nhất)
-        loadInitialData(); // Tải lại 2 bảng chính
-        applyFilters(); // Tải lại bảng chi tiết với bộ lọc
+        loadInitialData(); 
+        applyFilters(); 
         
         setTimeout(() => {
           showTab('daily');
