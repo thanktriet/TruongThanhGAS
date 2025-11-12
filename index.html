@@ -1,36 +1,136 @@
 <!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
+<html>
+  <head>
+    <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập ERP</title>
-    <style>
-        body { font-family: Arial, sans-serif; display: grid; place-items: center; min-height: 100vh; background: #f4f4f4; }
-        form { background: #fff; border: 1px solid #ccc; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        div { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input { width: 300px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        #message { margin-top: 15px; text-align: center; }
-    </style>
-</head>
-<body>
+    <title>Đăng nhập - ERP System</title>
     
-    <form id="loginForm">
-        <h2>Đăng nhập hệ thống ERP</h2>
-        <div>
-            <label for="username">Tên đăng nhập:</label>
-            <input type="text" id="username" name="username" required>
+    <link rel="stylesheet" href="style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  </head>
+  
+  <body class="login-page">
+    
+    <div class="login-container">
+      
+      <div class="login-left">
+        <div class="login-logo">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Logo_of_VinFast_%283D%29.svg/465px-Logo_of_VinFast_%283D%29.svg.png" alt="Logo">
         </div>
-        <div>
-            <label for="password">Mật khẩu:</label>
-            <input type="password" id="password" name="password" required>
+        <h1>VinFast Trương Thành</h1>
+        <p>Owners<br>Triet Minh Truong</p>
+        <div class="contact-info">
+          info@vinfastkiengiang.vn
         </div>
-        <button type="submit" id="loginButton">Đăng nhập</button>
-        <div id="message"></div>
-    </form>
+      </div>
+      
+      <div class="login-right">
+        <h2>Nhập tài khoản mật khẩu của bạn để đăng nhập.</h2>
+        
+        <form id="login-form" class="login-form">
+          <div class="form-group-login">
+            <input type="text" id="username" placeholder="TÀI KHOẢN" required>
+            <span class="checkmark-icon" id="username-checkmark"><i class="fas fa-check-circle"></i></span>
+          </div>
+          
+          <div class="form-group-login">
+            <input type="password" id="password" placeholder="MẬT KHẨU" required>
+          </div>
+          
+          <button type="submit" id="login-button" class="login-button">
+            ĐĂNG NHẬP <i class="fas fa-arrow-right"></i>
+          </button>
+          
+          <div id="login-status"></div>
+        </form>
+        
+        <div class="login-footer">
+          <a href="#">Quên mật khẩu?</a>
+          <span>•</span>
+          <a href="#">Điều khoản sử dụng</a>
+        </div>
+      </div>
+      
+    </div>
 
-    <script src="script.js"></script>
-</body>
+    <script>
+      // URL API (file Code.gs) của bạn
+      const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyUS4aLRcEjqZfM_71ytnS4rH9mGOFoH-RrTQ_c5sgxlrNtmCQC7e_Ls5paCRt1eimPQQ/exec';
+
+      // Chuyển hướng nếu đã đăng nhập rồi (tránh login lại)
+      if (localStorage.getItem('sessionToken')) {
+          window.location.href = 'dashboard.html';
+      }
+      
+      const loginForm = document.getElementById('login-form');
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+      const loginButton = document.getElementById('login-button');
+      const loginStatus = document.getElementById('login-status');
+      
+      // Gắn sự kiện submit cho form
+      loginForm.addEventListener('submit', handleLogin);
+
+      /**
+       * Hàm xử lý sự kiện submit form
+       */
+      async function handleLogin(event) {
+        event.preventDefault(); // Ngăn form submit mặc định
+
+        // Lấy giá trị và vô hiệu hóa nút
+        const username = usernameInput.value;
+        const password = passwordInput.value;
+        loginButton.disabled = true;
+        loginButton.innerHTML = 'LOGGING IN...'; // Cập nhật text của nút
+        loginStatus.textContent = ''; // Xóa lỗi cũ
+
+        try {
+          // Chuẩn bị dữ liệu gửi lên API
+          const data = {
+              action: 'login', // Quan trọng: Phải khớp với 'case' trong Code.gs
+              username: username,
+              password: password
+          };
+
+          // Gọi API của Apps Script bằng fetch
+          const response = await fetch(GAS_WEB_APP_URL, {
+              method: 'POST',
+              mode: 'cors',
+              headers: {
+                  'Content-Type': 'text/plain;charset=utf-8',
+              },
+              body: JSON.stringify(data) // Gửi dữ liệu dưới dạng chuỗi JSON
+          });
+
+          const result = await response.json();
+
+          if (result.status === 'success' && result.token) {
+              // ĐĂNG NHẬP THÀNH CÔNG
+              // 1. Lưu "vé" (token) vào bộ nhớ trình duyệt
+              localStorage.setItem('sessionToken', result.token);
+              
+              // 2. Cập nhật nút và chuyển hướng
+              loginButton.innerHTML = 'SUCCESS <i class="fas fa-check"></i>';
+              
+              // 3. Chuyển hướng đến trang dashboard sau 1 giây
+              setTimeout(() => {
+                  window.location.href = 'dashboard.html';
+              }, 1000);
+
+          } else {
+              // ĐĂNG NHẬP THẤT BẠI
+              throw new Error(result.message || 'Sai tên đăng nhập hoặc mật khẩu');
+          }
+
+        } catch (error) {
+          // XỬ LÝ LỖI (vd: Sai mật khẩu, mạng rớt)
+          loginStatus.textContent = error.message;
+          loginButton.disabled = false;
+          loginButton.innerHTML = 'LOGIN <i class="fas fa-arrow-right"></i>';
+        }
+      }
+    </script>
+    
+  </body>
 </html>
