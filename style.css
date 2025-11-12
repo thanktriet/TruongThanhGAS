@@ -1,5 +1,5 @@
 /* =================================== */
-/* CSS CHÍNH: LAYOUT & NỘI DUNG
+/* CSS CHÍNH (Layout "Top-bar + Tabs")
 /* =================================== */
 :root {
   --primary-color: #005B9A; --primary-light: #E6F0F8; --accent-color: #0d6efd;
@@ -7,79 +7,39 @@
   --border-color: #dee2e6; --text-color: #212529; --text-light: #6c757d;
   --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 6px 12px rgba(0,0,0,0.08);
   --border-radius: 12px;
-  --sidebar-width: 240px;
   --topbar-height: 60px;
 }
 html { box-sizing: border-box; }
 *, *:before, *:after { box-sizing: inherit; }
 
-/* === 1. LAYOUT CHÍNH (VỎ BỌC) === */
 body { 
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
   margin: 0; 
   color: var(--text-color);
-  display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr;
-  grid-template-rows: var(--topbar-height) 1fr;
-  grid-template-areas:
-    "sidebar topbar"
-    "sidebar content";
+  background-color: var(--bg-color);
+  display: flex;
+  flex-direction: column;
   height: 100vh;
   overflow: hidden; /* Ngăn body cuộn */
 }
 
-.sidebar {
-  grid-area: sidebar;
-  background: #1e293b; /* Màu tối */
-  color: #cbd5e1;
-  padding: 20px 15px;
-  display: flex;
-  flex-direction: column;
-}
-.sidebar-header {
-  font-size: 1.5em;
-  font-weight: 700;
-  color: #fff;
-  text-align: center;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #334155;
-  margin-bottom: 20px;
-}
-.sidebar-menu {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  flex-grow: 1;
-}
-.sidebar-menu li a {
-  display: block;
-  padding: 12px 15px;
-  color: #cbd5e1;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 500;
-  margin-bottom: 5px;
-  transition: all 0.2s ease;
-}
-.sidebar-menu li a:hover {
-  background-color: #334155;
-  color: #fff;
-}
-.sidebar-menu li a.active {
-  background-color: var(--primary-color);
-  color: #fff;
-  font-weight: 600;
-}
-
+/* === 1. TOP BAR (MỚI) === */
 .top-bar {
-  grid-area: topbar;
   background: #fff;
   border-bottom: 1px solid var(--border-color);
   display: flex;
-  justify-content: flex-end; /* Đẩy nội dung sang phải */
+  justify-content: space-between; /* Logo bên trái, User bên phải */
   align-items: center;
-  padding: 0 30px;
+  padding: 0 20px;
+  height: var(--topbar-height);
+  flex-shrink: 0; /* Không co lại */
   box-shadow: var(--shadow-sm);
+  z-index: 1001;
+}
+.top-bar-logo {
+  font-size: 1.4em;
+  font-weight: 700;
+  color: var(--primary-color);
 }
 .user-info {
   display: flex;
@@ -89,6 +49,7 @@ body {
 #username-display {
   font-weight: 600;
   color: var(--text-color);
+  font-size: 0.9em;
 }
 #logout-button {
   background-color: var(--danger-color);
@@ -103,18 +64,62 @@ body {
 }
 #logout-button:hover { background-color: #c82333; }
 
-.content-area {
-  grid-area: content;
-  overflow-y: auto; /* CHỈ VÙNG NÀY ĐƯỢC CUỘN */
-  overflow-x: hidden;
-  background-color: var(--bg-color);
-  padding: 20px; /* Thêm padding cho vùng nội dung */
+/* === 2. TAB NAVIGATION (MỚI) === */
+.tab-nav {
+  display: flex; 
+  background-color: #fff; 
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0; /* Không co lại */
+  z-index: 1000;
+  border-bottom: 1px solid var(--border-color);
+}
+.tab-button {
+  flex: 1; 
+  padding: 16px 5px; 
+  text-align: center; 
+  cursor: pointer;
+  font-weight: 600; 
+  color: var(--text-light); 
+  border: none;
+  background-color: transparent; 
+  font-size: 0.9em;
+  transition: all 0.2s ease-in-out; 
+  border-bottom: 4px solid transparent;
+  white-space: nowrap;
+}
+.tab-button:hover { 
+  background-color: var(--primary-light); 
+  color: var(--primary-color); 
+}
+.tab-button.active { 
+  color: var(--primary-color); 
+  border-bottom: 4px solid var(--primary-color); 
 }
 
+/* === 3. CONTENT AREA (MỚI) === */
+.content-area {
+  flex-grow: 1; /* Lấp đầy phần còn lại */
+  overflow-y: auto; /* CHỈ VÙNG NÀY ĐƯỢC CUỘN */
+  overflow-x: hidden;
+  padding: 20px;
+}
 
-/* === 2. CSS NỘI DUNG (BÁO CÁO) === */
+/* === 4. CSS NỘI DUNG (BÁO CÁO) === */
+.tab-content { display: none; padding: 0 5px; animation: fadeIn 0.4s ease; }
+.tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* --- THANH BỘ LỌC --- */
+.card {
+  background-color: #fff; border-radius: var(--border-radius); box-shadow: var(--shadow-md);
+  padding: 25px; margin: 0 auto 20px auto; max-width: 1300px;
+  border: 1px solid var(--border-color); overflow: hidden;
+}
+.card-form { max-width: 700px; }
+
+h2 { color: var(--primary-color); text-align: center; margin-top: 0; margin-bottom: 10px; font-weight: 700; }
+.subtitle { text-align: center; margin-top: -5px; margin-bottom: 25px; color: var(--text-light); font-size: 0.95em; }
+
+/* --- BỘ LỌC --- */
 .filter-bar {
   background-color: var(--bg-color);
   padding: 10px;
@@ -130,10 +135,7 @@ body {
   grid-template-columns: 1fr 150px;
   max-width: 400px;
 }
-.filter-group {
-  display: flex;
-  flex-direction: column;
-}
+.filter-group { display: flex; flex-direction: column; }
 .filter-group label {
   font-size: 0.8em;
   font-weight: 600;
@@ -147,10 +149,7 @@ body {
   background-color: #fff;
   box-sizing: border-box;
 }
-.filter-buttons {
-  display: flex;
-  gap: 10px;
-}
+.filter-buttons { display: flex; gap: 10px; }
 .filter-button, .reset-button, .export-button {
   padding: 8px 12px; border-radius: 8px;
   border: none; cursor: pointer;
@@ -169,51 +168,18 @@ body {
   border: 1px solid var(--border-color);
 }
 .reset-button:hover { background-color: #e9ecef; }
-
 .export-button {
   background-color: var(--success-color);
   color: white;
 }
 .export-button:hover { background-color: #157347; }
-
 .filter-button:disabled, .reset-button:disabled, .export-button:disabled {
   background-color: #aaa;
   cursor: not-allowed;
   border-color: #aaa;
 }
 
-/* --- THANH ĐIỀU HƯỚNG TAB --- */
-.tab-nav {
-  display: flex; background-color: #fff; box-shadow: var(--shadow-sm);
-  /* Sticky top = 0 (so với .content-area) */
-  position: -webkit-sticky; position: sticky; top: -20px; /* Dính vào top của .content-area */
-  margin: -20px -20px 20px -20px; /* Mở rộng ra để dính sát mép */
-  z-index: 1000;
-}
-.tab-button {
-  flex: 1; padding: 16px 5px; text-align: center; cursor: pointer;
-  font-weight: 600; color: var(--text-light); border: none;
-  background-color: transparent; font-size: 0.9em;
-  transition: all 0.2s ease-in-out; border-bottom: 4px solid transparent;
-  white-space: nowrap;
-}
-.tab-button:hover { background-color: var(--primary-light); color: var(--primary-color); }
-.tab-button.active { color: var(--primary-color); border-bottom: 4px solid var(--primary-color); }
-
-.tab-content { display: none; padding: 0 5px; /* Giảm padding ngang mặc định */ animation: fadeIn 0.4s ease; }
-.tab-content.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-.card {
-  background-color: #fff; border-radius: var(--border-radius); box-shadow: var(--shadow-md);
-  padding: 25px; margin: 0 auto 20px auto; max-width: 1300px;
-  border: 1px solid var(--border-color); overflow: hidden;
-}
-.card-form { max-width: 700px; }
-
-h2 { color: var(--primary-color); text-align: center; margin-top: 0; margin-bottom: 10px; font-weight: 700; }
-.subtitle { text-align: center; margin-top: -5px; margin-bottom: 25px; color: var(--text-light); font-size: 0.95em; }
-
+/* --- BẢNG (TABLE) --- */
 .table-container {
   overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; 
   max-height: 65vh; 
@@ -225,14 +191,12 @@ th, td {
   border: 1px solid var(--border-color); padding: 14px 16px; 
   text-align: left; min-width: 130px; vertical-align: middle;
 }
-
-/* --- CSS TIÊU ĐỀ BẢNG --- */
 thead th {
   background-color: var(--primary-light);
   font-weight: 600;
   color: var(--primary-color);
   position: -webkit-sticky; position: sticky;
-  top: 0; /* Hàng đầu tiên dính ở top (so với .table-container) */
+  top: 0; 
   z-index: 10;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   text-align: center; 
@@ -243,18 +207,17 @@ thead th[colspan] {
   z-index: 11;
 }
 thead .sub-header th {
-  top: 51px; /* Dính bên dưới hàng đầu tiên (giả sử hàng đầu 51px) */
+  top: 51px;
   font-size: 0.9em;
   padding: 10px 12px;
   min-width: 80px; 
   max-width: 80px;
 }
-
 tbody tr { transition: background-color 0.15s ease; }
 tbody tr:nth-child(even) { background-color: #fdfdfd; }
 tbody tr:hover { background-color: #f0f6ff; }
 
-/* --- CỐ ĐỊNH CỘT --- */
+/* Cột dính */
 .sticky-col-1, .sticky-col-2, .sticky-col-3 {
   position: -webkit-sticky; position: sticky;
   background-color: #fff; z-index: 5; 
@@ -281,6 +244,7 @@ thead th.sticky-col-1 { z-index: 13; }
 thead th.sticky-col-2 { z-index: 12; }
 thead th.sticky-col-3 { z-index: 12; }
 
+/* Dòng đặc biệt */
 tbody tr.total-row { background-color: var(--primary-light); font-weight: 700; color: var(--primary-color); }
 tbody tr.total-row .sticky-col-1,
 tbody tr.total-row .sticky-col-2,
@@ -299,7 +263,7 @@ tbody tr.not-reported:hover td {
     background-color: #fadadd; 
 }
 
-/* Cột Hạng (MTD Tổng) */
+/* Cột đặc biệt */
 #mtd-total-report-container th:first-child,
 #mtd-total-report-container td:first-child {
   text-align: center;
@@ -310,7 +274,6 @@ tbody tr.not-reported:hover td {
 #mtd-total-report-container .sticky-col-2 { left: 80px; }
 #mtd-total-report-container .sticky-col-3 { left: 210px; }
 
-/* Cột % */
 .percent-col {
   background-color: #f8f9fa !important; 
   font-weight: 600;
@@ -358,13 +321,13 @@ tbody tr.not-reported .percent-col {
 .form-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4); }
 .form-button:disabled { background: #aaa; transform: none; box-shadow: none; cursor: not-allowed; }
 
+/* Trạng thái loading/status */
 .loading-placeholder { font-size: 1.1em; text-align: center; padding: 40px 20px; color: var(--text-light); font-style: italic; }
 #form-data-status {
   font-style: italic; color: var(--text-light); margin-bottom: 25px; text-align: center;
   padding: 12px; background-color: var(--bg-color); border-radius: 8px;
   border: 1px dashed var(--border-color);
 }
-
 #form-status, #export-status {
   text-align: center; font-weight: 600; margin-top: 15px;
   padding: 10px; border-radius: 8px; display: none;
@@ -374,51 +337,46 @@ tbody tr.not-reported .percent-col {
 
 
 /* =================================== */
-/* 3. CSS CHO DI ĐỘNG (MEDIA QUERY) 
-/* ĐÃ GỘP VÀ SỬA LỖI
+/* 5. CSS CHO DI ĐỘNG (MEDIA QUERY) 
 /* =================================== */
 @media (max-width: 768px) {
   
   /* Layout chính */
   body {
-    grid-template-columns: 1fr; /* Sidebar ẩn */
-    grid-template-rows: var(--topbar-height) 1fr;
-    grid-template-areas:
-      "topbar"
-      "content";
-    overflow: auto; /* Cho phép cuộn trên di động */
-  }
-  .sidebar {
-    display: none; /* Ẩn sidebar trên di động */
+    overflow: auto; /* Cho phép body cuộn */
   }
   .top-bar {
     padding: 0 15px;
+    height: 50px; /* Giảm chiều cao thanh top */
+  }
+  .top-bar-logo {
+    font-size: 1.1em;
+  }
+  #username-display {
+    display: none; /* Ẩn tên user cho gọn */
   }
   .content-area {
-    padding: 0; /* Xóa padding của content-area */
+    padding: 15px; /* Thêm padding lại cho content */
   }
   
   /* Tab Nav (Sticky trên di động) */
   .tab-nav {
-    margin: 0; /* Xóa margin âm */
-    top: 0; /* Dính sát top của .content-area */
+    position: -webkit-sticky; 
+    position: sticky;
+    top: 0; /* Dính sát top (sau top-bar, vì body cuộn) */
   }
   .tab-button { 
     font-size: 0.8em; 
     padding: 12px 3px; 
+    font-weight: 500;
   }
   
   /* Card (nội dung) */
   .card { 
     padding: 15px; 
-    border-radius: 0; 
-    border-left: 0; 
-    border-right: 0; 
-    box-shadow: none; 
-    margin-bottom: 15px;
   }
   .tab-content { 
-    padding: 0; /* Xóa padding của tab-content */
+    padding: 0; 
   }
   
   /* Bảng & Tiêu đề */
@@ -430,8 +388,7 @@ tbody tr.not-reported .percent-col {
 
   /* Form */
   .filter-bar { 
-    grid-template-columns: 1fr 1fr; 
-    border-radius: 0;
+    grid-template-columns: 1fr; /* 1 cột */
   }
   .daily-filter-bar { grid-template-columns: 1fr 100px; }
   .filter-buttons { grid-column: 1 / -1; }
