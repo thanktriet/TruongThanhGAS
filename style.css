@@ -1,5 +1,5 @@
 /* =================================== */
-/* CSS MỚI: CHO LAYOUT CHÍNH (VỎ BỌC) */
+/* CSS CHÍNH: LAYOUT & NỘI DUNG
 /* =================================== */
 :root {
   --primary-color: #005B9A; --primary-light: #E6F0F8; --accent-color: #0d6efd;
@@ -13,9 +13,7 @@
 html { box-sizing: border-box; }
 *, *:before, *:after { box-sizing: inherit; }
 
-/* BỘ CHỌN QUAN TRỌNG NHẤT (ĐÃ SỬA LỖI): 
-  Áp dụng grid cho BODY, là cha trực tiếp của .sidebar, .top-bar, .content-area
-*/
+/* === 1. LAYOUT CHÍNH (VỎ BỌC) === */
 body { 
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
   margin: 0; 
@@ -113,29 +111,8 @@ body {
   padding: 20px; /* Thêm padding cho vùng nội dung */
 }
 
-@media (max-width: 768px) {
-  body {
-    grid-template-columns: 1fr; /* Sidebar ẩn */
-    grid-template-rows: var(--topbar-height) 1fr;
-    grid-template-areas:
-      "topbar"
-      "content";
-    overflow: auto; /* Cho phép cuộn trên di động */
-  }
-  .sidebar {
-    display: none; /* Ẩn sidebar trên di động */
-  }
-  .top-bar {
-    padding: 0 15px;
-  }
-  .content-area {
-    padding: 15px 0; /* Xóa padding ngang trên di động */
-  }
-}
 
-/* =================================== */
-/* CSS CŨ: CHO NỘI DUNG BÁO CÁO (RUỘT) */
-/* =================================== */
+/* === 2. CSS NỘI DUNG (BÁO CÁO) === */
 
 /* --- THANH BỘ LỌC --- */
 .filter-bar {
@@ -209,7 +186,9 @@ body {
 .tab-nav {
   display: flex; background-color: #fff; box-shadow: var(--shadow-sm);
   /* Sticky top = 0 (so với .content-area) */
-  position: -webkit-sticky; position: sticky; top: 0; z-index: 1000;
+  position: -webkit-sticky; position: sticky; top: -20px; /* Dính vào top của .content-area */
+  margin: -20px -20px 20px -20px; /* Mở rộng ra để dính sát mép */
+  z-index: 1000;
 }
 .tab-button {
   flex: 1; padding: 16px 5px; text-align: center; cursor: pointer;
@@ -221,13 +200,13 @@ body {
 .tab-button:hover { background-color: var(--primary-light); color: var(--primary-color); }
 .tab-button.active { color: var(--primary-color); border-bottom: 4px solid var(--primary-color); }
 
-.tab-content { display: none; padding: 25px 15px; animation: fadeIn 0.4s ease; }
+.tab-content { display: none; padding: 0 5px; /* Giảm padding ngang mặc định */ animation: fadeIn 0.4s ease; }
 .tab-content.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .card {
   background-color: #fff; border-radius: var(--border-radius); box-shadow: var(--shadow-md);
-  padding: 25px; margin: 0 auto; max-width: 1300px;
+  padding: 25px; margin: 0 auto 20px auto; max-width: 1300px;
   border: 1px solid var(--border-color); overflow: hidden;
 }
 .card-form { max-width: 700px; }
@@ -237,7 +216,6 @@ h2 { color: var(--primary-color); text-align: center; margin-top: 0; margin-bott
 
 .table-container {
   overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; 
-  /* Giảm max-height để vừa vặn hơn trong layout mới */
   max-height: 65vh; 
   overflow-y: auto; border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
@@ -248,7 +226,7 @@ th, td {
   text-align: left; min-width: 130px; vertical-align: middle;
 }
 
-/* --- CSS TIÊU ĐỀ BẢNG (NÂNG CẤP) --- */
+/* --- CSS TIÊU ĐỀ BẢNG --- */
 thead th {
   background-color: var(--primary-light);
   font-weight: 600;
@@ -257,20 +235,18 @@ thead th {
   top: 0; /* Hàng đầu tiên dính ở top (so với .table-container) */
   z-index: 10;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-  text-align: center; /* Căn giữa tiêu đề */
+  text-align: center; 
   vertical-align: middle;
 }
-/* Tiêu đề nhóm chính (dòng 1) */
 thead th[colspan] {
-  background-color: #dceaf9; /* Màu xanh nhạt hơn */
+  background-color: #dceaf9; 
   z-index: 11;
 }
-/* Tiêu đề con (dòng 2) */
 thead .sub-header th {
   top: 51px; /* Dính bên dưới hàng đầu tiên (giả sử hàng đầu 51px) */
   font-size: 0.9em;
   padding: 10px 12px;
-  min-width: 80px; /* Cho phép cột TĐ, CT, % nhỏ hơn */
+  min-width: 80px; 
   max-width: 80px;
 }
 
@@ -278,14 +254,14 @@ tbody tr { transition: background-color 0.15s ease; }
 tbody tr:nth-child(even) { background-color: #fdfdfd; }
 tbody tr:hover { background-color: #f0f6ff; }
 
-/* --- CỐ ĐỊNH CỘT (ĐÃ CẬP NHẬT 3 CỘT) --- */
+/* --- CỐ ĐỊNH CỘT --- */
 .sticky-col-1, .sticky-col-2, .sticky-col-3 {
   position: -webkit-sticky; position: sticky;
   background-color: #fff; z-index: 5; 
 }
 .sticky-col-1 { left: 0; }
-.sticky-col-2 { left: 80px; } /* Cột Hạng (80px) */
-.sticky-col-3 { left: 210px; } /* Hạng (80) + Nhóm (130) */
+.sticky-col-2 { left: 80px; } 
+.sticky-col-3 { left: 210px; } 
 
 tbody tr:nth-child(even) .sticky-col-1,
 tbody tr:nth-child(even) .sticky-col-2,
@@ -295,11 +271,10 @@ tbody tr:hover .sticky-col-1,
 tbody tr:hover .sticky-col-2,
 tbody tr:hover .sticky-col-3 { background-color: #f0f6ff; }
 
-/* Tiêu đề dính (cho cả 2 hàng) */
 thead th.sticky-col-1,
 thead th.sticky-col-2,
 thead th.sticky-col-3 {
-  z-index: 12; /* Nổi trên các tiêu đề cuộn */
+  z-index: 12; 
   border-right: 2px solid #c0d8f0;
 }
 thead th.sticky-col-1 { z-index: 13; }
@@ -311,7 +286,6 @@ tbody tr.total-row .sticky-col-1,
 tbody tr.total-row .sticky-col-2,
 tbody tr.total-row .sticky-col-3 { background-color: var(--primary-light); }
 
-/* --- CSS CHO HÀNG KHÔNG BÁO CÁO --- */
 tbody tr.not-reported td {
   color: var(--danger-color); 
   background-color: #fdecea; 
@@ -325,7 +299,7 @@ tbody tr.not-reported:hover td {
     background-color: #fadadd; 
 }
 
-/* --- CSS CHO CỘT XẾP HẠNG (MỚI) --- */
+/* Cột Hạng (MTD Tổng) */
 #mtd-total-report-container th:first-child,
 #mtd-total-report-container td:first-child {
   text-align: center;
@@ -333,11 +307,10 @@ tbody tr.not-reported:hover td {
   min-width: 80px; 
   max-width: 80px;
 }
-/* Ghi đè vị trí dính cho bảng MTD Tổng */
 #mtd-total-report-container .sticky-col-2 { left: 80px; }
 #mtd-total-report-container .sticky-col-3 { left: 210px; }
 
-/* --- CSS CHO CỘT % (MỚI) --- */
+/* Cột % */
 .percent-col {
   background-color: #f8f9fa !important; 
   font-weight: 600;
@@ -399,13 +372,80 @@ tbody tr.not-reported .percent-col {
 #form-status.success, #export-status.success { color: var(--success-color); background-color: #e8f5e9; display: block; }
 #form-status.error, #export-status.error { color: var(--danger-color); background-color: #fdecea; display: block; }
 
+
+/* =================================== */
+/* 3. CSS CHO DI ĐỘNG (MEDIA QUERY) 
+/* ĐÃ GỘP VÀ SỬA LỖI
+/* =================================== */
 @media (max-width: 768px) {
-  /* ... (CSS media query cũ của bạn giữ nguyên) ... */
-  .tab-content { padding: 15px 15px 0 15px; } /* Thêm padding cho card trên di động */
-  .card { padding: 15px; }
+  
+  /* Layout chính */
+  body {
+    grid-template-columns: 1fr; /* Sidebar ẩn */
+    grid-template-rows: var(--topbar-height) 1fr;
+    grid-template-areas:
+      "topbar"
+      "content";
+    overflow: auto; /* Cho phép cuộn trên di động */
+  }
+  .sidebar {
+    display: none; /* Ẩn sidebar trên di động */
+  }
+  .top-bar {
+    padding: 0 15px;
+  }
+  .content-area {
+    padding: 0; /* Xóa padding của content-area */
+  }
+  
+  /* Tab Nav (Sticky trên di động) */
+  .tab-nav {
+    margin: 0; /* Xóa margin âm */
+    top: 0; /* Dính sát top của .content-area */
+  }
+  .tab-button { 
+    font-size: 0.8em; 
+    padding: 12px 3px; 
+  }
+  
+  /* Card (nội dung) */
+  .card { 
+    padding: 15px; 
+    border-radius: 0; 
+    border-left: 0; 
+    border-right: 0; 
+    box-shadow: none; 
+    margin-bottom: 15px;
+  }
+  .tab-content { 
+    padding: 0; /* Xóa padding của tab-content */
+  }
+  
+  /* Bảng & Tiêu đề */
+  h2 { font-size: 1.4em; }
+  th, td { 
+    padding: 10px 12px; 
+    min-width: 110px; /* Giảm min-width */
+  }
+
+  /* Form */
+  .filter-bar { 
+    grid-template-columns: 1fr 1fr; 
+    border-radius: 0;
+  }
+  .daily-filter-bar { grid-template-columns: 1fr 100px; }
+  .filter-buttons { grid-column: 1 / -1; }
+  .input-grid { grid-template-columns: 1fr; } 
+
+  /* Sticky Columns (quan trọng) */
+  .sticky-col-2 { left: 110px; } 
+  .sticky-col-3 { left: 220px; } 
   
   #mtd-total-report-container th:first-child,
-  #mtd-total-report-container td:first-child { min-width: 60px; max-width: 60px; }
+  #mtd-total-report-container td:first-child { 
+    min-width: 60px; 
+    max-width: 60px; 
+  }
   #mtd-total-report-container .sticky-col-2 { left: 60px; }
   #mtd-total-report-container .sticky-col-3 { left: 170px; } /* 60 + 110 */
 }
