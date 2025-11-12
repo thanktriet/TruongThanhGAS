@@ -25,7 +25,7 @@
 .login-left {
   flex: 1; 
   background-color: #1A1A1A; /* Màu đen tuyền của VinFast */
-  background-image: url('https://i.imgur.com/8Fk6bSj.png'); /* Ảnh nền mờ mờ chữ */
+  background-image: url('https://vinfastvietnam.com.vn/wp-content/uploads/2024/08/bannervinfastvietnam.jpg'); /* Ảnh nền mờ mờ chữ */
   background-blend-mode: overlay; /* Trộn ảnh vào nền đen */
   background-size: cover;
   background-position: center;
