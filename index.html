@@ -15,12 +15,19 @@
     <div class="login-container">
       
       <div class="login-left">
-        <div class="login-logo">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Logo_of_VinFast_%283D%29.svg/465px-Logo_of_VinFast_%283D%29.svg.png" alt="Logo">
+        
+        <div class="login-left-content">
+          <div class="login-logo">
+              <img src="https://vinfastauto.com/themes/porto/img/logo-vinfast-white.svg" alt="VinFast Logo">
+          </div>
+          
+          <h1 class="login-left-title">VinFast Trường Thành</h1>
+          
+          <p class="login-left-subtitle">Owners</p>
+          <p class="login-left-owner">Triet Minh Truong</p>
         </div>
-        <h1>VinFast Trương Thành</h1>
-        <p>Owners<br>Triet Minh Truong</p>
-        <div class="contact-info">
+        
+        <div class="login-left-contact">
           info@vinfastkiengiang.vn
         </div>
       </div>
@@ -31,7 +38,6 @@
         <form id="login-form" class="login-form">
           <div class="form-group-login">
             <input type="text" id="username" placeholder="TÀI KHOẢN" required>
-            <span class="checkmark-icon" id="username-checkmark"><i class="fas fa-check-circle"></i></span>
           </div>
           
           <div class="form-group-login">
@@ -82,7 +88,7 @@
         const username = usernameInput.value;
         const password = passwordInput.value;
         loginButton.disabled = true;
-        loginButton.innerHTML = 'LOGGING IN...'; // Cập nhật text của nút
+        loginButton.innerHTML = 'ĐANG XỬ LÝ...'; // Cập nhật text của nút
         loginStatus.textContent = ''; // Xóa lỗi cũ
 
         try {
@@ -111,7 +117,7 @@
               localStorage.setItem('sessionToken', result.token);
               
               // 2. Cập nhật nút và chuyển hướng
-              loginButton.innerHTML = 'SUCCESS <i class="fas fa-check"></i>';
+              loginButton.innerHTML = 'THÀNH CÔNG <i class="fas fa-check"></i>';
               
               // 3. Chuyển hướng đến trang dashboard sau 1 giây
               setTimeout(() => {
@@ -127,7 +133,7 @@
           // XỬ LÝ LỖI (vd: Sai mật khẩu, mạng rớt)
           loginStatus.textContent = error.message;
           loginButton.disabled = false;
-          loginButton.innerHTML = 'LOGIN <i class="fas fa-arrow-right"></i>';
+          loginButton.innerHTML = 'ĐĂNG NHẬP <i class="fas fa-arrow-right"></i>';
         }
       }
     </script>
