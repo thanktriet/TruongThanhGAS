@@ -1,12 +1,11 @@
 /*
  * File: dashboard.js
- * ĐÃ VIẾT LẠI HOÀN TOÀN ĐỂ SỬ DỤNG API (FETCH) THAY VÌ GOOGLE.SCRIPT.RUN
+ * ĐÃ GỘP LOGIC BẢO MẬT (VerifyToken, Logout) VÀ LOGIC BÁO CÁO
  */
 
 // ===================================
 // CẤU HÌNH API
 // ===================================
-// Đây là link Web App của Code.gs (đã có từ các bước trước)
 const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyUS4aLRcEjqZfM_71ytnS4rH9mGOFoH-RrTQ_c5sgxlrNtmCQC7e_Ls5paCRt1eimPQQ/exec';
 
 // Biến toàn cục
@@ -14,7 +13,7 @@ let groupData = {};
 let carModelList = [];
 
 // ===================================
-// HÀM GỌI API TRỢ GIÚP (Hàm Mới)
+// HÀM GỌI API TRỢ GIÚP (Quan trọng)
 // ===================================
 /**
  * Hàm trợ giúp để gọi API (doPost) một cách nhất quán
@@ -37,7 +36,7 @@ async function callApi(action, payload = {}) {
     method: 'POST',
     mode: 'cors',
     headers: {
-      'Content-Type': 'text/plain;charset=utf-8', // Apps Script thường nhận text/plain
+      'Content-Type': 'text/plain;charset=utf-8',
     },
     body: JSON.stringify({
       action: action,  // Hành động mà Code.gs router sẽ bắt
@@ -59,25 +58,72 @@ async function callApi(action, payload = {}) {
     throw new Error(result.message);
   }
 
-  return result; // Trả về dữ liệu nếu thành công (vd: result.daily, result.mtdTotal)
+  return result; // Trả về dữ liệu nếu thành công
 }
 
 
 // ===================================
-// KHỞI CHẠY KHI TẢI TRANG
+// KHỞI CHẠY KHI TẢI TRANG (ĐÃ CẬP NHẬT)
 // ===================================
 document.addEventListener("DOMContentLoaded", function() {
-  loadInitialData(); // Tải 2 báo cáo đầu
-  loadMtdDetailReport({}); // Tải MTD Chi tiết (không lọc)
-  loadFormInitData(); // Tải dữ liệu cho Form và Bộ Lọc
+  // 1. Kiểm tra bảo mật (HÀM MỚI)
+  verifyLogin();
+  
+  // 2. Gắn sự kiện cho nút Logout (HÀM MỚI)
+  document.getElementById('logout-button').addEventListener('click', handleLogout);
+
+  // 3. Tải dữ liệu báo cáo (Hàm cũ)
+  loadInitialData(); 
+  loadMtdDetailReport({}); 
+  loadFormInitData(); 
   
   document.getElementById('entry-title').innerText = 'Báo Cáo Ngày ' + new Date().toLocaleDateString('vi-VN');
-  setDatePickerToToday(); // Đặt ngày mặc định
-  showTab('daily'); // Bắt đầu ở tab 'daily'
+  setDatePickerToToday(); 
+  showTab('daily'); 
 });
 
 // ===================================
-// LOGIC TAB
+// LOGIC BẢO MẬT (HÀM MỚI)
+// ===================================
+
+/**
+ * Kiểm tra token khi tải trang, hiển thị tên user
+ */
+function verifyLogin() {
+  // Dùng callApi để tự động kiểm tra token
+  callApi('verifyToken') // Cần action 'verifyToken' trong Code.gs
+    .then(result => {
+      // Nếu thành công, 'result' sẽ chứa { status: 'success', username: '...' }
+      document.getElementById('username-display').textContent = result.username;
+    })
+    .catch(error => {
+      // Nếu lỗi (vd: token hết hạn), callApi đã tự xử lý chuyển hướng
+      console.error("Lỗi xác thực:", error.message);
+    });
+}
+
+/**
+ * Xử lý đăng xuất
+ */
+function handleLogout() {
+  const token = localStorage.getItem('sessionToken');
+  if (!token) {
+      window.location.href = 'index.html';
+      return;
+  }
+
+  // Báo cho backend biết để xóa token (không bắt buộc nhưng nên làm)
+  callApi('logout')
+    .catch(error => console.error("Lỗi khi gọi API logout:", error.message))
+    .finally(() => {
+      // Luôn xóa token ở frontend và chuyển hướng
+      localStorage.removeItem('sessionToken');
+      window.location.href = 'index.html';
+    });
+}
+
+// ===================================
+// LOGIC TAB (Giữ nguyên)
 // ===================================
 function showTab(tabName) {
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -88,7 +134,7 @@ function showTab(tabName) {
 }
 
 // ===================================
-// LOGIC LỌC BÁO CÁO MTD CHI TIẾT
+// LOGIC LỌC BÁO CÁO MTD CHI TIẾT (Giữ nguyên)
 // ===================================
 function applyFilters() {
   const filters = {
@@ -96,27 +142,27 @@ function applyFilters() {
     tvbh: document.getElementById('filter-tvbh').value,
     carModel: document.getElementById('filter-car-model').value
   };
-  loadMtdDetailReport(filters); // Chỉ gọi hàm tải MTD Chi tiết
+  loadMtdDetailReport(filters); 
 }
 
 function resetFilters() {
   document.getElementById('filter-group').value = "";
   document.getElementById('filter-tvbh').value = "";
   document.getElementById('filter-car-model').value = "";
-  populateTvbhFilter(""); // Đặt lại bộ lọc TVBH
-  loadMtdDetailReport({}); // Chỉ gọi hàm tải MTD Chi tiết (với bộ lọc rỗng)
+  populateTvbhFilter(""); 
+  loadMtdDetailReport({}); 
 }
 
 function toggleFilterButtons(enabled, text = "Lọc") {
   document.getElementById('filter-btn').disabled = !enabled;
   document.getElementById('reset-btn').disabled = !enabled;
-  document.getElementById('export-btn').disabled = !enabled; // Vô hiệu hóa cả nút Export
+  document.getElementById('export-btn').disabled = !enabled; 
   document.getElementById('filter-btn').innerText = enabled ? "Lọc" : text;
 }
 
 function populateTvbhFilter(selectedGroup) {
   const tvbhSelect = document.getElementById("filter-tvbh");
-  tvbhSelect.innerHTML = '<option value="">Tất cả TVBH</option>'; // Luôn có "Tất cả"
+  tvbhSelect.innerHTML = '<option value="">Tất cả TVBH</option>'; 
 
   if (selectedGroup && groupData[selectedGroup]) {
     const tvbhList = groupData[selectedGroup].sort();
@@ -138,33 +184,30 @@ function populateTvbhFilter(selectedGroup) {
 }
 
 // ===================================
-// LOGIC TẢI DỮ LIỆU BÁO CÁO (ĐÃ CHUYỂN SANG API)
+// LOGIC TẢI DỮ LIỆU BÁO CÁO (Giữ nguyên)
 // ===================================
 
-// Hàm tải Báo cáo Ngày (hôm nay) và MTD Tổng (Chạy 1 lần)
 function loadInitialData() {
   document.getElementById("loading-daily").innerText = "Đang tải dữ liệu...";
   document.getElementById("loading-mtd-total").innerText = "Đang tải dữ liệu...";
   
-  callApi('getDashboardData') // <--- ĐÃ SỬA
-    .then(onInitialDataLoaded) // Hàm xử lý thành công
-    .catch(onInitialDataFailed); // Hàm xử lý thất bại
+  callApi('getDashboardData') 
+    .then(onInitialDataLoaded) 
+    .catch(onInitialDataFailed); 
 }
 
-// Hàm tải CHỈ Bảng MTD Chi tiết (Chạy khi lọc)
 function loadMtdDetailReport(filters) {
   document.getElementById("mtd-detail-report-container").innerHTML = '<div id="loading-mtd-detail" class="loading-placeholder">Đang tải dữ liệu...</div>';
   toggleFilterButtons(false, "Đang tải...");
 
-  callApi('getMtdDetailReport', { filters: filters }) // <--- ĐÃ SỬA
+  callApi('getMtdDetailReport', { filters: filters }) 
     .then(onMtdDetailDataLoaded)
     .catch(onMtdDetailDataFailed);
 }
 
-// Tải Báo cáo Ngày theo ngày được chọn
 function loadDailyReportByDate() {
   const datePicker = document.getElementById("daily-date-picker");
-  const dateString = datePicker.value; // "yyyy-MM-dd"
+  const dateString = datePicker.value; 
   if (!dateString) {
     alert("Vui lòng chọn ngày.");
     return;
@@ -173,74 +216,62 @@ function loadDailyReportByDate() {
   document.getElementById("daily-report-container").innerHTML = '<div id="loading-daily" class="loading-placeholder">Đang tải dữ liệu ngày ' + dateString + '...</div>';
   document.getElementById("daily-filter-btn").disabled = true;
   
-  callApi('getDailyReportForSpecificDate', { dateString: dateString }) // <--- ĐÃ SỬA
+  callApi('getDailyReportForSpecificDate', { dateString: dateString }) 
     .then(onDailyDataLoaded)
     .catch(onDailyDataFailed);
 }
 
-// Hàm xử lý cho 2 bảng ĐẦU TIÊN
-function onInitialDataLoaded(result) { // Nhận 'result' từ API
-  // Daily: dính 2 cột, tô đỏ
+// Hàm xử lý (Giữ nguyên)
+function onInitialDataLoaded(result) { 
   document.getElementById("daily-report-container").innerHTML = createHtmlTable(result.daily, 2, true); 
-  // MTD Total: dính 3 cột (Hạng, Nhóm, TVBH), không tô đỏ
-  document.getElementById("mtd-total-report-container").innerHTML = createMtdTotalTable(result.mtdTotal); // **GỌI HÀM MỚI**
+  document.getElementById("mtd-total-report-container").innerHTML = createMtdTotalTable(result.mtdTotal); 
 }
 
-// Hàm xử lý lỗi cho 2 bảng ĐẦU TIÊN
 function onInitialDataFailed(error) {
   const errorMsg = "Lỗi khi tải dữ liệu: " + error.message;
   document.getElementById("loading-daily").innerText = errorMsg;
   document.getElementById("loading-mtd-total").innerText = errorMsg;
 }
 
-// Hàm xử lý PHỤ: Chỉ cập nhật bảng MTD Chi tiết
-function onMtdDetailDataLoaded(result) { // Nhận 'result' từ API
-  toggleFilterButtons(true); // Kích hoạt lại nút
-  // MTD Detail: dính 2 cột, không tô đỏ
+function onMtdDetailDataLoaded(result) { 
+  toggleFilterButtons(true); 
   document.getElementById("mtd-detail-report-container").innerHTML = createHtmlTable(result.mtdDetail, 2, false);
 }
 
-// Hàm xử lý PHỤ: Chỉ báo lỗi ở bảng MTD Chi tiết
 function onMtdDetailDataFailed(error) {
-  toggleFilterButtons(true); // Kích hoạt lại nút
+  toggleFilterButtons(true); 
   const errorMsg = "Lỗi khi tải dữ liệu: " + error.message;
   document.getElementById("loading-mtd-detail").innerText = errorMsg;
 }
 
-// Xử lý Báo cáo Ngày (khi chọn ngày)
-function onDailyDataLoaded(result) { // Nhận 'result' từ API
+function onDailyDataLoaded(result) { 
   document.getElementById("daily-filter-btn").disabled = false;
-   // Daily (ngày cũ): dính 2 cột, tô đỏ
-   document.getElementById("daily-report-container").innerHTML = createHtmlTable(result.daily, 2, true);
+  document.getElementById("daily-report-container").innerHTML = createHtmlTable(result.daily, 2, true);
 }
 
-// Xử lý lỗi Báo cáo Ngày
 function onDailyDataFailed(error) {
   document.getElementById("daily-filter-btn").disabled = false;
   document.getElementById("loading-daily").innerText = "Lỗi: " + error.message;
 }
 
+// ===================================
+// LOGIC VẼ BẢNG (Giữ nguyên)
+// ===================================
 
-/**
- * HÀM TẠO BẢNG CHUẨN (CHO BC NGÀY & MTD CHI TIẾT)
- * (Giữ nguyên như code của bạn)
- */
 function createHtmlTable(dataArray, stickyColCount = 0, checkNonReporters = false) {
   if (!dataArray || dataArray.length < 2) { 
     return "<p class='loading-placeholder'>Không có dữ liệu báo cáo (hoặc không tìm thấy kết quả lọc).</p>";
   }
   
   let html = "<table><thead><tr>";
-  // Header
   dataArray[0].forEach((cell, index) => {
     let stickyClass = '';
     if (index < stickyColCount) stickyClass = `sticky-col-${index + 1}`;
-    let colClass = cell.includes("(%)") ? 'percent-col' : ''; // Thêm class cho cột %
+    let colClass = cell.includes("(%)") ? 'percent-col' : ''; 
     html += `<th class="${stickyClass} ${colClass}">${cell}</th>`;
   });
   html += "</tr></thead><tbody>";
   
-  // Body
   for (let i = 1; i < dataArray.length; i++) {
     const rowData = dataArray[i];
     const isTotalRow = (rowData[0] === "TỔNG CỘNG" || rowData[1] === "TỔNG CỘNG");
@@ -264,7 +295,7 @@ function createHtmlTable(dataArray, stickyColCount = 0, checkNonReporters = fals
     rowData.forEach((cell, index) => {
       let stickyClass = '';
       if (index < stickyColCount) stickyClass = `sticky-col-${index + 1}`;
-      let colClass = dataArray[0][index].includes("(%)") ? 'percent-col' : ''; // Thêm class cho cột %
+      let colClass = dataArray[0][index].includes("(%)") ? 'percent-col' : ''; 
       html += `<td class="${stickyClass} ${colClass}">${cell}</td>`;
     });
     html += "</tr>";
@@ -273,40 +304,33 @@ function createHtmlTable(dataArray, stickyColCount = 0, checkNonReporters = fals
   return html;
 }
 
-/**
- * HÀM MỚI: TẠO BẢNG MTD TỔNG HỢP (CÓ GỘP HEADER)
- * (Giữ nguyên như code của bạn)
- */
 function createMtdTotalTable(dataArray) {
   if (!dataArray || dataArray.length < 2) { 
     return "<p class='loading-placeholder'>Không có dữ liệu báo cáo.</p>";
   }
   
-  const headers = dataArray[0]; // ["Hạng", "Nhóm", "TVBH", "KHTN (TĐ)", "KHTN (CT)", ...]
+  const headers = dataArray[0]; 
   
   let html = "<table><thead>";
   
-  // --- HÀNG TIÊU ĐỀ 1 (GỘP) ---
   html += "<tr>";
-  html += `<th rowspan="2" class="sticky-col-1">${headers[0]}</th>`; // Hạng
-  html += `<th rowspan="2" class="sticky-col-2">${headers[1]}</th>`; // Nhóm
-  html += `<th rowspan="2" class="sticky-col-3">${headers[2]}</th>`; // TVBH
+  html += `<th rowspan="2" class="sticky-col-1">${headers[0]}</th>`; 
+  html += `<th rowspan="2" class="sticky-col-2">${headers[1]}</th>`; 
+  html += `<th rowspan="2" class="sticky-col-3">${headers[2]}</th>`; 
   html += `<th colspan="3">Khách Hàng Tiềm Năng</th>`;
   html += `<th colspan="3">Hợp Đồng</th>`;
   html += `<th colspan="3">Xuất Hóa Đơn</th>`;
   html += `<th colspan="3">Doanh Thu</th>`;
   html += "</tr>";
   
-  // --- HÀNG TIÊU ĐỀ 2 (CON) ---
   html += "<tr class='sub-header'>";
-  for (let i = 0; i < 4; i++) { // Lặp 4 nhóm (KHTN, HĐ, XHĐ, Doanh Thu)
-    html += `<th>${headers[3 + i*3].split('(')[1].replace(')', '')}</th>`; // TĐ
-    html += `<th>${headers[4 + i*3].split('(')[1].replace(')', '')}</th>`; // CT
-    html += `<th class="percent-col">${headers[5 + i*3].split('(')[1].replace(')', '')}</th>`; // %
+  for (let i = 0; i < 4; i++) { 
+    html += `<th>${headers[3 + i*3].split('(')[1].replace(')', '')}</th>`; 
+    html += `<th>${headers[4 + i*3].split('(')[1].replace(')', '')}</th>`; 
+    html += `<th class="percent-col">${headers[5 + i*3].split('(')[1].replace(')', '')}</th>`; 
   }
   html += "</tr></thead>";
   
-  // --- BODY ---
   html += "<tbody>";
   for (let i = 1; i < dataArray.length; i++) {
     const rowData = dataArray[i];
@@ -316,8 +340,8 @@ function createMtdTotalTable(dataArray) {
     html += `<tr class="${rowClass}">`; 
     rowData.forEach((cell, index) => {
       let stickyClass = '';
-      if (index < 3) stickyClass = `sticky-col-${index + 1}`; // Dính 3 cột
-      let colClass = [5, 8, 11, 14].includes(index) ? 'percent-col' : ''; // Cột %
+      if (index < 3) stickyClass = `sticky-col-${index + 1}`; 
+      let colClass = [5, 8, 11, 14].includes(index) ? 'percent-col' : ''; 
       html += `<td class="${stickyClass} ${colClass}">${cell}</td>`;
     });
     html += "</tr>";
@@ -327,7 +351,7 @@ function createMtdTotalTable(dataArray) {
 }
 
 // ===================================
-// LOGIC XUẤT EXCEL (ĐÃ CHUYỂN SANG API)
+// LOGIC XUẤT EXCEL (Giữ nguyên)
 // ===================================
 function exportToExcel() {
   const filters = {
@@ -343,12 +367,12 @@ function exportToExcel() {
   toggleFilterButtons(false, "Lọc"); 
   document.getElementById("export-btn").innerText = "Đang xuất...";
   
-  callApi('exportAllReports', { filters: filters }) // <--- ĐÃ SỬA
+  callApi('exportAllReports', { filters: filters }) 
     .then(onExportSuccess)
     .catch(onExportFailed);
 }
 
-function onExportSuccess(result) { // Nhận 'result' từ API
+function onExportSuccess(result) { 
   toggleFilterButtons(true); 
   document.getElementById("export-btn").innerText = "Excel";
   const exportStatus = document.getElementById("export-status");
@@ -373,11 +397,11 @@ function onExportFailed(error) {
 }
 
 // ===================================
-// LOGIC TAB 1: FORM NHẬP LIỆU (ĐÃ CHUYỂN SANG API)
+// LOGIC TAB 1: FORM NHẬP LIỆU (Giữ nguyên)
 // ===================================
 
 function loadFormInitData() {
-  callApi('getFormInitData') // <--- ĐÃ SỬA
+  callApi('getFormInitData') 
     .then(result => {
         groupData = result.groups || {};
         const groupSelectEntry = document.getElementById("group"); 
@@ -420,7 +444,6 @@ function loadFormInitData() {
         }
     })
     .catch(error => {
-        // Lỗi nghiêm trọng khi tải dữ liệu form
         console.error("Lỗi tải FormInitData:", error.message);
         document.getElementById("entry").innerHTML = `<p class='loading-placeholder'>Lỗi nghiêm trọng khi tải dữ liệu form: ${error.message}</p>`;
     });
@@ -483,13 +506,13 @@ function loadDailyData(tvbhName) {
   dataStatus.innerText = "Đang tải dữ liệu của bạn...";
   clearForm(); 
 
-  callApi('getTodaysReportForTvbh', { tvbhName: tvbhName }) // <--- ĐÃ SỬA
-    .then(populateForm) // Hàm populateForm sẽ nhận 'result'
-    .catch(onMtdDetailDataFailed); // Dùng chung hàm báo lỗi
+  callApi('getTodaysReportForTvbh', { tvbhName: tvbhName }) 
+    .then(populateForm) 
+    .catch(onMtdDetailDataFailed); 
 }
 
-function populateForm(result) { // Nhận 'result' từ API
-  const data = result.data; // Dữ liệu báo cáo nằm trong 'result.data'
+function populateForm(result) { 
+  const data = result.data; 
   const dataStatus = document.getElementById("form-data-status");
   clearForm(); 
 
@@ -550,25 +573,23 @@ function handleFormSubmit(event) {
     modelEntry[field] = input.value;
   });
 
-  callApi('submitDailyReport', formData) // <--- ĐÃ SỬA
+  callApi('submitDailyReport', formData) 
     .then(onSubmissionSuccess)
     .catch(onSubmissionFailed);
 }
 
-function onSubmissionSuccess(result) { // Nhận 'result' từ API
+function onSubmissionSuccess(result) { 
   const button = document.getElementById("submitButton");
   const status = document.getElementById("form-status");
   
   button.disabled = false; button.innerText = "Lưu Báo Cáo";
   
-  // API trả về { status: 'success', message: '...' }
   status.innerText = result.message;
   status.className = "success";
   status.style.display = "block";
   
-  // LÀM MỚI TẤT CẢ CÁC BẢNG (Cách đơn giản nhất)
-  loadInitialData(); // Tải lại 2 bảng chính
-  applyFilters(); // Tải lại bảng chi tiết với bộ lọc
+  loadInitialData(); 
+  applyFilters(); 
   
   setTimeout(() => {
     showTab('daily');
