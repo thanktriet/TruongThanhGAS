@@ -1,5 +1,263 @@
 /* =================================== */
-/* CSS CHÍNH (Layout "Top-bar + Tabs")
+/* 0. CSS CHO TRANG LOGIN (MỚI)
+/* =================================== */
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f0f2f5; /* Màu nền nhẹ nhàng cho toàn trang */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow: hidden; /* Ngăn cuộn */
+}
+
+.login-container {
+  display: flex;
+  width: 900px; /* Chiều rộng tổng thể của container */
+  height: 600px; /* Chiều cao tổng thể của container */
+  border-radius: 20px; /* Bo tròn góc */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Đổ bóng */
+  overflow: hidden; /* Quan trọng để bo tròn cả các phần con */
+  background-color: #fff;
+}
+
+.login-left {
+  flex: 1; /* Chiếm 50% */
+  background-image: url('https://i.imgur.com/k6Kx0Y8.jpeg'); /* Hình nền nội thất xe */
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 40px;
+  color: #fff;
+  text-align: center;
+  position: relative;
+}
+
+/* Lớp phủ đen trong suốt cho phần bên trái */
+.login-left::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Màu đen trong suốt */
+  z-index: 1; /* Đảm bảo lớp phủ nằm trên ảnh nền nhưng dưới nội dung */
+}
+
+.login-left > * { /* Đảm bảo nội dung nằm trên lớp phủ */
+  z-index: 2;
+}
+
+.login-logo {
+  font-size: 2.8em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  /* Nếu là logo SVG thực sự, có thể dùng <img> */
+}
+
+.login-logo img {
+    width: 80px; /* Kích thước logo Mercedes */
+    height: auto;
+    filter: brightness(0) invert(1); /* Biến logo đen thành trắng */
+    margin-bottom: 15px;
+}
+
+.login-left h1 {
+  font-size: 2.2em;
+  margin: 0;
+  font-weight: 300; /* Font mỏng */
+  letter-spacing: 1px;
+}
+
+.login-left p {
+  font-size: 1.5em;
+  font-weight: 500;
+  margin-top: 5px;
+  letter-spacing: 0.5px;
+}
+
+.contact-info {
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
+.login-right {
+  flex: 1; /* Chiếm 50% */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  background-color: #fdfdfd;
+}
+
+.login-right h2 {
+  font-size: 1.2em;
+  color: var(--text-light);
+  margin-bottom: 30px;
+  font-weight: normal;
+  text-align: center;
+}
+
+.login-form {
+  width: 100%;
+  max-width: 300px;
+}
+
+.form-group-login {
+  margin-bottom: 25px;
+  position: relative;
+}
+
+.form-group-login input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #e0e6ed;
+  border-radius: 8px;
+  font-size: 1em;
+  outline: none;
+  transition: all 0.2s ease;
+  background-color: #f9fbfd;
+  color: var(--text-color);
+}
+
+.form-group-login input::placeholder {
+  color: #a0aec0;
+}
+
+.form-group-login input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 91, 154, 0.1);
+  background-color: #fff;
+}
+
+/* Icon checkmark cho input username */
+.form-group-login .checkmark-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--success-color);
+    font-size: 1.2em;
+    display: none; /* Mặc định ẩn, sẽ hiển thị bằng JS */
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 10px rgba(0, 91, 154, 0.2);
+}
+
+.login-button:hover {
+  background-color: #004a82;
+  box-shadow: 0 6px 15px rgba(0, 91, 154, 0.3);
+  transform: translateY(-1px);
+}
+
+.login-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.login-footer {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  font-size: 0.85em;
+}
+
+.login-footer a {
+  color: var(--text-light);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.login-footer a:hover {
+  color: var(--primary-color);
+}
+
+#login-status {
+  text-align: center;
+  margin-top: 20px;
+  font-weight: 500;
+  color: var(--danger-color);
+  font-size: 0.9em;
+}
+
+/* --- Responsive cho Login Page --- */
+@media (max-width: 768px) {
+  .login-container {
+    flex-direction: column; /* Xếp chồng 2 cột */
+    width: 100%;
+    height: 100vh; /* Chiếm toàn bộ chiều cao màn hình */
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .login-left {
+    height: 30%; /* Chiếm 30% chiều cao */
+    padding: 20px;
+    justify-content: center; /* Căn giữa nội dung */
+  }
+
+  .login-left h1 {
+    font-size: 1.8em;
+  }
+  .login-left p {
+    font-size: 1.2em;
+  }
+  .contact-info {
+    display: none; /* Ẩn thông tin liên hệ trên mobile */
+  }
+
+  .login-right {
+    height: 70%; /* Chiếm 70% chiều cao */
+    padding: 30px 20px;
+    justify-content: flex-start; /* Dịch nội dung lên trên */
+  }
+  .login-right h2 {
+    margin-bottom: 20px;
+    font-size: 1em;
+  }
+  .login-form {
+    max-width: 280px;
+  }
+  .form-group-login {
+    margin-bottom: 20px;
+  }
+  .login-button {
+    padding: 10px;
+    font-size: 1em;
+  }
+  .login-footer {
+    margin-top: 20px;
+    gap: 15px;
+    font-size: 0.8em;
+  }
+}
+
+/* =================================== */
+/* 1. CSS CHÍNH (Layout "Top-bar + Tabs")
+/* ĐƯỢC GIỮ NGUYÊN TỪ CÁC LẦN CẬP NHẬT TRƯỚC
 /* =================================== */
 :root {
   --primary-color: #005B9A; --primary-light: #E6F0F8; --accent-color: #0d6efd;
@@ -23,16 +281,16 @@ body {
   overflow: hidden; /* Ngăn body cuộn */
 }
 
-/* === 1. TOP BAR (MỚI) === */
+/* === 1. TOP BAR === */
 .top-bar {
   background: #fff;
   border-bottom: 1px solid var(--border-color);
   display: flex;
-  justify-content: space-between; /* Logo bên trái, User bên phải */
+  justify-content: space-between;
   align-items: center;
   padding: 0 20px;
   height: var(--topbar-height);
-  flex-shrink: 0; /* Không co lại */
+  flex-shrink: 0;
   box-shadow: var(--shadow-sm);
   z-index: 1001;
 }
@@ -64,12 +322,12 @@ body {
 }
 #logout-button:hover { background-color: #c82333; }
 
-/* === 2. TAB NAVIGATION (MỚI) === */
+/* === 2. TAB NAVIGATION === */
 .tab-nav {
   display: flex; 
   background-color: #fff; 
   box-shadow: var(--shadow-sm);
-  flex-shrink: 0; /* Không co lại */
+  flex-shrink: 0;
   z-index: 1000;
   border-bottom: 1px solid var(--border-color);
 }
@@ -96,10 +354,10 @@ body {
   border-bottom: 4px solid var(--primary-color); 
 }
 
-/* === 3. CONTENT AREA (MỚI) === */
+/* === 3. CONTENT AREA === */
 .content-area {
-  flex-grow: 1; /* Lấp đầy phần còn lại */
-  overflow-y: auto; /* CHỈ VÙNG NÀY ĐƯỢC CUỘN */
+  flex-grow: 1; 
+  overflow-y: auto; 
   overflow-x: hidden;
   padding: 20px;
 }
