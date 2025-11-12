@@ -10,54 +10,25 @@
   </head>
   <body>
     
-    <nav class="sidebar">
-      <div class="sidebar-header">
+    <header class="top-bar">
+      <div class="top-bar-logo">
         ERP SYSTEM
       </div>
-      <ul class="sidebar-menu">
-        <li>
-          <a href="#dashboard" class="active">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 10px; vertical-align: text-bottom;">
-              <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM1 10.5A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zM2.5 10a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM9 2.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zM10.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM9 10.5A1.5 1.5 0 0 1 10.5 9h3A1.5 1.5 0 0 1 15 10.5v3A1.5 1.5 0 0 1 13.5 15h-3A1.5 1.5 0 0 1 9 13.5v-3zM10.5 10a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z"/>
-            </svg>
-            Dashboard
-          </a>
-        </li>
-        <li>
-          <a href="#users">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 10px; vertical-align: text-bottom;">
-              <path d="M15 14s1 0 1-1-1-4-6-4-6 3-6 4 1 1 1 1h10zM8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
-            </svg>
-            Quản lý Users
-          </a>
-        </li>
-        <li>
-          <a href="#products">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 10px; vertical-align: text-bottom;">
-              <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5z"/>
-            </svg>
-            Sản phẩm
-          </a>
-        </li>
-      </ul>
-    </nav>
-
-    <header class="top-bar">
       <div class="user-info">
-        <span>Xin chào, <strong id="username-display">...</strong></span>
+        <span id="username-display">...</span>
         <button id="logout-button">Đăng xuất</button>
       </div>
     </header>
 
+    <nav class="tab-nav">
+      <button class="tab-button" onclick="showTab('entry')">✍️ Nhập Báo Cáo</button>
+      <button class="tab-button active" onclick="showTab('daily')">📊 Báo Cáo Ngày</button>
+      <button class="tab-button" onclick="showTab('mtd_total')">📈 MTD - Tổng</button>
+      <button class="tab-button" onclick="showTab('mtd_detail')">🚗 MTD - Chi tiết Xe</button>
+    </nav>
+
     <main class="content-area">
       
-      <div class="tab-nav">
-        <button class="tab-button" onclick="showTab('entry')">✍️ Nhập Báo Cáo</button>
-        <button class="tab-button active" onclick="showTab('daily')">📊 Báo Cáo Ngày</button>
-        <button class="tab-button" onclick="showTab('mtd_total')">📈 MTD - Tổng</button>
-        <button class="tab-button" onclick="showTab('mtd_detail')">🚗 MTD - Chi tiết Xe</button>
-      </div>
-
       <div id="entry" class="tab-content">
         <div class="card card-form">
           <form id="entry-form" onsubmit="handleFormSubmit(event)">
