@@ -1,6 +1,6 @@
 /*
  * File: script.js (của trang index.html)
- * Frontend logic để gọi API Backend
+ * ĐÃ THÊM LOG ĐỂ GỠ LỖI
  */
 
 const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyUS4aLRcEjqZfM_71ytnS4rH9mGOFoH-RrTQ_c5sgxlrNtmCQC7e_Ls5paCRt1eimPQQ/exec';
@@ -38,21 +38,28 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(result => {
         
+        // --- BẮT ĐẦU VÙNG GỠ LỖI ---
+        console.log('Phản hồi từ Server:', result); // DÒNG 1: In ra kết quả nhận được
+
         if (result.status === 'success' && result.token) {
-            // LƯU TOKEN (VÉ VÀO CỬA)
+            
+            console.log('Đã nhận Token, đang lưu...'); // DÒNG 2: Báo hiệu chuẩn bị lưu
             localStorage.setItem('sessionToken', result.token);
             
-            // CHUYỂN HƯỚNG TỚI DASHBOARD
+            console.log('Đã lưu Token! Đang chuyển hướng...'); // DÒNG 3: Báo hiệu chuẩn bị chuyển trang
             window.location.href = 'dashboard.html';
 
         } else {
             // Đăng nhập thất bại
+            console.warn('Lỗi đăng nhập hoặc không có token:', result.message); // DÒNG 4: Báo lỗi nếu thất bại
             messageDiv.textContent = result.message;
             messageDiv.style.color = 'red';
         }
+        // --- KẾT THÚC VÙNG GỠ LỖI ---
+
     })
     .catch(error => {
-        console.error('Lỗi:', error);
+        console.error('Lỗi fetch:', error); // DÒNG 5: Báo lỗi nếu mạng
         messageDiv.textContent = 'Đã xảy ra lỗi. Vui lòng thử lại.';
         messageDiv.style.color = 'red';
     })
