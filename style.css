@@ -1,34 +1,37 @@
 /* =================================== */
-/* 0. CSS CHO TRANG LOGIN (MỚI)
+/* 0. CSS CHO TRANG LOGIN (ĐÃ CẬP NHẬT THEO MẪU VINFAST)
 /* =================================== */
 .login-page {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f0f2f5; /* Màu nền nhẹ nhàng cho toàn trang */
+  background-color: #f0f2f5; 
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  overflow: hidden; /* Ngăn cuộn */
+  overflow: hidden; 
 }
 
 .login-container {
   display: flex;
-  width: 900px; /* Chiều rộng tổng thể của container */
-  height: 600px; /* Chiều cao tổng thể của container */
-  border-radius: 20px; /* Bo tròn góc */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Đổ bóng */
-  overflow: hidden; /* Quan trọng để bo tròn cả các phần con */
+  width: 900px; 
+  height: 600px; 
+  border-radius: 20px; 
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); 
+  overflow: hidden; 
   background-color: #fff;
 }
 
+/* PHẦN BÊN TRÁI (MÀU ĐEN) */
 .login-left {
-  flex: 1; /* Chiếm 50% */
-  background-image: url('https://i.imgur.com/k6Kx0Y8.jpeg'); /* Hình nền nội thất xe */
+  flex: 1; 
+  background-color: #1A1A1A; /* Màu đen tuyền của VinFast */
+  background-image: url('https://i.imgur.com/8Fk6bSj.png'); /* Ảnh nền mờ mờ chữ */
+  background-blend-mode: overlay; /* Trộn ảnh vào nền đen */
   background-size: cover;
   background-position: center;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: space-between; /* Đẩy contact info xuống dưới */
   align-items: center;
   padding: 40px;
   color: #fff;
@@ -36,7 +39,7 @@
   position: relative;
 }
 
-/* Lớp phủ đen trong suốt cho phần bên trái */
+/* Lớp phủ (giữ nguyên, giúp chữ nổi bật) */
 .login-left::before {
   content: '';
   position: absolute;
@@ -44,49 +47,60 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5); /* Màu đen trong suốt */
-  z-index: 1; /* Đảm bảo lớp phủ nằm trên ảnh nền nhưng dưới nội dung */
+  background-color: rgba(0, 0, 0, 0.5); 
+  z-index: 1; 
 }
 
 .login-left > * { /* Đảm bảo nội dung nằm trên lớp phủ */
   z-index: 2;
 }
 
-.login-logo {
-  font-size: 2.8em;
-  font-weight: bold;
-  margin-bottom: 10px;
-  /* Nếu là logo SVG thực sự, có thể dùng <img> */
-}
-
+/* Logo VinFast */
 .login-logo img {
-    width: 80px; /* Kích thước logo Mercedes */
+    width: 120px; /* Logo VinFast rộng hơn */
     height: auto;
-    filter: brightness(0) invert(1); /* Biến logo đen thành trắng */
-    margin-bottom: 15px;
+    margin-bottom: 25px;
+    margin-top: 20px;
 }
 
-.login-left h1 {
-  font-size: 2.2em;
+.login-left-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* Căn giữa phần nội dung chính */
+}
+
+.login-left-title {
+  font-size: 2.5em; /* "VinFast Trường Thành" */
+  font-weight: 600;
   margin: 0;
-  font-weight: 300; /* Font mỏng */
   letter-spacing: 1px;
 }
-
-.login-left p {
-  font-size: 1.5em;
+.login-left-subtitle {
+  font-size: 1.1em; /* "Owners" */
+  font-weight: 300;
+  color: #c7c7c7; /* Màu xám nhạt */
+  margin-top: 25px;
+  margin-bottom: 5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.login-left-owner {
+  font-size: 1.8em; /* "Triet Minh Truong" */
   font-weight: 500;
-  margin-top: 5px;
+  margin: 0;
+}
+
+.login-left-contact {
+  font-size: 0.9em;
+  opacity: 0.8;
   letter-spacing: 0.5px;
 }
 
-.contact-info {
-  font-size: 0.9em;
-  opacity: 0.8;
-}
-
+/* PHẦN BÊN PHẢI (FORM TRẮNG) */
 .login-right {
-  flex: 1; /* Chiếm 50% */
+  flex: 1; 
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -96,11 +110,13 @@
 }
 
 .login-right h2 {
-  font-size: 1.2em;
+  font-size: 1.1em; /* "Nhập tài khoản..." */
   color: var(--text-light);
   margin-bottom: 30px;
-  font-weight: normal;
+  font-weight: 400; /* Đổi thành font thường */
   text-align: center;
+  max-width: 280px;
+  line-height: 1.5;
 }
 
 .login-form {
@@ -123,27 +139,17 @@
   transition: all 0.2s ease;
   background-color: #f9fbfd;
   color: var(--text-color);
+  font-weight: 500;
 }
-
+/* CSS cho Placeholder (TÀI KHOẢN, MẬT KHẨU) */
 .form-group-login input::placeholder {
   color: #a0aec0;
+  font-weight: 500;
 }
-
 .form-group-login input:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(0, 91, 154, 0.1);
   background-color: #fff;
-}
-
-/* Icon checkmark cho input username */
-.form-group-login .checkmark-icon {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--success-color);
-    font-size: 1.2em;
-    display: none; /* Mặc định ẩn, sẽ hiển thị bằng JS */
 }
 
 .login-button {
@@ -163,13 +169,11 @@
   gap: 10px;
   box-shadow: 0 4px 10px rgba(0, 91, 154, 0.2);
 }
-
 .login-button:hover {
   background-color: #004a82;
   box-shadow: 0 6px 15px rgba(0, 91, 154, 0.3);
   transform: translateY(-1px);
 }
-
 .login-button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
@@ -181,18 +185,20 @@
   margin-top: 30px;
   display: flex;
   justify-content: center;
-  gap: 20px;
+  gap: 15px; /* Giảm khoảng cách */
   font-size: 0.85em;
 }
-
 .login-footer a {
   color: var(--text-light);
   text-decoration: none;
   transition: color 0.2s;
 }
-
 .login-footer a:hover {
   color: var(--primary-color);
+}
+/* Màu cho dấu • */
+.login-footer span {
+  color: #ccc;
 }
 
 #login-status {
@@ -205,71 +211,57 @@
 
 /* --- Responsive cho Login Page --- */
 @media (max-width: 768px) {
+  .login-page {
+    overflow: auto; /* Cho phép cuộn trên mobile nếu cần */
+  }
   .login-container {
-    flex-direction: column; /* Xếp chồng 2 cột */
+    flex-direction: column; 
     width: 100%;
-    height: 100vh; /* Chiếm toàn bộ chiều cao màn hình */
+    height: auto; /* Chiều cao tự động */
+    min-height: 100vh;
     border-radius: 0;
     box-shadow: none;
   }
-
   .login-left {
-    height: 30%; /* Chiếm 30% chiều cao */
-    padding: 20px;
-    justify-content: center; /* Căn giữa nội dung */
+    height: auto; 
+    padding: 40px 20px;
+    justify-content: center; 
   }
-
-  .login-left h1 {
-    font-size: 1.8em;
+  .login-logo img {
+      margin-top: 0;
+      margin-bottom: 20px;
+      width: 100px;
   }
-  .login-left p {
-    font-size: 1.2em;
+  .login-left-title { font-size: 2em; }
+  .login-left-subtitle { margin-top: 20px; }
+  .login-left-owner { font-size: 1.5em; }
+  .login-left-contact {
+    display: none; /* Ẩn email trên mobile cho gọn */
   }
-  .contact-info {
-    display: none; /* Ẩn thông tin liên hệ trên mobile */
-  }
-
   .login-right {
-    height: 70%; /* Chiếm 70% chiều cao */
-    padding: 30px 20px;
-    justify-content: flex-start; /* Dịch nội dung lên trên */
+    height: auto; 
+    padding: 40px 20px;
+    justify-content: flex-start; 
   }
   .login-right h2 {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     font-size: 1em;
   }
   .login-form {
-    max-width: 280px;
-  }
-  .form-group-login {
-    margin-bottom: 20px;
-  }
-  .login-button {
-    padding: 10px;
-    font-size: 1em;
+    max-width: 300px;
   }
   .login-footer {
-    margin-top: 20px;
-    gap: 15px;
     font-size: 0.8em;
   }
 }
 
 /* =================================== */
-/* 1. CSS CHÍNH (Layout "Top-bar + Tabs")
-/* ĐƯỢC GIỮ NGUYÊN TỪ CÁC LẦN CẬP NHẬT TRƯỚC
+/* 1. CSS CHÍNH (Layout "Top-bar + Tabs" CỦA DASHBOARD)
+/* (PHẦN NÀY GIỮ NGUYÊN)
 /* =================================== */
 :root {
-  --primary-color: #005B9A; --primary-light: #E6F0F8; --accent-color: #0d6efd;
-  --success-color: #198754; --danger-color: #dc3545; --bg-color: #f8f9fa;
-  --border-color: #dee2e6; --text-color: #212529; --text-light: #6c757d;
-  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 6px 12px rgba(0,0,0,0.08);
-  --border-radius: 12px;
   --topbar-height: 60px;
 }
-html { box-sizing: border-box; }
-*, *:before, *:after { box-sizing: inherit; }
-
 body { 
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
   margin: 0; 
@@ -278,7 +270,15 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  overflow: hidden; /* Ngăn body cuộn */
+  overflow: hidden; 
+}
+
+/* Sửa lỗi: Đảm bảo body của login-page không bị ảnh hưởng bởi CSS dashboard */
+body.login-page {
+  display: flex;
+  flex-direction: column;
+  height: auto; /* Cho phép trang login tự co giãn */
+  overflow: auto; /* Cho phép cuộn trang login nếu cần */
 }
 
 /* === 1. TOP BAR === */
@@ -599,8 +599,8 @@ tbody tr.not-reported .percent-col {
 /* =================================== */
 @media (max-width: 768px) {
   
-  /* Layout chính */
-  body {
+  /* Layout chính (Dashboard) */
+  body:not(.login-page) {
     overflow: auto; /* Cho phép body cuộn */
   }
   .top-bar {
