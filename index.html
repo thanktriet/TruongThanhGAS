@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Phê Duyệt Giá</title>
+    <title>Hệ Thống Phê Duyệt Giá Xe</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
@@ -13,21 +13,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* Hiệu ứng Loading cho HTMX */
+        /* Hiệu ứng loading HTMX */
         .htmx-indicator { opacity: 0; transition: opacity 200ms ease-in; pointer-events: none; }
         .htmx-request .htmx-indicator { opacity: 1; pointer-events: auto; }
         .htmx-request.htmx-indicator { opacity: 1; pointer-events: auto; }
         
-        /* Ẩn hiện Tab */
+        /* Ẩn/Hiện Tab */
         .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
         .tab-content.active { display: block; }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Sidebar active state */
+        /* Active Sidebar */
         .nav-item.active { background-color: #1e40af; border-left: 4px solid #60a5fa; }
+        
+        /* Active Mobile Nav */
+        .nav-mobile-item.active { color: #2563eb; }
     </style>
 </head>
+
 <body class="bg-gray-100 text-gray-800 font-sans h-screen overflow-hidden" hx-ext="client-side-templates">
 
     <div id="login-view" class="fixed inset-0 z-50 bg-gray-100 flex items-center justify-center">
@@ -45,7 +49,7 @@
                     <label class="block text-gray-700 text-sm font-bold mb-2">Tên đăng nhập</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500"><i class="fa-solid fa-user"></i></span>
-                        <input type="text" id="login-user" class="w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="Username" required>
+                        <input type="text" id="login-user" class="w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="admin" required>
                     </div>
                 </div>
                 <div class="mb-6">
@@ -76,13 +80,11 @@
                     <i class="fa-solid fa-plus-circle w-6 text-gray-400 group-hover:text-white"></i>
                     <span>Tạo Tờ Trình</span>
                 </button>
-                
                 <button onclick="switchTab('approval')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center group" id="nav-approval">
                     <i class="fa-solid fa-list-check w-6 text-gray-400 group-hover:text-white"></i>
                     <span>Duyệt Đơn</span>
-                    <span class="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full" id="badge-count">!</span>
+                    <span class="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full hidden" id="badge-count">!</span>
                 </button>
-
                 <button onclick="switchTab('history')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center group" id="nav-history">
                     <i class="fa-solid fa-clock-rotate-left w-6 text-gray-400 group-hover:text-white"></i>
                     <span>Lịch sử</span>
@@ -107,47 +109,126 @@
                 
                 <div id="tab-create" class="tab-content active max-w-4xl mx-auto">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="bg-blue-50 px-6 py-4 border-b border-blue-100 flex justify-between items-center">
+                        
+                        <div class="bg-blue-50 px-6 py-4 border-b border-blue-100 flex flex-col md:flex-row justify-between items-center gap-4">
                             <h2 class="text-lg font-bold text-blue-800">📝 Tạo Yêu Cầu Mới</h2>
+                            <div class="bg-white p-1 rounded-lg border border-blue-200 flex shadow-sm">
+                                <button onclick="toggleCreateMode('search')" id="btn-mode-search" class="px-4 py-2 rounded-md text-sm font-bold transition bg-blue-600 text-white shadow">
+                                    🔍 Tra Cứu HĐ
+                                </button>
+                                <button onclick="toggleCreateMode('manual')" id="btn-mode-manual" class="px-4 py-2 rounded-md text-sm font-bold transition text-gray-600 hover:bg-gray-100">
+                                    ✍️ Nhập Tay
+                                </button>
+                            </div>
                         </div>
                         
                         <div class="p-6">
-                            <div class="mb-6 relative">
-                                <label class="block text-gray-700 text-sm font-bold mb-2">1. Nhập Mã Đơn Hàng / Hợp Đồng</label>
-                                <div class="flex gap-2">
-                                    <input type="text" 
-                                           id="search_code_input"
-                                           class="flex-1 border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 outline-none uppercase font-mono font-bold text-gray-700"
-                                           placeholder="VD: S10601-25-0663"
-                                           
-                                           hx-post="" 
-                                           hx-trigger="change" 
-                                           hx-vals='{"action": "lookup_contract"}'
-                                           hx-target="#search-result"
-                                           mustache-template="tpl-lookup-result"
-                                           hx-indicator="#loading-lookup">
-                                    
-                                    <div id="loading-lookup" class="htmx-indicator flex items-center justify-center px-4">
-                                        <i class="fa-solid fa-spinner fa-spin text-blue-600 text-xl"></i>
+                            <div id="mode-search-container">
+                                <div class="mb-6 relative">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2">Nhập Mã Đơn Hàng / Hợp Đồng</label>
+                                    <div class="flex gap-2">
+                                        <input type="text" 
+                                               id="search_code_input"
+                                               class="flex-1 border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 outline-none uppercase font-mono font-bold text-gray-700"
+                                               placeholder="VD: S10601-25-0663"
+                                               hx-post="" 
+                                               hx-trigger="change" 
+                                               hx-vals='{"action": "lookup_contract"}'
+                                               hx-target="#search-result"
+                                               mustache-template="tpl-lookup-result"
+                                               hx-indicator="#loading-lookup">
+                                        <div id="loading-lookup" class="htmx-indicator flex items-center justify-center px-4">
+                                            <i class="fa-solid fa-spinner fa-spin text-blue-600 text-xl"></i>
+                                        </div>
                                     </div>
                                 </div>
-                                <p class="text-xs text-gray-400 mt-1">* Nhấn Enter hoặc click ra ngoài để tìm kiếm</p>
+
+                                <form id="form-create-request" onsubmit="handleSubmitRequest(event, 'search')">
+                                    <div id="search-result">
+                                        <div class="text-center py-10 text-gray-400 border-2 border-dashed rounded-lg bg-gray-50">
+                                            <i class="fa-solid fa-magnifying-glass text-4xl mb-3 opacity-30"></i>
+                                            <p>Nhập mã để tải dữ liệu khách hàng</p>
+                                        </div>
+                                    </div>
+                                    <div id="action-area" class="mt-8 hidden">
+                                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-4 rounded-lg hover:bg-green-700 shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2">
+                                            <i class="fa-solid fa-paper-plane"></i> Gửi Duyệt Giá
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
 
-                            <form id="form-create-request" onsubmit="handleSubmitRequest(event)">
-                                <div id="search-result">
-                                    <div class="text-center py-10 text-gray-400 border-2 border-dashed rounded-lg bg-gray-50">
-                                        <i class="fa-solid fa-magnifying-glass text-4xl mb-3 opacity-30"></i>
-                                        <p>Vui lòng nhập mã để tải dữ liệu khách hàng</p>
+                            <div id="mode-manual-container" class="hidden animate-fade-in-down">
+                                <form id="form-manual-create" onsubmit="handleSubmitRequest(event, 'manual')">
+                                    <h3 class="text-sm font-bold text-gray-500 uppercase border-b pb-1 mb-3">Thông tin Khách hàng</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <label class="block text-sm font-bold text-gray-700 mb-1">Mã Hợp Đồng <span class="text-red-500">*</span></label>
+                                            <input name="contract_code" class="w-full border p-2 rounded outline-none uppercase font-mono" placeholder="VD: S10601..." required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-bold text-gray-700 mb-1">Tên Khách Hàng <span class="text-red-500">*</span></label>
+                                            <input name="customer_name" class="w-full border p-2 rounded outline-none" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-bold text-gray-700 mb-1">Số Điện Thoại</label>
+                                            <input name="phone" class="w-full border p-2 rounded outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-bold text-gray-700 mb-1">CCCD / CMND</label>
+                                            <input name="cccd" class="w-full border p-2 rounded outline-none">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-bold text-gray-700 mb-1">Địa chỉ</label>
+                                            <input name="address" class="w-full border p-2 rounded outline-none">
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div id="action-area" class="mt-8 hidden">
-                                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-4 rounded-lg hover:bg-green-700 shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2">
-                                        <i class="fa-solid fa-paper-plane"></i> Gửi Duyệt Giá
-                                    </button>
-                                </div>
-                            </form>
+                                    <h3 class="text-sm font-bold text-gray-500 uppercase border-b pb-1 mb-3 mt-6">Thông tin Xe</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                        <div>
+                                            <label class="block text-sm font-bold text-gray-700 mb-1">Dòng Xe</label>
+                                            <input name="car_model" class="w-full border p-2 rounded outline-none" placeholder="VD: VF 5 Plus">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-bold text-gray-700 mb-1">Số Khung (VIN)</label>
+                                            <input name="vin_no" class="w-full border p-2 rounded outline-none uppercase" placeholder="Nếu có">
+                                        </div>
+                                         <div>
+                                            <label class="block text-sm font-bold text-gray-700 mb-1">Màu sắc</label>
+                                            <input name="car_color" class="w-full border p-2 rounded outline-none">
+                                        </div>
+                                    </div>
+
+                                    <h3 class="text-sm font-bold text-gray-500 uppercase border-b pb-1 mb-3 mt-6">Chính sách giá</h3>
+                                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-bold text-gray-800 mb-1">Giá trị hợp đồng (VNĐ) <span class="text-red-500">*</span></label>
+                                            <input name="contract_price" type="text" class="w-full border-2 border-yellow-400 p-2 rounded text-lg font-bold text-gray-800 outline-none" required placeholder="0">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-bold text-gray-700 mb-1">Chi tiết giảm giá</label>
+                                            <textarea name="discount_details" rows="2" class="w-full border p-2 rounded outline-none" placeholder="Diễn giải..."></textarea>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                             <div>
+                                                <label class="text-xs font-bold text-gray-500">Tiền giảm (VNĐ)</label>
+                                                <input name="discount_amount" type="number" class="w-full border p-2 rounded" placeholder="0">
+                                             </div>
+                                             <div>
+                                                <label class="text-xs font-bold text-gray-500">Tiền quà tặng (VNĐ)</label>
+                                                <input name="gift_amount" type="number" class="w-full border p-2 rounded" placeholder="0">
+                                             </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-8">
+                                        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-lg hover:bg-blue-700 shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2">
+                                            <i class="fa-solid fa-paper-plane"></i> Gửi Duyệt Giá (Manual)
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -159,7 +240,6 @@
                             <i class="fa-solid fa-sync"></i> Làm mới
                         </button>
                     </div>
-
                     <div id="approval-list-container" class="space-y-4">
                         <div class="text-center py-10 text-gray-400">Đang tải danh sách...</div>
                     </div>
@@ -172,7 +252,6 @@
                          <p class="text-gray-500">Vui lòng quay lại sau.</p>
                      </div>
                 </div>
-
             </div>
 
             <div class="bg-white border-t flex justify-around p-2 md:hidden">
@@ -186,7 +265,6 @@
                     <i class="fa-solid fa-clock text-xl"></i> <span class="text-[10px]">Lịch sử</span>
                 </button>
             </div>
-
         </main>
     </div>
 
@@ -202,7 +280,8 @@
                 </div>
                 
                 <input type="hidden" name="customer_name" value="{{data.name}}">
-                <input type="hidden" name="contract_code" value="{{data.contractCode}}"> <input type="hidden" name="phone" value="{{data.phone}}">
+                <input type="hidden" name="contract_code" value="{{data.contractCode}}">
+                <input type="hidden" name="phone" value="{{data.phone}}">
                 <input type="hidden" name="cccd" value="{{data.cccd}}">
                 <input type="hidden" name="address" value="{{data.address}}">
                 <input type="hidden" name="car_model" value="{{data.carModel}}">
@@ -216,9 +295,9 @@
                         </div>
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase">Dòng Xe / Phiên bản</label>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Dòng Xe</label>
                         <div class="p-2 bg-blue-50 rounded border border-blue-200 text-blue-800 font-bold">
-                            {{data.carModel}} - {{data.carVersion}}
+                            {{data.carModel}} {{data.carVersion}}
                         </div>
                     </div>
                 </div>
@@ -228,12 +307,10 @@
                         <label class="block text-sm font-bold text-gray-700 mb-1">Giá trị hợp đồng (VNĐ) <span class="text-red-500">*</span></label>
                         <input name="contract_price" type="text" class="w-full border-2 border-yellow-400 p-3 rounded-lg focus:ring-2 focus:ring-yellow-200 outline-none font-medium" placeholder="VD: 500,000,000" required>
                     </div>
-
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">Chi tiết giảm giá</label>
-                        <textarea name="discount_details" rows="2" class="w-full border border-gray-300 p-2 rounded-lg focus:border-blue-500 outline-none" placeholder="VD: Giảm tiền mặt, Voucher..."></textarea>
+                        <textarea name="discount_details" rows="2" class="w-full border border-gray-300 p-2 rounded-lg outline-none" placeholder="VD: Giảm tiền mặt..."></textarea>
                     </div>
-                    
                     <div class="grid grid-cols-2 gap-4">
                          <div>
                             <label class="text-xs font-bold text-gray-500">Tiền giảm giá</label>
@@ -245,13 +322,11 @@
                          </div>
                     </div>
                 </div>
-
                 <script> document.getElementById('action-area').classList.remove('hidden'); </script>
             </div>
         {{/success}}
-
         {{^success}}
-            <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg text-center animate-bounce-short">
+            <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg text-center">
                 <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
                 <p class="font-bold">Không tìm thấy!</p>
                 <p class="text-sm">{{message}}</p>
@@ -264,7 +339,6 @@
         {{#data}}
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4 relative overflow-hidden transition hover:shadow-md" id="card-{{id}}">
             <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-            
             <div class="flex justify-between items-start mb-2 pl-3">
                 <div>
                     <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">{{contract_code}}</span>
@@ -275,7 +349,6 @@
                     <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded">{{status_text}}</span>
                 </div>
             </div>
-
             <div class="pl-3 grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
                 <p><i class="fa-solid fa-car mr-1 opacity-50"></i> {{car_model}}</p>
                 <p><i class="fa-solid fa-user-tie mr-1 opacity-50"></i> {{requester}}</p>
@@ -284,7 +357,6 @@
                     <span class="text-blue-600 font-bold text-base">{{final_price}}</span>
                 </p>
             </div>
-
             {{#logs}}
             <div class="pl-3 mb-4">
                  <details class="text-xs text-gray-500">
@@ -293,18 +365,16 @@
                  </details>
             </div>
             {{/logs}}
-
             <div class="pl-3 flex gap-2">
-                <button onclick="confirmAction('{{id}}', 'approve')" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-bold text-sm transition flex items-center justify-center gap-1">
+                <button onclick="confirmAction('{{id}}', 'approve')" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-1">
                     <i class="fa-solid fa-check"></i> Duyệt
                 </button>
-                <button onclick="confirmAction('{{id}}', 'reject')" class="flex-1 bg-red-100 hover:bg-red-200 text-red-600 py-2.5 rounded-lg font-bold text-sm transition flex items-center justify-center gap-1">
+                <button onclick="confirmAction('{{id}}', 'reject')" class="flex-1 bg-red-100 hover:bg-red-200 text-red-600 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-1">
                     <i class="fa-solid fa-xmark"></i> Từ chối
                 </button>
             </div>
         </div>
         {{/data}}
-
         {{^data}}
         <div class="text-center py-12 text-gray-400">
             <i class="fa-regular fa-folder-open text-4xl mb-2 opacity-30"></i>
@@ -314,301 +384,235 @@
     </template>
 
     <script>
-        // ==========================================================
-// CẤU HÌNH HỆ THỐNG
-// ==========================================================
-// ⚠️ Thay URL này bằng Web App URL bạn copy từ Apps Script (Deploy > Anyone)
-const API_URL = "https://script.google.com/macros/s/AKfycbwTyybDq0fVwdJz0IdCM-t1uLc3EKhclv58q9ey9kiKtUd4NMvpDR-ptWbH2b34bwkR/exec";
+        // --- CẤU HÌNH API ---
+        const API_URL = "https://script.google.com/macros/s/AKfycbwTyybDq0fVwdJz0IdCM-t1uLc3EKhclv58q9ey9kiKtUd4NMvpDR-ptWbH2b34bwkR/exec";
 
-// ==========================================================
-// 1. QUẢN LÝ SESSION & INIT
-// ==========================================================
-
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Setup HTMX cho ô tìm kiếm
-    const searchInput = document.getElementById('search_code_input');
-    if (searchInput) {
-        searchInput.setAttribute('hx-post', API_URL);
-        htmx.process(searchInput);
-    }
-
-    // 2. Check Login
-    checkSession();
-});
-
-// Hàm kiểm tra xem user đã login chưa
-function checkSession() {
-    const session = localStorage.getItem('user_session');
-    const loginView = document.getElementById('login-view');
-    const dashboardView = document.getElementById('dashboard-view');
-    
-    if (session) {
-        const user = JSON.parse(session);
-        // Hiển thị thông tin user lên Sidebar
-        document.getElementById('user-fullname').textContent = user.fullname;
-        document.getElementById('user-role').textContent = user.role;
-        
-        // Logic hiển thị menu theo Role
-        if(user.role === 'SALE' || user.role === 'TVBH') {
-            document.getElementById('nav-approval').classList.add('hidden'); // Sale không cần nút Duyệt
-            if(document.getElementById('mob-approval')) document.getElementById('mob-approval').classList.add('hidden');
-        } else {
-            // Sếp thì vào thẳng tab duyệt
-            switchTab('approval');
-        }
-
-        loginView.classList.add('hidden');
-        dashboardView.classList.remove('hidden');
-        dashboardView.classList.add('flex'); // Quan trọng để flex layout hoạt động
-    } else {
-        loginView.classList.remove('hidden');
-        dashboardView.classList.add('hidden');
-        dashboardView.classList.remove('flex');
-    }
-}
-
-// ==========================================================
-// 2. XỬ LÝ ĐĂNG NHẬP / ĐĂNG XUẤT
-// ==========================================================
-
-async function handleLogin(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btn-login');
-    const userInp = document.getElementById('login-user');
-    const passInp = document.getElementById('login-pass');
-
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
-    btn.disabled = true;
-
-    try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            body: JSON.stringify({
-                action: "login",
-                username: userInp.value,
-                password: passInp.value
-            })
-        });
-        const result = await response.json();
-
-        if (result.success) {
-            localStorage.setItem('user_session', JSON.stringify(result.user));
-            Swal.fire({
-                icon: 'success',
-                title: 'Xin chào ' + result.user.fullname,
-                toast: true, position: 'top-end', showConfirmButton: false, timer: 2000
-            });
-            checkSession();
-        } else {
-            Swal.fire('Lỗi', result.message, 'error');
-        }
-    } catch (err) {
-        Swal.fire('Lỗi kết nối', 'Không thể gọi tới Server GAS', 'error');
-    } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
-}
-
-function logout() {
-    Swal.fire({
-        title: 'Đăng xuất?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Đồng ý',
-        cancelButtonText: 'Hủy'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            localStorage.removeItem('user_session');
-            location.reload();
-        }
-    });
-}
-
-// ==========================================================
-// 3. ĐIỀU HƯỚNG TAB
-// ==========================================================
-
-function switchTab(tabId) {
-    // 1. Ẩn tất cả nội dung tab
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    // 2. Bỏ active style ở Sidebar buttons
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    // 3. Bỏ active style ở Mobile buttons
-    document.querySelectorAll('.nav-mobile-item').forEach(el => {
-        el.classList.remove('active', 'text-blue-600');
-        el.classList.add('text-gray-400');
-    });
-
-    // 4. Active tab được chọn
-    document.getElementById('tab-' + tabId).classList.add('active');
-    
-    // 5. Active button tương ứng
-    const navBtn = document.getElementById('nav-' + tabId);
-    if(navBtn) navBtn.classList.add('active');
-
-    const mobBtn = document.getElementById('mob-' + tabId);
-    if(mobBtn) {
-        mobBtn.classList.remove('text-gray-400');
-        mobBtn.classList.add('active', 'text-blue-600');
-    }
-
-    // Logic riêng cho từng tab
-    if (tabId === 'approval') {
-        loadApprovalList();
-    }
-}
-
-// ==========================================================
-// 4. LOGIC: TẠO YÊU CẦU (SUBMIT FORM)
-// ==========================================================
-
-async function handleSubmitRequest(e) {
-    e.preventDefault();
-    
-    // Lấy Session
-    const session = JSON.parse(localStorage.getItem('user_session'));
-    const formData = new FormData(document.getElementById('form-create-request'));
-    const data = Object.fromEntries(formData.entries());
-    
-    // Dữ liệu bổ sung
-    const payload = {
-        action: "submit_request",
-        requester: session.username,
-        contract_code: document.getElementById('search_code_input').value, // Lấy từ ô search
-        ...data
-    };
-
-    // UI Loading
-    const btn = document.querySelector('#action-area button');
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
-    btn.disabled = true;
-
-    try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-
-        if (result.success) {
-            Swal.fire('Thành công', result.message, 'success');
-            // Reset form
-            document.getElementById('form-create-request').reset();
-            document.getElementById('search-result').innerHTML = '<div class="text-center py-10 text-gray-400 border-2 border-dashed rounded-lg bg-gray-50"><p>Đã gửi xong. Nhập mã mới để tiếp tục.</p></div>';
-            document.getElementById('search_code_input').value = '';
-            document.getElementById('action-area').classList.add('hidden');
-        } else {
-            Swal.fire('Thất bại', result.message, 'error');
-        }
-    } catch (err) {
-        Swal.fire('Lỗi', 'Không thể kết nối server', 'error');
-    } finally {
-        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Gửi Duyệt Giá';
-        btn.disabled = false;
-    }
-}
-
-// ==========================================================
-// 5. LOGIC: DUYỆT ĐƠN (APPROVAL LIST)
-// ==========================================================
-
-async function loadApprovalList() {
-    const session = JSON.parse(localStorage.getItem('user_session'));
-    const container = document.getElementById('approval-list-container');
-    
-    container.innerHTML = '<div class="text-center py-4"><i class="fa-solid fa-spinner fa-spin text-blue-600 text-2xl"></i></div>';
-
-    try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            body: JSON.stringify({
-                action: "get_pending_list",
-                username: session.username,
-                role: session.role
-            })
-        });
-        const result = await response.json();
-
-        if (result.success) {
-            // Render bằng Mustache thủ công (vì hàm này gọi bằng JS thuần)
-            const template = document.getElementById('tpl-pending-list').innerHTML;
-            const rendered = Mustache.render(template, { data: result.data });
-            container.innerHTML = rendered;
-            
-            // Cập nhật Badge số lượng
-            const count = result.data.length;
-            const badge = document.getElementById('badge-count');
-            if(badge) {
-                badge.textContent = count > 0 ? count : '!';
-                badge.style.display = count > 0 ? 'inline-block' : 'none';
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('search_code_input');
+            if (searchInput) {
+                searchInput.setAttribute('hx-post', API_URL);
+                htmx.process(searchInput);
             }
+            checkSession();
+        });
 
-        } else {
-            container.innerHTML = '<p class="text-red-500 text-center">Lỗi tải dữ liệu</p>';
-        }
-    } catch (err) {
-        container.innerHTML = '<p class="text-red-500 text-center">Lỗi kết nối</p>';
-    }
-}
-
-// Xử lý nút Duyệt / Từ chối
-function confirmAction(id, decision) {
-    const session = JSON.parse(localStorage.getItem('user_session'));
-    const actionText = decision === 'approve' ? 'Duyệt' : 'Từ chối';
-    const actionColor = decision === 'approve' ? '#16a34a' : '#dc2626';
-
-    Swal.fire({
-        title: `Xác nhận ${actionText}?`,
-        input: 'text',
-        inputPlaceholder: 'Nhập ghi chú (tùy chọn)...',
-        showCancelButton: true,
-        confirmButtonText: actionText,
-        confirmButtonColor: actionColor,
-        cancelButtonText: 'Hủy'
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            // Gọi API
-            const card = document.getElementById(`card-${id}`);
-            card.style.opacity = '0.5';
+        // --- AUTH ---
+        function checkSession() {
+            const session = localStorage.getItem('user_session');
+            const loginView = document.getElementById('login-view');
+            const dashboardView = document.getElementById('dashboard-view');
             
+            if (session) {
+                const user = JSON.parse(session);
+                document.getElementById('user-fullname').textContent = user.fullname;
+                document.getElementById('user-role').textContent = user.role;
+                
+                if(user.role === 'SALE' || user.role === 'TVBH') {
+                    document.getElementById('nav-approval').classList.add('hidden');
+                    if(document.getElementById('mob-approval')) document.getElementById('mob-approval').classList.add('hidden');
+                } else {
+                    switchTab('approval');
+                }
+                loginView.classList.add('hidden');
+                dashboardView.classList.remove('hidden');
+                dashboardView.classList.add('flex');
+            } else {
+                loginView.classList.remove('hidden');
+                dashboardView.classList.add('hidden');
+                dashboardView.classList.remove('flex');
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-login');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+            btn.disabled = true;
+
             try {
                 const response = await fetch(API_URL, {
                     method: "POST",
                     body: JSON.stringify({
-                        action: "approve_reject",
-                        id: id,
-                        username: session.username,
-                        role: session.role,
-                        decision: decision,
-                        comment: result.value
+                        action: "login",
+                        username: document.getElementById('login-user').value,
+                        password: document.getElementById('login-pass').value
                     })
                 });
-                const apiRes = await response.json();
-                
-                if (apiRes.success) {
-                    Swal.fire('Đã xử lý', apiRes.message, 'success');
-                    // Xóa card khỏi danh sách
-                    card.remove();
-                    // Load lại list để cập nhật số lượng
-                    loadApprovalList();
+                const result = await response.json();
+                if (result.success) {
+                    localStorage.setItem('user_session', JSON.stringify(result.user));
+                    Swal.fire({ icon: 'success', title: 'Xin chào ' + result.user.fullname, toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+                    checkSession();
                 } else {
-                    Swal.fire('Lỗi', apiRes.message, 'error');
-                    card.style.opacity = '1';
+                    Swal.fire('Lỗi', result.message, 'error');
                 }
-            } catch (e) {
-                Swal.fire('Lỗi', 'Mất kết nối', 'error');
-                card.style.opacity = '1';
+            } catch (err) {
+                Swal.fire('Lỗi kết nối', 'Không thể gọi tới Server GAS', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
-    });
-}
 
+        function logout() {
+            Swal.fire({ title: 'Đăng xuất?', icon: 'question', showCancelButton: true, confirmButtonText: 'Đồng ý' }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('user_session');
+                    location.reload();
+                }
+            });
+        }
 
+        // --- NAVIGATION ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-mobile-item').forEach(el => {
+                el.classList.remove('active', 'text-blue-600');
+                el.classList.add('text-gray-400');
+            });
 
+            document.getElementById('tab-' + tabId).classList.add('active');
+            const navBtn = document.getElementById('nav-' + tabId);
+            if(navBtn) navBtn.classList.add('active');
+            const mobBtn = document.getElementById('mob-' + tabId);
+            if(mobBtn) {
+                mobBtn.classList.remove('text-gray-400');
+                mobBtn.classList.add('active', 'text-blue-600');
+            }
+            if (tabId === 'approval') loadApprovalList();
+        }
 
-      
+        function toggleCreateMode(mode) {
+            const btnSearch = document.getElementById('btn-mode-search');
+            const btnManual = document.getElementById('btn-mode-manual');
+            const viewSearch = document.getElementById('mode-search-container');
+            const viewManual = document.getElementById('mode-manual-container');
+
+            if (mode === 'search') {
+                btnSearch.classList.add('bg-blue-600', 'text-white', 'shadow');
+                btnSearch.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                btnManual.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                btnManual.classList.add('text-gray-600', 'hover:bg-gray-100');
+                viewSearch.classList.remove('hidden');
+                viewManual.classList.add('hidden');
+            } else {
+                btnManual.classList.add('bg-blue-600', 'text-white', 'shadow');
+                btnManual.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                btnSearch.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                btnSearch.classList.add('text-gray-600', 'hover:bg-gray-100');
+                viewManual.classList.remove('hidden');
+                viewSearch.classList.add('hidden');
+            }
+        }
+
+        // --- SUBMIT FORM ---
+        async function handleSubmitRequest(e, mode) {
+            e.preventDefault();
+            const session = JSON.parse(localStorage.getItem('user_session'));
+            let formId = mode === 'search' ? 'form-create-request' : 'form-manual-create';
+            const formData = new FormData(document.getElementById(formId));
+            const data = Object.fromEntries(formData.entries());
+            
+            let payload = { action: "submit_request", requester: session.username, ...data };
+            if (mode === 'search') payload.contract_code = document.getElementById('search_code_input').value;
+
+            const btn = document.querySelector(`#${formId} button[type="submit"]`);
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+                const result = await response.json();
+                if (result.success) {
+                    Swal.fire('Thành công', result.message, 'success');
+                    document.getElementById(formId).reset();
+                    if (mode === 'search') {
+                        document.getElementById('search-result').innerHTML = '<div class="text-center py-10 text-gray-400 border-2 border-dashed rounded-lg bg-gray-50"><p>Đã gửi xong.</p></div>';
+                        document.getElementById('search_code_input').value = '';
+                        document.getElementById('action-area').classList.add('hidden');
+                    }
+                } else {
+                    Swal.fire('Thất bại', result.message, 'error');
+                }
+            } catch (err) {
+                Swal.fire('Lỗi', 'Không thể kết nối server', 'error');
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        }
+
+        // --- APPROVAL LIST ---
+        async function loadApprovalList() {
+            const session = JSON.parse(localStorage.getItem('user_session'));
+            const container = document.getElementById('approval-list-container');
+            container.innerHTML = '<div class="text-center py-4"><i class="fa-solid fa-spinner fa-spin text-blue-600 text-2xl"></i></div>';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "get_pending_list", username: session.username, role: session.role })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    const template = document.getElementById('tpl-pending-list').innerHTML;
+                    const rendered = Mustache.render(template, { data: result.data });
+                    container.innerHTML = rendered;
+                    const count = result.data.length;
+                    const badge = document.getElementById('badge-count');
+                    if(badge) {
+                        badge.textContent = count > 0 ? count : '!';
+                        badge.style.display = count > 0 ? 'inline-block' : 'none';
+                    }
+                } else {
+                    container.innerHTML = '<p class="text-red-500 text-center">Lỗi tải dữ liệu</p>';
+                }
+            } catch (err) {
+                container.innerHTML = '<p class="text-red-500 text-center">Lỗi kết nối</p>';
+            }
+        }
+
+        function confirmAction(id, decision) {
+            const session = JSON.parse(localStorage.getItem('user_session'));
+            const actionText = decision === 'approve' ? 'Duyệt' : 'Từ chối';
+            const actionColor = decision === 'approve' ? '#16a34a' : '#dc2626';
+
+            Swal.fire({
+                title: `Xác nhận ${actionText}?`,
+                input: 'text', inputPlaceholder: 'Nhập ghi chú (tùy chọn)...',
+                showCancelButton: true, confirmButtonText: actionText, confirmButtonColor: actionColor
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const card = document.getElementById(`card-${id}`);
+                    card.style.opacity = '0.5';
+                    try {
+                        const response = await fetch(API_URL, {
+                            method: "POST",
+                            body: JSON.stringify({
+                                action: "approve_reject", id: id, username: session.username,
+                                role: session.role, decision: decision, comment: result.value
+                            })
+                        });
+                        const apiRes = await response.json();
+                        if (apiRes.success) {
+                            Swal.fire('Đã xử lý', apiRes.message, 'success');
+                            card.remove();
+                            loadApprovalList();
+                        } else {
+                            Swal.fire('Lỗi', apiRes.message, 'error');
+                            card.style.opacity = '1';
+                        }
+                    } catch (e) {
+                        Swal.fire('Lỗi', 'Mất kết nối', 'error');
+                        card.style.opacity = '1';
+                    }
+                }
+            });
+        }
     </script>
 </body>
 </html>
