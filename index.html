@@ -1,9 +1,23 @@
+Đây là file `index.html` hoàn chỉnh (Single File Application).
+
+Tôi đã bổ sung **đầy đủ các trường thông tin** (Màu xe, Phiên bản, Hình thức thanh toán, Email...) vào cả form **Nhập Tay**, form **Tra Cứu** và **Modal Chi Tiết**.
+
+### Cập nhật chính:
+
+1.  **Form Nhập Tay:** Thêm các trường: Email, Phiên bản, Màu xe, Hình thức thanh toán.
+2.  **Logic Quà tặng:** Cho phép thêm/xóa nhiều dòng, tự động tính tổng tiền.
+3.  **Modal Chi tiết:** Hiển thị đầy đủ mọi thông tin đã nhập để Sếp duyệt.
+
+Bạn chỉ cần thay **`API_URL`** ở cuối file là chạy.
+
+```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Phê Duyệt Giá Xe</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/client-side-templates.js"></script>
@@ -14,12 +28,16 @@
     <style>
         .htmx-indicator { opacity: 0; transition: opacity 200ms ease-in; pointer-events: none; }
         .htmx-request .htmx-indicator { opacity: 1; pointer-events: auto; }
-        .htmx-request.htmx-indicator { opacity: 1; pointer-events: auto; }
         .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .nav-item.active { background-color: #1e40af; border-left: 4px solid #60a5fa; }
-        .nav-mobile-item.active { color: #2563eb; }
+        
+        /* Custom Scrollbar cho Modal */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
     </style>
 </head>
 
@@ -28,113 +46,183 @@
     <div id="login-view" class="fixed inset-0 z-50 bg-gray-100 flex items-center justify-center">
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm border border-gray-200">
             <div class="text-center mb-8">
+                <div class="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <i class="fa-solid fa-car text-white text-2xl"></i>
+                </div>
                 <h2 class="text-2xl font-bold text-gray-800">Duyệt Giá Xe</h2>
                 <p class="text-gray-500 text-sm">Hệ thống quản trị nội bộ</p>
             </div>
-            <form id="form-login" onsubmit="handleLogin(event)">
-                <input type="text" id="login-user" class="w-full mb-4 p-3 border rounded-lg" placeholder="Username" required>
-                <input type="password" id="login-pass" class="w-full mb-6 p-3 border rounded-lg" placeholder="Password" required>
-                <button type="submit" id="btn-login" class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg hover:bg-blue-800">Đăng Nhập</button>
+            <form onsubmit="handleLogin(event)">
+                <div class="mb-4 relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa-solid fa-user"></i></span>
+                    <input type="text" id="login-user" class="w-full pl-10 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Tên đăng nhập" required>
+                </div>
+                <div class="mb-6 relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa-solid fa-lock"></i></span>
+                    <input type="password" id="login-pass" class="w-full pl-10 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Mật khẩu" required>
+                </div>
+                <button type="submit" id="btn-login" class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg hover:bg-blue-800 shadow-lg transition">Đăng Nhập</button>
             </form>
         </div>
     </div>
 
     <div id="dashboard-view" class="flex h-full hidden">
+        
         <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-2xl z-20 hidden md:flex">
             <div class="p-6 border-b border-slate-700">
-                <h1 class="text-xl font-bold">MY AUTO</h1>
+                <h1 class="text-xl font-bold tracking-wider">MY AUTO</h1>
                 <p class="text-xs text-slate-400 mt-1">Xin chào, <span id="user-fullname" class="font-bold text-white">User</span></p>
                 <span id="user-role" class="text-[10px] bg-blue-600 px-2 py-0.5 rounded mt-2 inline-block">ROLE</span>
             </div>
             <nav class="flex-1 overflow-y-auto py-4 space-y-1">
-                <button onclick="switchTab('create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 active" id="nav-create">
-                    <i class="fa-solid fa-plus-circle w-6"></i> Tạo Tờ Trình
+                <button onclick="switchTab('create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 active" id="nav-create">
+                    <i class="fa-solid fa-file-circle-plus"></i> Tạo Tờ Trình
                 </button>
-                <button onclick="switchTab('approval')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800" id="nav-approval">
-                    <i class="fa-solid fa-list-check w-6"></i> Duyệt Đơn <span class="ml-auto bg-red-500 text-white text-xs px-2 rounded-full hidden" id="badge-count">!</span>
+                <button onclick="switchTab('approval')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3" id="nav-approval">
+                    <i class="fa-solid fa-list-check"></i> Duyệt Đơn
                 </button>
             </nav>
-            <div class="p-4"><button onclick="logout()" class="w-full bg-slate-800 hover:bg-red-600 py-2 rounded">Đăng xuất</button></div>
+            <div class="p-4 border-t border-slate-700">
+                <button onclick="logout()" class="w-full bg-slate-800 hover:bg-red-600 py-2 rounded transition flex items-center justify-center gap-2"><i class="fa-solid fa-sign-out-alt"></i> Đăng xuất</button>
+            </div>
         </aside>
 
         <main class="flex-1 flex flex-col bg-gray-100 relative overflow-hidden">
             <header class="bg-white shadow p-4 flex justify-between items-center md:hidden z-10">
-                <h1 class="font-bold">Duyệt Giá Xe</h1>
-                <button onclick="logout()"><i class="fa-solid fa-power-off text-red-600"></i></button>
+                <h1 class="font-bold text-gray-800">Duyệt Giá Xe</h1>
+                <button onclick="logout()" class="text-red-600"><i class="fa-solid fa-power-off"></i></button>
             </header>
 
             <div class="flex-1 overflow-y-auto p-4 md:p-8">
-                <div id="tab-create" class="tab-content active max-w-4xl mx-auto">
-                    <div class="bg-white rounded-xl shadow-sm border p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-lg font-bold text-blue-800">📝 Tạo Yêu Cầu</h2>
-                            <div class="bg-gray-100 p-1 rounded flex">
-                                <button onclick="toggleCreateMode('search')" id="btn-mode-search" class="px-3 py-1 bg-blue-600 text-white rounded text-sm font-bold shadow">Tra Cứu</button>
-                                <button onclick="toggleCreateMode('manual')" id="btn-mode-manual" class="px-3 py-1 text-gray-600 rounded text-sm font-bold">Nhập Tay</button>
+                
+                <div id="tab-create" class="tab-content active max-w-5xl mx-auto">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        
+                        <div class="bg-blue-50 px-6 py-4 border-b border-blue-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <h2 class="text-lg font-bold text-blue-800"><i class="fa-solid fa-pen-to-square mr-2"></i>Tạo Yêu Cầu Mới</h2>
+                            <div class="bg-white p-1 rounded-lg border border-blue-200 flex shadow-sm">
+                                <button onclick="toggleCreateMode('search')" id="btn-mode-search" class="px-4 py-2 rounded-md text-sm font-bold transition bg-blue-600 text-white shadow">Tra Cứu HĐ</button>
+                                <button onclick="toggleCreateMode('manual')" id="btn-mode-manual" class="px-4 py-2 rounded-md text-sm font-bold transition text-gray-600 hover:bg-gray-100">Nhập Tay</button>
                             </div>
                         </div>
-
-                        <div id="mode-search-container">
-                            <div class="mb-4 relative">
-                                <input type="text" id="search_code_input" class="w-full border-2 border-blue-200 p-3 rounded font-mono uppercase font-bold" placeholder="Nhập Mã HĐ (VD: S10601...)"
-                                       hx-post="" hx-trigger="change" hx-vals='{"action": "lookup_contract"}' hx-target="#search-result" mustache-template="tpl-lookup-result" hx-indicator="#loading">
-                                <div id="loading" class="htmx-indicator absolute right-3 top-3"><i class="fa-solid fa-spinner fa-spin text-blue-600"></i></div>
-                            </div>
-                            <form id="form-create-request" onsubmit="handleSubmitRequest(event, 'search')">
-                                <div id="search-result"><div class="text-center py-8 text-gray-400 border-2 border-dashed rounded">Nhập mã để tải dữ liệu</div></div>
-                                <div id="action-area" class="mt-6 hidden">
-                                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700">Gửi Duyệt Giá</button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <div id="mode-manual-container" class="hidden">
-                            <form id="form-manual-create" onsubmit="handleSubmitRequest(event, 'manual')">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <input name="contract_code" class="border p-2 rounded uppercase font-mono" placeholder="Mã Hợp Đồng *" required>
-                                    <input name="customer_name" class="border p-2 rounded" placeholder="Tên Khách Hàng *" required>
-                                    <input name="phone" class="border p-2 rounded" placeholder="SĐT">
-                                    <input name="car_model" class="border p-2 rounded" placeholder="Dòng xe">
-                                </div>
-                                
-                                <h3 class="font-bold text-gray-700 mt-4 mb-2">Chính sách giá</h3>
-                                <div class="bg-yellow-50 p-4 rounded border border-yellow-200 space-y-3">
-                                    <input name="contract_price" class="w-full border-2 border-yellow-400 p-2 rounded font-bold" placeholder="Giá trị HĐ (VNĐ) *" required>
-                                    <input name="discount_amount" type="number" class="w-full border p-2 rounded" placeholder="Tiền giảm giá (VNĐ)">
-                                    
-                                    <div class="border-t pt-2 mt-2">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <label class="text-sm font-bold">Quà tặng</label>
-                                            <button type="button" onclick="addGiftRow()" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">+ Thêm</button>
-                                        </div>
-                                        <div id="gift-list-manual" class="space-y-2"></div>
-                                        <input type="hidden" name="gift_json" id="hidden_gift_json_manual">
+                        
+                        <div class="p-6">
+                            <div id="mode-search-container">
+                                <div class="mb-6 relative">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2">Mã Hợp Đồng</label>
+                                    <div class="flex gap-2">
+                                        <input type="text" id="search_code_input" 
+                                               class="flex-1 border-2 border-blue-200 p-3 rounded-lg focus:border-blue-600 outline-none uppercase font-mono font-bold"
+                                               placeholder="VD: S10601-25-0663"
+                                               hx-post="" hx-trigger="change" hx-vals='{"action": "lookup_contract"}' 
+                                               hx-target="#search-result" mustache-template="tpl-lookup-result" hx-indicator="#loading-lookup">
+                                        <div id="loading-lookup" class="htmx-indicator flex items-center px-4"><i class="fa-solid fa-spinner fa-spin text-blue-600 text-xl"></i></div>
                                     </div>
                                 </div>
 
-                                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded mt-6">Gửi Duyệt (Nhập Tay)</button>
-                            </form>
+                                <form id="form-create-request" onsubmit="handleSubmitRequest(event, 'search')">
+                                    <div id="search-result">
+                                        <div class="text-center py-12 text-gray-400 border-2 border-dashed rounded-lg bg-gray-50">
+                                            <i class="fa-solid fa-magnifying-glass text-4xl mb-3 opacity-30"></i>
+                                            <p>Nhập mã hợp đồng để tải dữ liệu khách hàng</p>
+                                        </div>
+                                    </div>
+                                    <div id="action-area" class="mt-8 hidden">
+                                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 shadow-lg transition transform active:scale-95">Gửi Duyệt Giá</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div id="mode-manual-container" class="hidden animate-fade-in-down">
+                                <form id="form-manual-create" onsubmit="handleSubmitRequest(event, 'manual')">
+                                    
+                                    <div class="mb-6">
+                                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">1. Thông tin Khách hàng</h3>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div><label class="label">Mã Hợp Đồng *</label><input name="contract_code" class="input uppercase font-mono" required placeholder="S10601..."></div>
+                                            <div><label class="label">Họ tên Khách hàng *</label><input name="customer_name" class="input" required></div>
+                                            <div><label class="label">Số điện thoại</label><input name="phone" class="input"></div>
+                                            <div><label class="label">CCCD / CMND</label><input name="cccd" class="input"></div>
+                                            <div><label class="label">Email</label><input name="email" class="input"></div>
+                                            <div><label class="label">Địa chỉ</label><input name="address" class="input"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-6">
+                                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">2. Thông tin Xe</h3>
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div><label class="label">Dòng Xe</label><input name="car_model" class="input" placeholder="VD: VF 5 Plus"></div>
+                                            <div><label class="label">Phiên bản</label><input name="car_version" class="input" placeholder="Eco / Plus"></div>
+                                            <div><label class="label">Màu sắc</label><input name="car_color" class="input"></div>
+                                            <div><label class="label">Số Khung (VIN)</label><input name="vin_no" class="input uppercase"></div>
+                                            <div class="md:col-span-2"><label class="label">Hình thức thanh toán</label>
+                                                <select name="payment_method" class="input bg-white">
+                                                    <option value="Tiền mặt">Tiền mặt</option>
+                                                    <option value="Trả góp">Trả góp ngân hàng</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-6">
+                                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">3. Chính sách giá & Quà tặng</h3>
+                                        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                                            <div class="mb-4">
+                                                <label class="block text-sm font-bold text-gray-800 mb-1">Giá trị Hợp đồng (VNĐ) *</label>
+                                                <input name="contract_price" type="text" class="w-full border-2 border-yellow-400 p-2 rounded text-lg font-bold text-gray-800 outline-none" oninput="formatMoneyInput(this)" required placeholder="0">
+                                            </div>
+                                            
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                                <div>
+                                                    <label class="label">Chi tiết giảm giá</label>
+                                                    <textarea name="discount_details" rows="2" class="input" placeholder="Diễn giải..."></textarea>
+                                                </div>
+                                                <div>
+                                                    <label class="label">Tiền giảm giá (VNĐ)</label>
+                                                    <input name="discount_amount" type="text" class="input" oninput="formatMoneyInput(this)" placeholder="0">
+                                                </div>
+                                            </div>
+
+                                            <div class="border-t border-yellow-200 pt-3">
+                                                <div class="flex justify-between items-center mb-2">
+                                                    <label class="text-sm font-bold text-gray-700">🎁 Quà tặng kèm</label>
+                                                    <button type="button" onclick="addGiftRow('gift-list-manual')" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold hover:bg-blue-200 transition">+ Thêm dòng</button>
+                                                </div>
+                                                <div id="gift-list-manual" class="space-y-2"></div>
+                                                <input type="hidden" name="gift_json" id="hidden_gift_json_manual">
+                                                
+                                                <div class="flex justify-end mt-2 text-sm">
+                                                    <span class="font-bold text-gray-600 mr-2">Tổng quà:</span>
+                                                    <span id="total-gift-manual" class="font-bold text-blue-600">0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg transition transform active:scale-95">Gửi Duyệt (Nhập Tay)</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div id="tab-approval" class="tab-content max-w-4xl mx-auto">
-                    <div class="flex justify-between mb-4">
-                        <h2 class="font-bold text-xl">Duyệt Đơn</h2>
-                        <button onclick="loadApprovalList()" class="text-sm bg-white border px-3 py-1 rounded">Làm mới</button>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800">Danh sách cần duyệt</h2>
+                        <button onclick="loadApprovalList()" class="bg-white border text-gray-600 px-3 py-1 rounded hover:bg-gray-50 text-sm"><i class="fa-solid fa-sync mr-1"></i>Làm mới</button>
                     </div>
                     <div id="approval-list-container" class="space-y-4"></div>
                 </div>
             </div>
 
             <div class="bg-white border-t flex justify-around p-2 md:hidden">
-                <button onclick="switchTab('create')" class="nav-mobile-item text-blue-600 flex flex-col items-center"><i class="fa-solid fa-plus-circle"></i> <span class="text-[10px]">Tạo</span></button>
-                <button onclick="switchTab('approval')" class="nav-mobile-item text-gray-400 flex flex-col items-center"><i class="fa-solid fa-list-check"></i> <span class="text-[10px]">Duyệt</span></button>
+                <button onclick="switchTab('create')" class="nav-mobile-item text-blue-600 flex flex-col items-center"><i class="fa-solid fa-plus-circle text-xl"></i><span class="text-[10px]">Tạo</span></button>
+                <button onclick="switchTab('approval')" class="nav-mobile-item text-gray-400 flex flex-col items-center"><i class="fa-solid fa-list-check text-xl"></i><span class="text-[10px]">Duyệt</span></button>
             </div>
         </main>
     </div>
 
-    <div id="modal-detail" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div id="modal-detail" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95 transition" id="modal-content">
             <div id="modal-detail-body"></div>
         </div>
@@ -143,32 +231,56 @@
     <template id="tpl-lookup-result">
         {{#success}}
         <div class="animate-fade-in-down">
-            <div class="bg-green-50 text-green-800 p-3 rounded mb-4 font-bold text-sm">✓ Tìm thấy: {{data.name}}</div>
+            <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6 flex items-center">
+                <i class="fa-solid fa-check-circle mr-2 text-xl"></i>
+                <div>
+                    <p class="font-bold text-sm">Đã tìm thấy dữ liệu</p>
+                    <p class="text-xs">{{data.name}}</p>
+                </div>
+            </div>
+            
             <input type="hidden" name="customer_name" value="{{data.name}}">
             <input type="hidden" name="contract_code" value="{{data.contractCode}}">
             <input type="hidden" name="phone" value="{{data.phone}}">
+            <input type="hidden" name="cccd" value="{{data.cccd}}">
             <input type="hidden" name="address" value="{{data.address}}">
+            <input type="hidden" name="email" value="{{data.email}}">
             <input type="hidden" name="car_model" value="{{data.carModel}}">
-            
-            <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
-                <div><label class="font-bold text-gray-500">Khách hàng</label><div class="bg-gray-100 p-2 rounded">{{data.name}}</div></div>
-                <div><label class="font-bold text-gray-500">Xe</label><div class="bg-blue-50 p-2 rounded text-blue-800 font-bold">{{data.carModel}}</div></div>
+            <input type="hidden" name="car_version" value="{{data.carVersion}}">
+            <input type="hidden" name="car_color" value="{{data.carColor}}">
+            <input type="hidden" name="vin_no" value="">
+            <input type="hidden" name="payment_method" value="{{data.payment}}">
+
+            <div class="grid grid-cols-2 gap-4 mb-4 text-sm bg-gray-50 p-4 rounded border">
+                <div><span class="text-xs text-gray-500 block">KHÁCH HÀNG</span><span class="font-bold">{{data.name}}</span></div>
+                <div><span class="text-xs text-gray-500 block">DÒNG XE</span><span class="font-bold text-blue-800">{{data.carModel}} {{data.carVersion}}</span></div>
+                <div><span class="text-xs text-gray-500 block">SĐT</span><span>{{data.phone}}</span></div>
+                <div><span class="text-xs text-gray-500 block">ĐỊA CHỈ</span><span>{{data.address}}</span></div>
+                <div><span class="text-xs text-gray-500 block">THANH TOÁN</span><span>{{data.payment}}</span></div>
+                <div><span class="text-xs text-gray-500 block">MÀU XE</span><span>{{data.carColor}}</span></div>
             </div>
 
-            <div class="space-y-3 border-t pt-3">
-                <input name="contract_price" class="w-full border-2 border-yellow-400 p-2 rounded font-bold" placeholder="Giá HĐ (VNĐ) *" required>
-                <textarea name="discount_details" class="w-full border p-2 rounded" placeholder="Chi tiết giảm giá"></textarea>
-                <input name="discount_amount" type="number" class="w-full border p-2 rounded" placeholder="Tiền giảm (VNĐ)">
+            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-800 mb-1">Giá trị Hợp đồng (VNĐ) *</label>
+                    <input name="contract_price" type="text" class="w-full border-2 border-yellow-400 p-2 rounded text-lg font-bold text-gray-800 outline-none" oninput="formatMoneyInput(this)" required placeholder="0">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="label">Chi tiết giảm giá</label><textarea name="discount_details" rows="1" class="input"></textarea></div>
+                    <div><label class="label">Tiền giảm (VNĐ)</label><input name="discount_amount" oninput="formatMoneyInput(this)" class="input" placeholder="0"></div>
+                </div>
                 
-                <div class="border-t pt-2">
+                <div class="border-t border-yellow-200 pt-2">
                     <div class="flex justify-between items-center mb-2">
                         <label class="text-sm font-bold">Quà tặng</label>
-                        <button type="button" onclick="addGiftRow('gift-list-search')" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">+ Thêm</button>
+                        <button type="button" onclick="addGiftRow('gift-list-search')" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold hover:bg-blue-200">+ Thêm</button>
                     </div>
                     <div id="gift-list-search" class="space-y-2"></div>
                     <input type="hidden" name="gift_json" id="hidden_gift_json_search">
+                    <div class="flex justify-end mt-2 text-sm"><span class="font-bold text-gray-600 mr-2">Tổng quà:</span><span id="total-gift-search" class="font-bold text-blue-600">0</span></div>
                 </div>
             </div>
+
             <script> 
                 document.getElementById('action-area').classList.remove('hidden'); 
                 addGiftRow('gift-list-search'); // Init 1 row
@@ -176,86 +288,127 @@
         </div>
         {{/success}}
         {{^success}}
-        <div class="bg-red-50 text-red-700 p-4 rounded text-center font-bold">Không tìm thấy!</div>
+        <div class="bg-red-50 text-red-700 p-4 rounded text-center font-bold animate-bounce-short">⚠️ Không tìm thấy đơn hàng này!</div>
         {{/success}}
     </template>
 
     <template id="tpl-pending-list">
         {{#data}}
-        <div class="bg-white rounded shadow-sm border p-4 mb-3 cursor-pointer hover:bg-gray-50" onclick="openDetail('{{json_string}}')">
-            <div class="flex justify-between">
-                <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">{{contract_code}}</span>
-                <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded">{{status_text}}</span>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-3 cursor-pointer hover:shadow-md transition relative overflow-hidden" onclick="openDetail('{{json_string}}')">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
+            <div class="flex justify-between items-start pl-3">
+                <div>
+                    <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-1 rounded uppercase">{{contract_code}}</span>
+                    <h3 class="font-bold text-gray-800 mt-1">{{customer}}</h3>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-gray-400 block">{{date}}</span>
+                    <span class="text-xs font-bold bg-gray-100 px-2 py-0.5 rounded text-gray-600">{{status_text}}</span>
+                </div>
             </div>
-            <h3 class="font-bold mt-2">{{customer}}</h3>
-            <p class="text-sm text-gray-600">{{car_model}} - {{final_price}}</p>
-            <p class="text-xs text-blue-500 mt-2 underline">Xem chi tiết</p>
+            <div class="pl-3 mt-2 text-sm text-gray-600">
+                <p><i class="fa-solid fa-car-side mr-1 opacity-50"></i> {{car_model}}</p>
+                <div class="flex justify-between border-t mt-2 pt-2">
+                    <span class="font-medium">Chốt:</span>
+                    <span class="text-blue-600 font-bold">{{final_price}}</span>
+                </div>
+            </div>
+            <div class="pl-3 mt-2 text-xs text-center text-blue-500 underline">Xem chi tiết</div>
         </div>
         {{/data}}
-        {{^data}}<div class="text-center text-gray-400 py-10">Trống</div>{{/data}}
+        {{^data}}<div class="text-center text-gray-400 py-12"><i class="fa-regular fa-folder-open text-4xl mb-2 opacity-30"></i><p>Không có đơn hàng nào.</p></div>{{/data}}
     </template>
 
     <template id="tpl-order-detail">
         <div class="relative">
-            <div class="bg-blue-600 text-white p-4 flex justify-between items-center sticky top-0">
-                <h3 class="font-bold">Chi Tiết Tờ Trình</h3>
-                <button onclick="closeModal()" class="text-2xl">&times;</button>
+            <div class="bg-blue-600 text-white p-4 flex justify-between items-center sticky top-0 z-10">
+                <div>
+                    <h3 class="font-bold text-lg">CHI TIẾT TỜ TRÌNH</h3>
+                    <p class="text-xs opacity-80">Mã: {{contract_code}}</p>
+                </div>
+                <button onclick="closeModal()" class="text-2xl hover:text-red-200">&times;</button>
             </div>
-            <div class="p-6 space-y-4">
-                <div class="border-b pb-2">
-                    <p class="text-lg font-bold">{{customer}}</p>
-                    <p class="text-sm text-gray-500">{{contract_code}} | {{date}}</p>
+            
+            <div class="p-6 space-y-6">
+                <div class="flex justify-between items-start border-b pb-4">
+                    <div>
+                        <p class="text-lg font-bold text-gray-800">{{customer}}</p>
+                        <p class="text-xs text-gray-500"><i class="fa-solid fa-phone mr-1"></i>{{phone}}</p>
+                        <p class="text-xs text-gray-500"><i class="fa-solid fa-map-marker-alt mr-1"></i>{{address}}</p>
+                        <p class="text-xs text-gray-500 mt-1">CCCD: {{cccd}} | Email: {{email}}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">{{requester}}</span>
+                        <p class="text-xs text-gray-400 mt-1">{{date}}</p>
+                    </div>
                 </div>
-                <div class="bg-gray-50 p-3 rounded border">
-                    <p class="font-bold text-gray-700">🚙 {{car_model}}</p>
-                    <p class="text-xs">VIN: {{vin_no}}</p>
+
+                <div class="bg-gray-50 p-4 rounded border">
+                    <div class="flex justify-between font-bold text-gray-700 mb-1">
+                        <span>🚙 {{car_model}} {{car_version}}</span>
+                        <span>{{car_color}}</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>VIN: {{vin_no}}</span>
+                        <span>TT: {{payment}}</span>
+                    </div>
                 </div>
-                <div class="border rounded text-sm overflow-hidden">
-                    <div class="flex justify-between p-2 border-b"><span>Giá HĐ</span><span class="font-bold">{{contract_price}}</span></div>
-                    <div class="flex justify-between p-2 border-b text-red-600"><span>(-) Giảm</span><span>{{discount_amount}}</span></div>
-                    <div class="p-2 bg-gray-50 border-b">
-                        <p class="font-bold mb-1">🎁 Quà tặng:</p>
-                        <div class="pl-2 whitespace-pre-line text-xs">{{#gift_details}}{{gift_details}}{{/gift_details}}{{^gift_details}}Không có{{/gift_details}}</div>
-                        <div class="flex justify-between mt-1 pt-1 border-t"><span class="font-bold text-xs">Tổng quà:</span><span>{{gift_amount}}</span></div>
+
+                <div class="border rounded-lg overflow-hidden text-sm">
+                    <div class="flex justify-between p-3 border-b"><span>Giá Hợp đồng</span><span class="font-bold">{{contract_price}}</span></div>
+                    <div class="flex justify-between p-3 border-b text-red-600"><span>(-) Giảm giá</span><span>{{discount_amount}}</span></div>
+                    <div class="p-3 bg-gray-50 border-b">
+                        <p class="font-bold mb-1 text-gray-600">🎁 Quà tặng:</p>
+                        <div class="pl-2 whitespace-pre-line text-xs italic text-gray-600">{{#gift_details}}{{gift_details}}{{/gift_details}}{{^gift_details}}Không có{{/gift_details}}</div>
+                        <div class="flex justify-between mt-2 pt-2 border-t text-xs font-bold text-gray-500"><span>Tổng quà:</span><span>{{gift_amount}}</span></div>
                     </div>
                     <div class="flex justify-between p-3 bg-blue-50 text-blue-800 font-bold text-lg"><span>GIÁ CHỐT</span><span>{{final_price}}</span></div>
                 </div>
-                <div class="bg-gray-100 p-3 rounded text-xs font-mono whitespace-pre-line">{{logs}}</div>
-                <div class="flex gap-3 pt-2">
-                    <button onclick="confirmAction('{{id}}', 'approve')" class="flex-1 bg-green-600 text-white py-3 rounded font-bold">Duyệt</button>
-                    <button onclick="confirmAction('{{id}}', 'reject')" class="flex-1 bg-red-100 text-red-600 py-3 rounded font-bold">Từ chối</button>
+
+                <div>
+                    <h4 class="font-bold text-xs text-gray-400 uppercase mb-2">Lịch sử phê duyệt</h4>
+                    <div class="bg-gray-100 p-3 rounded text-xs font-mono whitespace-pre-line text-gray-600">{{logs}}</div>
+                </div>
+
+                <div class="flex gap-3 pt-2 border-t">
+                    <button onclick="confirmAction('{{id}}', 'approve')" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold shadow">Duyệt</button>
+                    <button onclick="confirmAction('{{id}}', 'reject')" class="flex-1 bg-red-100 hover:bg-red-200 text-red-600 py-3 rounded-lg font-bold">Từ chối</button>
                 </div>
             </div>
         </div>
     </template>
 
     <script>
-        // ⚠️ THAY URL NÀY BẰNG WEB APP URL CỦA BẠN
+        // --- CONFIG ---
         const API_URL = "https://script.google.com/macros/s/AKfycbwTyybDq0fVwdJz0IdCM-t1uLc3EKhclv58q9ey9kiKtUd4NMvpDR-ptWbH2b34bwkR/exec";
 
+        // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.getElementById('search_code_input');
             if (searchInput) { searchInput.setAttribute('hx-post', API_URL); htmx.process(searchInput); }
             checkSession();
-            addGiftRow('gift-list-manual'); // Init manual row
+            // Init empty rows
+            addGiftRow('gift-list-manual');
         });
 
         // --- AUTH ---
         function checkSession() {
             const session = localStorage.getItem('user_session');
+            const login = document.getElementById('login-view');
+            const dash = document.getElementById('dashboard-view');
             if (session) {
                 const user = JSON.parse(session);
                 document.getElementById('user-fullname').textContent = user.fullname;
                 document.getElementById('user-role').textContent = user.role;
                 if(user.role==='SALE'||user.role==='TVBH') document.getElementById('nav-approval').classList.add('hidden');
                 else switchTab('approval');
-                
-                document.getElementById('login-view').classList.add('hidden');
-                document.getElementById('dashboard-view').classList.remove('hidden');
-                document.getElementById('dashboard-view').classList.add('flex');
+                login.classList.add('hidden');
+                dash.classList.remove('hidden');
+                dash.classList.add('flex');
             } else {
-                document.getElementById('login-view').classList.remove('hidden');
-                document.getElementById('dashboard-view').classList.add('hidden');
+                login.classList.remove('hidden');
+                dash.classList.add('hidden');
+                dash.classList.remove('flex');
             }
         }
         async function handleLogin(e) {
@@ -279,24 +432,41 @@
             const manual = document.getElementById('mode-manual-container');
             const btnS = document.getElementById('btn-mode-search');
             const btnM = document.getElementById('btn-mode-manual');
-            
-            if(mode==='search') { search.classList.remove('hidden'); manual.classList.add('hidden'); btnS.classList.add('bg-blue-600','text-white'); btnM.classList.remove('bg-blue-600','text-white'); }
-            else { manual.classList.remove('hidden'); search.classList.add('hidden'); btnM.classList.add('bg-blue-600','text-white'); btnS.classList.remove('bg-blue-600','text-white'); }
+            if(mode==='search') { search.classList.remove('hidden'); manual.classList.add('hidden'); btnS.classList.add('bg-blue-600','text-white','shadow'); btnS.classList.remove('text-gray-600'); btnM.classList.remove('bg-blue-600','text-white','shadow'); }
+            else { manual.classList.remove('hidden'); search.classList.add('hidden'); btnM.classList.add('bg-blue-600','text-white','shadow'); btnM.classList.remove('text-gray-600'); btnS.classList.remove('bg-blue-600','text-white','shadow'); }
         }
 
-        // --- GIFT LOGIC ---
+        // --- MONEY & GIFT LOGIC ---
+        function formatMoneyInput(el) {
+            let val = el.value.replace(/\D/g, '');
+            el.value = val ? new Number(val).toLocaleString('vi-VN') : '';
+            // Calc total if needed
+            let containerId = el.closest('#mode-search-container') ? 'gift-list-search' : 'gift-list-manual';
+            calcGiftTotal(containerId);
+        }
         function addGiftRow(containerId) {
             const container = document.getElementById(containerId);
-            if(!container) return;
             const rowId = 'gift-'+Date.now();
             const html = `<div class="flex gap-2 mb-2 gift-row" id="${rowId}">
-                <input class="gift-name flex-1 border p-1 rounded text-sm" placeholder="Tên quà">
-                <input class="gift-price w-24 border p-1 rounded text-sm text-right" placeholder="Tiền" oninput="formatMoney(this)">
-                <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-500 px-1">&times;</button>
+                <input class="gift-name flex-1 border p-1.5 rounded text-sm outline-none focus:border-blue-500" placeholder="Tên quà">
+                <input class="gift-price w-28 border p-1.5 rounded text-sm text-right outline-none focus:border-blue-500" placeholder="0" oninput="formatMoneyInput(this)">
+                <button type="button" onclick="removeGiftRow('${rowId}','${containerId}')" class="text-red-400 hover:text-red-600 px-1"><i class="fa-solid fa-trash"></i></button>
             </div>`;
             container.insertAdjacentHTML('beforeend', html);
         }
-        function formatMoney(el) { el.value = new Number(el.value.replace(/\D/g,'')).toLocaleString('vi-VN'); }
+        function removeGiftRow(rowId, containerId) {
+            document.getElementById(rowId).remove();
+            calcGiftTotal(containerId);
+        }
+        function calcGiftTotal(containerId) {
+            let total = 0;
+            document.querySelectorAll(`#${containerId} .gift-price`).forEach(el => {
+                let val = parseInt(el.value.replace(/\./g,'')) || 0;
+                total += val;
+            });
+            let displayId = containerId === 'gift-list-search' ? 'total-gift-search' : 'total-gift-manual';
+            document.getElementById(displayId).textContent = total.toLocaleString('vi-VN');
+        }
         function packGiftData(containerId, hiddenInputId) {
             let gifts = [];
             document.querySelectorAll(`#${containerId} .gift-row`).forEach(row => {
@@ -315,47 +485,82 @@
             let giftContainer = mode === 'search' ? 'gift-list-search' : 'gift-list-manual';
             let hiddenInput = mode === 'search' ? 'hidden_gift_json_search' : 'hidden_gift_json_manual';
 
-            packGiftData(giftContainer, hiddenInput); // Pack JSON
+            packGiftData(giftContainer, hiddenInput); // Pack Gifts
             
             const formData = new FormData(document.getElementById(formId));
             let payload = { action: "submit_request", requester: session.username, ...Object.fromEntries(formData.entries()) };
             if(mode==='search') payload.contract_code = document.getElementById('search_code_input').value;
 
+            // UI Loading
+            const btn = document.querySelector(`#${formId} button[type="submit"]`);
+            const orgHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...'; btn.disabled = true;
+
             const res = await callAPI(payload);
-            if(res.success) { Swal.fire('OK', res.message, 'success'); document.getElementById(formId).reset(); document.getElementById(giftContainer).innerHTML=''; addGiftRow(giftContainer); }
-            else Swal.fire('Lỗi', res.message, 'error');
+            if(res.success) {
+                Swal.fire('Thành công', res.message, 'success');
+                document.getElementById(formId).reset();
+                document.getElementById(giftContainer).innerHTML = ''; addGiftRow(giftContainer);
+                document.getElementById(mode === 'search' ? 'total-gift-search' : 'total-gift-manual').textContent = '0';
+                if(mode==='search') {
+                    document.getElementById('search-result').innerHTML = '<div class="text-center py-12 text-gray-400 border-2 border-dashed rounded-lg bg-gray-50"><p>Đã gửi xong.</p></div>';
+                    document.getElementById('search_code_input').value = '';
+                    document.getElementById('action-area').classList.add('hidden');
+                }
+            } else {
+                Swal.fire('Lỗi', res.message, 'error');
+            }
+            btn.innerHTML = orgHtml; btn.disabled = false;
         }
 
         // --- APPROVAL ---
         async function loadApprovalList() {
             const session = JSON.parse(localStorage.getItem('user_session'));
+            const container = document.getElementById('approval-list-container');
+            container.innerHTML = '<div class="text-center py-4"><i class="fa-solid fa-spinner fa-spin text-blue-600 text-2xl"></i></div>';
             const res = await callAPI({action:'get_pending_list', username:session.username, role:session.role});
             if(res.success) {
                 const tpl = document.getElementById('tpl-pending-list').innerHTML;
-                document.getElementById('approval-list-container').innerHTML = Mustache.render(tpl, {data:res.data});
-            }
+                container.innerHTML = Mustache.render(tpl, {data:res.data});
+            } else container.innerHTML = '<p class="text-red-500 text-center">Lỗi tải dữ liệu</p>';
         }
+
+        // --- MODAL ---
         function openDetail(jsonStr) {
             const data = JSON.parse(decodeURIComponent(jsonStr));
             const tpl = document.getElementById('tpl-order-detail').innerHTML;
             document.getElementById('modal-detail-body').innerHTML = Mustache.render(tpl, data);
-            document.getElementById('modal-detail').classList.remove('hidden');
-            document.getElementById('modal-content').classList.remove('scale-95');
+            const modal = document.getElementById('modal-detail');
+            modal.classList.remove('hidden');
+            setTimeout(() => { document.getElementById('modal-content').classList.remove('scale-95'); document.getElementById('modal-content').classList.add('scale-100'); }, 10);
         }
-        function closeModal() { document.getElementById('modal-detail').classList.add('hidden'); document.getElementById('modal-content').classList.add('scale-95'); }
-        
+        function closeModal() {
+            const modal = document.getElementById('modal-detail');
+            document.getElementById('modal-content').classList.remove('scale-100');
+            document.getElementById('modal-content').classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 200);
+        }
         async function confirmAction(id, decision) {
             const session = JSON.parse(localStorage.getItem('user_session'));
             const res = await callAPI({action:'approve_reject', id, username:session.username, role:session.role, decision});
             if(res.success) { Swal.fire('OK', res.message, 'success'); closeModal(); loadApprovalList(); }
+            else Swal.fire('Lỗi', res.message, 'error');
         }
 
+        // --- API CALLER ---
         async function callAPI(data) {
             try {
                 const res = await fetch(API_URL, { method:'POST', body:JSON.stringify(data) });
                 return await res.json();
             } catch(e) { return {success:false, message:'Lỗi kết nối'}; }
         }
+
+        // --- CSS Helper ---
+        const style = document.createElement('style');
+        style.innerHTML = `.label { display:block; font-size:0.875rem; font-weight:700; color:#374151; margin-bottom:0.25rem; }
+        .input { width:100%; border:1px solid #d1d5db; padding:0.5rem; border-radius:0.5rem; outline:none; } .input:focus { border-color:#2563eb; ring:2px solid #93c5fd; }`;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
+```
