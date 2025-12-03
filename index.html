@@ -99,10 +99,17 @@
                                     <label class="block text-gray-700 text-sm font-bold mb-2">Mã Hợp Đồng</label>
                                     <div class="flex gap-2">
                                         <input type="text" id="search_code_input" 
+                                               name="contract_code"
                                                class="flex-1 border-2 border-blue-200 p-3 rounded-lg focus:border-blue-600 outline-none uppercase font-mono font-bold"
                                                placeholder="VD: S10601-25-0663"
-                                               hx-post="" hx-trigger="change" hx-vals='{"action": "lookup_contract"}' 
-                                               hx-target="#search-result" mustache-template="tpl-lookup-result" hx-indicator="#loading-lookup">
+                                               hx-post="" 
+                                               hx-trigger="change delay:500ms" 
+                                               hx-vals='{"action": "lookup_contract"}'
+                                               hx-target="#search-result" 
+                                               mustache-template="tpl-lookup-result" 
+                                               hx-indicator="#loading-lookup"
+                                               hx-swap="innerHTML"
+                                               hx-include="[name='contract_code']">
                                         <div id="loading-lookup" class="htmx-indicator flex items-center px-4"><i class="fa-solid fa-spinner fa-spin text-blue-600 text-xl"></i></div>
                                     </div>
                                 </div>
@@ -227,7 +234,7 @@
             </div>
             
             <input type="hidden" name="customer_name" value="{{data.name}}">
-            <input type="hidden" name="contract_code" value="{{data.contractCode}}">
+            <input type="hidden" name="contract_code" id="lookup-contract-code" value="">
             <input type="hidden" name="phone" value="{{data.phone}}">
             <input type="hidden" name="cccd" value="{{data.cccd}}">
             <input type="hidden" name="address" value="{{data.address}}">
@@ -269,8 +276,13 @@
             </div>
 
             <script> 
-                document.getElementById('action-area').classList.remove('hidden'); 
-                addGiftRow('gift-list-search'); // Init 1 row
+                (function() {
+                    const actionArea = document.getElementById('action-area');
+                    if (actionArea) actionArea.classList.remove('hidden');
+                    if (typeof addGiftRow === 'function') {
+                        addGiftRow('gift-list-search');
+                    }
+                })();
             </script>
         </div>
         {{/success}}
@@ -365,188 +377,6 @@
         </div>
     </template>
 
-    <script>
-        // --- CONFIG ---
-        const API_URL = "https://script.google.com/macros/s/AKfycbwTyybDq0fVwdJz0IdCM-t1uLc3EKhclv58q9ey9kiKtUd4NMvpDR-ptWbH2b34bwkR/exec";
-
-        // --- INIT ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('search_code_input');
-            if (searchInput) { searchInput.setAttribute('hx-post', API_URL); htmx.process(searchInput); }
-            checkSession();
-            // Init empty rows
-            addGiftRow('gift-list-manual');
-        });
-
-        // --- AUTH ---
-        function checkSession() {
-            const session = localStorage.getItem('user_session');
-            const login = document.getElementById('login-view');
-            const dash = document.getElementById('dashboard-view');
-            if (session) {
-                const user = JSON.parse(session);
-                document.getElementById('user-fullname').textContent = user.fullname;
-                document.getElementById('user-role').textContent = user.role;
-                if(user.role==='SALE'||user.role==='TVBH') document.getElementById('nav-approval').classList.add('hidden');
-                else switchTab('approval');
-                login.classList.add('hidden');
-                dash.classList.remove('hidden');
-                dash.classList.add('flex');
-            } else {
-                login.classList.remove('hidden');
-                dash.classList.add('hidden');
-                dash.classList.remove('flex');
-            }
-        }
-        async function handleLogin(e) {
-            e.preventDefault();
-            const res = await callAPI({action:'login', username:document.getElementById('login-user').value, password:document.getElementById('login-pass').value});
-            if(res.success) { localStorage.setItem('user_session', JSON.stringify(res.user)); location.reload(); }
-            else Swal.fire('Lỗi', res.message, 'error');
-        }
-        function logout() { localStorage.removeItem('user_session'); location.reload(); }
-
-        // --- NAVIGATION ---
-        function switchTab(id) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-'+id).classList.add('active');
-            if(document.getElementById('nav-'+id)) document.getElementById('nav-'+id).classList.add('active');
-            if(id === 'approval') loadApprovalList();
-        }
-        function toggleCreateMode(mode) {
-            const search = document.getElementById('mode-search-container');
-            const manual = document.getElementById('mode-manual-container');
-            const btnS = document.getElementById('btn-mode-search');
-            const btnM = document.getElementById('btn-mode-manual');
-            if(mode==='search') { search.classList.remove('hidden'); manual.classList.add('hidden'); btnS.classList.add('bg-blue-600','text-white','shadow'); btnS.classList.remove('text-gray-600'); btnM.classList.remove('bg-blue-600','text-white','shadow'); }
-            else { manual.classList.remove('hidden'); search.classList.add('hidden'); btnM.classList.add('bg-blue-600','text-white','shadow'); btnM.classList.remove('text-gray-600'); btnS.classList.remove('bg-blue-600','text-white','shadow'); }
-        }
-
-        // --- MONEY & GIFT LOGIC ---
-        function formatMoneyInput(el) {
-            let val = el.value.replace(/\D/g, '');
-            el.value = val ? new Number(val).toLocaleString('vi-VN') : '';
-            // Calc total if needed
-            let containerId = el.closest('#mode-search-container') ? 'gift-list-search' : 'gift-list-manual';
-            calcGiftTotal(containerId);
-        }
-        function addGiftRow(containerId) {
-            const container = document.getElementById(containerId);
-            const rowId = 'gift-'+Date.now();
-            const html = `<div class="flex gap-2 mb-2 gift-row" id="${rowId}">
-                <input class="gift-name flex-1 border p-1.5 rounded text-sm outline-none focus:border-blue-500" placeholder="Tên quà">
-                <input class="gift-price w-28 border p-1.5 rounded text-sm text-right outline-none focus:border-blue-500" placeholder="0" oninput="formatMoneyInput(this)">
-                <button type="button" onclick="removeGiftRow('${rowId}','${containerId}')" class="text-red-400 hover:text-red-600 px-1"><i class="fa-solid fa-trash"></i></button>
-            </div>`;
-            container.insertAdjacentHTML('beforeend', html);
-        }
-        function removeGiftRow(rowId, containerId) {
-            document.getElementById(rowId).remove();
-            calcGiftTotal(containerId);
-        }
-        function calcGiftTotal(containerId) {
-            let total = 0;
-            document.querySelectorAll(`#${containerId} .gift-price`).forEach(el => {
-                let val = parseInt(el.value.replace(/\./g,'')) || 0;
-                total += val;
-            });
-            let displayId = containerId === 'gift-list-search' ? 'total-gift-search' : 'total-gift-manual';
-            document.getElementById(displayId).textContent = total.toLocaleString('vi-VN');
-        }
-        function packGiftData(containerId, hiddenInputId) {
-            let gifts = [];
-            document.querySelectorAll(`#${containerId} .gift-row`).forEach(row => {
-                let name = row.querySelector('.gift-name').value;
-                let price = row.querySelector('.gift-price').value;
-                if(name) gifts.push({name, price});
-            });
-            document.getElementById(hiddenInputId).value = JSON.stringify(gifts);
-        }
-
-        // --- SUBMIT ---
-        async function handleSubmitRequest(e, mode) {
-            e.preventDefault();
-            const session = JSON.parse(localStorage.getItem('user_session'));
-            let formId = mode === 'search' ? 'form-create-request' : 'form-manual-create';
-            let giftContainer = mode === 'search' ? 'gift-list-search' : 'gift-list-manual';
-            let hiddenInput = mode === 'search' ? 'hidden_gift_json_search' : 'hidden_gift_json_manual';
-
-            packGiftData(giftContainer, hiddenInput); // Pack Gifts
-            
-            const formData = new FormData(document.getElementById(formId));
-            let payload = { action: "submit_request", requester: session.username, ...Object.fromEntries(formData.entries()) };
-            if(mode==='search') payload.contract_code = document.getElementById('search_code_input').value;
-
-            // UI Loading
-            const btn = document.querySelector(`#${formId} button[type="submit"]`);
-            const orgHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...'; btn.disabled = true;
-
-            const res = await callAPI(payload);
-            if(res.success) {
-                Swal.fire('Thành công', res.message, 'success');
-                document.getElementById(formId).reset();
-                document.getElementById(giftContainer).innerHTML = ''; addGiftRow(giftContainer);
-                document.getElementById(mode === 'search' ? 'total-gift-search' : 'total-gift-manual').textContent = '0';
-                if(mode==='search') {
-                    document.getElementById('search-result').innerHTML = '<div class="text-center py-12 text-gray-400 border-2 border-dashed rounded-lg bg-gray-50"><p>Đã gửi xong.</p></div>';
-                    document.getElementById('search_code_input').value = '';
-                    document.getElementById('action-area').classList.add('hidden');
-                }
-            } else {
-                Swal.fire('Lỗi', res.message, 'error');
-            }
-            btn.innerHTML = orgHtml; btn.disabled = false;
-        }
-
-        // --- APPROVAL ---
-        async function loadApprovalList() {
-            const session = JSON.parse(localStorage.getItem('user_session'));
-            const container = document.getElementById('approval-list-container');
-            container.innerHTML = '<div class="text-center py-4"><i class="fa-solid fa-spinner fa-spin text-blue-600 text-2xl"></i></div>';
-            const res = await callAPI({action:'get_pending_list', username:session.username, role:session.role});
-            if(res.success) {
-                const tpl = document.getElementById('tpl-pending-list').innerHTML;
-                container.innerHTML = Mustache.render(tpl, {data:res.data});
-            } else container.innerHTML = '<p class="text-red-500 text-center">Lỗi tải dữ liệu</p>';
-        }
-
-        // --- MODAL ---
-        function openDetail(jsonStr) {
-            const data = JSON.parse(decodeURIComponent(jsonStr));
-            const tpl = document.getElementById('tpl-order-detail').innerHTML;
-            document.getElementById('modal-detail-body').innerHTML = Mustache.render(tpl, data);
-            const modal = document.getElementById('modal-detail');
-            modal.classList.remove('hidden');
-            setTimeout(() => { document.getElementById('modal-content').classList.remove('scale-95'); document.getElementById('modal-content').classList.add('scale-100'); }, 10);
-        }
-        function closeModal() {
-            const modal = document.getElementById('modal-detail');
-            document.getElementById('modal-content').classList.remove('scale-100');
-            document.getElementById('modal-content').classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); }, 200);
-        }
-        async function confirmAction(id, decision) {
-            const session = JSON.parse(localStorage.getItem('user_session'));
-            const res = await callAPI({action:'approve_reject', id, username:session.username, role:session.role, decision});
-            if(res.success) { Swal.fire('OK', res.message, 'success'); closeModal(); loadApprovalList(); }
-            else Swal.fire('Lỗi', res.message, 'error');
-        }
-
-        // --- API CALLER ---
-        async function callAPI(data) {
-            try {
-                const res = await fetch(API_URL, { method:'POST', body:JSON.stringify(data) });
-                return await res.json();
-            } catch(e) { return {success:false, message:'Lỗi kết nối'}; }
-        }
-
-        // --- CSS Helper ---
-        const style = document.createElement('style');
-        style.innerHTML = `.label { display:block; font-size:0.875rem; font-weight:700; color:#374151; margin-bottom:0.25rem; }
-        .input { width:100%; border:1px solid #d1d5db; padding:0.5rem; border-radius:0.5rem; outline:none; } .input:focus { border-color:#2563eb; ring:2px solid #93c5fd; }`;
-        document.head.appendChild(style);
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
