@@ -1256,7 +1256,10 @@ function logout() {
         function packGiftData(containerId, hiddenInputId) {
     const container = $(containerId);
     const hiddenInput = $(hiddenInputId);
-    if (!container || !hiddenInput) return;
+    if (!container || !hiddenInput) {
+        console.error('packGiftData: Container or hiddenInput not found', { containerId, hiddenInputId });
+        return;
+    }
     
     const gifts = [];
     container.querySelectorAll('.gift-row').forEach(row => {
@@ -1265,14 +1268,17 @@ function logout() {
         const name = nameInput?.value.trim();
         
         if (name) {
+            // Loại bỏ dấu chấm và các ký tự không phải số từ giá trị
+            const priceValue = (priceInput?.value || '0').toString().replace(/\./g, '').replace(/[^\d]/g, '');
             gifts.push({
                 name,
-                price: priceInput?.value || '0'
+                price: priceValue || '0'
             });
         }
     });
     
     hiddenInput.value = JSON.stringify(gifts);
+    console.log('packGiftData result:', hiddenInput.value);
 }
 
 // ===================================
@@ -1316,6 +1322,14 @@ function logout() {
         requester: session.username,
         ...Object.fromEntries(formData.entries())
     };
+    
+    // Đảm bảo gift_json được gửi lên (lấy từ hidden input)
+    const giftJsonValue = $(hiddenInput)?.value || '[]';
+    if (giftJsonValue) {
+        payload.gift_json = giftJsonValue;
+    }
+    
+    console.log('Submit payload:', payload);
     
     if (mode === 'search') {
         const contractCode = $('search_code_input')?.value;
