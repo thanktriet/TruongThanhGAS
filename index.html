@@ -57,7 +57,7 @@
         
         <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-2xl z-20 hidden md:flex">
             <div class="p-6 border-b border-slate-700">
-                <h1 class="text-xl font-bold tracking-wider">MY AUTO</h1>
+                <h1 class="text-xl font-bold tracking-wider">VINFAST TRƯƠNG THÀNH</h1>
                 <p class="text-xs text-slate-400 mt-1">Xin chào, <span id="user-fullname" class="font-bold text-white">User</span></p>
                 <span id="user-role" class="text-[10px] bg-blue-600 px-2 py-0.5 rounded mt-2 inline-block">ROLE</span>
             </div>
@@ -856,14 +856,14 @@
                     </h4>
                     <div class="space-y-3">
                         <div class="grid grid-cols-2 gap-3">
-                            <div>
+                <div>
                                 <p class="text-xs text-gray-500 mb-1">Mức chi phí giảm tối đa (%)</p>
                                 <div class="flex gap-2 items-center">
                                     <input type="text" id="detail-max-cost-rate" value="{{max_cost_rate}}" 
                                            class="flex-1 border p-2 rounded text-sm" 
                                            placeholder="Nhập %" 
                                            oninput="this.value = this.value.replace(/[^0-9.]/g, '')"
-                                           {{#is_admin}}{{else}}readonly{{/is_admin}}>
+                                           {{^is_admin}}readonly{{/is_admin}}>
                                     {{#is_admin}}
                                     <button onclick="saveMaxCostRate('{{id}}')" 
                                             class="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition">
@@ -911,7 +911,7 @@
                                 {{/is_completed}}
                                 {{/can_resubmit}}
                             </span>
-                        </div>
+                </div>
                         {{#next_status}}
                         <div>
                             <p class="text-xs text-gray-500 mb-1">Bước duyệt tiếp theo:</p>
