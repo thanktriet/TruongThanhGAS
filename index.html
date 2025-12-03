@@ -65,6 +65,9 @@
                 <button onclick="switchTab('create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 active" id="nav-create">
                     <i class="fa-solid fa-file-circle-plus"></i> Tạo Tờ Trình
                 </button>
+                <button onclick="switchTab('my-requests')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3" id="nav-my-requests">
+                    <i class="fa-solid fa-folder-open"></i> Quản lý tờ trình của tôi
+                </button>
                 <button onclick="switchTab('approval')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3" id="nav-approval">
                     <i class="fa-solid fa-list-check"></i> Duyệt Đơn
                 </button>
@@ -90,50 +93,11 @@
                 
                 <div id="tab-create" class="tab-content active max-w-5xl mx-auto">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        
-                        <div class="bg-blue-50 px-6 py-4 border-b border-blue-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="bg-blue-50 px-6 py-4 border-b border-blue-100">
                             <h2 class="text-lg font-bold text-blue-800"><i class="fa-solid fa-pen-to-square mr-2"></i>Tạo Yêu Cầu Mới</h2>
-                            <div class="bg-white p-1 rounded-lg border border-blue-200 flex shadow-sm">
-                                <button onclick="toggleCreateMode('search')" id="btn-mode-search" class="px-4 py-2 rounded-md text-sm font-bold transition bg-blue-600 text-white shadow">Tra Cứu HĐ</button>
-                                <button onclick="toggleCreateMode('manual')" id="btn-mode-manual" class="px-4 py-2 rounded-md text-sm font-bold transition text-gray-600 hover:bg-gray-100">Nhập Tay</button>
                             </div>
-                        </div>
-                        
                         <div class="p-6">
-                            <div id="mode-search-container">
-                                <div class="mb-6 relative">
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">Mã Hợp Đồng</label>
-                                    <div class="flex gap-2">
-                                        <input type="text" id="search_code_input" 
-                                               name="contract_code"
-                                               class="flex-1 border-2 border-blue-200 p-3 rounded-lg focus:border-blue-600 outline-none uppercase font-mono font-bold"
-                                               placeholder="VD: S10601-25-0663"
-                                               hx-post="" 
-                                               hx-trigger="change delay:500ms" 
-                                               hx-vals='{"action": "lookup_contract"}'
-                                               hx-target="#search-result" 
-                                               mustache-template="tpl-lookup-result" 
-                                               hx-indicator="#loading-lookup"
-                                               hx-swap="innerHTML"
-                                               hx-include="[name='contract_code']">
-                                        <div id="loading-lookup" class="htmx-indicator flex items-center px-4"><i class="fa-solid fa-spinner fa-spin text-blue-600 text-xl"></i></div>
-                                    </div>
-                                </div>
-
-                                <form id="form-create-request" onsubmit="handleSubmitRequest(event, 'search')">
-                                    <div id="search-result">
-                                        <div class="text-center py-12 text-gray-400 border-2 border-dashed rounded-lg bg-gray-50">
-                                            <i class="fa-solid fa-magnifying-glass text-4xl mb-3 opacity-30"></i>
-                                            <p>Nhập mã hợp đồng để tải dữ liệu khách hàng</p>
-                                        </div>
-                                    </div>
-                                    <div id="action-area" class="mt-8 hidden">
-                                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 shadow-lg transition transform active:scale-95">Gửi Duyệt Giá</button>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <div id="mode-manual-container" class="hidden animate-fade-in-down">
+                            <div id="mode-manual-container">
                                 <form id="form-manual-create" onsubmit="handleSubmitRequest(event, 'manual')">
                                     
                                     <div class="mb-6">
@@ -199,7 +163,7 @@
                                         </div>
                                     </div>
 
-                                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg transition transform active:scale-95">Gửi Duyệt (Nhập Tay)</button>
+                                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg transition transform active:scale-95">Gửi Duyệt</button>
                                 </form>
                             </div>
                         </div>
@@ -239,6 +203,35 @@
                         </div>
                     </div>
                     <div id="approval-list-container" class="space-y-4"></div>
+                </div>
+
+                <div id="tab-my-requests" class="tab-content max-w-5xl mx-auto space-y-4">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 space-y-4">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fa-solid fa-folder-open text-blue-600"></i>Quản lý tờ trình của tôi
+                            </h2>
+                            <button onclick="loadMyRequests()" class="bg-blue-50 border border-blue-200 text-blue-600 px-4 py-1.5 rounded hover:bg-blue-100 text-sm font-semibold">
+                                <i class="fa-solid fa-sync mr-1"></i>Làm mới
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase">Tìm kiếm</label>
+                                <input id="my-requests-search" type="text" class="input" placeholder="Mã HĐ, khách hàng...">
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase">Trạng thái</label>
+                                <select id="my-requests-status-filter" class="input bg-white">
+                                    <option value="all">Tất cả</option>
+                                    <option value="pending">Đang chờ duyệt</option>
+                                    <option value="rejected">Đã bị trả về</option>
+                                    <option value="completed">Hoàn tất</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="my-requests-list-container" class="space-y-4"></div>
                 </div>
 
                 <div id="tab-profile" class="tab-content max-w-3xl mx-auto">
@@ -359,6 +352,88 @@
     <div id="modal-detail" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95 transition" id="modal-content">
             <div id="modal-detail-body"></div>
+        </div>
+    </div>
+
+    <div id="modal-edit-request" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform scale-95 transition" id="modal-edit-content">
+            <div class="bg-blue-600 text-white p-4 flex justify-between items-center sticky top-0 z-10">
+                <h3 class="font-bold text-lg">Sửa tờ trình</h3>
+                <button onclick="closeEditModal()" class="text-2xl hover:text-red-200">&times;</button>
+            </div>
+            <div class="p-6">
+                <form id="form-edit-request" onsubmit="handleUpdateRequest(event)">
+                    <input type="hidden" name="edit_request_id" id="edit_request_id">
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">1. Thông tin Khách hàng</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="label">Mã Hợp Đồng *</label><input name="edit_contract_code" id="edit_contract_code" class="input uppercase font-mono" required></div>
+                            <div><label class="label">Họ tên Khách hàng *</label><input name="edit_customer_name" id="edit_customer_name" class="input" required></div>
+                            <div><label class="label">Số điện thoại</label><input name="edit_phone" id="edit_phone" class="input"></div>
+                            <div><label class="label">CCCD / CMND</label><input name="edit_cccd" id="edit_cccd" class="input"></div>
+                            <div><label class="label">Email</label><input name="edit_email" id="edit_email" class="input"></div>
+                            <div><label class="label">Địa chỉ</label><input name="edit_address" id="edit_address" class="input"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">2. Thông tin Xe</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div><label class="label">Dòng Xe</label><input name="edit_car_model" id="edit_car_model" class="input"></div>
+                            <div><label class="label">Phiên bản</label><input name="edit_car_version" id="edit_car_version" class="input"></div>
+                            <div><label class="label">Màu sắc</label><input name="edit_car_color" id="edit_car_color" class="input"></div>
+                            <div><label class="label">Số Khung (VIN)</label><input name="edit_vin_no" id="edit_vin_no" class="input uppercase"></div>
+                            <div class="md:col-span-2"><label class="label">Hình thức thanh toán</label>
+                                <select name="edit_payment_method" id="edit_payment_method" class="input bg-white">
+                                    <option value="Tiền mặt">Tiền mặt</option>
+                                    <option value="Trả góp">Trả góp ngân hàng</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">3. Chính sách giá & Quà tặng</h3>
+                        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                            <div class="mb-4">
+                                <label class="block text-sm font-bold text-gray-800 mb-1">Giá trị Hợp đồng (VNĐ) *</label>
+                                <input name="edit_contract_price" id="edit_contract_price" type="text" class="w-full border-2 border-yellow-400 p-2 rounded text-lg font-bold text-gray-800 outline-none" oninput="formatMoneyInput(this)" required>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="label">Chi tiết giảm giá</label>
+                                    <textarea name="edit_discount_details" id="edit_discount_details" rows="2" class="input"></textarea>
+                                </div>
+                                <div>
+                                    <label class="label">Tiền giảm giá (VNĐ)</label>
+                                    <input name="edit_discount_amount" id="edit_discount_amount" type="text" class="input" oninput="formatMoneyInput(this)">
+                                </div>
+                            </div>
+
+                            <div class="border-t border-yellow-200 pt-3">
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="text-sm font-bold text-gray-700">🎁 Quà tặng kèm</label>
+                                    <button type="button" onclick="addGiftRow('gift-list-edit')" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold hover:bg-blue-200 transition">+ Thêm dòng</button>
+                                </div>
+                                <div id="gift-list-edit" class="space-y-2"></div>
+                                <input type="hidden" name="edit_gift_json" id="hidden_gift_json_edit">
+                                
+                                <div class="flex justify-end mt-2 text-sm">
+                                    <span class="font-bold text-gray-600 mr-2">Tổng quà:</span>
+                                    <span id="total-gift-edit" class="font-bold text-blue-600">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="button" onclick="closeEditModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-bold transition">Hủy</button>
+                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold shadow-lg transition">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -495,6 +570,84 @@
             <i class="fa-regular fa-folder-open text-5xl mb-3 opacity-30"></i>
             <p class="text-lg font-semibold">Không có đơn hàng nào</p>
             <p class="text-sm mt-1">Vui lòng thử lại sau hoặc kiểm tra bộ lọc</p>
+        </div>
+        {{/data}}
+    </template>
+
+    <template id="tpl-my-requests-list">
+        {{#data}}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-3 hover:shadow-md transition relative overflow-hidden">
+            {{#can_resubmit}}
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
+            {{/can_resubmit}}
+            {{^can_resubmit}}
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
+            {{/can_resubmit}}
+            <div class="flex justify-between items-start pl-3">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-1 rounded uppercase">{{contract_code}}</span>
+                        {{#can_resubmit}}
+                        <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-semibold">
+                            <i class="fa-solid fa-exclamation-triangle mr-1"></i>Đã bị từ chối - Cần sửa
+                        </span>
+                        {{/can_resubmit}}
+                        {{#is_completed}}
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded font-semibold">
+                            <i class="fa-solid fa-check-circle mr-1"></i>Hoàn tất
+                        </span>
+                        {{/is_completed}}
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-lg mb-1">{{customer}}</h3>
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                        {{#phone}}<span><i class="fa-solid fa-phone mr-1"></i>{{phone}}</span>{{/phone}}
+                        {{#email}}<span><i class="fa-solid fa-envelope mr-1"></i>{{email}}</span>{{/email}}
+                    </div>
+                </div>
+                <div class="text-right ml-4">
+                    <span class="text-xs text-gray-400 block mb-2">{{date}}</span>
+                    <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded block text-gray-600">{{status_text}}</span>
+                    {{#next_status}}
+                    <span class="text-xs text-gray-500 mt-1 block">→ {{next_status}}</span>
+                    {{/next_status}}
+                </div>
+            </div>
+            <div class="pl-3 mt-3 pt-3 border-t border-gray-100">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2 text-sm text-gray-700">
+                        <i class="fa-solid fa-car-side text-blue-600"></i>
+                        <span class="font-semibold">{{car_model}}</span>
+                        {{#car_version}}<span class="text-gray-500">- {{car_version}}</span>{{/car_version}}
+                        {{#car_color}}<span class="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">{{car_color}}</span>{{/car_color}}
+                    </div>
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                    <span class="text-xs text-gray-500">Giá chốt:</span>
+                    <span class="text-blue-600 font-bold text-lg">{{final_price}}</span>
+                </div>
+            </div>
+            <div class="pl-3 mt-3 flex gap-2">
+                {{#can_resubmit}}
+                <button onclick="openEditRequest('{{id}}')" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg font-semibold text-sm transition">
+                    <i class="fa-solid fa-edit mr-1"></i>Sửa lại
+                </button>
+                {{/can_resubmit}}
+                <button onclick="openDetail('{{json_string}}')" class="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 py-2 rounded-lg font-semibold text-sm transition border border-blue-200">
+                    <i class="fa-solid fa-eye mr-1"></i>Xem chi tiết
+                </button>
+                {{#is_completed}}
+                <button onclick="printRequest('{{id}}')" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-semibold text-sm transition">
+                    <i class="fa-solid fa-print mr-1"></i>In tờ trình
+                </button>
+                {{/is_completed}}
+            </div>
+        </div>
+        {{/data}}
+        {{^data}}
+        <div class="text-center text-gray-400 py-12 bg-white rounded-lg border border-gray-200">
+            <i class="fa-regular fa-folder-open text-5xl mb-3 opacity-30"></i>
+            <p class="text-lg font-semibold">Chưa có tờ trình nào</p>
+            <p class="text-sm mt-1">Tạo tờ trình mới để bắt đầu</p>
         </div>
         {{/data}}
     </template>
@@ -645,17 +798,33 @@
                 <!-- Trạng thái hiện tại -->
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <h4 class="font-bold text-sm text-gray-600 uppercase mb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-info-circle text-blue-600"></i>Trạng thái hiện tại
+                        <i class="fa-solid fa-info-circle text-blue-600"></i>Trạng thái phê duyệt
                     </h4>
-                    <div class="flex items-center gap-3">
-                        <span class="px-4 py-2 rounded-lg font-bold text-sm {{#can_resubmit}}bg-yellow-100 text-yellow-800{{/can_resubmit}}{{^can_resubmit}}{{#status_text}}{{#status_text.indexOf}}bg-blue-100 text-blue-800{{/status_text.indexOf}}{{/status_text}}{{/can_resubmit}}">
-                            {{#can_resubmit}}
-                            <i class="fa-solid fa-exclamation-triangle mr-1"></i>Đã bị trả về - Cần chỉnh sửa
-                            {{/can_resubmit}}
-                            {{^can_resubmit}}
-                            {{status_text}}
-                            {{/can_resubmit}}
-                        </span>
+                    <div class="space-y-3">
+                <div>
+                            <p class="text-xs text-gray-500 mb-1">Trạng thái hiện tại:</p>
+                            <span class="px-4 py-2 rounded-lg font-bold text-sm inline-block {{#can_resubmit}}bg-yellow-100 text-yellow-800{{/can_resubmit}}{{^can_resubmit}}{{#is_completed}}bg-green-100 text-green-800{{/is_completed}}{{^is_completed}}bg-blue-100 text-blue-800{{/is_completed}}{{/can_resubmit}}">
+                                {{#can_resubmit}}
+                                <i class="fa-solid fa-exclamation-triangle mr-1"></i>Đã bị trả về - Cần chỉnh sửa
+                                {{/can_resubmit}}
+                                {{^can_resubmit}}
+                                {{#is_completed}}
+                                <i class="fa-solid fa-check-circle mr-1"></i>Hoàn tất phê duyệt
+                                {{/is_completed}}
+                                {{^is_completed}}
+                                {{status_text}}
+                                {{/is_completed}}
+                                {{/can_resubmit}}
+                            </span>
+                        </div>
+                        {{#next_status}}
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Bước duyệt tiếp theo:</p>
+                            <span class="px-4 py-2 rounded-lg font-semibold text-sm inline-block bg-gray-100 text-gray-700 border border-gray-300">
+                                <i class="fa-solid fa-arrow-right mr-1 text-blue-600"></i>{{next_status}}
+                            </span>
+                        </div>
+                        {{/next_status}}
                     </div>
                 </div>
 
@@ -726,6 +895,13 @@
                     </button>
                     {{/can_resubmit}}
                     {{^can_resubmit}}
+                    {{#is_completed}}
+                    <button onclick="printRequest('{{id}}')" class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 rounded-lg font-bold shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-print"></i>
+                        <span>In tờ trình</span>
+                    </button>
+                    {{/is_completed}}
+                    {{^is_completed}}
                     <div class="grid grid-cols-2 gap-3">
                         <button onclick="confirmAction('{{id}}', 'approve')" class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 rounded-lg font-bold shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
                             <i class="fa-solid fa-check-circle"></i>
@@ -736,6 +912,7 @@
                             <span>Từ chối</span>
                         </button>
                     </div>
+                    {{/is_completed}}
                     {{/can_resubmit}}
                 </div>
             </div>
@@ -969,34 +1146,11 @@ function logout() {
     if (nav) nav.classList.add('active');
     
     if (id === 'approval') loadApprovalList();
+    if (id === 'my-requests') loadMyRequests();
     if (id === 'profile') loadProfile();
     if (id === 'users') loadUserManagement();
 }
 
-        function toggleCreateMode(mode) {
-    const search = $('mode-search-container');
-    const manual = $('mode-manual-container');
-    const btnS = $('btn-mode-search');
-    const btnM = $('btn-mode-manual');
-    
-    const isSearch = mode === 'search';
-    
-    if (isSearch) {
-        search?.classList.remove('hidden');
-        manual?.classList.add('hidden');
-        btnS?.classList.add('bg-blue-600', 'text-white', 'shadow');
-        btnS?.classList.remove('text-gray-600');
-        btnM?.classList.remove('bg-blue-600', 'text-white', 'shadow');
-        btnM?.classList.add('text-gray-600');
-    } else {
-        manual?.classList.remove('hidden');
-        search?.classList.add('hidden');
-        btnM?.classList.add('bg-blue-600', 'text-white', 'shadow');
-        btnM?.classList.remove('text-gray-600');
-        btnS?.classList.remove('bg-blue-600', 'text-white', 'shadow');
-        btnS?.classList.add('text-gray-600');
-    }
-}
 
 // ===================================
 // MONEY & GIFT LOGIC
@@ -1305,6 +1459,27 @@ function renderApprovalList() {
                                     (session.role === 'TVBH' || session.role === 'SALE') &&
                                     data.requester && 
                                     data.requester.toLowerCase() === session.username.toLowerCase());
+                
+                // Tính next_status và is_completed nếu chưa có
+                if (!data.next_status && !data.is_completed) {
+                    const workflow = [
+                        { step: 0, next: 1, label: 'Chờ TPKD duyệt' },
+                        { step: 1, next: 2, label: 'Chờ GĐKD duyệt' },
+                        { step: 2, next: 3, label: 'Chờ Ban Kiểm Soát' },
+                        { step: 3, next: 4, label: 'Chờ Ban Giám Đốc' },
+                        { step: 4, next: 5, label: 'Chờ Kế Toán kiểm tra' },
+                        { step: 5, next: 6, label: 'Hoàn tất / Chờ in' }
+                    ];
+                    const stepConfig = workflow.find(w => w.step === data.step);
+                    if (stepConfig && stepConfig.next < 6) {
+                        const nextConfig = workflow.find(w => w.step === stepConfig.next);
+                        if (nextConfig) {
+                            data.next_status = nextConfig.label;
+                        }
+                    } else {
+                        data.is_completed = true;
+                    }
+                }
             } catch (e) {
                 console.error('Error parsing session:', e);
             }
@@ -1473,6 +1648,354 @@ async function resubmitRequest(id) {
         console.error('Error in confirmAction:', error);
         Swal.fire('Lỗi', error.message || 'Không thể kết nối đến server', 'error');
     }
+}
+
+// ===================================
+// MY REQUESTS MANAGEMENT
+// ===================================
+
+let myRequestsData = [];
+let myRequestsFilters = { search: '', status: 'all' };
+
+async function loadMyRequests() {
+    const session = getSession();
+    if (!session) {
+        Swal.fire('Lỗi', 'Phiên đăng nhập đã hết hạn', 'error');
+        logout();
+        return;
+    }
+    
+    const container = $('my-requests-list-container');
+    if (!container) return;
+    
+    container.innerHTML = '<div class="text-center py-4"><i class="fa-solid fa-spinner fa-spin text-blue-600 text-2xl"></i><p class="mt-2 text-gray-500">Đang tải danh sách...</p></div>';
+    
+    try {
+        const res = await callAPI({
+            action: 'get_my_requests',
+            username: session.username,
+            role: session.role
+        });
+        
+        if (res.success && res.data) {
+            myRequestsData = res.data;
+            renderMyRequestsList();
+        } else {
+            container.innerHTML = `<p class="text-red-500 text-center">${res.message || 'Không có dữ liệu'}</p>`;
+        }
+    } catch (error) {
+        console.error('Error in loadMyRequests:', error);
+        container.innerHTML = `<p class="text-red-500 text-center">Lỗi kết nối: ${error.message || 'Không thể kết nối đến server'}</p>`;
+    }
+}
+
+function filterMyRequestsData() {
+    const search = (myRequestsFilters.search || '').trim().toLowerCase();
+    const status = myRequestsFilters.status || 'all';
+    return myRequestsData.filter(item => {
+        const statusMatch = status === 'all' || getMyRequestStatus(item) === status;
+        if (!statusMatch) return false;
+        if (!search) return true;
+        const haystack = [
+            item.contract_code,
+            item.customer,
+            item.phone,
+            item.status_text
+        ].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(search);
+    });
+}
+
+function getMyRequestStatus(item) {
+    if (item.can_resubmit) return 'rejected';
+    if (item.status_text && /từ chối|trả về/i.test(item.status_text)) return 'rejected';
+    if (item.is_completed) return 'completed';
+    return 'pending';
+}
+
+function renderMyRequestsList() {
+    const container = $('my-requests-list-container');
+    if (!container) return;
+    const tpl = $('tpl-my-requests-list')?.innerHTML;
+    if (!tpl || typeof Mustache === 'undefined') {
+        container.innerHTML = '<p class="text-red-500 text-center">Template không khả dụng.</p>';
+        return;
+    }
+    const filtered = filterMyRequestsData();
+    container.innerHTML = Mustache.render(tpl, { data: filtered });
+}
+
+// Setup filters
+document.addEventListener('DOMContentLoaded', () => {
+    const myRequestsSearch = $('my-requests-search');
+    if (myRequestsSearch) {
+        myRequestsSearch.addEventListener('input', (e) => {
+            myRequestsFilters.search = e.target.value;
+            renderMyRequestsList();
+        });
+    }
+    const myRequestsStatus = $('my-requests-status-filter');
+    if (myRequestsStatus) {
+        myRequestsStatus.addEventListener('change', (e) => {
+            myRequestsFilters.status = e.target.value;
+            renderMyRequestsList();
+        });
+    }
+});
+
+async function openEditRequest(id) {
+    const session = getSession();
+    if (!session) {
+        Swal.fire('Lỗi', 'Phiên đăng nhập đã hết hạn', 'error');
+        logout();
+        return;
+    }
+    
+    try {
+        const res = await callAPI({
+            action: 'get_request_detail',
+            id,
+            username: session.username
+        });
+        
+        if (!res.success || !res.data) {
+            Swal.fire('Lỗi', res.message || 'Không tìm thấy tờ trình', 'error');
+            return;
+        }
+        
+        const data = res.data;
+        
+        // Fill form
+        $('edit_request_id').value = data.id;
+        $('edit_contract_code').value = data.contract_code || '';
+        $('edit_customer_name').value = data.customer || '';
+        $('edit_phone').value = data.phone || '';
+        $('edit_cccd').value = data.cccd || '';
+        $('edit_email').value = data.email || '';
+        $('edit_address').value = data.address || '';
+        $('edit_car_model').value = data.car_model || '';
+        $('edit_car_version').value = data.car_version || '';
+        $('edit_car_color').value = data.car_color || '';
+        $('edit_vin_no').value = data.vin_no || '';
+        $('edit_payment_method').value = data.payment || '';
+        $('edit_contract_price').value = (data.contract_price || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        $('edit_discount_details').value = data.discount_details || '';
+        $('edit_discount_amount').value = (data.discount_amount || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        
+        // Load gifts
+        const giftList = $('gift-list-edit');
+        if (giftList) giftList.innerHTML = '';
+        try {
+            const gifts = JSON.parse(data.gift_json || '[]');
+            if (Array.isArray(gifts) && gifts.length > 0) {
+                gifts.forEach(gift => {
+                    addGiftRow('gift-list-edit');
+                    const rows = giftList.querySelectorAll('.gift-row');
+                    const lastRow = rows[rows.length - 1];
+                    if (lastRow) {
+                        lastRow.querySelector('.gift-name').value = gift.name || '';
+                        lastRow.querySelector('.gift-price').value = (gift.price || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Error parsing gifts:', e);
+        }
+        calcGiftTotal('gift-list-edit');
+        
+        // Show modal
+        const modal = $('modal-edit-request');
+        const modalContent = $('modal-edit-content');
+        if (modal && modalContent) {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }, 10);
+        }
+    } catch (error) {
+        console.error('Error in openEditRequest:', error);
+        Swal.fire('Lỗi', error.message || 'Không thể tải dữ liệu', 'error');
+    }
+}
+
+function closeEditModal() {
+    const modal = $('modal-edit-request');
+    const modalContent = $('modal-edit-content');
+    
+    if (modalContent) {
+        modalContent.classList.remove('scale-100');
+        modalContent.classList.add('scale-95');
+    }
+    
+    setTimeout(() => {
+        if (modal) modal.classList.add('hidden');
+    }, 200);
+}
+
+async function handleUpdateRequest(event) {
+    event.preventDefault();
+    const session = getSession();
+    if (!session) {
+        Swal.fire('Lỗi', 'Phiên đăng nhập đã hết hạn', 'error');
+        logout();
+        return;
+    }
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    // Pack gift data
+    packGiftData('gift-list-edit', 'hidden_gift_json_edit');
+    const giftJson = $('hidden_gift_json_edit')?.value || '[]';
+    
+    const data = {
+        action: 'update_request',
+        id: formData.get('edit_request_id'),
+        username: session.username,
+        contract_code: formData.get('edit_contract_code'),
+        customer_name: formData.get('edit_customer_name'),
+        phone: formData.get('edit_phone'),
+        cccd: formData.get('edit_cccd'),
+        email: formData.get('edit_email'),
+        address: formData.get('edit_address'),
+        car_model: formData.get('edit_car_model'),
+        car_version: formData.get('edit_car_version'),
+        car_color: formData.get('edit_car_color'),
+        vin_no: formData.get('edit_vin_no'),
+        payment_method: formData.get('edit_payment_method'),
+        contract_price: formData.get('edit_contract_price')?.replace(/\./g, '') || '0',
+        discount_details: formData.get('edit_discount_details'),
+        discount_amount: formData.get('edit_discount_amount')?.replace(/\./g, '') || '0',
+        gift_json: giftJson
+    };
+    
+    try {
+        Swal.fire({
+            title: 'Đang xử lý...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        const res = await callAPI(data);
+        
+        if (res.success) {
+            Swal.fire('Thành công', res.message || 'Đã cập nhật tờ trình thành công', 'success');
+            closeEditModal();
+            loadMyRequests();
+            if (typeof loadApprovalList === 'function') loadApprovalList();
+        } else {
+            Swal.fire('Lỗi', res.message || 'Cập nhật thất bại', 'error');
+        }
+    } catch (error) {
+        console.error('Error in handleUpdateRequest:', error);
+        Swal.fire('Lỗi', error.message || 'Không thể kết nối đến server', 'error');
+    }
+}
+
+function printRequest(id) {
+    const session = getSession();
+    if (!session) {
+        Swal.fire('Lỗi', 'Phiên đăng nhập đã hết hạn', 'error');
+        logout();
+        return;
+    }
+    
+    // Open print window with template
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>In Tờ Trình</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .section { margin-bottom: 20px; }
+                .section-title { font-weight: bold; font-size: 14px; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 5px; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+                table td { padding: 8px; border: 1px solid #ddd; }
+                .label { font-weight: bold; background: #f0f0f0; }
+                .total { font-weight: bold; font-size: 16px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>TỜ TRÌNH PHÊ DUYỆT GIÁ</h1>
+                <p>Mã HĐ: <span id="print-contract-code"></span></p>
+            </div>
+            <div class="section">
+                <div class="section-title">THÔNG TIN KHÁCH HÀNG</div>
+                <table>
+                    <tr><td class="label">Họ tên:</td><td id="print-customer"></td></tr>
+                    <tr><td class="label">SĐT:</td><td id="print-phone"></td></tr>
+                    <tr><td class="label">CCCD:</td><td id="print-cccd"></td></tr>
+                    <tr><td class="label">Email:</td><td id="print-email"></td></tr>
+                    <tr><td class="label">Địa chỉ:</td><td id="print-address"></td></tr>
+                </table>
+            </div>
+            <div class="section">
+                <div class="section-title">THÔNG TIN XE</div>
+                <table>
+                    <tr><td class="label">Dòng xe:</td><td id="print-car-model"></td></tr>
+                    <tr><td class="label">Phiên bản:</td><td id="print-car-version"></td></tr>
+                    <tr><td class="label">Màu sắc:</td><td id="print-car-color"></td></tr>
+                    <tr><td class="label">VIN:</td><td id="print-vin"></td></tr>
+                    <tr><td class="label">Thanh toán:</td><td id="print-payment"></td></tr>
+                </table>
+            </div>
+            <div class="section">
+                <div class="section-title">BẢNG GIÁ</div>
+                <table>
+                    <tr><td class="label">Giá hợp đồng:</td><td id="print-contract-price"></td></tr>
+                    <tr><td class="label">Giảm giá:</td><td id="print-discount-amount"></td></tr>
+                    <tr><td class="label">Lý do giảm giá:</td><td id="print-discount-details"></td></tr>
+                    <tr><td class="label">Quà tặng:</td><td id="print-gift-details"></td></tr>
+                    <tr><td class="label total">GIÁ CHỐT:</td><td class="total" id="print-final-price"></td></tr>
+                </table>
+            </div>
+        </body>
+        </html>
+    `);
+    
+    // Load data and fill template
+    callAPI({
+        action: 'get_request_detail',
+        id,
+        username: session.username
+    }).then(res => {
+        if (res.success && res.data) {
+            const d = res.data;
+            printWindow.document.getElementById('print-contract-code').textContent = d.contract_code || '';
+            printWindow.document.getElementById('print-customer').textContent = d.customer || '';
+            printWindow.document.getElementById('print-phone').textContent = d.phone || '';
+            printWindow.document.getElementById('print-cccd').textContent = d.cccd || '';
+            printWindow.document.getElementById('print-email').textContent = d.email || '';
+            printWindow.document.getElementById('print-address').textContent = d.address || '';
+            printWindow.document.getElementById('print-car-model').textContent = d.car_model || '';
+            printWindow.document.getElementById('print-car-version').textContent = d.car_version || '';
+            printWindow.document.getElementById('print-car-color').textContent = d.car_color || '';
+            printWindow.document.getElementById('print-vin').textContent = d.vin_no || '';
+            printWindow.document.getElementById('print-payment').textContent = d.payment || '';
+            printWindow.document.getElementById('print-contract-price').textContent = d.contract_price || '';
+            printWindow.document.getElementById('print-discount-amount').textContent = d.discount_amount || '';
+            printWindow.document.getElementById('print-discount-details').textContent = d.discount_details || '';
+            printWindow.document.getElementById('print-gift-details').textContent = d.gift_details || 'Không có';
+            printWindow.document.getElementById('print-final-price').textContent = d.final_price || '';
+            
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        } else {
+            printWindow.close();
+            Swal.fire('Lỗi', res.message || 'Không thể tải dữ liệu để in', 'error');
+        }
+    }).catch(error => {
+        printWindow.close();
+        Swal.fire('Lỗi', error.message || 'Không thể kết nối đến server', 'error');
+    });
 }
 
 // ===================================
