@@ -433,7 +433,7 @@
 
     <template id="tpl-pending-list">
         {{#data}}
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-3 cursor-pointer hover:shadow-md transition relative overflow-hidden" onclick="openDetail('{{json_string}}')">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-3 cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all relative overflow-hidden group" onclick="openDetail('{{json_string}}')">
             {{#can_resubmit}}
             <div class="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
             {{/can_resubmit}}
@@ -441,36 +441,62 @@
             <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
             {{/can_resubmit}}
             <div class="flex justify-between items-start pl-3">
-                <div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
                     <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-1 rounded uppercase">{{contract_code}}</span>
-                    <h3 class="font-bold text-gray-800 mt-1">{{customer}}</h3>
-                    {{#can_resubmit}}
-                    <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded mt-1 inline-block">
-                        <i class="fa-solid fa-exclamation-triangle mr-1"></i>Đã bị từ chối - Cần gửi lại
-                    </span>
-                    {{/can_resubmit}}
+                        {{#can_resubmit}}
+                        <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-semibold">
+                            <i class="fa-solid fa-exclamation-triangle mr-1"></i>Đã bị từ chối
+                        </span>
+                        {{/can_resubmit}}
                 </div>
-                <div class="text-right">
-                    <span class="text-xs text-gray-400 block">{{date}}</span>
+                    <h3 class="font-bold text-gray-800 text-lg mb-1">{{customer}}</h3>
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                        {{#phone}}<span><i class="fa-solid fa-phone mr-1"></i>{{phone}}</span>{{/phone}}
+                        {{#email}}<span><i class="fa-solid fa-envelope mr-1"></i>{{email}}</span>{{/email}}
+                </div>
+            </div>
+                <div class="text-right ml-4">
+                    <span class="text-xs text-gray-400 block mb-2">{{date}}</span>
                     {{#can_resubmit}}
-                    <span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded">{{status_text}}</span>
+                    <span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-1 rounded block">{{status_text}}</span>
                     {{/can_resubmit}}
                     {{^can_resubmit}}
-                    <span class="text-xs font-bold bg-gray-100 px-2 py-0.5 rounded text-gray-600">{{status_text}}</span>
+                    <span class="text-xs font-bold bg-blue-50 text-blue-700 px-2 py-1 rounded block border border-blue-200">{{status_text}}</span>
                     {{/can_resubmit}}
                 </div>
             </div>
-            <div class="pl-3 mt-2 text-sm text-gray-600">
-                <p><i class="fa-solid fa-car-side mr-1 opacity-50"></i> {{car_model}}</p>
-                <div class="flex justify-between border-t mt-2 pt-2">
-                    <span class="font-medium">Chốt:</span>
-                    <span class="text-blue-600 font-bold">{{final_price}}</span>
+            <div class="pl-3 mt-3 pt-3 border-t border-gray-100">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2 text-sm text-gray-700">
+                        <i class="fa-solid fa-car-side text-blue-600"></i>
+                        <span class="font-semibold">{{car_model}}</span>
+                        {{#car_version}}<span class="text-gray-500">- {{car_version}}</span>{{/car_version}}
+                        {{#car_color}}<span class="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">{{car_color}}</span>{{/car_color}}
+                    </div>
+                </div>
+                {{#payment}}
+                <div class="text-xs text-gray-500 mb-2">
+                    <i class="fa-solid fa-credit-card mr-1"></i>Thanh toán: {{payment}}
+                </div>
+                {{/payment}}
+                <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                    <span class="text-xs text-gray-500">Giá chốt:</span>
+                    <span class="text-blue-600 font-bold text-lg">{{final_price}}</span>
                 </div>
             </div>
-            <div class="pl-3 mt-2 text-xs text-center text-blue-500 underline">Xem chi tiết</div>
+            <div class="pl-3 mt-3 text-xs text-center text-blue-500 group-hover:text-blue-700 font-semibold">
+                <i class="fa-solid fa-arrow-right mr-1"></i>Nhấn để xem chi tiết
+            </div>
         </div>
         {{/data}}
-        {{^data}}<div class="text-center text-gray-400 py-12"><i class="fa-regular fa-folder-open text-4xl mb-2 opacity-30"></i><p>Không có đơn hàng nào.</p></div>{{/data}}
+        {{^data}}
+        <div class="text-center text-gray-400 py-12 bg-white rounded-lg border border-gray-200">
+            <i class="fa-regular fa-folder-open text-5xl mb-3 opacity-30"></i>
+            <p class="text-lg font-semibold">Không có đơn hàng nào</p>
+            <p class="text-sm mt-1">Vui lòng thử lại sau hoặc kiểm tra bộ lọc</p>
+        </div>
+        {{/data}}
     </template>
 
     <template id="tpl-order-detail">
@@ -478,67 +504,197 @@
             <div class="bg-blue-600 text-white p-4 flex justify-between items-center sticky top-0 z-10">
                 <div>
                     <h3 class="font-bold text-lg">CHI TIẾT TỜ TRÌNH</h3>
-                    <p class="text-xs opacity-80">Mã: {{contract_code}}</p>
+                    <p class="text-xs opacity-80">Mã HĐ: {{contract_code}}</p>
                 </div>
                 <button onclick="closeModal()" class="text-2xl hover:text-red-200">&times;</button>
             </div>
             
             <div class="p-6 space-y-6">
-                <div class="flex justify-between items-start border-b pb-4">
+                <!-- Thông tin khách hàng -->
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <h4 class="font-bold text-sm text-gray-600 uppercase mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-user text-blue-600"></i>Thông tin khách hàng
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                     <div>
-                        <p class="text-lg font-bold text-gray-800">{{customer}}</p>
-                        <p class="text-xs text-gray-500"><i class="fa-solid fa-phone mr-1"></i>{{phone}}</p>
-                        <p class="text-xs text-gray-500"><i class="fa-solid fa-map-marker-alt mr-1"></i>{{address}}</p>
-                        <p class="text-xs text-gray-500 mt-1">CCCD: {{cccd}} | Email: {{email}}</p>
+                            <p class="text-gray-500 text-xs mb-1">Họ và tên</p>
+                            <p class="font-bold text-gray-800">{{customer}}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-xs mb-1">Số điện thoại</p>
+                            <p class="font-semibold text-gray-700"><i class="fa-solid fa-phone mr-1 text-blue-600"></i>{{phone}}</p>
+                        </div>
+                        {{#cccd}}
+                        <div>
+                            <p class="text-gray-500 text-xs mb-1">CCCD/CMND</p>
+                            <p class="font-semibold text-gray-700">{{cccd}}</p>
+                        </div>
+                        {{/cccd}}
+                        {{#email}}
+                        <div>
+                            <p class="text-gray-500 text-xs mb-1">Email</p>
+                            <p class="font-semibold text-gray-700"><i class="fa-solid fa-envelope mr-1 text-blue-600"></i>{{email}}</p>
+                        </div>
+                        {{/email}}
+                        {{#address}}
+                        <div class="md:col-span-2">
+                            <p class="text-gray-500 text-xs mb-1">Địa chỉ</p>
+                            <p class="font-semibold text-gray-700"><i class="fa-solid fa-map-marker-alt mr-1 text-blue-600"></i>{{address}}</p>
+                        </div>
+                        {{/address}}
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+                        <div>
+                            <p class="text-xs text-gray-500">Người tạo</p>
+                            <p class="text-sm font-semibold text-blue-700">{{requester}}</p>
                     </div>
                     <div class="text-right">
-                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">{{requester}}</span>
-                        <p class="text-xs text-gray-400 mt-1">{{date}}</p>
-                    </div>
-                </div>
-
-                <div class="bg-gray-50 p-4 rounded border">
-                    <div class="flex justify-between font-bold text-gray-700 mb-1">
-                        <span>🚙 {{car_model}}{{#car_version}} {{car_version}}{{/car_version}}</span>
-                        {{#car_color}}<span>{{car_color}}</span>{{/car_color}}
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-500">
-                        {{#vin_no}}<span>VIN: {{vin_no}}</span>{{/vin_no}}
-                        {{#payment}}<span>TT: {{payment}}</span>{{/payment}}
-                    </div>
-                </div>
-
-                <div class="border rounded-lg overflow-hidden text-sm">
-                    <div class="flex justify-between p-3 border-b"><span>Giá Hợp đồng</span><span class="font-bold">{{contract_price}}</span></div>
-                    <div class="p-3 border-b text-red-600">
-                        <div class="flex justify-between mb-1"><span>(-) Giảm giá</span><span class="font-bold">{{discount_amount}}</span></div>
-                        {{#discount_details}}
-                        <div class="text-xs text-gray-600 mt-1 italic pl-2 border-l-2 border-red-300">
-                            <i class="fa-solid fa-info-circle mr-1"></i>{{discount_details}}
+                            <p class="text-xs text-gray-500">Ngày tạo</p>
+                            <p class="text-sm font-semibold text-gray-700">{{date}}</p>
                         </div>
-                        {{/discount_details}}
                     </div>
-                    <div class="p-3 bg-gray-50 border-b">
-                        <p class="font-bold mb-1 text-gray-600">🎁 Quà tặng:</p>
-                        <div class="pl-2 whitespace-pre-line text-xs italic text-gray-600">{{#gift_details}}{{gift_details}}{{/gift_details}}{{^gift_details}}Không có{{/gift_details}}</div>
-                        <div class="flex justify-between mt-2 pt-2 border-t text-xs font-bold text-gray-500"><span>Tổng quà:</span><span>{{gift_amount}}</span></div>
-                    </div>
-                    <div class="flex justify-between p-3 bg-blue-50 text-blue-800 font-bold text-lg"><span>GIÁ CHỐT</span><span>{{final_price}}</span></div>
                 </div>
 
-                <div>
-                    <h4 class="font-bold text-xs text-gray-400 uppercase mb-2">Lịch sử phê duyệt</h4>
-                    <div class="bg-gray-100 p-3 rounded text-xs space-y-2">
+                <!-- Thông tin xe -->
+                <div class="bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-200">
+                    <h4 class="font-bold text-sm text-gray-600 uppercase mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-car text-blue-600"></i>Thông tin xe
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <p class="text-gray-500 text-xs mb-1">Dòng xe</p>
+                            <p class="font-bold text-lg text-gray-800">
+                                🚙 {{car_model}}{{#car_version}} <span class="text-base">{{car_version}}</span>{{/car_version}}
+                            </p>
+                    </div>
+                        {{#car_color}}
+                        <div>
+                            <p class="text-gray-500 text-xs mb-1">Màu sắc</p>
+                            <p class="font-bold text-gray-700">{{car_color}}</p>
+                        </div>
+                        {{/car_color}}
+                        {{#vin_no}}
+                        <div>
+                            <p class="text-gray-500 text-xs mb-1">Số VIN</p>
+                            <p class="font-mono text-xs text-gray-700 bg-white px-2 py-1 rounded border">{{vin_no}}</p>
+                        </div>
+                        {{/vin_no}}
+                        {{#payment}}
+                        <div>
+                            <p class="text-gray-500 text-xs mb-1">Phương thức thanh toán</p>
+                            <p class="font-semibold text-gray-700">{{payment}}</p>
+                        </div>
+                        {{/payment}}
+                    </div>
+                </div>
+
+                <!-- Bảng giá -->
+                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-blue-600 text-white p-3 font-bold text-center">
+                        <i class="fa-solid fa-calculator mr-2"></i>BẢNG GIÁ
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        <div class="flex justify-between items-center p-4 hover:bg-gray-50 transition">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-file-contract text-blue-600"></i>
+                                <span class="text-gray-700">Giá hợp đồng</span>
+                            </div>
+                            <span class="font-bold text-lg text-gray-800">{{contract_price}}</span>
+                        </div>
+                        <div class="p-4 bg-red-50 border-l-4 border-red-400">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-tag text-red-600"></i>
+                                    <span class="text-red-700 font-semibold">(-) Giảm giá</span>
+                                </div>
+                                <span class="font-bold text-lg text-red-700">{{discount_amount}}</span>
+                            </div>
+                            {{#discount_details}}
+                            <div class="mt-2 p-2 bg-white rounded border border-red-200 text-xs text-gray-700">
+                                <i class="fa-solid fa-info-circle mr-1 text-red-600"></i>
+                                <span class="font-medium">Lý do giảm giá:</span>
+                                <p class="mt-1 italic pl-4">{{discount_details}}</p>
+                            </div>
+                            {{/discount_details}}
+                        </div>
+                        <div class="p-4 bg-yellow-50">
+                            <div class="flex items-start gap-2 mb-2">
+                                <i class="fa-solid fa-gift text-yellow-600 mt-1"></i>
+                                <div class="flex-1">
+                                    <p class="font-semibold text-gray-700 mb-1">🎁 Quà tặng</p>
+                                    <div class="bg-white rounded p-2 text-xs text-gray-600 whitespace-pre-line border border-yellow-200">
+                                        {{#gift_details}}{{gift_details}}{{/gift_details}}{{^gift_details}}Không có quà tặng{{/gift_details}}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center mt-3 pt-3 border-t border-yellow-200">
+                                <span class="text-xs font-semibold text-gray-600">Tổng giá trị quà tặng:</span>
+                                <span class="font-bold text-gray-800">{{gift_amount}}</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                            <span class="font-bold text-lg flex items-center gap-2">
+                                <i class="fa-solid fa-check-circle"></i>
+                                GIÁ CHỐT CUỐI CÙNG
+                            </span>
+                            <span class="font-bold text-2xl">{{final_price}}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trạng thái hiện tại -->
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <h4 class="font-bold text-sm text-gray-600 uppercase mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-info-circle text-blue-600"></i>Trạng thái hiện tại
+                    </h4>
+                    <div class="flex items-center gap-3">
+                        <span class="px-4 py-2 rounded-lg font-bold text-sm {{#can_resubmit}}bg-yellow-100 text-yellow-800{{/can_resubmit}}{{^can_resubmit}}{{#status_text}}{{#status_text.indexOf}}bg-blue-100 text-blue-800{{/status_text.indexOf}}{{/status_text}}{{/can_resubmit}}">
+                            {{#can_resubmit}}
+                            <i class="fa-solid fa-exclamation-triangle mr-1"></i>Đã bị trả về - Cần chỉnh sửa
+                            {{/can_resubmit}}
+                            {{^can_resubmit}}
+                            {{status_text}}
+                            {{/can_resubmit}}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Lịch sử phê duyệt -->
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <h4 class="font-bold text-sm text-gray-600 uppercase mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-history text-blue-600"></i>Lịch sử phê duyệt
+                    </h4>
+                    <div class="space-y-2 max-h-64 overflow-y-auto">
                         {{#log_entries}}
                         {{#.}}
-                        <div class="border-l-4 pl-3 py-2 {{#is_approve}}border-green-500 bg-green-50{{/is_approve}}{{#is_reject}}border-red-500 bg-red-50{{/is_reject}}{{^is_approve}}{{^is_reject}}border-gray-400 bg-gray-50{{/is_reject}}{{/is_approve}}">
-                            <div class="font-bold text-gray-800">{{time}}{{#user}} - {{user}}{{/user}}{{#role}} ({{role}}){{/role}}</div>
-                            <div class="mt-1">
-                                <span class="font-semibold {{#is_approve}}text-green-700{{/is_approve}}{{#is_reject}}text-red-700{{/is_reject}}{{^is_approve}}{{^is_reject}}text-gray-700{{/is_reject}}{{/is_approve}}">{{action}}</span>
+                        <div class="border-l-4 pl-4 py-3 rounded-r-lg {{#is_approve}}border-green-500 bg-green-50{{/is_approve}}{{#is_reject}}border-red-500 bg-red-50{{/is_reject}}{{^is_approve}}{{^is_reject}}border-gray-400 bg-gray-50{{/is_reject}}{{/is_approve}}">
+                            <div class="flex items-start justify-between mb-1">
+                                <div class="flex items-center gap-2">
+                                    {{#is_approve}}
+                                    <i class="fa-solid fa-check-circle text-green-600"></i>
+                                    {{/is_approve}}
+                                    {{#is_reject}}
+                                    <i class="fa-solid fa-times-circle text-red-600"></i>
+                                    {{/is_reject}}
+                                    {{^is_approve}}{{^is_reject}}
+                                    <i class="fa-solid fa-clock text-gray-500"></i>
+                                    {{/is_reject}}{{/is_approve}}
+                                    <span class="font-bold text-xs text-gray-600">{{time}}</span>
+                </div>
+                                {{#user}}
+                                <span class="text-xs text-gray-500 bg-white px-2 py-1 rounded border">
+                                    {{user}}{{#role}} <span class="text-gray-400">({{role}})</span>{{/role}}
+                                </span>
+                                {{/user}}
+                            </div>
+                            <div class="mt-2">
+                                <span class="font-semibold text-sm {{#is_approve}}text-green-700{{/is_approve}}{{#is_reject}}text-red-700{{/is_reject}}{{^is_approve}}{{^is_reject}}text-gray-700{{/is_reject}}{{/is_approve}}">
+                                    {{action}}
+                                </span>
                                 {{#comment}}
-                                <div class="mt-1 text-gray-700 italic flex items-start">
-                                    <i class="fa-solid fa-comment-dots mr-1 mt-0.5 text-xs"></i>
-                                    <span>{{comment}}</span>
+                                <div class="mt-2 p-2 bg-white rounded border border-gray-200 text-xs text-gray-700 flex items-start">
+                                    <i class="fa-solid fa-comment-dots mr-2 mt-0.5 text-blue-600"></i>
+                                    <span class="flex-1 italic">{{comment}}</span>
                                 </div>
                                 {{/comment}}
                             </div>
@@ -547,24 +703,39 @@
                         {{/log_entries}}
                         {{^log_entries}}
                         {{#logs}}
-                        <div class="whitespace-pre-line text-gray-600 font-mono text-xs">{{logs}}</div>
+                        <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                            <div class="whitespace-pre-line text-gray-600 font-mono text-xs">{{logs}}</div>
+                        </div>
                         {{/logs}}
                         {{^logs}}
-                        <div class="text-gray-400 italic">Chưa có lịch sử phê duyệt</div>
+                        <div class="text-center py-6 text-gray-400 italic">
+                            <i class="fa-solid fa-inbox text-3xl mb-2 block"></i>
+                            Chưa có lịch sử phê duyệt
+                        </div>
                         {{/logs}}
                         {{/log_entries}}
                     </div>
                 </div>
 
-                <div class="flex gap-3 pt-2 border-t">
+                <!-- Nút hành động -->
+                <div class="bg-gray-50 border-t border-gray-200 -mx-6 -mb-6 p-4 rounded-b-lg">
                     {{#can_resubmit}}
-                    <button onclick="resubmitRequest('{{id}}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold shadow">
-                        <i class="fa-solid fa-paper-plane mr-2"></i>Gửi lại để duyệt
+                    <button onclick="resubmitRequest('{{id}}')" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 rounded-lg font-bold shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Gửi lại để duyệt</span>
                     </button>
                     {{/can_resubmit}}
                     {{^can_resubmit}}
-                    <button onclick="confirmAction('{{id}}', 'approve')" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold shadow">Duyệt</button>
-                    <button onclick="confirmAction('{{id}}', 'reject')" class="flex-1 bg-red-100 hover:bg-red-200 text-red-600 py-3 rounded-lg font-bold">Từ chối</button>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="confirmAction('{{id}}', 'approve')" class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 rounded-lg font-bold shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-check-circle"></i>
+                            <span>Duyệt</span>
+                        </button>
+                        <button onclick="confirmAction('{{id}}', 'reject')" class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-3 rounded-lg font-bold shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-times-circle"></i>
+                            <span>Từ chối</span>
+                        </button>
+                    </div>
                     {{/can_resubmit}}
                 </div>
             </div>
