@@ -960,13 +960,22 @@ async function callAPI(data) {
     try {
         console.log('Calling API:', data.action, data);
         
+        // Sử dụng FormData để tránh CORS preflight request
+        // Google Apps Script Web App xử lý FormData tốt hơn JSON và không trigger preflight
+        const formData = new FormData();
+        Object.keys(data).forEach(key => {
+            const value = data[key];
+            if (value !== null && value !== undefined) {
+                formData.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
+            }
+        });
+        
         const res = await fetch(API_URL, {
             method: 'POST',
-            mode: 'cors',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
+            mode: 'cors', // Giữ cors mode
+            body: formData
+            // Không set Content-Type header để browser tự set với boundary cho FormData
+            // Điều này giúp tránh preflight request
         });
         
         console.log('API Response status:', res.status, res.statusText);
