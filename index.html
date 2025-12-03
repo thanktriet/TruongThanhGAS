@@ -173,6 +173,19 @@
                                         </div>
                                     </div>
 
+                                    <div class="mb-6">
+                                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">4. Yêu cầu khác</h3>
+                                        <textarea name="other_requirements" rows="3" class="input w-full" placeholder="Nhập yêu cầu khác (nếu có)..."></textarea>
+                                    </div>
+
+                                    <div class="mb-6">
+                                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">5. Chọn người duyệt</h3>
+                                        <label class="label">Chọn TPKD duyệt *</label>
+                                        <select name="approver_step0" id="approver_step0" class="input w-full" required>
+                                            <option value="">-- Đang tải danh sách --</option>
+                                        </select>
+                                    </div>
+
                                     <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg transition transform active:scale-95">Gửi Duyệt</button>
                                 </form>
                             </div>
@@ -446,6 +459,11 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">4. Yêu cầu khác</h3>
+                        <textarea name="edit_other_requirements" id="edit_other_requirements" rows="3" class="input w-full" placeholder="Nhập yêu cầu khác (nếu có)..."></textarea>
                     </div>
 
                     <div class="flex gap-3">
@@ -819,6 +837,59 @@
                     </div>
                 </div>
 
+                <!-- Yêu cầu khác -->
+                {{#other_requirements}}
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <h4 class="font-bold text-sm text-gray-600 uppercase mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-list text-blue-600"></i>Yêu cầu khác
+                    </h4>
+                    <div class="bg-gray-50 p-3 rounded border border-gray-200 text-sm text-gray-700 whitespace-pre-line">
+                        {{other_requirements}}
+                    </div>
+                </div>
+                {{/other_requirements}}
+
+                <!-- Phân bổ chi phí bán hàng (chỉ hiển thị khi có dữ liệu hoặc là admin) -->
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <h4 class="font-bold text-sm text-gray-600 uppercase mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-blue-600"></i>Phân bổ chi phí bán hàng
+                    </h4>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">Mức chi phí giảm tối đa (%)</p>
+                                <div class="flex gap-2 items-center">
+                                    <input type="text" id="detail-max-cost-rate" value="{{max_cost_rate}}" 
+                                           class="flex-1 border p-2 rounded text-sm" 
+                                           placeholder="Nhập %" 
+                                           oninput="this.value = this.value.replace(/[^0-9.]/g, '')"
+                                           {{#is_admin}}{{else}}readonly{{/is_admin}}>
+                                    {{#is_admin}}
+                                    <button onclick="saveMaxCostRate('{{id}}')" 
+                                            class="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition">
+                                        <i class="fa-solid fa-save"></i>
+                                    </button>
+                                    {{/is_admin}}
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">Lương năng suất (VNĐ)</p>
+                                <p class="font-semibold text-gray-800">{{#productivity_bonus}}{{productivity_bonus}}{{/productivity_bonus}}{{^productivity_bonus}}Chưa nhập{{/productivity_bonus}}</p>
+                            </div>
+                        </div>
+                            <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-600">Chi phí bán hàng:</span>
+                                <span class="font-semibold text-gray-800">{{total_cost}}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm mt-2">
+                                <span class="text-gray-600">Tỷ lệ (%):</span>
+                                <span class="font-semibold text-gray-800">{{cost_percentage}}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Trạng thái hiện tại -->
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <h4 class="font-bold text-sm text-gray-600 uppercase mb-3 flex items-center gap-2">
@@ -978,7 +1049,29 @@ function getSession() {
 // ===================================
 // INITIALIZATION
 // ===================================
+        // Load TPKD users when page loads
+        async function loadTPKDUsers() {
+            try {
+                const res = await callAPI({ action: 'get_users_by_role', role: 'TPKD' });
+                if (res.success && res.users) {
+                    const select = $('approver_step0');
+                    if (select) {
+                        select.innerHTML = '<option value="">-- Chọn TPKD --</option>';
+                        res.users.forEach(user => {
+                            const option = document.createElement('option');
+                            option.value = user.username;
+                            option.textContent = `${user.fullname} (${user.username})${user.group ? ' - ' + user.group : ''}`;
+                            select.appendChild(option);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading TPKD users:', error);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            loadTPKDUsers();
             checkSession();
             addGiftRow('gift-list-manual');
     initContractLookup();
@@ -1320,8 +1413,15 @@ function logout() {
     const payload = {
         action: "submit_request",
         requester: session.username,
-        ...Object.fromEntries(formData.entries())
+        ...Object.fromEntries(formData.entries()),
+        approver_step0: formData.get('approver_step0') || ''
     };
+    
+    // Validate approver_step0
+    if (!payload.approver_step0) {
+        Swal.fire('Lỗi', 'Vui lòng chọn TPKD duyệt', 'error');
+        return;
+    }
     
     // Đảm bảo gift_json được gửi lên (lấy từ hidden input)
     const giftJsonValue = $(hiddenInput)?.value || '[]';
@@ -1513,6 +1613,18 @@ function renderApprovalList() {
                                     data.requester && 
                                     data.requester.toLowerCase() === session.username.toLowerCase());
                 
+                // Thêm is_admin flag
+                data.is_admin = (session && session.role === 'ADMIN');
+                
+                // Tính toán chi phí và tỷ lệ
+                const discountAmount = parseInt((data.discount_amount || '').replace(/[^\d]/g, '')) || 0;
+                const giftAmount = parseInt((data.gift_amount || '').replace(/[^\d]/g, '')) || 0;
+                const totalCost = discountAmount + giftAmount;
+                const contractPrice = parseInt((data.contract_price || '').replace(/[^\d]/g, '')) || 0;
+                const costPercentage = contractPrice > 0 ? ((totalCost / contractPrice) * 100).toFixed(2) : '0.00';
+                data.total_cost = totalCost.toLocaleString('vi-VN');
+                data.cost_percentage = costPercentage;
+                
                 // Tính next_status và is_completed nếu chưa có
                 // Step 4 (Kế Toán) là bước cuối, sau đó có thể in (step >= 6)
                 if (!data.next_status && !data.is_completed) {
@@ -1630,54 +1742,136 @@ async function resubmitRequest(id) {
         return;
     }
     
-    // Prompt for comment for both approve and reject
-    let comment = '';
+    // Get request detail to know next step
+    let nextRole = null;
+    let nextStep = null;
     try {
-        const title = decision === 'reject' ? 'Lý do từ chối' : 'Lý do duyệt';
-        const label = decision === 'reject' 
-            ? 'Nhập lý do từ chối (khuyến nghị)' 
-            : 'Nhập lý do duyệt (tùy chọn)';
-        const placeholder = decision === 'reject' 
-            ? 'Ví dụ: Giá không phù hợp, thiếu thông tin...' 
-            : 'Ví dụ: Đã kiểm tra và đồng ý...';
-        
-        const result = await Swal.fire({
-            title: title,
-            input: 'textarea',
-            inputLabel: label,
-            inputPlaceholder: placeholder,
-            showCancelButton: true,
-            confirmButtonText: 'Xác nhận',
-            cancelButtonText: 'Hủy',
-            allowOutsideClick: false,
-            allowEscapeKey: true,
-            inputValidator: (value) => {
-                if (decision === 'reject' && !value) {
-                    return 'Vui lòng nhập lý do từ chối';
+        const detailRes = await callAPI({ action: 'get_request_detail', id, username: session.username });
+        if (detailRes.success && detailRes.data) {
+            const workflow = [
+                { step: 0, next: 1, role: 'TPKD' },
+                { step: 1, next: 2, role: 'GDKD' },
+                { step: 2, next: 3, role: 'BKS' },
+                { step: 3, next: 4, role: 'BGD' },
+                { step: 4, next: 6, role: 'KETOAN' }
+            ];
+            const currentStep = detailRes.data.step || 0;
+            const stepConfig = workflow.find(w => w.step === currentStep);
+            if (stepConfig && stepConfig.next < 6) {
+                const nextConfig = workflow.find(w => w.step === stepConfig.next);
+                if (nextConfig) {
+                    nextRole = nextConfig.role;
+                    nextStep = stepConfig.next;
                 }
-                return null;
             }
-        });
-        
-        // Check if user cancelled (dismissed with cancel button or ESC)
-        if (result.dismiss === Swal.DismissReason.cancel || result.dismiss === Swal.DismissReason.esc) {
-            return; // User cancelled, don't proceed
-        }
-        
-        comment = result.value || '';
-        
-        // Require comment for reject
-        if (decision === 'reject' && !comment.trim()) {
-            Swal.fire('Lỗi', 'Vui lòng nhập lý do từ chối', 'error');
-            return;
         }
     } catch (e) {
-        console.error('Error getting comment:', e);
+        console.error('Error getting request detail:', e);
+    }
+    
+    // Prompt for comment for both approve and reject
+    let comment = '';
+    let productivityBonus = '';
+    let nextApprover = '';
+    try {
+        if (decision === 'approve') {
+            // Load users for next role if available
+            let usersHtml = '';
+            if (nextRole) {
+                try {
+                    const usersRes = await callAPI({ action: 'get_users_by_role', role: nextRole });
+                    if (usersRes.success && usersRes.users && usersRes.users.length > 0) {
+                        usersHtml = `
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Chọn người duyệt tiếp theo (${nextRole}):</label>
+                            <select id="swal-next-approver" class="swal2-select" style="width: 100%; margin-bottom: 15px; padding: 8px;">
+                                <option value="">-- Chọn người duyệt --</option>
+                        `;
+                        usersRes.users.forEach(user => {
+                            usersHtml += `<option value="${user.username}">${user.fullname} (${user.username})${user.group ? ' - ' + user.group : ''}</option>`;
+                        });
+                        usersHtml += '</select>';
+                    }
+                } catch (e) {
+                    console.error('Error loading users:', e);
+                }
+            }
+            
+            // For approve: show form with comment, productivity bonus, and next approver
+            const result = await Swal.fire({
+                title: 'Duyệt tờ trình',
+                html: `
+                    <div style="text-align: left;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Lý do duyệt (tùy chọn):</label>
+                        <textarea id="swal-comment" class="swal2-textarea" placeholder="Ví dụ: Đã kiểm tra và đồng ý..." style="width: 100%; min-height: 60px; margin-bottom: 15px;"></textarea>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Lương năng suất (VNĐ) - TVBH đề xuất:</label>
+                        <input id="swal-productivity" type="text" class="swal2-input" placeholder="0" style="text-align: right; margin-bottom: 15px;" oninput="this.value = this.value.replace(/[^0-9]/g, ''); if (this.value) this.value = parseInt(this.value).toLocaleString('vi-VN');">
+                        ${usersHtml}
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Xác nhận',
+                cancelButtonText: 'Hủy',
+                allowOutsideClick: false,
+                allowEscapeKey: true,
+                didOpen: () => {
+                    const commentInput = Swal.getPopup().querySelector('#swal-comment');
+                    if (commentInput) commentInput.focus();
+                }
+            });
+            
+            if (result.dismiss === Swal.DismissReason.cancel || result.dismiss === Swal.DismissReason.esc) {
+                return;
+            }
+            
+            const commentInput = Swal.getPopup().querySelector('#swal-comment');
+            const productivityInput = Swal.getPopup().querySelector('#swal-productivity');
+            const nextApproverInput = Swal.getPopup().querySelector('#swal-next-approver');
+            comment = commentInput ? commentInput.value : '';
+            productivityBonus = productivityInput ? productivityInput.value.replace(/\./g, '') : '';
+            nextApprover = nextApproverInput ? nextApproverInput.value : '';
+        } else {
+            // For reject: only comment required
+            const title = 'Lý do từ chối';
+            const label = 'Nhập lý do từ chối (khuyến nghị)';
+            const placeholder = 'Ví dụ: Giá không phù hợp, thiếu thông tin...';
+            
+            const result = await Swal.fire({
+                title: title,
+                input: 'textarea',
+                inputLabel: label,
+                inputPlaceholder: placeholder,
+                showCancelButton: true,
+                confirmButtonText: 'Xác nhận',
+                cancelButtonText: 'Hủy',
+                allowOutsideClick: false,
+                allowEscapeKey: true,
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Vui lòng nhập lý do từ chối';
+                    }
+                    return null;
+                }
+            });
+            
+            if (result.dismiss === Swal.DismissReason.cancel || result.dismiss === Swal.DismissReason.esc) {
+                return;
+            }
+            
+            comment = result.value || '';
+            
+            if (!comment.trim()) {
+                Swal.fire('Lỗi', 'Vui lòng nhập lý do từ chối', 'error');
+                return;
+            }
+        }
+    } catch (e) {
+        console.error('Error getting input:', e);
         if (decision === 'reject') {
             Swal.fire('Lỗi', 'Vui lòng nhập lý do từ chối', 'error');
             return;
         }
         comment = '';
+        productivityBonus = '';
     }
     
     try {
@@ -1687,7 +1881,9 @@ async function resubmitRequest(id) {
             username: session.username,
             role: session.role,
             decision,
-            comment: comment || ''
+            comment: comment || '',
+            productivity_bonus: productivityBonus || '',
+            next_approver: nextApprover || ''
         });
         
         if (res.success) {
@@ -1926,7 +2122,8 @@ async function handleUpdateRequest(event) {
         contract_price: formData.get('edit_contract_price')?.replace(/\./g, '') || '0',
         discount_details: formData.get('edit_discount_details'),
         discount_amount: formData.get('edit_discount_amount')?.replace(/\./g, '') || '0',
-        gift_json: giftJson
+        gift_json: giftJson,
+        other_requirements: formData.get('edit_other_requirements') || ''
     };
     
     try {
@@ -2076,46 +2273,47 @@ function printRequest(id) {
                 }
                 body { 
                     font-family: "Times New Roman", serif; 
-                    font-size: 12pt; 
-                    padding: 20px; 
-                    line-height: 1.5;
+                    font-size: 10pt; 
+                    padding: 10px; 
+                    line-height: 1.3;
+                    margin: 0;
                 }
                 .header { 
                     text-align: center; 
-                    margin-bottom: 25px; 
+                    margin-bottom: 10px; 
                 }
                 .header h1 { 
-                    font-size: 16pt; 
+                    font-size: 13pt; 
                     font-weight: bold; 
                     text-transform: uppercase; 
-                    margin-bottom: 10px;
+                    margin-bottom: 5px;
                 }
                 .header-info {
                     display: flex;
                     justify-content: space-between;
-                    margin-top: 15px;
-                    font-size: 11pt;
+                    margin-top: 5px;
+                    font-size: 9pt;
                 }
                 .section { 
-                    margin-bottom: 20px; 
+                    margin-bottom: 8px; 
                 }
                 .section-title { 
                     font-weight: bold; 
-                    font-size: 12pt; 
-                    margin-bottom: 10px; 
+                    font-size: 10pt; 
+                    margin-bottom: 5px; 
                     text-transform: uppercase;
                 }
                 table { 
                     width: 100%; 
                     border-collapse: collapse; 
-                    margin-bottom: 15px; 
-                    font-size: 11pt;
+                    margin-bottom: 8px; 
+                    font-size: 9pt;
                 }
                 table, table td, table th { 
                     border: 1px solid #000; 
                 }
                 table td, table th { 
-                    padding: 6px 8px; 
+                    padding: 3px 5px; 
                     text-align: left;
                     vertical-align: top;
                 }
@@ -2123,32 +2321,34 @@ function printRequest(id) {
                     background: #f0f0f0;
                     font-weight: bold;
                     text-align: center;
+                    font-size: 9pt;
                 }
                 .label { 
                     font-weight: bold; 
                     background: #f5f5f5; 
                     width: 30%;
+                    font-size: 9pt;
                 }
                 .text-right {
                     text-align: right;
                 }
                 .total { 
                     font-weight: bold; 
-                    font-size: 12pt; 
+                    font-size: 10pt; 
                 }
                 .signature-section {
-                    margin-top: 40px;
+                    margin-top: 15px;
                     display: flex;
                     justify-content: space-around;
                 }
                 .signature-box {
                     text-align: center;
-                    width: 200px;
+                    width: 150px;
                 }
                 .signature-box-title {
                     font-weight: bold;
-                    margin-bottom: 60px;
-                    font-size: 11pt;
+                    margin-bottom: 40px;
+                    font-size: 9pt;
                 }
             </style>
         </head>
@@ -2251,16 +2451,6 @@ function printRequest(id) {
                             <td id="print-gift-details"></td>
                             <td class="text-right" id="print-gift-amount"></td>
                         </tr>
-                        <tr>
-                            <td class="label">Ưu đãi khác</td>
-                            <td></td>
-                            <td class="text-right">0</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Chi phí môi giới | hoa hồng</td>
-                            <td></td>
-                            <td class="text-right">0</td>
-                        </tr>
                     </tbody>
                     <tfoot>
                         <tr>
@@ -2282,20 +2472,26 @@ function printRequest(id) {
             </div>
             
             <div class="section">
-                <div class="section-title">V. PHÂN BỐ CHI PHÍ BÁN HÀNG</div>
+                <div class="section-title">V. PHÂN BỔ CHI PHÍ BÁN HÀNG</div>
                 <table>
-                    <tr>
-                        <td class="label" style="width: 70%;">1 - Tổng chi phí bán hàng:</td>
-                        <td class="text-right" id="print-cost-1"></td>
-                    </tr>
-                    <tr>
-                        <td class="label">2 - Mức chi phí bán hàng định mức:</td>
-                        <td class="text-right">95%</td>
-                    </tr>
-                    <tr>
-                        <td class="label">3 - Lương Năng suất:</td>
-                        <td class="text-right"></td>
-                    </tr>
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">Nội dung</th>
+                            <th style="width: 20%;" class="text-right">Mức chi phí giảm tối đa (%)</th>
+                            <th style="width: 20%;" class="text-right">Chi phí bán hàng (VNĐ)</th>
+                            <th style="width: 15%;" class="text-right">Tỷ lệ (%)</th>
+                            <th style="width: 15%;" class="text-right">Lương năng suất (VNĐ)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="label">Chi phí bán hàng</td>
+                            <td class="text-right" id="print-max-cost-rate"></td>
+                            <td class="text-right" id="print-sales-cost"></td>
+                            <td class="text-right" id="print-cost-percentage"></td>
+                            <td class="text-right" id="print-productivity-bonus"></td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
             
@@ -2373,14 +2569,25 @@ function printRequest(id) {
             // Tổng chi phí (B) = Giảm giá + Quà tặng
             const totalCost = (parseInt(discountAmount) || 0) + (parseInt(giftAmount) || 0);
             printWindow.document.getElementById('print-total-cost').textContent = totalCost.toLocaleString('vi-VN');
-            printWindow.document.getElementById('print-cost-1').textContent = totalCost.toLocaleString('vi-VN');
             
             // IV. GIÁ TRỊ HỢP ĐỒNG SAU ƯU ĐÃI
             const finalPrice = (d.final_price || '').replace(/[^\d]/g, '');
             printWindow.document.getElementById('print-final-price').textContent = finalPrice ? Number(finalPrice).toLocaleString('vi-VN') : '0';
             
+            // V. PHÂN BỔ CHI PHÍ BÁN HÀNG
+            const maxCostRate = d.max_cost_rate || '';
+            const salesCost = totalCost; // Chi phí bán hàng = Tổng chi phí (B)
+            const contractPriceNum = parseInt(contractPrice) || 0;
+            const costPercentage = contractPriceNum > 0 ? ((salesCost / contractPriceNum) * 100).toFixed(2) : '0.00';
+            const productivityBonus = (d.productivity_bonus || '').replace(/[^\d]/g, '');
+            
+            printWindow.document.getElementById('print-max-cost-rate').textContent = maxCostRate ? maxCostRate + '%' : '';
+            printWindow.document.getElementById('print-sales-cost').textContent = salesCost.toLocaleString('vi-VN');
+            printWindow.document.getElementById('print-cost-percentage').textContent = costPercentage + '%';
+            printWindow.document.getElementById('print-productivity-bonus').textContent = productivityBonus ? Number(productivityBonus).toLocaleString('vi-VN') : '';
+            
             // VI. YÊU CẦU KHÁC
-            printWindow.document.getElementById('print-other-requirements').textContent = d.discount_details || '';
+            printWindow.document.getElementById('print-other-requirements').textContent = d.other_requirements || '';
             printWindow.document.getElementById('print-requester').textContent = d.requester || '';
             
             setTimeout(() => {
