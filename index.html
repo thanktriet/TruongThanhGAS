@@ -294,15 +294,30 @@
     <template id="tpl-pending-list">
         {{#data}}
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-3 cursor-pointer hover:shadow-md transition relative overflow-hidden" onclick="openDetail('{{json_string}}')">
+            {{#can_resubmit}}
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
+            {{/can_resubmit}}
+            {{^can_resubmit}}
             <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
+            {{/can_resubmit}}
             <div class="flex justify-between items-start pl-3">
                 <div>
                     <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-1 rounded uppercase">{{contract_code}}</span>
                     <h3 class="font-bold text-gray-800 mt-1">{{customer}}</h3>
+                    {{#can_resubmit}}
+                    <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded mt-1 inline-block">
+                        <i class="fa-solid fa-exclamation-triangle mr-1"></i>Đã bị từ chối - Cần gửi lại
+                    </span>
+                    {{/can_resubmit}}
                 </div>
                 <div class="text-right">
                     <span class="text-xs text-gray-400 block">{{date}}</span>
+                    {{#can_resubmit}}
+                    <span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded">{{status_text}}</span>
+                    {{/can_resubmit}}
+                    {{^can_resubmit}}
                     <span class="text-xs font-bold bg-gray-100 px-2 py-0.5 rounded text-gray-600">{{status_text}}</span>
+                    {{/can_resubmit}}
                 </div>
             </div>
             <div class="pl-3 mt-2 text-sm text-gray-600">
@@ -344,18 +359,25 @@
 
                 <div class="bg-gray-50 p-4 rounded border">
                     <div class="flex justify-between font-bold text-gray-700 mb-1">
-                        <span>🚙 {{car_model}} {{car_version}}</span>
-                        <span>{{car_color}}</span>
+                        <span>🚙 {{car_model}}{{#car_version}} {{car_version}}{{/car_version}}</span>
+                        {{#car_color}}<span>{{car_color}}</span>{{/car_color}}
                     </div>
                     <div class="flex justify-between text-xs text-gray-500">
-                        <span>VIN: {{vin_no}}</span>
-                        <span>TT: {{payment}}</span>
+                        {{#vin_no}}<span>VIN: {{vin_no}}</span>{{/vin_no}}
+                        {{#payment}}<span>TT: {{payment}}</span>{{/payment}}
                     </div>
                 </div>
 
                 <div class="border rounded-lg overflow-hidden text-sm">
                     <div class="flex justify-between p-3 border-b"><span>Giá Hợp đồng</span><span class="font-bold">{{contract_price}}</span></div>
-                    <div class="flex justify-between p-3 border-b text-red-600"><span>(-) Giảm giá</span><span>{{discount_amount}}</span></div>
+                    <div class="p-3 border-b text-red-600">
+                        <div class="flex justify-between mb-1"><span>(-) Giảm giá</span><span class="font-bold">{{discount_amount}}</span></div>
+                        {{#discount_details}}
+                        <div class="text-xs text-gray-600 mt-1 italic pl-2 border-l-2 border-red-300">
+                            <i class="fa-solid fa-info-circle mr-1"></i>{{discount_details}}
+                        </div>
+                        {{/discount_details}}
+                    </div>
                     <div class="p-3 bg-gray-50 border-b">
                         <p class="font-bold mb-1 text-gray-600">🎁 Quà tặng:</p>
                         <div class="pl-2 whitespace-pre-line text-xs italic text-gray-600">{{#gift_details}}{{gift_details}}{{/gift_details}}{{^gift_details}}Không có{{/gift_details}}</div>
@@ -366,12 +388,44 @@
 
                 <div>
                     <h4 class="font-bold text-xs text-gray-400 uppercase mb-2">Lịch sử phê duyệt</h4>
-                    <div class="bg-gray-100 p-3 rounded text-xs font-mono whitespace-pre-line text-gray-600">{{logs}}</div>
+                    <div class="bg-gray-100 p-3 rounded text-xs space-y-2">
+                        {{#log_entries}}
+                        {{#.}}
+                        <div class="border-l-4 pl-3 py-2 {{#is_approve}}border-green-500 bg-green-50{{/is_approve}}{{#is_reject}}border-red-500 bg-red-50{{/is_reject}}{{^is_approve}}{{^is_reject}}border-gray-400 bg-gray-50{{/is_reject}}{{/is_approve}}">
+                            <div class="font-bold text-gray-800">{{time}}{{#user}} - {{user}}{{/user}}{{#role}} ({{role}}){{/role}}</div>
+                            <div class="mt-1">
+                                <span class="font-semibold {{#is_approve}}text-green-700{{/is_approve}}{{#is_reject}}text-red-700{{/is_reject}}{{^is_approve}}{{^is_reject}}text-gray-700{{/is_reject}}{{/is_approve}}">{{action}}</span>
+                                {{#comment}}
+                                <div class="mt-1 text-gray-700 italic flex items-start">
+                                    <i class="fa-solid fa-comment-dots mr-1 mt-0.5 text-xs"></i>
+                                    <span>{{comment}}</span>
+                                </div>
+                                {{/comment}}
+                            </div>
+                        </div>
+                        {{/.}}
+                        {{/log_entries}}
+                        {{^log_entries}}
+                        {{#logs}}
+                        <div class="whitespace-pre-line text-gray-600 font-mono text-xs">{{logs}}</div>
+                        {{/logs}}
+                        {{^logs}}
+                        <div class="text-gray-400 italic">Chưa có lịch sử phê duyệt</div>
+                        {{/logs}}
+                        {{/log_entries}}
+                    </div>
                 </div>
 
                 <div class="flex gap-3 pt-2 border-t">
+                    {{#can_resubmit}}
+                    <button onclick="resubmitRequest('{{id}}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold shadow">
+                        <i class="fa-solid fa-paper-plane mr-2"></i>Gửi lại để duyệt
+                    </button>
+                    {{/can_resubmit}}
+                    {{^can_resubmit}}
                     <button onclick="confirmAction('{{id}}', 'approve')" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold shadow">Duyệt</button>
                     <button onclick="confirmAction('{{id}}', 'reject')" class="flex-1 bg-red-100 hover:bg-red-200 text-red-600 py-3 rounded-lg font-bold">Từ chối</button>
+                    {{/can_resubmit}}
                 </div>
             </div>
         </div>
@@ -843,6 +897,23 @@ async function loadApprovalList() {
 function openDetail(jsonStr) {
     try {
         const data = JSON.parse(decodeURIComponent(jsonStr));
+        const sessionStr = localStorage.getItem('user_session');
+        let session = null;
+        
+        if (sessionStr) {
+            try {
+                session = JSON.parse(sessionStr);
+                // Kiểm tra xem có thể gửi lại không (step = 0 và là người tạo)
+                data.can_resubmit = (data.step === 0 && 
+                                    session && 
+                                    (session.role === 'TVBH' || session.role === 'SALE') &&
+                                    data.requester && 
+                                    data.requester.toLowerCase() === session.username.toLowerCase());
+            } catch (e) {
+                console.error('Error parsing session:', e);
+            }
+        }
+        
         const tpl = $('tpl-order-detail')?.innerHTML;
         const modalBody = $('modal-detail-body');
         const modal = $('modal-detail');
@@ -884,6 +955,58 @@ function closeModal() {
     }, 200);
 }
 
+async function resubmitRequest(id) {
+    const sessionStr = localStorage.getItem('user_session');
+    if (!sessionStr) {
+        Swal.fire('Lỗi', 'Phiên đăng nhập đã hết hạn', 'error');
+        logout();
+        return;
+    }
+    
+    let session;
+    try {
+        session = JSON.parse(sessionStr);
+    } catch (e) {
+        Swal.fire('Lỗi', 'Dữ liệu phiên không hợp lệ', 'error');
+        logout();
+        return;
+    }
+    
+    // Xác nhận trước khi gửi lại
+    const confirmResult = await Swal.fire({
+        title: 'Gửi lại đơn?',
+        text: 'Đơn sẽ được gửi lại để duyệt từ đầu',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Gửi lại',
+        cancelButtonText: 'Hủy'
+    });
+    
+    if (!confirmResult.isConfirmed) {
+        return;
+    }
+    
+    try {
+        const res = await callAPI({
+            action: 'resubmit',
+            id,
+            username: session.username,
+            role: session.role
+        });
+        
+        if (res.success) {
+            Swal.fire('Thành công', res.message || 'Đã gửi lại đơn thành công', 'success');
+            closeModal();
+            loadApprovalList();
+        } else {
+            Swal.fire('Lỗi', res.message || 'Gửi lại thất bại', 'error');
+        }
+    } catch (error) {
+        console.error('Error in resubmitRequest:', error);
+        Swal.fire('Lỗi', error.message || 'Không thể kết nối đến server', 'error');
+    }
+}
+
 async function confirmAction(id, decision) {
     const sessionStr = localStorage.getItem('user_session');
     if (!sessionStr) {
@@ -901,33 +1024,54 @@ async function confirmAction(id, decision) {
         return;
     }
     
-    // Prompt for comment if rejecting
+    // Prompt for comment for both approve and reject
     let comment = '';
-    if (decision === 'reject') {
-        try {
-            const result = await Swal.fire({
-                title: 'Lý do từ chối',
-                input: 'textarea',
-                inputLabel: 'Nhập lý do từ chối (tùy chọn)',
-                inputPlaceholder: 'Nhập lý do...',
-                showCancelButton: true,
-                confirmButtonText: 'Xác nhận',
-                cancelButtonText: 'Hủy',
-                allowOutsideClick: false,
-                allowEscapeKey: true
-            });
-            
-            // Check if user cancelled (dismissed with cancel button or ESC)
-            if (result.dismiss === Swal.DismissReason.cancel || result.dismiss === Swal.DismissReason.esc) {
-                return; // User cancelled, don't proceed
+    try {
+        const title = decision === 'reject' ? 'Lý do từ chối' : 'Lý do duyệt';
+        const label = decision === 'reject' 
+            ? 'Nhập lý do từ chối (khuyến nghị)' 
+            : 'Nhập lý do duyệt (tùy chọn)';
+        const placeholder = decision === 'reject' 
+            ? 'Ví dụ: Giá không phù hợp, thiếu thông tin...' 
+            : 'Ví dụ: Đã kiểm tra và đồng ý...';
+        
+        const result = await Swal.fire({
+            title: title,
+            input: 'textarea',
+            inputLabel: label,
+            inputPlaceholder: placeholder,
+            showCancelButton: true,
+            confirmButtonText: 'Xác nhận',
+            cancelButtonText: 'Hủy',
+            allowOutsideClick: false,
+            allowEscapeKey: true,
+            inputValidator: (value) => {
+                if (decision === 'reject' && !value) {
+                    return 'Vui lòng nhập lý do từ chối';
+                }
+                return null;
             }
-            
-            comment = result.value || '';
-        } catch (e) {
-            console.error('Error getting comment:', e);
-            // Continue without comment if there's an error
-            comment = '';
+        });
+        
+        // Check if user cancelled (dismissed with cancel button or ESC)
+        if (result.dismiss === Swal.DismissReason.cancel || result.dismiss === Swal.DismissReason.esc) {
+            return; // User cancelled, don't proceed
         }
+        
+        comment = result.value || '';
+        
+        // Require comment for reject
+        if (decision === 'reject' && !comment.trim()) {
+            Swal.fire('Lỗi', 'Vui lòng nhập lý do từ chối', 'error');
+            return;
+        }
+    } catch (e) {
+        console.error('Error getting comment:', e);
+        if (decision === 'reject') {
+            Swal.fire('Lỗi', 'Vui lòng nhập lý do từ chối', 'error');
+            return;
+        }
+        comment = '';
     }
     
     try {
