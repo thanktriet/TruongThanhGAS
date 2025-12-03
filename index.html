@@ -1953,38 +1953,54 @@ async function resubmitRequest(id) {
         return;
     }
     
-    // Get request detail to know next step
-    let nextRole = null;
-    let nextStep = null;
-    try {
-        const detailRes = await callAPI({ action: 'get_request_detail', id, username: session.username });
-        if (detailRes.success && detailRes.data) {
-            const workflow = [
-                { step: 0, next: 1, role: 'TPKD' },
-                { step: 1, next: 2, role: 'GDKD' },
-                { step: 2, next: 3, role: 'BKS' },
-                { step: 3, next: 4, role: 'BGD' },
-                { step: 4, next: 6, role: 'KETOAN' }
-            ];
-            const currentStep = detailRes.data.step || 0;
-            const stepConfig = workflow.find(w => w.step === currentStep);
-            if (stepConfig && stepConfig.next < 6) {
-                const nextConfig = workflow.find(w => w.step === stepConfig.next);
-                if (nextConfig) {
-                    nextRole = nextConfig.role;
-                    nextStep = stepConfig.next;
-                }
-            }
-        }
-    } catch (e) {
-        console.error('Error getting request detail:', e);
-    }
-    
     // Prompt for comment for both approve and reject
     let comment = '';
     let productivityBonus = '';
     let nextApprover = '';
+    
+    // Show loading immediately
+    Swal.fire({
+        title: 'Đang tải...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
     try {
+        // Get request detail to know next step and current productivity bonus
+        let detailData = null;
+        let nextRole = null;
+        let nextStep = null;
+        
+        try {
+            const detailRes = await callAPI({ action: 'get_request_detail', id, username: session.username });
+            if (detailRes.success && detailRes.data) {
+                detailData = detailRes.data;
+                const workflow = [
+                    { step: 0, next: 1, role: 'TPKD' },
+                    { step: 1, next: 2, role: 'GDKD' },
+                    { step: 2, next: 3, role: 'BKS' },
+                    { step: 3, next: 4, role: 'BGD' },
+                    { step: 4, next: 6, role: 'KETOAN' }
+                ];
+                const currentStep = detailData.step || 0;
+                const stepConfig = workflow.find(w => w.step === currentStep);
+                if (stepConfig && stepConfig.next < 6) {
+                    const nextConfig = workflow.find(w => w.step === stepConfig.next);
+                    if (nextConfig) {
+                        nextRole = nextConfig.role;
+                        nextStep = stepConfig.next;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error getting request detail:', e);
+            Swal.close();
+            Swal.fire('Lỗi', 'Không thể tải thông tin tờ trình', 'error');
+            return;
+        }
+        
         if (decision === 'approve') {
             // Load users for next role if available
             let usersHtml = '';
@@ -2010,6 +2026,9 @@ async function resubmitRequest(id) {
             // Get current productivity bonus from detail data
             const currentProductivityBonus = detailData ? (detailData.productivity_bonus || '') : '';
             const currentProductivityBonusFormatted = currentProductivityBonus || '0';
+            
+            // Close loading and show form
+            Swal.close();
             
             // For approve: show form with comment, productivity bonus adjustment, and next approver
             const result = await Swal.fire({
@@ -2040,16 +2059,28 @@ async function resubmitRequest(id) {
                 return;
             }
             
-            const commentInput = Swal.getPopup().querySelector('#swal-comment');
-            const productivityInput = Swal.getPopup().querySelector('#swal-productivity');
-            const nextApproverInput = Swal.getPopup().querySelector('#swal-next-approver');
-            comment = commentInput ? commentInput.value : '';
-            // Nếu có nhập mới thì lấy, không thì giữ nguyên giá trị cũ
-            const newProductivityBonus = productivityInput ? productivityInput.value.replace(/\./g, '') : '';
-            const oldProductivityBonus = currentProductivityBonus ? String(currentProductivityBonus).replace(/\./g, '') : '';
-            // Chỉ gửi nếu có thay đổi, nếu không có thay đổi thì gửi rỗng để backend giữ nguyên
-            productivityBonus = (newProductivityBonus && newProductivityBonus !== oldProductivityBonus) ? newProductivityBonus : '';
-            nextApprover = nextApproverInput ? nextApproverInput.value : '';
+            // Read values from preConfirm result
+            if (result.value) {
+                comment = result.value.comment || '';
+                const newProductivityBonus = result.value.productivity_bonus || '';
+                const oldProductivityBonus = currentProductivityBonus ? String(currentProductivityBonus).replace(/\./g, '') : '';
+                // Chỉ gửi nếu có thay đổi, nếu không có thay đổi thì gửi rỗng để backend giữ nguyên
+                productivityBonus = (newProductivityBonus && newProductivityBonus !== oldProductivityBonus) ? newProductivityBonus : '';
+                nextApprover = result.value.next_approver || '';
+            } else {
+                // Fallback: try to read from DOM
+                const popup = Swal.getPopup();
+                if (popup) {
+                    const commentInput = popup.querySelector('#swal-comment');
+                    const productivityInput = popup.querySelector('#swal-productivity');
+                    const nextApproverInput = popup.querySelector('#swal-next-approver');
+                    comment = commentInput ? commentInput.value : '';
+                    const newProductivityBonus = productivityInput ? productivityInput.value.replace(/\./g, '') : '';
+                    const oldProductivityBonus = currentProductivityBonus ? String(currentProductivityBonus).replace(/\./g, '') : '';
+                    productivityBonus = (newProductivityBonus && newProductivityBonus !== oldProductivityBonus) ? newProductivityBonus : '';
+                    nextApprover = nextApproverInput ? nextApproverInput.value : '';
+                }
+            }
         } else {
             // For reject: only comment required
             const title = 'Lý do từ chối';
