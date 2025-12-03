@@ -174,12 +174,19 @@
                                     </div>
 
                                     <div class="mb-6">
-                                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">4. Yêu cầu khác</h3>
+                                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">4. Lương năng suất</h3>
+                                        <label class="label">Lương năng suất (VNĐ) *</label>
+                                        <input name="productivity_bonus" type="text" class="input w-full" oninput="formatMoneyInput(this)" placeholder="0" required>
+                                        <p class="text-xs text-gray-500 mt-1">TVBH tự đề xuất mức lương năng suất</p>
+                                    </div>
+
+                                    <div class="mb-6">
+                                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">5. Yêu cầu khác</h3>
                                         <textarea name="other_requirements" rows="3" class="input w-full" placeholder="Nhập yêu cầu khác (nếu có)..."></textarea>
                                     </div>
 
                                     <div class="mb-6">
-                                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">5. Chọn người duyệt</h3>
+                                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">6. Chọn người duyệt</h3>
                                         <label class="label">Chọn TPKD duyệt *</label>
                                         <select name="approver_step0" id="approver_step0" class="input w-full" required>
                                             <option value="">-- Đang tải danh sách --</option>
@@ -849,51 +856,32 @@
                 </div>
                 {{/other_requirements}}
 
-                <!-- Phân bổ chi phí bán hàng -->
+                <!-- Lương năng suất -->
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <h4 class="font-bold text-sm text-gray-600 uppercase mb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-blue-600"></i>Phân bổ chi phí bán hàng
+                        <i class="fa-solid fa-money-bill-wave text-blue-600"></i>Lương năng suất
                     </h4>
                     <div class="space-y-3">
-                        <div class="grid grid-cols-2 gap-3">
-                <div>
-                                <p class="text-xs text-gray-500 mb-1">Mức chi phí giảm tối đa (VNĐ)</p>
-                                <div class="flex gap-2 items-center">
-                                    {{#can_edit_cost}}
-                                    <input type="text" id="detail-max-cost-rate" value="{{max_cost_rate}}" 
-                                           class="flex-1 border p-2 rounded text-sm" 
-                                           placeholder="Nhập số tiền" 
-                                           oninput="formatMoneyInput(this)">
-                                    <button onclick="saveCostData('{{id}}')" 
-                                            class="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition">
-                                        <i class="fa-solid fa-save"></i>
-                                    </button>
-                                    {{/can_edit_cost}}
-                                    {{^can_edit_cost}}
-                                    <p class="font-semibold text-gray-800 flex-1">{{#max_cost_rate}}{{max_cost_rate}}{{/max_cost_rate}}{{^max_cost_rate}}Chưa nhập{{/max_cost_rate}}</p>
-                                    {{/can_edit_cost}}
-                                </div>
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Lương năng suất (VNĐ)</p>
+                            <div class="flex gap-2 items-center">
+                                {{#can_edit_cost}}
+                                <input type="text" id="detail-productivity-bonus" value="{{productivity_bonus}}" 
+                                       class="flex-1 border p-2 rounded text-sm" 
+                                       placeholder="Nhập số tiền" 
+                                       oninput="formatMoneyInput(this)">
+                                <button onclick="saveProductivityBonus('{{id}}')" 
+                                        class="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition">
+                                    <i class="fa-solid fa-save"></i>
+                                </button>
+                                {{/can_edit_cost}}
+                                {{^can_edit_cost}}
+                                <p class="font-semibold text-gray-800 flex-1">{{#productivity_bonus}}{{productivity_bonus}}{{/productivity_bonus}}{{^productivity_bonus}}Chưa nhập{{/productivity_bonus}}</p>
+                                {{/can_edit_cost}}
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-500 mb-1">Lương năng suất (VNĐ)</p>
-                                <div class="flex gap-2 items-center">
-                                    {{#can_edit_cost}}
-                                    <input type="text" id="detail-productivity-bonus" value="{{productivity_bonus}}" 
-                                           class="flex-1 border p-2 rounded text-sm" 
-                                           placeholder="Nhập số tiền" 
-                                           oninput="formatMoneyInput(this)">
-                                    <button onclick="saveCostData('{{id}}')" 
-                                            class="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition">
-                                        <i class="fa-solid fa-save"></i>
-                                    </button>
-                                    {{/can_edit_cost}}
-                                    {{^can_edit_cost}}
-                                    <p class="font-semibold text-gray-800 flex-1">{{#productivity_bonus}}{{productivity_bonus}}{{/productivity_bonus}}{{^productivity_bonus}}Chưa nhập{{/productivity_bonus}}</p>
-                                    {{/can_edit_cost}}
-                                </div>
-                            </div>
+                            <p class="text-xs text-gray-500 mt-1 italic">{{#can_edit_cost}}Có thể điều chỉnh lương năng suất khi duyệt{{/can_edit_cost}}{{^can_edit_cost}}TVBH đề xuất: {{productivity_bonus}}{{/can_edit_cost}}</p>
                         </div>
-                            <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                        <div class="bg-gray-50 p-3 rounded border border-gray-200">
                             <div class="flex justify-between items-center text-sm">
                                 <span class="text-gray-600">Chi phí bán hàng:</span>
                                 <span class="font-semibold text-gray-800">{{total_cost}}</span>
@@ -1557,12 +1545,19 @@ function logout() {
         action: "submit_request",
         requester: session.username,
         ...Object.fromEntries(formData.entries()),
-        approver_step0: formData.get('approver_step0') || ''
+        approver_step0: formData.get('approver_step0') || '',
+        productivity_bonus: formData.get('productivity_bonus')?.replace(/\./g, '') || '0'
     };
     
     // Validate approver_step0
     if (!payload.approver_step0) {
         Swal.fire('Lỗi', 'Vui lòng chọn TPKD duyệt', 'error');
+        return;
+    }
+    
+    // Validate productivity_bonus
+    if (!payload.productivity_bonus || payload.productivity_bonus === '0') {
+        Swal.fire('Lỗi', 'Vui lòng nhập lương năng suất', 'error');
         return;
     }
     
@@ -1768,13 +1763,7 @@ function renderApprovalList() {
         
         // Đảm bảo các trường mới có giá trị mặc định
         data.other_requirements = data.other_requirements || '';
-        // Format max_cost_rate và productivity_bonus từ số sang VNĐ
-        if (data.max_cost_rate) {
-            const maxCostRateNum = parseInt(String(data.max_cost_rate).replace(/[^\d]/g, '')) || 0;
-            data.max_cost_rate = maxCostRateNum > 0 ? maxCostRateNum.toLocaleString('vi-VN') : '';
-        } else {
-            data.max_cost_rate = '';
-        }
+        // Format productivity_bonus từ số sang VNĐ
         if (data.productivity_bonus) {
             const productivityBonusNum = parseInt(String(data.productivity_bonus).replace(/[^\d]/g, '')) || 0;
             data.productivity_bonus = productivityBonusNum > 0 ? productivityBonusNum.toLocaleString('vi-VN') : '';
@@ -2018,15 +2007,21 @@ async function resubmitRequest(id) {
                 }
             }
             
-            // For approve: show form with comment, productivity bonus, and next approver
+            // Get current productivity bonus from detail data
+            const currentProductivityBonus = detailData ? (detailData.productivity_bonus || '') : '';
+            const currentProductivityBonusFormatted = currentProductivityBonus || '0';
+            
+            // For approve: show form with comment, productivity bonus adjustment, and next approver
             const result = await Swal.fire({
                 title: 'Duyệt tờ trình',
                 html: `
                     <div style="text-align: left;">
                         <label style="display: block; margin-bottom: 5px; font-weight: bold;">Lý do duyệt (tùy chọn):</label>
                         <textarea id="swal-comment" class="swal2-textarea" placeholder="Ví dụ: Đã kiểm tra và đồng ý..." style="width: 100%; min-height: 60px; margin-bottom: 15px;"></textarea>
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Lương năng suất (VNĐ) - TVBH đề xuất:</label>
-                        <input id="swal-productivity" type="text" class="swal2-input" placeholder="0" style="text-align: right; margin-bottom: 15px;" oninput="this.value = this.value.replace(/[^0-9]/g, ''); if (this.value) this.value = parseInt(this.value).toLocaleString('vi-VN');">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Điều chỉnh lương năng suất (VNĐ):</label>
+                        <p style="font-size: 12px; color: #666; margin-bottom: 5px;">TVBH đề xuất: <strong>${currentProductivityBonusFormatted}</strong></p>
+                        <input id="swal-productivity" type="text" class="swal2-input" value="${currentProductivityBonusFormatted}" placeholder="Nhập số tiền (để trống = giữ nguyên)" style="text-align: right; margin-bottom: 15px;" oninput="this.value = this.value.replace(/[^0-9]/g, ''); if (this.value) this.value = parseInt(this.value).toLocaleString('vi-VN');">
+                        <p style="font-size: 11px; color: #999; margin-top: -10px; margin-bottom: 15px;">Để trống hoặc giữ nguyên giá trị hiện tại nếu không điều chỉnh</p>
                         ${usersHtml}
                     </div>
                 `,
@@ -2049,7 +2044,11 @@ async function resubmitRequest(id) {
             const productivityInput = Swal.getPopup().querySelector('#swal-productivity');
             const nextApproverInput = Swal.getPopup().querySelector('#swal-next-approver');
             comment = commentInput ? commentInput.value : '';
-            productivityBonus = productivityInput ? productivityInput.value.replace(/\./g, '') : '';
+            // Nếu có nhập mới thì lấy, không thì giữ nguyên giá trị cũ
+            const newProductivityBonus = productivityInput ? productivityInput.value.replace(/\./g, '') : '';
+            const oldProductivityBonus = currentProductivityBonus ? String(currentProductivityBonus).replace(/\./g, '') : '';
+            // Chỉ gửi nếu có thay đổi, nếu không có thay đổi thì gửi rỗng để backend giữ nguyên
+            productivityBonus = (newProductivityBonus && newProductivityBonus !== oldProductivityBonus) ? newProductivityBonus : '';
             nextApprover = nextApproverInput ? nextApproverInput.value : '';
         } else {
             // For reject: only comment required
@@ -2698,17 +2697,15 @@ function printRequest(id) {
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 30%;">Nội dung</th>
-                            <th style="width: 20%;" class="text-right">Mức chi phí giảm tối đa (VNĐ)</th>
+                            <th style="width: 40%;">Nội dung</th>
                             <th style="width: 20%;" class="text-right">Chi phí bán hàng (VNĐ)</th>
-                            <th style="width: 15%;" class="text-right">Tỷ lệ (%)</th>
-                            <th style="width: 15%;" class="text-right">Lương năng suất (VNĐ)</th>
+                            <th style="width: 20%;" class="text-right">Tỷ lệ (%)</th>
+                            <th style="width: 20%;" class="text-right">Lương năng suất (VNĐ)</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td class="label">Chi phí bán hàng</td>
-                            <td class="text-right" id="print-max-cost-rate"></td>
                             <td class="text-right" id="print-sales-cost"></td>
                             <td class="text-right" id="print-cost-percentage"></td>
                             <td class="text-right" id="print-productivity-bonus"></td>
@@ -2797,14 +2794,11 @@ function printRequest(id) {
             printWindow.document.getElementById('print-final-price').textContent = finalPrice ? Number(finalPrice).toLocaleString('vi-VN') : '0';
             
             // V. PHÂN BỔ CHI PHÍ BÁN HÀNG
-            const maxCostRate = d.max_cost_rate || '';
             const salesCost = totalCost; // Chi phí bán hàng = Tổng chi phí (B)
             const contractPriceNum = parseInt(contractPrice) || 0;
             const costPercentage = contractPriceNum > 0 ? ((salesCost / contractPriceNum) * 100).toFixed(2) : '0.00';
             const productivityBonus = (d.productivity_bonus || '').replace(/[^\d]/g, '');
             
-            const maxCostRateNum = parseInt(String(maxCostRate).replace(/[^\d]/g, '')) || 0;
-            printWindow.document.getElementById('print-max-cost-rate').textContent = maxCostRateNum > 0 ? maxCostRateNum.toLocaleString('vi-VN') + ' VNĐ' : '';
             printWindow.document.getElementById('print-sales-cost').textContent = salesCost.toLocaleString('vi-VN');
             printWindow.document.getElementById('print-cost-percentage').textContent = costPercentage + '%';
             printWindow.document.getElementById('print-productivity-bonus').textContent = productivityBonus ? Number(productivityBonus).toLocaleString('vi-VN') : '';
@@ -3142,7 +3136,7 @@ async function resetUserPasswordPrompt(encodedUsername) {
     }
 }
 
-async function saveCostData(id) {
+async function saveProductivityBonus(id) {
     const session = getSession();
     if (!session) {
         Swal.fire('Lỗi', 'Phiên đăng nhập đã hết hạn', 'error');
@@ -3150,21 +3144,23 @@ async function saveCostData(id) {
         return;
     }
     
-    const maxCostRateInput = $('detail-max-cost-rate');
     const productivityBonusInput = $('detail-productivity-bonus');
     
-    if (!maxCostRateInput) {
-        Swal.fire('Lỗi', 'Không tìm thấy trường mức chi phí', 'error');
+    if (!productivityBonusInput) {
+        Swal.fire('Lỗi', 'Không tìm thấy trường lương năng suất', 'error');
         return;
     }
     
     // Lấy giá trị và loại bỏ dấu phân cách nghìn
-    const maxCostRateRaw = maxCostRateInput.value.replace(/\./g, '').trim();
-    const productivityBonusRaw = productivityBonusInput ? productivityBonusInput.value.replace(/\./g, '').trim() : '';
+    const productivityBonusRaw = productivityBonusInput.value.replace(/\./g, '').trim();
+    
+    if (!productivityBonusRaw) {
+        Swal.fire('Lỗi', 'Vui lòng nhập lương năng suất', 'error');
+        return;
+    }
     
     // Format lại để hiển thị trong log
-    const maxCostRateFormatted = maxCostRateRaw ? Number(maxCostRateRaw).toLocaleString('vi-VN') + ' VNĐ' : 'Chưa nhập';
-    const productivityBonusFormatted = productivityBonusRaw ? Number(productivityBonusRaw).toLocaleString('vi-VN') + ' VNĐ' : 'Chưa nhập';
+    const productivityBonusFormatted = Number(productivityBonusRaw).toLocaleString('vi-VN') + ' VNĐ';
     
     try {
         Swal.fire({
@@ -3176,25 +3172,28 @@ async function saveCostData(id) {
         });
         
         const res = await callAPI({
-            action: 'update_cost_data',
+            action: 'update_productivity_bonus',
             id,
             username: session.username,
             role: session.role,
-            max_cost_rate: maxCostRateRaw,
-            productivity_bonus: productivityBonusRaw || '',
-            max_cost_rate_formatted: maxCostRateFormatted,
+            productivity_bonus: productivityBonusRaw,
             productivity_bonus_formatted: productivityBonusFormatted
         });
         
         if (res.success) {
-            Swal.fire('Thành công', res.message || 'Đã cập nhật chi phí thành công', 'success');
-            closeModal();
-            loadApprovalList();
+            Swal.fire('Thành công', res.message || 'Đã cập nhật lương năng suất thành công', 'success');
+            // Reload detail to reflect changes
+            const currentDetailJson = $('modal-detail-body').dataset.json;
+            if (currentDetailJson) {
+                openDetail(currentDetailJson);
+            } else {
+                loadApprovalList(); // Fallback
+            }
         } else {
             Swal.fire('Lỗi', res.message || 'Cập nhật thất bại', 'error');
         }
     } catch (error) {
-        console.error('Error in saveCostData:', error);
+        console.error('Error in saveProductivityBonus:', error);
         Swal.fire('Lỗi', error.message || 'Không thể kết nối đến server', 'error');
     }
 }
