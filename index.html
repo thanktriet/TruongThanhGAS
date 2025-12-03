@@ -148,16 +148,26 @@
                                             </div>
 
                                             <div class="border-t border-yellow-200 pt-3">
-                                                <div class="flex justify-between items-center mb-2">
-                                                    <label class="text-sm font-bold text-gray-700">🎁 Quà tặng kèm</label>
-                                                    <button type="button" onclick="addGiftRow('gift-list-manual')" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold hover:bg-blue-200 transition">+ Thêm dòng</button>
+                                                <div class="flex justify-between items-center mb-3">
+                                                    <div>
+                                                        <label class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                                                            <i class="fa-solid fa-gift text-yellow-600"></i>
+                                                            Quà tặng kèm
+                                                        </label>
                                                 </div>
-                                                <div id="gift-list-manual" class="space-y-2"></div>
+                                                    <button type="button" onclick="addGiftRow('gift-list-manual')" class="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded font-bold hover:bg-blue-200 transition flex items-center gap-1">
+                                                        <i class="fa-solid fa-plus"></i>
+                                                        Thêm quà
+                                                    </button>
+                                                </div>
+                                                <div id="gift-list-manual" class="space-y-2 min-h-[40px]">
+                                                    <p class="text-xs text-gray-400 italic text-center py-2">Chưa có quà tặng. Nhấn "Thêm quà" để thêm.</p>
+                                                </div>
                                                 <input type="hidden" name="gift_json" id="hidden_gift_json_manual">
                                                 
-                                                <div class="flex justify-end mt-2 text-sm">
-                                                    <span class="font-bold text-gray-600 mr-2">Tổng quà:</span>
-                                                    <span id="total-gift-manual" class="font-bold text-blue-600">0</span>
+                                                <div class="flex justify-between items-center mt-3 pt-3 border-t border-yellow-200">
+                                                    <span class="text-xs text-gray-500 italic">Tổng giá trị quà tặng:</span>
+                                                    <span id="total-gift-manual" class="font-bold text-blue-600 text-sm">0 đ</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -413,16 +423,26 @@
                             </div>
 
                             <div class="border-t border-yellow-200 pt-3">
-                                <div class="flex justify-between items-center mb-2">
-                                    <label class="text-sm font-bold text-gray-700">🎁 Quà tặng kèm</label>
-                                    <button type="button" onclick="addGiftRow('gift-list-edit')" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold hover:bg-blue-200 transition">+ Thêm dòng</button>
+                                <div class="flex justify-between items-center mb-3">
+                                    <div>
+                                        <label class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                                            <i class="fa-solid fa-gift text-yellow-600"></i>
+                                            Quà tặng kèm
+                                        </label>
+                                    </div>
+                                    <button type="button" onclick="addGiftRow('gift-list-edit')" class="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded font-bold hover:bg-blue-200 transition flex items-center gap-1">
+                                        <i class="fa-solid fa-plus"></i>
+                                        Thêm quà
+                                    </button>
                                 </div>
-                                <div id="gift-list-edit" class="space-y-2"></div>
+                                <div id="gift-list-edit" class="space-y-2 min-h-[40px]">
+                                    <p class="text-xs text-gray-400 italic text-center py-2">Chưa có quà tặng. Nhấn "Thêm quà" để thêm.</p>
+                                </div>
                                 <input type="hidden" name="edit_gift_json" id="hidden_gift_json_edit">
                                 
-                                <div class="flex justify-end mt-2 text-sm">
-                                    <span class="font-bold text-gray-600 mr-2">Tổng quà:</span>
-                                    <span id="total-gift-edit" class="font-bold text-blue-600">0</span>
+                                <div class="flex justify-between items-center mt-3 pt-3 border-t border-yellow-200">
+                                    <span class="text-xs text-gray-500 italic">Tổng giá trị quà tặng:</span>
+                                    <span id="total-gift-edit" class="font-bold text-blue-600 text-sm">0 đ</span>
                                 </div>
                             </div>
                         </div>
@@ -430,6 +450,10 @@
 
                     <div class="flex gap-3">
                         <button type="button" onclick="closeEditModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-bold transition">Hủy</button>
+                        <button type="button" onclick="handleUpdateAndResubmit(event)" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-lg font-bold shadow-lg transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Lưu & Trình lại</span>
+                        </button>
                         <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold shadow-lg transition">Lưu thay đổi</button>
                     </div>
                 </form>
@@ -1170,17 +1194,22 @@ function logout() {
     const container = $(containerId);
     if (!container) return;
     
+    // Xóa message "Chưa có quà tặng" nếu đây là quà đầu tiên
+    if (container.querySelectorAll('.gift-row').length === 0) {
+        container.innerHTML = '';
+    }
+    
     const rowId = `gift-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const html = `
-        <div class="flex gap-2 mb-2 gift-row" id="${rowId}">
-            <input class="gift-name flex-1 border p-1.5 rounded text-sm outline-none focus:border-blue-500" 
-                   placeholder="Tên quà">
-            <input class="gift-price w-28 border p-1.5 rounded text-sm text-right outline-none focus:border-blue-500" 
+        <div class="flex gap-2 mb-2 gift-row items-center bg-gray-50 p-2 rounded border border-gray-200" id="${rowId}">
+            <input class="gift-name flex-1 border p-1.5 rounded text-sm outline-none focus:border-blue-500 bg-white" 
+                   placeholder="Nhập tên quà tặng">
+            <input class="gift-price w-32 border p-1.5 rounded text-sm text-right outline-none focus:border-blue-500 bg-white" 
                    placeholder="0" 
-                   oninput="formatMoneyInput(this)">
+                   oninput="formatMoneyInput(this); calcGiftTotal('${containerId}')">
             <button type="button" 
                     onclick="removeGiftRow('${rowId}','${containerId}')" 
-                    class="text-red-400 hover:text-red-600 px-1">
+                    class="text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition">
                 <i class="fa-solid fa-trash"></i>
             </button>
         </div>
@@ -1193,7 +1222,13 @@ function logout() {
     if (row) {
         row.remove();
             calcGiftTotal(containerId);
+        
+        // Kiểm tra nếu không còn quà nào thì hiển thị message
+        const container = $(containerId);
+        if (container && container.querySelectorAll('.gift-row').length === 0) {
+            container.innerHTML = '<p class="text-xs text-gray-400 italic text-center py-2">Chưa có quà tặng. Nhấn "Thêm quà" để thêm.</p>';
         }
+    }
 }
 
         function calcGiftTotal(containerId) {
@@ -1201,17 +1236,20 @@ function logout() {
     if (!container) return;
     
             let total = 0;
-    container.querySelectorAll('.gift-price').forEach(el => {
-        const val = parseInt(el.value.replace(/\./g, '')) || 0;
+    container.querySelectorAll('.gift-row').forEach(row => {
+        const priceInput = row.querySelector('.gift-price');
+        if (priceInput) {
+            const val = parseInt(priceInput.value.replace(/\./g, '')) || 0;
                 total += val;
-            });
+        }
+    });
     
     const displayId = containerId === 'gift-list-search' 
         ? 'total-gift-search' 
-        : 'total-gift-manual';
+        : (containerId === 'gift-list-edit' ? 'total-gift-edit' : 'total-gift-manual');
     const displayEl = $(displayId);
     if (displayEl) {
-        displayEl.textContent = total.toLocaleString('vi-VN');
+        displayEl.textContent = total.toLocaleString('vi-VN') + ' đ';
     }
 }
 
@@ -1263,6 +1301,7 @@ function logout() {
     const giftContainer = mode === 'search' ? 'gift-list-search' : 'gift-list-manual';
     const hiddenInput = mode === 'search' ? 'hidden_gift_json_search' : 'hidden_gift_json_manual';
     
+    // Pack gift data trước khi submit
     packGiftData(giftContainer, hiddenInput);
     
     const form = $(formId);
@@ -1296,10 +1335,10 @@ function logout() {
             Swal.fire('Thành công', res.message || 'Đã gửi thành công', 'success');
             form.reset();
             
-            const giftContainerEl = $(giftContainer);
+            // Xóa quà tặng khỏi form sau khi submit
+            const giftContainerEl = mode === 'search' ? $('gift-list-search') : $('gift-list-manual');
             if (giftContainerEl) {
-                giftContainerEl.innerHTML = '';
-                addGiftRow(giftContainer);
+                giftContainerEl.innerHTML = '<p class="text-xs text-gray-400 italic text-center py-2">Chưa có quà tặng. Nhấn "Thêm quà" để thêm.</p>';
             }
             
             const totalEl = $(mode === 'search' ? 'total-gift-search' : 'total-gift-manual');
@@ -1782,7 +1821,7 @@ async function openEditRequest(id) {
         $('edit_discount_details').value = data.discount_details || '';
         $('edit_discount_amount').value = (data.discount_amount || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         
-        // Load gifts
+        // Load gifts từ data
         const giftList = $('gift-list-edit');
         if (giftList) giftList.innerHTML = '';
         try {
@@ -1794,12 +1833,18 @@ async function openEditRequest(id) {
                     const lastRow = rows[rows.length - 1];
                     if (lastRow) {
                         lastRow.querySelector('.gift-name').value = gift.name || '';
-                        lastRow.querySelector('.gift-price').value = (gift.price || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        const priceValue = (gift.price || '0').toString().replace(/[^\d]/g, '');
+                        lastRow.querySelector('.gift-price').value = priceValue ? Number(priceValue).toLocaleString('vi-VN') : '';
                     }
                 });
+            } else {
+                giftList.innerHTML = '<p class="text-xs text-gray-400 italic text-center py-2">Chưa có quà tặng. Nhấn "Thêm quà" để thêm.</p>';
             }
         } catch (e) {
             console.error('Error parsing gifts:', e);
+            if (giftList) {
+                giftList.innerHTML = '<p class="text-xs text-gray-400 italic text-center py-2">Chưa có quà tặng. Nhấn "Thêm quà" để thêm.</p>';
+            }
         }
         calcGiftTotal('gift-list-edit');
         
@@ -1845,7 +1890,7 @@ async function handleUpdateRequest(event) {
     const form = event.target;
     const formData = new FormData(form);
     
-    // Pack gift data
+    // Pack gift data trước khi submit
     packGiftData('gift-list-edit', 'hidden_gift_json_edit');
     const giftJson = $('hidden_gift_json_edit')?.value || '[]';
     
@@ -1891,6 +1936,101 @@ async function handleUpdateRequest(event) {
         }
     } catch (error) {
         console.error('Error in handleUpdateRequest:', error);
+        Swal.fire('Lỗi', error.message || 'Không thể kết nối đến server', 'error');
+    }
+}
+
+async function handleUpdateAndResubmit(event) {
+    event.preventDefault();
+    const session = getSession();
+    if (!session) {
+        Swal.fire('Lỗi', 'Phiên đăng nhập đã hết hạn', 'error');
+        logout();
+        return;
+    }
+    
+    // Xác nhận trước khi trình lại
+    const confirmResult = await Swal.fire({
+        title: 'Lưu và trình lại?',
+        text: 'Tờ trình sẽ được lưu thay đổi và gửi lại để duyệt từ đầu',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Xác nhận',
+        cancelButtonText: 'Hủy'
+    });
+    
+    if (!confirmResult.isConfirmed) {
+        return;
+    }
+    
+    const form = $('form-edit-request');
+    if (!form) {
+        Swal.fire('Lỗi', 'Không tìm thấy form', 'error');
+        return;
+    }
+    
+    const formData = new FormData(form);
+    
+    // Pack gift data trước khi submit
+    packGiftData('gift-list-edit', 'hidden_gift_json_edit');
+    const giftJson = $('hidden_gift_json_edit')?.value || '[]';
+    
+    const updateData = {
+        action: 'update_request',
+        id: formData.get('edit_request_id'),
+        username: session.username,
+        contract_code: formData.get('edit_contract_code'),
+        customer_name: formData.get('edit_customer_name'),
+        phone: formData.get('edit_phone'),
+        cccd: formData.get('edit_cccd'),
+        email: formData.get('edit_email'),
+        address: formData.get('edit_address'),
+        car_model: formData.get('edit_car_model'),
+        car_version: formData.get('edit_car_version'),
+        car_color: formData.get('edit_car_color'),
+        vin_no: formData.get('edit_vin_no'),
+        payment_method: formData.get('edit_payment_method'),
+        contract_price: formData.get('edit_contract_price')?.replace(/\./g, '') || '0',
+        discount_details: formData.get('edit_discount_details'),
+        discount_amount: formData.get('edit_discount_amount')?.replace(/\./g, '') || '0',
+        gift_json: giftJson
+    };
+    
+    try {
+        Swal.fire({
+            title: 'Đang xử lý...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Bước 1: Cập nhật tờ trình
+        const updateRes = await callAPI(updateData);
+        
+        if (!updateRes.success) {
+            Swal.fire('Lỗi', updateRes.message || 'Cập nhật thất bại', 'error');
+            return;
+        }
+        
+        // Bước 2: Gửi lại để duyệt
+        const resubmitRes = await callAPI({
+            action: 'resubmit',
+            id: formData.get('edit_request_id'),
+            username: session.username,
+            role: session.role
+        });
+        
+        if (resubmitRes.success) {
+            Swal.fire('Thành công', 'Đã lưu thay đổi và trình lại tờ trình thành công', 'success');
+            closeEditModal();
+            loadMyRequests();
+            if (typeof loadApprovalList === 'function') loadApprovalList();
+        } else {
+            Swal.fire('Lỗi', resubmitRes.message || 'Trình lại thất bại', 'error');
+        }
+    } catch (error) {
+        console.error('Error in handleUpdateAndResubmit:', error);
         Swal.fire('Lỗi', error.message || 'Không thể kết nối đến server', 'error');
     }
 }
