@@ -1726,7 +1726,35 @@ function renderApprovalList() {
 // ===================================
         function openDetail(jsonStr) {
     try {
-            const data = JSON.parse(decodeURIComponent(jsonStr));
+        if (!jsonStr) {
+            console.error('jsonStr is empty or undefined');
+            Swal.fire('Lỗi', 'Không có dữ liệu để hiển thị', 'error');
+            return;
+        }
+        
+        let data;
+        try {
+            // Thử decode và parse JSON
+            const decoded = decodeURIComponent(jsonStr);
+            data = JSON.parse(decoded);
+        } catch (parseError) {
+            console.error('Error parsing JSON:', parseError);
+            console.error('jsonStr value:', jsonStr);
+            Swal.fire('Lỗi', 'Dữ liệu không hợp lệ. Vui lòng thử lại.', 'error');
+            return;
+        }
+        
+        if (!data || typeof data !== 'object') {
+            console.error('Invalid data format:', data);
+            Swal.fire('Lỗi', 'Dữ liệu không đúng định dạng', 'error');
+            return;
+        }
+        
+        // Đảm bảo các trường mới có giá trị mặc định
+        data.other_requirements = data.other_requirements || '';
+        data.max_cost_rate = data.max_cost_rate || '';
+        data.productivity_bonus = data.productivity_bonus || '';
+        
         const sessionStr = localStorage.getItem('user_session');
         let session = null;
         
@@ -1777,19 +1805,44 @@ function renderApprovalList() {
             }
         }
         
-        const tpl = $('tpl-order-detail')?.innerHTML;
+        const tpl = $('tpl-order-detail');
         const modalBody = $('modal-detail-body');
         const modal = $('modal-detail');
         
-        if (!tpl || !modalBody || !modal) return;
-        
-        if (typeof Mustache !== 'undefined') {
-            modalBody.innerHTML = Mustache.render(tpl, data);
-        } else {
-            modalBody.innerHTML = '<p>Lỗi: Mustache không được tải</p>';
+        if (!tpl) {
+            console.error('Template tpl-order-detail not found');
+            Swal.fire('Lỗi', 'Template không tìm thấy', 'error');
+            return;
         }
         
+        if (!modalBody) {
+            console.error('modal-detail-body not found');
+            Swal.fire('Lỗi', 'Modal body không tìm thấy', 'error');
+            return;
+        }
+        
+        if (!modal) {
+            console.error('modal-detail not found');
+            Swal.fire('Lỗi', 'Modal không tìm thấy', 'error');
+            return;
+        }
+        
+        if (typeof Mustache === 'undefined') {
+            console.error('Mustache is not loaded');
+            modalBody.innerHTML = '<p class="p-4 text-red-500">Lỗi: Mustache không được tải. Vui lòng tải lại trang.</p>';
             modal.classList.remove('hidden');
+            return;
+        }
+        
+        try {
+            modalBody.innerHTML = Mustache.render(tpl.innerHTML, data);
+        } catch (renderError) {
+            console.error('Error rendering template:', renderError);
+            Swal.fire('Lỗi', 'Không thể render template: ' + renderError.message, 'error');
+            return;
+        }
+        
+        modal.classList.remove('hidden');
         
         setTimeout(() => {
             const modalContent = $('modal-content');
@@ -1800,7 +1853,8 @@ function renderApprovalList() {
         }, 10);
     } catch (e) {
         console.error('Error opening detail:', e);
-        Swal.fire('Lỗi', 'Không thể mở chi tiết', 'error');
+        console.error('Stack trace:', e.stack);
+        Swal.fire('Lỗi', 'Không thể mở chi tiết: ' + (e.message || 'Lỗi không xác định'), 'error');
     }
 }
 
