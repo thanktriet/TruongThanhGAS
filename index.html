@@ -68,6 +68,12 @@
                 <button onclick="switchTab('approval')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3" id="nav-approval">
                     <i class="fa-solid fa-list-check"></i> Duyệt Đơn
                 </button>
+                <button onclick="switchTab('profile')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-profile">
+                    <i class="fa-solid fa-id-badge"></i> Hồ sơ cá nhân
+                </button>
+                <button onclick="switchTab('users')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-users">
+                    <i class="fa-solid fa-users-gear"></i> Quản lý User
+                </button>
             </nav>
             <div class="p-4 border-t border-slate-700">
                 <button onclick="logout()" class="w-full bg-slate-800 hover:bg-red-600 py-2 rounded transition flex items-center justify-center gap-2"><i class="fa-solid fa-sign-out-alt"></i> Đăng xuất</button>
@@ -207,11 +213,118 @@
                     </div>
                     <div id="approval-list-container" class="space-y-4"></div>
                 </div>
+
+                <div id="tab-profile" class="tab-content max-w-3xl mx-auto">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800">Hồ sơ tư vấn bán hàng</h2>
+                                <p class="text-sm text-gray-500">Cập nhật thông tin liên hệ của bạn</p>
+                            </div>
+                            <button onclick="loadProfile()" class="text-sm text-blue-600 hover:text-blue-800"><i class="fa-solid fa-rotate mr-1"></i>Làm mới</button>
+                        </div>
+                        <form id="form-profile" class="space-y-4" onsubmit="handleProfileUpdate(event)">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="label">Tên đăng nhập</label>
+                                    <input type="text" name="profile_username" id="profile_username" class="input bg-gray-100" readonly>
+                                </div>
+                                <div>
+                                    <label class="label">Vai trò</label>
+                                    <input type="text" name="profile_role" id="profile_role" class="input bg-gray-100" readonly>
+                                </div>
+                                <div>
+                                    <label class="label">Họ và tên</label>
+                                    <input type="text" name="profile_fullname" id="profile_fullname" class="input" required>
+                                </div>
+                                <div>
+                                    <label class="label">Nhóm/Bộ phận</label>
+                                    <input type="text" name="profile_group" id="profile_group" class="input">
+                                </div>
+                                <div>
+                                    <label class="label">Email</label>
+                                    <input type="email" name="profile_email" id="profile_email" class="input">
+                                </div>
+                                <div>
+                                    <label class="label">Số điện thoại</label>
+                                    <input type="text" name="profile_phone" id="profile_phone" class="input">
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span id="profile-status" class="text-sm text-gray-500"></span>
+                                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Lưu thay đổi</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="tab-users" class="tab-content max-w-6xl mx-auto">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <h2 class="text-lg font-bold text-gray-800 mb-4">Thêm người dùng</h2>
+                            <form id="form-create-user" class="space-y-3" onsubmit="handleCreateUser(event)">
+                                <div>
+                                    <label class="label">Tên đăng nhập *</label>
+                                    <input type="text" name="new_username" class="input" required>
+                                </div>
+                                <div>
+                                    <label class="label">Họ tên *</label>
+                                    <input type="text" name="new_fullname" class="input" required>
+                                </div>
+                                <div>
+                                    <label class="label">Vai trò *</label>
+                                    <select name="new_role" class="input bg-white" required>
+                                        <option value="">-- Chọn vai trò --</option>
+                                        <option value="TVBH">TVBH</option>
+                                        <option value="TPKD">TPKD</option>
+                                        <option value="GDKD">GDKD</option>
+                                        <option value="BKS">BKS</option>
+                                        <option value="BGD">BGD</option>
+                                        <option value="KETOAN">KẾ TOÁN</option>
+                                        <option value="ADMIN">ADMIN</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="label">Nhóm/Bộ phận</label>
+                                    <input type="text" name="new_group" class="input">
+                                </div>
+                                <div>
+                                    <label class="label">Email</label>
+                                    <input type="email" name="new_email" class="input">
+                                </div>
+                                <div>
+                                    <label class="label">Số điện thoại</label>
+                                    <input type="text" name="new_phone" class="input">
+                                </div>
+                                <div>
+                                    <label class="label">Mật khẩu tạm</label>
+                                    <input type="text" name="new_password" class="input" placeholder="Mặc định: 123456">
+                                </div>
+                                <div class="text-right">
+                                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition">Thêm người dùng</button>
+                                </div>
+                                <p id="create-user-status" class="text-sm text-gray-500"></p>
+                            </form>
+                        </div>
+
+                        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-lg font-bold text-gray-800">Danh sách người dùng</h2>
+                                <button onclick="loadUserManagement()" class="text-sm text-blue-600 hover:text-blue-800"><i class="fa-solid fa-rotate mr-1"></i>Làm mới</button>
+                            </div>
+                            <div id="user-list-container" class="overflow-x-auto">
+                                <div class="text-center text-gray-500 py-6">Chọn tab để tải dữ liệu...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="bg-white border-t flex justify-around p-2 md:hidden">
                 <button onclick="switchTab('create')" class="nav-mobile-item text-blue-600 flex flex-col items-center"><i class="fa-solid fa-plus-circle text-xl"></i><span class="text-[10px]">Tạo</span></button>
                 <button onclick="switchTab('approval')" class="nav-mobile-item text-gray-400 flex flex-col items-center"><i class="fa-solid fa-list-check text-xl"></i><span class="text-[10px]">Duyệt</span></button>
+                <button onclick="switchTab('profile')" id="nav-mobile-profile" class="nav-mobile-item text-gray-400 flex flex-col items-center hidden"><i class="fa-solid fa-id-badge text-xl"></i><span class="text-[10px]">Hồ sơ</span></button>
+                <button onclick="switchTab('users')" id="nav-mobile-users" class="nav-mobile-item text-gray-400 flex flex-col items-center hidden"><i class="fa-solid fa-users-gear text-xl"></i><span class="text-[10px]">User</span></button>
             </div>
         </main>
     </div>
@@ -440,20 +553,33 @@
 // ===================================
 // CONFIGURATION
 // ===================================
-const API_URL = "https://script.google.com/macros/s/AKfycbwTyybDq0fVwdJz0IdCM-t1uLc3EKhclv58q9ey9kiKtUd4NMvpDR-ptWbH2b34bwkR/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwTyybDq0fVwdJz0IdCM-t1uLc3EKhclv58q9ey9kiKtUd4NMvpDR-ptWbH2b34bwkR/exec";
 
 // ===================================
 // UTILITY FUNCTIONS
 // ===================================
 const $ = (id) => document.getElementById(id);
 const $$ = (selector) => document.querySelectorAll(selector);
+let cachedUsers = [];
+
+function getSession() {
+    const sessionStr = localStorage.getItem('user_session');
+    if (!sessionStr) return null;
+    try {
+        return JSON.parse(sessionStr);
+    } catch (e) {
+        console.error('Invalid session data', e);
+        localStorage.removeItem('user_session');
+        return null;
+    }
+}
 
 // ===================================
 // INITIALIZATION
 // ===================================
-document.addEventListener('DOMContentLoaded', () => {
-    checkSession();
-    addGiftRow('gift-list-manual');
+        document.addEventListener('DOMContentLoaded', () => {
+            checkSession();
+            addGiftRow('gift-list-manual');
     initContractLookup();
 });
 
@@ -547,32 +673,36 @@ function initContractLookup() {
 // ===================================
 // AUTHENTICATION
 // ===================================
-function checkSession() {
-    const session = localStorage.getItem('user_session');
+        function checkSession() {
+    const user = getSession();
     const login = $('login-view');
     const dash = $('dashboard-view');
     
-    if (session) {
-        try {
-            const user = JSON.parse(session);
-            $('user-fullname').textContent = user.fullname || 'User';
-            $('user-role').textContent = user.role || 'ROLE';
-            
-            const navApproval = $('nav-approval');
-            if (user.role === 'SALE' || user.role === 'TVBH') {
-                navApproval?.classList.add('hidden');
+    if (user) {
+        $('user-fullname').textContent = user.fullname || 'User';
+        $('user-role').textContent = user.role || 'ROLE';
+        
+        $('nav-profile')?.classList.remove('hidden');
+        $('nav-mobile-profile')?.classList.remove('hidden');
+        
+        if (user.role === 'ADMIN') {
+            $('nav-users')?.classList.remove('hidden');
+            $('nav-mobile-users')?.classList.remove('hidden');
             } else {
-                switchTab('approval');
-            }
-            
-            login?.classList.add('hidden');
-            dash?.classList.remove('hidden');
-            dash?.classList.add('flex');
-        } catch (e) {
-            console.error('Error parsing session:', e);
-            localStorage.removeItem('user_session');
-            showLogin();
+            $('nav-users')?.classList.add('hidden');
+            $('nav-mobile-users')?.classList.add('hidden');
         }
+        
+        const navApproval = $('nav-approval');
+        if (user.role === 'SALE' || user.role === 'TVBH') {
+            navApproval?.classList.add('hidden');
+        } else {
+            switchTab('approval');
+        }
+        
+        login?.classList.add('hidden');
+        dash?.classList.remove('hidden');
+        dash?.classList.add('flex');
     } else {
         showLogin();
     }
@@ -586,8 +716,8 @@ function showLogin() {
     dash?.classList.remove('flex');
 }
 
-async function handleLogin(e) {
-    e.preventDefault();
+        async function handleLogin(e) {
+            e.preventDefault();
     const username = $('login-user')?.value;
     const password = $('login-pass')?.value;
     
@@ -617,7 +747,7 @@ function logout() {
 // ===================================
 // NAVIGATION
 // ===================================
-function switchTab(id) {
+        function switchTab(id) {
     $$('.tab-content').forEach(el => el.classList.remove('active'));
     $$('.nav-item').forEach(el => el.classList.remove('active'));
     
@@ -628,9 +758,11 @@ function switchTab(id) {
     if (nav) nav.classList.add('active');
     
     if (id === 'approval') loadApprovalList();
+    if (id === 'profile') loadProfile();
+    if (id === 'users') loadUserManagement();
 }
 
-function toggleCreateMode(mode) {
+        function toggleCreateMode(mode) {
     const search = $('mode-search-container');
     const manual = $('mode-manual-container');
     const btnS = $('btn-mode-search');
@@ -658,18 +790,18 @@ function toggleCreateMode(mode) {
 // ===================================
 // MONEY & GIFT LOGIC
 // ===================================
-function formatMoneyInput(el) {
+        function formatMoneyInput(el) {
     if (!el) return;
-    let val = el.value.replace(/\D/g, '');
+            let val = el.value.replace(/\D/g, '');
     el.value = val ? Number(val).toLocaleString('vi-VN') : '';
     
     const containerId = el.closest('#mode-search-container') 
         ? 'gift-list-search' 
         : 'gift-list-manual';
-    calcGiftTotal(containerId);
-}
+            calcGiftTotal(containerId);
+        }
 
-function addGiftRow(containerId) {
+        function addGiftRow(containerId) {
     const container = $(containerId);
     if (!container) return;
     
@@ -688,26 +820,26 @@ function addGiftRow(containerId) {
             </button>
         </div>
     `;
-    container.insertAdjacentHTML('beforeend', html);
-}
+            container.insertAdjacentHTML('beforeend', html);
+        }
 
-function removeGiftRow(rowId, containerId) {
+        function removeGiftRow(rowId, containerId) {
     const row = $(rowId);
     if (row) {
         row.remove();
-        calcGiftTotal(containerId);
-    }
+            calcGiftTotal(containerId);
+        }
 }
 
-function calcGiftTotal(containerId) {
+        function calcGiftTotal(containerId) {
     const container = $(containerId);
     if (!container) return;
     
-    let total = 0;
+            let total = 0;
     container.querySelectorAll('.gift-price').forEach(el => {
         const val = parseInt(el.value.replace(/\./g, '')) || 0;
-        total += val;
-    });
+                total += val;
+            });
     
     const displayId = containerId === 'gift-list-search' 
         ? 'total-gift-search' 
@@ -718,7 +850,7 @@ function calcGiftTotal(containerId) {
     }
 }
 
-function packGiftData(containerId, hiddenInputId) {
+        function packGiftData(containerId, hiddenInputId) {
     const container = $(containerId);
     const hiddenInput = $(hiddenInputId);
     if (!container || !hiddenInput) return;
@@ -743,8 +875,8 @@ function packGiftData(containerId, hiddenInputId) {
 // ===================================
 // FORM SUBMISSION
 // ===================================
-async function handleSubmitRequest(e, mode) {
-    e.preventDefault();
+        async function handleSubmitRequest(e, mode) {
+            e.preventDefault();
     
     const sessionStr = localStorage.getItem('user_session');
     if (!sessionStr) {
@@ -789,12 +921,12 @@ async function handleSubmitRequest(e, mode) {
     const btn = form.querySelector('button[type="submit"]');
     if (!btn) return;
     
-    const orgHtml = btn.innerHTML;
+            const orgHtml = btn.innerHTML;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
     btn.disabled = true;
-    
+
     try {
-        const res = await callAPI(payload);
+            const res = await callAPI(payload);
         if (res.success) {
             Swal.fire('Thành công', res.message || 'Đã gửi thành công', 'success');
             form.reset();
@@ -818,8 +950,8 @@ async function handleSubmitRequest(e, mode) {
                 }
                 if (searchInput) searchInput.value = '';
                 if (actionArea) actionArea.classList.add('hidden');
-            }
-        } else {
+                }
+            } else {
             Swal.fire('Lỗi', res.message || 'Gửi thất bại', 'error');
         }
     } catch (error) {
@@ -833,7 +965,7 @@ async function handleSubmitRequest(e, mode) {
 // ===================================
 // APPROVAL
 // ===================================
-async function loadApprovalList() {
+        async function loadApprovalList() {
     const sessionStr = localStorage.getItem('user_session');
     if (!sessionStr) {
         const container = $('approval-list-container');
@@ -894,9 +1026,9 @@ async function loadApprovalList() {
 // ===================================
 // MODAL
 // ===================================
-function openDetail(jsonStr) {
+        function openDetail(jsonStr) {
     try {
-        const data = JSON.parse(decodeURIComponent(jsonStr));
+            const data = JSON.parse(decodeURIComponent(jsonStr));
         const sessionStr = localStorage.getItem('user_session');
         let session = null;
         
@@ -926,7 +1058,7 @@ function openDetail(jsonStr) {
             modalBody.innerHTML = '<p>Lỗi: Mustache không được tải</p>';
         }
         
-        modal.classList.remove('hidden');
+            modal.classList.remove('hidden');
         
         setTimeout(() => {
             const modalContent = $('modal-content');
@@ -941,7 +1073,7 @@ function openDetail(jsonStr) {
     }
 }
 
-function closeModal() {
+        function closeModal() {
     const modal = $('modal-detail');
     const modalContent = $('modal-content');
     
@@ -956,18 +1088,9 @@ function closeModal() {
 }
 
 async function resubmitRequest(id) {
-    const sessionStr = localStorage.getItem('user_session');
-    if (!sessionStr) {
+    const session = getSession();
+    if (!session) {
         Swal.fire('Lỗi', 'Phiên đăng nhập đã hết hạn', 'error');
-        logout();
-        return;
-    }
-    
-    let session;
-    try {
-        session = JSON.parse(sessionStr);
-    } catch (e) {
-        Swal.fire('Lỗi', 'Dữ liệu phiên không hợp lệ', 'error');
         logout();
         return;
     }
@@ -1007,19 +1130,10 @@ async function resubmitRequest(id) {
     }
 }
 
-async function confirmAction(id, decision) {
-    const sessionStr = localStorage.getItem('user_session');
-    if (!sessionStr) {
+        async function confirmAction(id, decision) {
+    const session = getSession();
+    if (!session) {
         Swal.fire('Lỗi', 'Phiên đăng nhập đã hết hạn', 'error');
-        logout();
-        return;
-    }
-    
-    let session;
-    try {
-        session = JSON.parse(sessionStr);
-    } catch (e) {
-        Swal.fire('Lỗi', 'Dữ liệu phiên không hợp lệ', 'error');
         logout();
         return;
     }
@@ -1098,10 +1212,326 @@ async function confirmAction(id, decision) {
 }
 
 // ===================================
+// PROFILE MANAGEMENT
+// ===================================
+
+async function loadProfile() {
+    const form = $('form-profile');
+    if (!form) return;
+    const session = getSession();
+    if (!session) {
+        Swal.fire('Lỗi', 'Phiên đăng nhập đã hết hạn', 'error');
+        return;
+    }
+
+    const statusEl = $('profile-status');
+    statusEl.textContent = 'Đang tải...';
+    form.classList.add('opacity-70');
+
+    try {
+        const res = await callAPI({ action: 'get_profile', username: session.username });
+        if (res.success && res.profile) {
+            const profile = res.profile;
+            $('profile_username').value = profile.username || '';
+            $('profile_role').value = profile.role || '';
+            $('profile_fullname').value = profile.fullname || '';
+            $('profile_email').value = profile.email || '';
+            $('profile_phone').value = profile.phone || '';
+            $('profile_group').value = profile.group || '';
+            statusEl.textContent = 'Đã tải dữ liệu.';
+        } else {
+            statusEl.textContent = res.message || 'Không thể tải hồ sơ.';
+        }
+    } catch (error) {
+        console.error(error);
+        statusEl.textContent = 'Lỗi kết nối.';
+    } finally {
+        form.classList.remove('opacity-70');
+    }
+}
+
+async function handleProfileUpdate(e) {
+    e.preventDefault();
+    const session = getSession();
+    if (!session) {
+        Swal.fire('Lỗi', 'Phiên đăng nhập đã hết hạn', 'error');
+        return;
+    }
+
+    const statusEl = $('profile-status');
+    statusEl.textContent = 'Đang lưu...';
+
+    try {
+        const res = await callAPI({
+            action: 'update_profile',
+            username: session.username,
+            fullname: $('profile_fullname').value,
+            email: $('profile_email').value,
+            phone: $('profile_phone').value,
+            group: $('profile_group').value
+        });
+        if (res.success) {
+            statusEl.textContent = res.message || 'Đã lưu thay đổi.';
+            const stored = getSession() || {};
+            stored.fullname = $('profile_fullname').value;
+            stored.email = $('profile_email').value;
+            stored.phone = $('profile_phone').value;
+            stored.group = $('profile_group').value;
+            localStorage.setItem('user_session', JSON.stringify(stored));
+            $('user-fullname').textContent = stored.fullname || 'User';
+        } else {
+            statusEl.textContent = res.message || 'Lưu thất bại.';
+        }
+    } catch (error) {
+        console.error(error);
+        statusEl.textContent = 'Lỗi kết nối.';
+    }
+}
+
+// ===================================
+// USER MANAGEMENT (ADMIN)
+// ===================================
+
+async function loadUserManagement() {
+    const container = $('user-list-container');
+    if (!container) return;
+    const session = getSession();
+    if (!session || session.role !== 'ADMIN') {
+        container.innerHTML = '<div class="text-center text-red-500 py-6">Chỉ ADMIN mới được truy cập chức năng này.</div>';
+        return;
+    }
+
+    container.innerHTML = '<div class="text-center text-gray-500 py-6"><i class="fa-solid fa-spinner fa-spin text-xl mb-2"></i><p>Đang tải danh sách...</p></div>';
+
+    try {
+        const res = await callAPI({ action: 'list_users', username: session.username, role: session.role });
+        if (res.success) {
+            cachedUsers = res.users || [];
+            container.innerHTML = renderUserTable(cachedUsers);
+        } else {
+            container.innerHTML = `<div class="text-center text-red-500 py-6">${res.message || 'Không thể tải danh sách người dùng.'}</div>`;
+        }
+    } catch (error) {
+        console.error(error);
+        container.innerHTML = '<div class="text-center text-red-500 py-6">Lỗi kết nối đến server.</div>';
+    }
+}
+
+function renderUserTable(users) {
+    if (!users.length) {
+        return '<div class="text-center text-gray-500 py-6">Chưa có người dùng nào.</div>';
+    }
+
+    let rows = users.map(user => {
+        const encoded = encodeURIComponent(user.username);
+        return `
+            <tr class="border-b hover:bg-gray-50 text-sm">
+                <td class="py-2 px-3 font-mono">${user.username}</td>
+                <td class="py-2 px-3">${user.fullname || ''}</td>
+                <td class="py-2 px-3 font-bold">${user.role || ''}</td>
+                <td class="py-2 px-3">${user.email || ''}</td>
+                <td class="py-2 px-3">${user.phone || ''}</td>
+                <td class="py-2 px-3">${user.group || ''}</td>
+                <td class="py-2 px-3">
+                    <span class="px-2 py-1 text-xs rounded ${user.active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}">
+                        ${user.active ? 'Đang hoạt động' : 'Bị khóa'}
+                    </span>
+                </td>
+                <td class="py-2 px-3 space-x-2">
+                    <button onclick="openEditUserModal('${encoded}')" class="text-blue-600 hover:text-blue-800 text-xs font-semibold">Sửa</button>
+                    <button onclick="resetUserPasswordPrompt('${encoded}')" class="text-red-600 hover:text-red-800 text-xs font-semibold">Reset MK</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    return `
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-left">
+                <thead class="bg-gray-100 text-xs uppercase text-gray-500">
+                    <tr>
+                        <th class="py-2 px-3">Username</th>
+                        <th class="py-2 px-3">Họ tên</th>
+                        <th class="py-2 px-3">Vai trò</th>
+                        <th class="py-2 px-3">Email</th>
+                        <th class="py-2 px-3">SĐT</th>
+                        <th class="py-2 px-3">Nhóm</th>
+                        <th class="py-2 px-3">Trạng thái</th>
+                        <th class="py-2 px-3">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `;
+}
+
+async function handleCreateUser(e) {
+    e.preventDefault();
+    const session = getSession();
+    if (!session || session.role !== 'ADMIN') {
+        Swal.fire('Lỗi', 'Bạn không có quyền thực hiện thao tác này', 'error');
+        return;
+    }
+    const form = e.target;
+    const statusEl = $('create-user-status');
+    statusEl.textContent = 'Đang tạo người dùng...';
+
+    const payload = {
+        action: 'create_user',
+        username: session.username,
+        role: session.role,
+        new_username: form.new_username.value.trim(),
+        new_fullname: form.new_fullname.value.trim(),
+        new_role: form.new_role.value.trim(),
+        new_group: form.new_group.value.trim(),
+        new_email: form.new_email.value.trim(),
+        new_phone: form.new_phone.value.trim(),
+        new_password: form.new_password.value.trim()
+    };
+
+    try {
+        const res = await callAPI(payload);
+        if (res.success) {
+            statusEl.textContent = res.message || 'Đã tạo người dùng.';
+            form.reset();
+            loadUserManagement();
+        } else {
+            statusEl.textContent = res.message || 'Không thể tạo người dùng.';
+        }
+    } catch (error) {
+        console.error(error);
+        statusEl.textContent = 'Lỗi kết nối.';
+    }
+}
+
+async function openEditUserModal(encodedUsername) {
+    const username = decodeURIComponent(encodedUsername);
+    const target = cachedUsers.find(u => u.username === username);
+    if (!target) {
+        Swal.fire('Lỗi', 'Không tìm thấy người dùng', 'error');
+        return;
+    }
+
+    const { value: formValues } = await Swal.fire({
+        title: `Chỉnh sửa: ${username}`,
+        html: `
+            <div class="text-left space-y-3">
+                <div>
+                    <label class="text-xs font-semibold text-gray-500">Họ tên</label>
+                    <input id="swal-fullname" class="swal2-input" value="${target.fullname || ''}">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-500">Vai trò</label>
+                    <select id="swal-role" class="swal2-input">
+                        ${['TVBH','TPKD','GDKD','BKS','BGD','KETOAN','ADMIN'].map(role => `<option value="${role}" ${target.role === role ? 'selected' : ''}>${role}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-500">Nhóm</label>
+                    <input id="swal-group" class="swal2-input" value="${target.group || ''}">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-500">Email</label>
+                    <input id="swal-email" class="swal2-input" value="${target.email || ''}">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-500">Số điện thoại</label>
+                    <input id="swal-phone" class="swal2-input" value="${target.phone || ''}">
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <input type="checkbox" id="swal-active" ${target.active ? 'checked' : ''}>
+                    <label for="swal-active">Đang hoạt động</label>
+                </div>
+            </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Lưu',
+        cancelButtonText: 'Hủy',
+        preConfirm: () => {
+            return {
+                fullname: document.getElementById('swal-fullname').value.trim(),
+                role: document.getElementById('swal-role').value,
+                group: document.getElementById('swal-group').value.trim(),
+                email: document.getElementById('swal-email').value.trim(),
+                phone: document.getElementById('swal-phone').value.trim(),
+                active: document.getElementById('swal-active').checked
+            };
+        }
+    });
+
+    if (!formValues) return;
+
+    const session = getSession();
+    try {
+        const res = await callAPI({
+            action: 'update_user',
+            username: session.username,
+            role: session.role,
+            target_username: username,
+            fullname: formValues.fullname,
+            user_role: formValues.role,
+            group: formValues.group,
+            email: formValues.email,
+            phone: formValues.phone,
+            active: formValues.active
+        });
+        if (res.success) {
+            Swal.fire('Thành công', res.message || 'Đã cập nhật người dùng', 'success');
+            loadUserManagement();
+        } else {
+            Swal.fire('Lỗi', res.message || 'Không thể cập nhật người dùng', 'error');
+        }
+    } catch (error) {
+        console.error(error);
+        Swal.fire('Lỗi', 'Không thể kết nối đến server', 'error');
+    }
+}
+
+async function resetUserPasswordPrompt(encodedUsername) {
+    const username = decodeURIComponent(encodedUsername);
+    const session = getSession();
+    if (!session || session.role !== 'ADMIN') {
+        Swal.fire('Lỗi', 'Bạn không có quyền thực hiện thao tác này', 'error');
+        return;
+    }
+
+    const { value: newPass } = await Swal.fire({
+        title: `Reset mật khẩu cho ${username}`,
+        input: 'text',
+        inputLabel: 'Nhập mật khẩu mới (để trống = 123456)',
+        showCancelButton: true,
+        confirmButtonText: 'Reset',
+        cancelButtonText: 'Hủy'
+    });
+
+    if (newPass === undefined) return;
+
+    try {
+        const res = await callAPI({
+            action: 'reset_user_password',
+            username: session.username,
+            role: session.role,
+            target_username: username,
+            new_password: newPass
+        });
+        if (res.success) {
+            Swal.fire('Thành công', res.message || 'Đã reset mật khẩu', 'success');
+        } else {
+            Swal.fire('Lỗi', res.message || 'Không thể reset mật khẩu', 'error');
+        }
+    } catch (error) {
+        console.error(error);
+        Swal.fire('Lỗi', 'Không thể kết nối đến server', 'error');
+    }
+}
+
+// ===================================
 // API CALLER
 // ===================================
-async function callAPI(data) {
-    try {
+        async function callAPI(data) {
+            try {
         console.log('Calling API:', data.action, data);
         
         // Sử dụng FormData để tránh CORS preflight request
