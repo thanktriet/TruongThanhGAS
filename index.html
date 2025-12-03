@@ -57,7 +57,7 @@
         
         <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-2xl z-20 hidden md:flex">
             <div class="p-6 border-b border-slate-700">
-                <h1 class="text-xl font-bold tracking-wider">MY AUTO</h1>
+                <h1 class="text-xl font-bold tracking-wider">VINFAST TRƯƠNG THÀNH</h1>
                 <p class="text-xs text-slate-400 mt-1">Xin chào, <span id="user-fullname" class="font-bold text-white">User</span></p>
                 <span id="user-role" class="text-[10px] bg-blue-600 px-2 py-0.5 rounded mt-2 inline-block">ROLE</span>
             </div>
@@ -2032,28 +2032,72 @@ async function resubmitRequest(id) {
             
             // For approve: show form with comment, productivity bonus adjustment, and next approver
             const result = await Swal.fire({
-                title: 'Duyệt tờ trình',
+                title: '<div style="font-size: 20px; font-weight: 600; color: #1f2937; margin-bottom: 5px;">✓ Duyệt tờ trình</div>',
                 html: `
-                    <div style="text-align: left; padding: 10px 0;">
-                        <div style="margin-bottom: 15px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Lý do duyệt (tùy chọn):</label>
-                            <textarea id="swal-comment" class="swal2-textarea" placeholder="Ví dụ: Đã kiểm tra và đồng ý..." style="width: 100%; min-height: 60px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; resize: vertical;"></textarea>
+                    <div style="text-align: left; padding: 5px 0;">
+                        <!-- Lý do duyệt -->
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
+                                <i class="fa-solid fa-comment-dots" style="color: #3b82f6; margin-right: 5px;"></i>
+                                Lý do duyệt <span style="color: #9ca3af; font-weight: 400;">(tùy chọn)</span>
+                            </label>
+                            <textarea id="swal-comment" 
+                                      class="swal2-textarea" 
+                                      placeholder="Ví dụ: Đã kiểm tra và đồng ý..." 
+                                      style="width: 100%; min-height: 70px; padding: 10px 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; resize: vertical; font-family: inherit; transition: border-color 0.2s;"
+                                      onfocus="this.style.borderColor='#3b82f6'; this.style.outline='none';"
+                                      onblur="this.style.borderColor='#e5e7eb';"></textarea>
                         </div>
-                        <div style="margin-bottom: 15px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Điều chỉnh lương năng suất (VNĐ):</label>
-                            <p style="font-size: 12px; color: #666; margin-bottom: 8px; padding: 5px; background: #f5f5f5; border-radius: 4px;">TVBH đề xuất: <strong style="color: #2563eb;">${currentProductivityBonusFormatted}</strong></p>
-                            <input id="swal-productivity" type="text" class="swal2-input" value="${currentProductivityBonusFormatted}" placeholder="Nhập số tiền (để trống = giữ nguyên)" style="text-align: right; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; width: 100%;" oninput="this.value = this.value.replace(/[^0-9]/g, ''); if (this.value) this.value = parseInt(this.value).toLocaleString('vi-VN');">
-                            <p style="font-size: 11px; color: #999; margin-top: 5px; margin-bottom: 0;">Để trống hoặc giữ nguyên giá trị hiện tại nếu không điều chỉnh</p>
+                        
+                        <!-- Điều chỉnh lương năng suất -->
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px;">
+                                <i class="fa-solid fa-money-bill-wave" style="color: #10b981; margin-right: 5px;"></i>
+                                Điều chỉnh lương năng suất (VNĐ)
+                            </label>
+                            <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 10px 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #bae6fd;">
+                                <span style="font-size: 12px; color: #64748b; display: block; margin-bottom: 3px;">TVBH đề xuất:</span>
+                                <span style="font-size: 16px; font-weight: 700; color: #0284c7;">${currentProductivityBonusFormatted}</span>
+                            </div>
+                            <input id="swal-productivity" 
+                                   type="text" 
+                                   class="swal2-input" 
+                                   value="${currentProductivityBonusFormatted}" 
+                                   placeholder="Nhập số tiền mới (để trống = giữ nguyên)" 
+                                   style="text-align: right; padding: 10px 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 15px; width: 100%; font-weight: 500; transition: border-color 0.2s;"
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, ''); if (this.value) this.value = parseInt(this.value).toLocaleString('vi-VN');"
+                                   onfocus="this.style.borderColor='#10b981'; this.style.outline='none';"
+                                   onblur="this.style.borderColor='#e5e7eb';">
+                            <p style="font-size: 11px; color: #6b7280; margin-top: 6px; margin-bottom: 0; padding-left: 2px;">
+                                <i class="fa-solid fa-info-circle" style="margin-right: 4px;"></i>
+                                Để trống hoặc giữ nguyên giá trị hiện tại nếu không điều chỉnh
+                            </p>
                         </div>
-                        ${usersHtml ? `<div style="margin-bottom: 10px;">${usersHtml}</div>` : ''}
+                        
+                        <!-- Chọn người duyệt tiếp theo -->
+                        ${usersHtml ? `
+                        <div style="margin-bottom: 15px;">
+                            ${usersHtml.replace('style="width: 100%; margin-bottom: 15px; padding: 8px;"', 'style="width: 100%; padding: 10px 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white; transition: border-color 0.2s;" onfocus="this.style.borderColor=\'#3b82f6\';" onblur="this.style.borderColor=\'#e5e7eb\';"')}
+                        </div>
+                        ` : ''}
                     </div>
                 `,
-                width: '500px',
+                width: '520px',
+                padding: '25px',
                 showCancelButton: true,
-                confirmButtonText: 'Xác nhận',
-                cancelButtonText: 'Hủy',
+                confirmButtonText: '<i class="fa-solid fa-check"></i> Xác nhận',
+                cancelButtonText: '<i class="fa-solid fa-times"></i> Hủy',
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#6b7280',
+                buttonsStyling: true,
                 allowOutsideClick: false,
                 allowEscapeKey: true,
+                customClass: {
+                    popup: 'swal2-popup-custom',
+                    title: 'swal2-title-custom',
+                    confirmButton: 'swal2-confirm-custom',
+                    cancelButton: 'swal2-cancel-custom'
+                },
                 preConfirm: () => {
                     // Read values before closing
                     const popup = Swal.getPopup();
@@ -2071,7 +2115,44 @@ async function resubmitRequest(id) {
                 },
                 didOpen: () => {
                     const commentInput = Swal.getPopup().querySelector('#swal-comment');
-                    if (commentInput) commentInput.focus();
+                    if (commentInput) {
+                        commentInput.focus();
+                    }
+                    // Add custom styles
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        .swal2-popup-custom {
+                            border-radius: 12px !important;
+                            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+                        }
+                        .swal2-title-custom {
+                            padding: 0 0 15px 0 !important;
+                            margin-bottom: 0 !important;
+                        }
+                        .swal2-confirm-custom {
+                            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+                            border: none !important;
+                            border-radius: 8px !important;
+                            padding: 10px 24px !important;
+                            font-weight: 600 !important;
+                            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3) !important;
+                            transition: all 0.2s !important;
+                        }
+                        .swal2-confirm-custom:hover {
+                            transform: translateY(-1px) !important;
+                            box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4) !important;
+                        }
+                        .swal2-cancel-custom {
+                            border-radius: 8px !important;
+                            padding: 10px 24px !important;
+                            font-weight: 600 !important;
+                            transition: all 0.2s !important;
+                        }
+                        .swal2-cancel-custom:hover {
+                            background: #4b5563 !important;
+                        }
+                    `;
+                    document.head.appendChild(style);
                 }
             });
             
