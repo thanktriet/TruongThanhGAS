@@ -1514,23 +1514,23 @@ function renderApprovalList() {
                                     data.requester.toLowerCase() === session.username.toLowerCase());
                 
                 // Tính next_status và is_completed nếu chưa có
+                // Step 4 (Kế Toán) là bước cuối, sau đó có thể in (step >= 6)
                 if (!data.next_status && !data.is_completed) {
                     const workflow = [
                         { step: 0, next: 1, label: 'Chờ TPKD duyệt' },
                         { step: 1, next: 2, label: 'Chờ GĐKD duyệt' },
                         { step: 2, next: 3, label: 'Chờ Ban Kiểm Soát' },
                         { step: 3, next: 4, label: 'Chờ Ban Giám Đốc' },
-                        { step: 4, next: 5, label: 'Chờ Kế Toán kiểm tra' },
-                        { step: 5, next: 6, label: 'Hoàn tất / Chờ in' }
+                        { step: 4, next: 6, label: 'Chờ Kế Toán kiểm tra' } // next: 6 = Hoàn tất
                     ];
                     const stepConfig = workflow.find(w => w.step === data.step);
-                    if (stepConfig && stepConfig.next < 6) {
+                    if (data.step >= 6 || (stepConfig && stepConfig.next >= 6)) {
+                        data.is_completed = true;
+                    } else if (stepConfig && stepConfig.next < 6) {
                         const nextConfig = workflow.find(w => w.step === stepConfig.next);
                         if (nextConfig) {
                             data.next_status = nextConfig.label;
                         }
-                    } else {
-                        data.is_completed = true;
                     }
                 }
             } catch (e) {
