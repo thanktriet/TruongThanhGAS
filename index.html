@@ -849,37 +849,48 @@
                 </div>
                 {{/other_requirements}}
 
-                <!-- Phân bổ chi phí bán hàng (chỉ hiển thị khi có dữ liệu hoặc là admin) -->
+                <!-- Phân bổ chi phí bán hàng -->
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <h4 class="font-bold text-sm text-gray-600 uppercase mb-3 flex items-center gap-2">
                         <i class="fa-solid fa-chart-pie text-blue-600"></i>Phân bổ chi phí bán hàng
                     </h4>
                     <div class="space-y-3">
                         <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <p class="text-xs text-gray-500 mb-1">Mức chi phí giảm tối đa (%)</p>
+                <div>
+                                <p class="text-xs text-gray-500 mb-1">Mức chi phí giảm tối đa (VNĐ)</p>
                                 <div class="flex gap-2 items-center">
-                                    {{#is_admin}}
+                                    {{#can_edit_cost}}
                                     <input type="text" id="detail-max-cost-rate" value="{{max_cost_rate}}" 
                                            class="flex-1 border p-2 rounded text-sm" 
-                                           placeholder="Nhập %" 
-                                           oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
-                                    <button onclick="saveMaxCostRate('{{id}}')" 
+                                           placeholder="Nhập số tiền" 
+                                           oninput="formatMoneyInput(this)">
+                                    <button onclick="saveCostData('{{id}}')" 
                                             class="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition">
                                         <i class="fa-solid fa-save"></i>
                                     </button>
-                                    {{/is_admin}}
-                                    {{^is_admin}}
-                                    <input type="text" id="detail-max-cost-rate" value="{{max_cost_rate}}" 
-                                           class="flex-1 border p-2 rounded text-sm" 
-                                           placeholder="Nhập %" 
-                                           readonly>
-                                    {{/is_admin}}
+                                    {{/can_edit_cost}}
+                                    {{^can_edit_cost}}
+                                    <p class="font-semibold text-gray-800 flex-1">{{#max_cost_rate}}{{max_cost_rate}}{{/max_cost_rate}}{{^max_cost_rate}}Chưa nhập{{/max_cost_rate}}</p>
+                                    {{/can_edit_cost}}
                                 </div>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 mb-1">Lương năng suất (VNĐ)</p>
-                                <p class="font-semibold text-gray-800">{{#productivity_bonus}}{{productivity_bonus}}{{/productivity_bonus}}{{^productivity_bonus}}Chưa nhập{{/productivity_bonus}}</p>
+                                <div class="flex gap-2 items-center">
+                                    {{#can_edit_cost}}
+                                    <input type="text" id="detail-productivity-bonus" value="{{productivity_bonus}}" 
+                                           class="flex-1 border p-2 rounded text-sm" 
+                                           placeholder="Nhập số tiền" 
+                                           oninput="formatMoneyInput(this)">
+                                    <button onclick="saveCostData('{{id}}')" 
+                                            class="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition">
+                                        <i class="fa-solid fa-save"></i>
+                                    </button>
+                                    {{/can_edit_cost}}
+                                    {{^can_edit_cost}}
+                                    <p class="font-semibold text-gray-800 flex-1">{{#productivity_bonus}}{{productivity_bonus}}{{/productivity_bonus}}{{^productivity_bonus}}Chưa nhập{{/productivity_bonus}}</p>
+                                    {{/can_edit_cost}}
+                                </div>
                             </div>
                         </div>
                             <div class="bg-gray-50 p-3 rounded border border-gray-200">
@@ -1757,8 +1768,19 @@ function renderApprovalList() {
         
         // Đảm bảo các trường mới có giá trị mặc định
         data.other_requirements = data.other_requirements || '';
-        data.max_cost_rate = data.max_cost_rate || '';
-        data.productivity_bonus = data.productivity_bonus || '';
+        // Format max_cost_rate và productivity_bonus từ số sang VNĐ
+        if (data.max_cost_rate) {
+            const maxCostRateNum = parseInt(String(data.max_cost_rate).replace(/[^\d]/g, '')) || 0;
+            data.max_cost_rate = maxCostRateNum > 0 ? maxCostRateNum.toLocaleString('vi-VN') : '';
+        } else {
+            data.max_cost_rate = '';
+        }
+        if (data.productivity_bonus) {
+            const productivityBonusNum = parseInt(String(data.productivity_bonus).replace(/[^\d]/g, '')) || 0;
+            data.productivity_bonus = productivityBonusNum > 0 ? productivityBonusNum.toLocaleString('vi-VN') : '';
+        } else {
+            data.productivity_bonus = '';
+        }
         
         const sessionStr = localStorage.getItem('user_session');
         let session = null;
@@ -1775,6 +1797,20 @@ function renderApprovalList() {
                 
                 // Thêm is_admin flag
                 data.is_admin = (session && session.role === 'ADMIN');
+                
+                // Kiểm tra quyền chỉnh sửa chi phí (tất cả các bộ phận có thể chỉnh sửa khi duyệt)
+                // Chỉ cho phép chỉnh sửa khi đang ở bước duyệt của họ hoặc đã duyệt xong
+                const workflow = [
+                    { step: 0, role: 'TPKD' },
+                    { step: 1, role: 'GDKD' },
+                    { step: 2, role: 'BKS' },
+                    { step: 3, role: 'BGD' },
+                    { step: 4, role: 'KETOAN' }
+                ];
+                const currentStepConfig = workflow.find(w => w.step === data.step);
+                const canEditAtCurrentStep = currentStepConfig && currentStepConfig.role === session.role;
+                const isCompleted = data.step >= 6;
+                data.can_edit_cost = (session && (session.role === 'ADMIN' || canEditAtCurrentStep || isCompleted));
                 
                 // Tính toán chi phí và tỷ lệ
                 const discountAmount = parseInt((data.discount_amount || '').replace(/[^\d]/g, '')) || 0;
@@ -2663,7 +2699,7 @@ function printRequest(id) {
                     <thead>
                         <tr>
                             <th style="width: 30%;">Nội dung</th>
-                            <th style="width: 20%;" class="text-right">Mức chi phí giảm tối đa (%)</th>
+                            <th style="width: 20%;" class="text-right">Mức chi phí giảm tối đa (VNĐ)</th>
                             <th style="width: 20%;" class="text-right">Chi phí bán hàng (VNĐ)</th>
                             <th style="width: 15%;" class="text-right">Tỷ lệ (%)</th>
                             <th style="width: 15%;" class="text-right">Lương năng suất (VNĐ)</th>
@@ -2767,7 +2803,8 @@ function printRequest(id) {
             const costPercentage = contractPriceNum > 0 ? ((salesCost / contractPriceNum) * 100).toFixed(2) : '0.00';
             const productivityBonus = (d.productivity_bonus || '').replace(/[^\d]/g, '');
             
-            printWindow.document.getElementById('print-max-cost-rate').textContent = maxCostRate ? maxCostRate + '%' : '';
+            const maxCostRateNum = parseInt(String(maxCostRate).replace(/[^\d]/g, '')) || 0;
+            printWindow.document.getElementById('print-max-cost-rate').textContent = maxCostRateNum > 0 ? maxCostRateNum.toLocaleString('vi-VN') + ' VNĐ' : '';
             printWindow.document.getElementById('print-sales-cost').textContent = salesCost.toLocaleString('vi-VN');
             printWindow.document.getElementById('print-cost-percentage').textContent = costPercentage + '%';
             printWindow.document.getElementById('print-productivity-bonus').textContent = productivityBonus ? Number(productivityBonus).toLocaleString('vi-VN') : '';
@@ -3102,6 +3139,63 @@ async function resetUserPasswordPrompt(encodedUsername) {
     } catch (error) {
         console.error(error);
         Swal.fire('Lỗi', 'Không thể kết nối đến server', 'error');
+    }
+}
+
+async function saveCostData(id) {
+    const session = getSession();
+    if (!session) {
+        Swal.fire('Lỗi', 'Phiên đăng nhập đã hết hạn', 'error');
+        logout();
+        return;
+    }
+    
+    const maxCostRateInput = $('detail-max-cost-rate');
+    const productivityBonusInput = $('detail-productivity-bonus');
+    
+    if (!maxCostRateInput) {
+        Swal.fire('Lỗi', 'Không tìm thấy trường mức chi phí', 'error');
+        return;
+    }
+    
+    // Lấy giá trị và loại bỏ dấu phân cách nghìn
+    const maxCostRateRaw = maxCostRateInput.value.replace(/\./g, '').trim();
+    const productivityBonusRaw = productivityBonusInput ? productivityBonusInput.value.replace(/\./g, '').trim() : '';
+    
+    // Format lại để hiển thị trong log
+    const maxCostRateFormatted = maxCostRateRaw ? Number(maxCostRateRaw).toLocaleString('vi-VN') + ' VNĐ' : 'Chưa nhập';
+    const productivityBonusFormatted = productivityBonusRaw ? Number(productivityBonusRaw).toLocaleString('vi-VN') + ' VNĐ' : 'Chưa nhập';
+    
+    try {
+        Swal.fire({
+            title: 'Đang lưu...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        const res = await callAPI({
+            action: 'update_cost_data',
+            id,
+            username: session.username,
+            role: session.role,
+            max_cost_rate: maxCostRateRaw,
+            productivity_bonus: productivityBonusRaw || '',
+            max_cost_rate_formatted: maxCostRateFormatted,
+            productivity_bonus_formatted: productivityBonusFormatted
+        });
+        
+        if (res.success) {
+            Swal.fire('Thành công', res.message || 'Đã cập nhật chi phí thành công', 'success');
+            closeModal();
+            loadApprovalList();
+        } else {
+            Swal.fire('Lỗi', res.message || 'Cập nhật thất bại', 'error');
+        }
+    } catch (error) {
+        console.error('Error in saveCostData:', error);
+        Swal.fire('Lỗi', error.message || 'Không thể kết nối đến server', 'error');
     }
 }
 
