@@ -378,9 +378,9 @@
     </template>
 
     <script>
-            /**
+/**
  * Hệ Thống Phê Duyệt Giá Xe - Main Application Script
- * Optimized version
+ * Single Page Application - All code in one file
  */
 
 // ===================================
@@ -781,20 +781,33 @@ async function handleSubmitRequest(e, mode) {
 // ===================================
 async function loadApprovalList() {
     const sessionStr = localStorage.getItem('user_session');
-    if (!sessionStr) return;
+    if (!sessionStr) {
+        const container = $('approval-list-container');
+        if (container) {
+            container.innerHTML = '<p class="text-red-500 text-center">Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.</p>';
+        }
+        return;
+    }
     
     let session;
     try {
         session = JSON.parse(sessionStr);
     } catch (e) {
         console.error('Error parsing session:', e);
+        const container = $('approval-list-container');
+        if (container) {
+            container.innerHTML = '<p class="text-red-500 text-center">Lỗi dữ liệu phiên đăng nhập</p>';
+        }
         return;
     }
     
     const container = $('approval-list-container');
-    if (!container) return;
+    if (!container) {
+        console.error('approval-list-container not found');
+        return;
+    }
     
-    container.innerHTML = '<div class="text-center py-4"><i class="fa-solid fa-spinner fa-spin text-blue-600 text-2xl"></i></div>';
+    container.innerHTML = '<div class="text-center py-4"><i class="fa-solid fa-spinner fa-spin text-blue-600 text-2xl"></i><p class="mt-2 text-gray-500">Đang tải danh sách...</p></div>';
     
     try {
         const res = await callAPI({
@@ -803,18 +816,24 @@ async function loadApprovalList() {
             role: session.role
         });
         
+        console.log('loadApprovalList response:', res);
+        
         if (res.success && res.data) {
             const tpl = $('tpl-pending-list')?.innerHTML;
             if (tpl && typeof Mustache !== 'undefined') {
                 container.innerHTML = Mustache.render(tpl, { data: res.data });
             } else {
-                container.innerHTML = '<p class="text-red-500 text-center">Lỗi render template</p>';
+                console.error('Template or Mustache not found');
+                container.innerHTML = '<p class="text-red-500 text-center">Lỗi render template. Vui lòng tải lại trang.</p>';
             }
         } else {
-            container.innerHTML = '<p class="text-red-500 text-center">' + (res.message || 'Lỗi tải dữ liệu') + '</p>';
+            const errorMsg = res.message || 'Không có dữ liệu hoặc lỗi không xác định';
+            console.error('API returned error:', errorMsg);
+            container.innerHTML = `<p class="text-red-500 text-center">${errorMsg}</p>`;
         }
     } catch (error) {
-        container.innerHTML = '<p class="text-red-500 text-center">Lỗi kết nối</p>';
+        console.error('Error in loadApprovalList:', error);
+        container.innerHTML = `<p class="text-red-500 text-center">Lỗi kết nối: ${error.message || 'Không thể kết nối đến server'}</p>`;
     }
 }
 
@@ -882,13 +901,43 @@ async function confirmAction(id, decision) {
         return;
     }
     
+    // Prompt for comment if rejecting
+    let comment = '';
+    if (decision === 'reject') {
+        try {
+            const result = await Swal.fire({
+                title: 'Lý do từ chối',
+                input: 'textarea',
+                inputLabel: 'Nhập lý do từ chối (tùy chọn)',
+                inputPlaceholder: 'Nhập lý do...',
+                showCancelButton: true,
+                confirmButtonText: 'Xác nhận',
+                cancelButtonText: 'Hủy',
+                allowOutsideClick: false,
+                allowEscapeKey: true
+            });
+            
+            // Check if user cancelled (dismissed with cancel button or ESC)
+            if (result.dismiss === Swal.DismissReason.cancel || result.dismiss === Swal.DismissReason.esc) {
+                return; // User cancelled, don't proceed
+            }
+            
+            comment = result.value || '';
+        } catch (e) {
+            console.error('Error getting comment:', e);
+            // Continue without comment if there's an error
+            comment = '';
+        }
+    }
+    
     try {
         const res = await callAPI({
             action: 'approve_reject',
             id,
             username: session.username,
             role: session.role,
-            decision
+            decision,
+            comment: comment || ''
         });
         
         if (res.success) {
@@ -899,7 +948,8 @@ async function confirmAction(id, decision) {
             Swal.fire('Lỗi', res.message || 'Thất bại', 'error');
         }
     } catch (error) {
-        Swal.fire('Lỗi', 'Không thể kết nối đến server', 'error');
+        console.error('Error in confirmAction:', error);
+        Swal.fire('Lỗi', error.message || 'Không thể kết nối đến server', 'error');
     }
 }
 
@@ -908,22 +958,44 @@ async function confirmAction(id, decision) {
 // ===================================
 async function callAPI(data) {
     try {
+        console.log('Calling API:', data.action, data);
+        
         const res = await fetch(API_URL, {
             method: 'POST',
+            mode: 'cors',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
         });
         
+        console.log('API Response status:', res.status, res.statusText);
+        
         if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
+            const errorText = await res.text();
+            console.error('API Error Response:', errorText);
+            throw new Error(`HTTP error! status: ${res.status} - ${errorText}`);
         }
         
-        return await res.json();
+        const responseText = await res.text();
+        console.log('API Response text:', responseText);
+        
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('JSON Parse Error:', parseError, 'Response:', responseText);
+            throw new Error('Invalid JSON response from server');
+        }
+        
+        console.log('API Result:', result);
+        return result;
     } catch (e) {
         console.error('API call error:', e);
-        return { success: false, message: 'Lỗi kết nối' };
+        return { 
+            success: false, 
+            message: e.message || 'Lỗi kết nối đến server. Vui lòng kiểm tra kết nối mạng.' 
+        };
     }
 }
 
@@ -957,9 +1029,6 @@ async function callAPI(data) {
         document.head.appendChild(style);
     }
 })();
-
-
-        
     </script>
 </body>
 </html>
