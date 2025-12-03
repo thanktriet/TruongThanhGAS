@@ -2059,56 +2059,273 @@ function printRequest(id) {
     
     // Open print window with template
     const printWindow = window.open('', '_blank');
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+    
     printWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
-            <title>In Tờ Trình</title>
+            <title>PHIẾU TRÌNH ĐỀ XUẤT CHƯƠNG TRÌNH BÁN HÀNG</title>
+            <meta charset="UTF-8">
             <style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                .header { text-align: center; margin-bottom: 30px; }
-                .section { margin-bottom: 20px; }
-                .section-title { font-weight: bold; font-size: 14px; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 5px; }
-                table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-                table td { padding: 8px; border: 1px solid #ddd; }
-                .label { font-weight: bold; background: #f0f0f0; }
-                .total { font-weight: bold; font-size: 16px; }
+                @media print {
+                    @page { margin: 1cm; size: A4; }
+                }
+                body { 
+                    font-family: "Times New Roman", serif; 
+                    font-size: 12pt; 
+                    padding: 20px; 
+                    line-height: 1.5;
+                }
+                .header { 
+                    text-align: center; 
+                    margin-bottom: 25px; 
+                }
+                .header h1 { 
+                    font-size: 16pt; 
+                    font-weight: bold; 
+                    text-transform: uppercase; 
+                    margin-bottom: 10px;
+                }
+                .header-info {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 15px;
+                    font-size: 11pt;
+                }
+                .section { 
+                    margin-bottom: 20px; 
+                }
+                .section-title { 
+                    font-weight: bold; 
+                    font-size: 12pt; 
+                    margin-bottom: 10px; 
+                    text-transform: uppercase;
+                }
+                table { 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin-bottom: 15px; 
+                    font-size: 11pt;
+                }
+                table, table td, table th { 
+                    border: 1px solid #000; 
+                }
+                table td, table th { 
+                    padding: 6px 8px; 
+                    text-align: left;
+                    vertical-align: top;
+                }
+                table th {
+                    background: #f0f0f0;
+                    font-weight: bold;
+                    text-align: center;
+                }
+                .label { 
+                    font-weight: bold; 
+                    background: #f5f5f5; 
+                    width: 30%;
+                }
+                .text-right {
+                    text-align: right;
+                }
+                .total { 
+                    font-weight: bold; 
+                    font-size: 12pt; 
+                }
+                .signature-section {
+                    margin-top: 40px;
+                    display: flex;
+                    justify-content: space-around;
+                }
+                .signature-box {
+                    text-align: center;
+                    width: 200px;
+                }
+                .signature-box-title {
+                    font-weight: bold;
+                    margin-bottom: 60px;
+                    font-size: 11pt;
+                }
             </style>
         </head>
         <body>
             <div class="header">
-                <h1>TỜ TRÌNH PHÊ DUYỆT GIÁ</h1>
-                <p>Mã HĐ: <span id="print-contract-code"></span></p>
+                <h1>PHIẾU TRÌNH ĐỀ XUẤT CHƯƠNG TRÌNH BÁN HÀNG</h1>
+                <div class="header-info">
+                    <div>Ngày <span id="print-day">${day}</span> tháng <span id="print-month">${month}</span> năm <span id="print-year">${year}</span></div>
+                    <div>Số hợp đồng: <span id="print-contract-code"></span></div>
+                </div>
             </div>
+            
             <div class="section">
-                <div class="section-title">THÔNG TIN KHÁCH HÀNG</div>
+                <div class="section-title">I. THÔNG TIN KHÁCH HÀNG</div>
                 <table>
-                    <tr><td class="label">Họ tên:</td><td id="print-customer"></td></tr>
-                    <tr><td class="label">SĐT:</td><td id="print-phone"></td></tr>
-                    <tr><td class="label">CCCD:</td><td id="print-cccd"></td></tr>
-                    <tr><td class="label">Email:</td><td id="print-email"></td></tr>
-                    <tr><td class="label">Địa chỉ:</td><td id="print-address"></td></tr>
+                    <tr>
+                        <td class="label">Tên khách hàng:</td>
+                        <td id="print-customer"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Địa chỉ:</td>
+                        <td id="print-address"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">CMND/CCCD:</td>
+                        <td id="print-cccd"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Số điện thoại:</td>
+                        <td id="print-phone"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Email:</td>
+                        <td id="print-email"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Người đại diện (đối với tổ chức):</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Chức vụ (nếu có):</td>
+                        <td></td>
+                    </tr>
                 </table>
             </div>
+            
             <div class="section">
-                <div class="section-title">THÔNG TIN XE</div>
+                <div class="section-title">II. THÔNG TIN XE</div>
                 <table>
-                    <tr><td class="label">Dòng xe:</td><td id="print-car-model"></td></tr>
-                    <tr><td class="label">Phiên bản:</td><td id="print-car-version"></td></tr>
-                    <tr><td class="label">Màu sắc:</td><td id="print-car-color"></td></tr>
-                    <tr><td class="label">VIN:</td><td id="print-vin"></td></tr>
-                    <tr><td class="label">Thanh toán:</td><td id="print-payment"></td></tr>
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">STT</th>
+                            <th style="width: 50%;">Mặt hàng</th>
+                            <th style="width: 20%;">Số khung</th>
+                            <th style="width: 25%;" class="text-right">Giá trị hợp đồng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="text-align: center;">1</td>
+                            <td>
+                                <div><strong>XE Ô TÔ CON</strong></div>
+                                <div>Nhãn hiệu: <span id="print-car-brand">VinFast</span></div>
+                                <div>Ký hiệu xe: <span id="print-car-model"></span><span id="print-car-version"></span></div>
+                                <div>Màu sơn: <span id="print-car-color"></span></div>
+                                <div>Số chỗ ngồi: 5</div>
+                                <div>Năm SX: <span id="print-car-year">2025</span></div>
+                            </td>
+                            <td id="print-vin"></td>
+                            <td class="text-right" id="print-contract-price"></td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="label">Tổng giá trị hợp đồng (A):</td>
+                            <td class="text-right total" id="print-total-contract"></td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
+            
             <div class="section">
-                <div class="section-title">BẢNG GIÁ</div>
+                <div class="section-title">III. CHI PHÍ BÁN HÀNG</div>
                 <table>
-                    <tr><td class="label">Giá hợp đồng:</td><td id="print-contract-price"></td></tr>
-                    <tr><td class="label">Giảm giá:</td><td id="print-discount-amount"></td></tr>
-                    <tr><td class="label">Lý do giảm giá:</td><td id="print-discount-details"></td></tr>
-                    <tr><td class="label">Quà tặng:</td><td id="print-gift-details"></td></tr>
-                    <tr><td class="label total">GIÁ CHỐT:</td><td class="total" id="print-final-price"></td></tr>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Nội dung</th>
+                            <th style="width: 50%;">Diễn giải chi tiết</th>
+                            <th style="width: 25%;" class="text-right">Tổng giá trị quy đổi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="label">Giảm giá tiền mặt</td>
+                            <td id="print-discount-details"></td>
+                            <td class="text-right" id="print-discount-amount"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Quà tặng</td>
+                            <td id="print-gift-details"></td>
+                            <td class="text-right" id="print-gift-amount"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Ưu đãi khác</td>
+                            <td></td>
+                            <td class="text-right">0</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Chi phí môi giới | hoa hồng</td>
+                            <td></td>
+                            <td class="text-right">0</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="2" class="label">Tổng chi phí (B):</td>
+                            <td class="text-right total" id="print-total-cost"></td>
+                        </tr>
+                    </tfoot>
                 </table>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">IV. GIÁ TRỊ HỢP ĐỒNG SAU ƯU ĐÃI</div>
+                <table>
+                    <tr>
+                        <td class="label" style="width: 70%;">(A) - (B):</td>
+                        <td class="text-right total" id="print-final-price"></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">V. PHÂN BỐ CHI PHÍ BÁN HÀNG</div>
+                <table>
+                    <tr>
+                        <td class="label" style="width: 70%;">1 - Tổng chi phí bán hàng:</td>
+                        <td class="text-right" id="print-cost-1"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">2 - Mức chi phí bán hàng định mức:</td>
+                        <td class="text-right">95%</td>
+                    </tr>
+                    <tr>
+                        <td class="label">3 - Lương Năng suất:</td>
+                        <td class="text-right"></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">VI. YÊU CẦU KHÁC</div>
+                <table>
+                    <tr>
+                        <td style="width: 30%;" class="label">Nội dung:</td>
+                        <td id="print-other-requirements"></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Người thực hiện:</td>
+                        <td id="print-requester"></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="signature-section">
+                <div class="signature-box">
+                    <div class="signature-box-title">Ban Giám đốc</div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-box-title">Kiểm soát</div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-box-title">Kế toán</div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-box-title">Phòng Kinh doanh</div>
+                </div>
             </div>
         </body>
         </html>
@@ -2122,22 +2339,49 @@ function printRequest(id) {
     }).then(res => {
         if (res.success && res.data) {
             const d = res.data;
+            
+            // Header
             printWindow.document.getElementById('print-contract-code').textContent = d.contract_code || '';
+            
+            // I. THÔNG TIN KHÁCH HÀNG
             printWindow.document.getElementById('print-customer').textContent = d.customer || '';
-            printWindow.document.getElementById('print-phone').textContent = d.phone || '';
-            printWindow.document.getElementById('print-cccd').textContent = d.cccd || '';
-            printWindow.document.getElementById('print-email').textContent = d.email || '';
             printWindow.document.getElementById('print-address').textContent = d.address || '';
-            printWindow.document.getElementById('print-car-model').textContent = d.car_model || '';
-            printWindow.document.getElementById('print-car-version').textContent = d.car_version || '';
+            printWindow.document.getElementById('print-cccd').textContent = d.cccd || '';
+            printWindow.document.getElementById('print-phone').textContent = d.phone || '';
+            printWindow.document.getElementById('print-email').textContent = d.email || '';
+            
+            // II. THÔNG TIN XE
+            const carModelFull = (d.car_model || '') + (d.car_version ? ' ' + d.car_version : '');
+            printWindow.document.getElementById('print-car-model').textContent = carModelFull;
             printWindow.document.getElementById('print-car-color').textContent = d.car_color || '';
             printWindow.document.getElementById('print-vin').textContent = d.vin_no || '';
-            printWindow.document.getElementById('print-payment').textContent = d.payment || '';
-            printWindow.document.getElementById('print-contract-price').textContent = d.contract_price || '';
-            printWindow.document.getElementById('print-discount-amount').textContent = d.discount_amount || '';
+            const contractPrice = (d.contract_price || '').replace(/[^\d]/g, '');
+            printWindow.document.getElementById('print-contract-price').textContent = contractPrice ? Number(contractPrice).toLocaleString('vi-VN') : '0';
+            printWindow.document.getElementById('print-total-contract').textContent = contractPrice ? Number(contractPrice).toLocaleString('vi-VN') : '0';
+            
+            // III. CHI PHÍ BÁN HÀNG
             printWindow.document.getElementById('print-discount-details').textContent = d.discount_details || '';
-            printWindow.document.getElementById('print-gift-details').textContent = d.gift_details || 'Không có';
-            printWindow.document.getElementById('print-final-price').textContent = d.final_price || '';
+            const discountAmount = (d.discount_amount || '').replace(/[^\d]/g, '');
+            printWindow.document.getElementById('print-discount-amount').textContent = discountAmount ? Number(discountAmount).toLocaleString('vi-VN') : '0';
+            
+            // Quà tặng - format từ gift_details
+            const giftDetails = d.gift_details || '';
+            printWindow.document.getElementById('print-gift-details').textContent = giftDetails || 'Không có';
+            const giftAmount = (d.gift_amount || '').replace(/[^\d]/g, '');
+            printWindow.document.getElementById('print-gift-amount').textContent = giftAmount ? Number(giftAmount).toLocaleString('vi-VN') : '0';
+            
+            // Tổng chi phí (B) = Giảm giá + Quà tặng
+            const totalCost = (parseInt(discountAmount) || 0) + (parseInt(giftAmount) || 0);
+            printWindow.document.getElementById('print-total-cost').textContent = totalCost.toLocaleString('vi-VN');
+            printWindow.document.getElementById('print-cost-1').textContent = totalCost.toLocaleString('vi-VN');
+            
+            // IV. GIÁ TRỊ HỢP ĐỒNG SAU ƯU ĐÃI
+            const finalPrice = (d.final_price || '').replace(/[^\d]/g, '');
+            printWindow.document.getElementById('print-final-price').textContent = finalPrice ? Number(finalPrice).toLocaleString('vi-VN') : '0';
+            
+            // VI. YÊU CẦU KHÁC
+            printWindow.document.getElementById('print-other-requirements').textContent = d.discount_details || '';
+            printWindow.document.getElementById('print-requester').textContent = d.requester || '';
             
             setTimeout(() => {
                 printWindow.print();
