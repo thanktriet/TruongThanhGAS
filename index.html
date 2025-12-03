@@ -206,10 +206,37 @@
                     </div>
                 </div>
 
-                <div id="tab-approval" class="tab-content max-w-4xl mx-auto">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold text-gray-800">Danh sách cần duyệt</h2>
-                        <button onclick="loadApprovalList()" class="bg-white border text-gray-600 px-3 py-1 rounded hover:bg-gray-50 text-sm"><i class="fa-solid fa-sync mr-1"></i>Làm mới</button>
+                <div id="tab-approval" class="tab-content max-w-5xl mx-auto space-y-4">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 space-y-4">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-list-check text-blue-600"></i>Danh sách cần duyệt</h2>
+                            <button onclick="loadApprovalList()" class="bg-blue-50 border border-blue-200 text-blue-600 px-4 py-1.5 rounded hover:bg-blue-100 text-sm font-semibold"><i class="fa-solid fa-sync mr-1"></i>Làm mới</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase">Tìm kiếm</label>
+                                <input id="approval-search" type="text" class="input" placeholder="Mã HĐ, khách hàng...">
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase">Trạng thái</label>
+                                <select id="approval-status-filter" class="input bg-white">
+                                    <option value="all">Tất cả</option>
+                                    <option value="pending">Đang chờ duyệt</option>
+                                    <option value="rejected">Đã bị trả về</option>
+                                    <option value="completed">Hoàn tất</option>
+                                </select>
+                            </div>
+                            <div id="approval-summary" class="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-900 flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs uppercase text-blue-600 font-semibold">Tổng đơn</p>
+                                    <p class="text-xl font-bold" id="summary-total">0</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs uppercase text-blue-600 font-semibold">Chờ duyệt</p>
+                                    <p class="text-xl font-bold" id="summary-pending">0</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div id="approval-list-container" class="space-y-4"></div>
                 </div>
@@ -561,6 +588,8 @@
 const $ = (id) => document.getElementById(id);
 const $$ = (selector) => document.querySelectorAll(selector);
 let cachedUsers = [];
+let approvalData = [];
+let approvalFilters = { search: '', status: 'all' };
 
 function getSession() {
     const sessionStr = localStorage.getItem('user_session');
@@ -581,6 +610,15 @@ function getSession() {
             checkSession();
             addGiftRow('gift-list-manual');
     initContractLookup();
+
+    const approvalSearch = $('approval-search');
+    if (approvalSearch) {
+        approvalSearch.addEventListener('input', (e) => setApprovalFilter('search', e.target.value));
+    }
+    const approvalStatus = $('approval-status-filter');
+    if (approvalStatus) {
+        approvalStatus.addEventListener('change', (e) => setApprovalFilter('status', e.target.value));
+    }
 });
 
 // ===================================
@@ -692,6 +730,8 @@ function initContractLookup() {
             $('nav-users')?.classList.add('hidden');
             $('nav-mobile-users')?.classList.add('hidden');
         }
+        
+        loadProfile();
         
         const navApproval = $('nav-approval');
         if (user.role === 'SALE' || user.role === 'TVBH') {
@@ -1005,13 +1045,9 @@ function logout() {
         console.log('loadApprovalList response:', res);
         
         if (res.success && res.data) {
-            const tpl = $('tpl-pending-list')?.innerHTML;
-            if (tpl && typeof Mustache !== 'undefined') {
-                container.innerHTML = Mustache.render(tpl, { data: res.data });
-            } else {
-                console.error('Template or Mustache not found');
-                container.innerHTML = '<p class="text-red-500 text-center">Lỗi render template. Vui lòng tải lại trang.</p>';
-            }
+            approvalData = res.data;
+            renderApprovalSummary();
+            renderApprovalList();
         } else {
             const errorMsg = res.message || 'Không có dữ liệu hoặc lỗi không xác định';
             console.error('API returned error:', errorMsg);
@@ -1021,6 +1057,63 @@ function logout() {
         console.error('Error in loadApprovalList:', error);
         container.innerHTML = `<p class="text-red-500 text-center">Lỗi kết nối: ${error.message || 'Không thể kết nối đến server'}</p>`;
     }
+}
+
+function setApprovalFilter(key, value) {
+    approvalFilters[key] = value;
+    renderApprovalSummary();
+    renderApprovalList();
+}
+
+function getApprovalStatus(item) {
+    if (item.can_resubmit) return 'rejected';
+    if (item.status_text && /từ chối|trả về/i.test(item.status_text)) return 'rejected';
+    if (item.status_text && /hoàn tất|chờ in/i.test(item.status_text)) return 'completed';
+    return 'pending';
+}
+
+function filterApprovalData() {
+    const search = (approvalFilters.search || '').trim().toLowerCase();
+    const status = approvalFilters.status || 'all';
+    return approvalData.filter(item => {
+        const statusMatch = status === 'all' || getApprovalStatus(item) === status;
+        if (!statusMatch) return false;
+        if (!search) return true;
+        const haystack = [
+            item.contract_code,
+            item.customer,
+            item.phone,
+            item.requester,
+            item.status_text
+        ].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(search);
+    });
+}
+
+function renderApprovalSummary() {
+    const summaryTotal = $('summary-total');
+    const summaryPending = $('summary-pending');
+    if (!summaryTotal || !summaryPending) return;
+    const filtered = filterApprovalData();
+    const pendingCount = approvalData.filter(item => getApprovalStatus(item) === 'pending').length;
+    summaryTotal.textContent = approvalData.length.toString();
+    summaryPending.textContent = pendingCount.toString();
+}
+
+function renderApprovalList() {
+    const container = $('approval-list-container');
+    if (!container) return;
+    const tpl = $('tpl-pending-list')?.innerHTML;
+    if (!tpl || typeof Mustache === 'undefined') {
+        container.innerHTML = '<p class="text-red-500 text-center">Template không khả dụng.</p>';
+        return;
+    }
+    const filtered = filterApprovalData();
+    if (!filtered.length) {
+        container.innerHTML = '<div class="text-center text-gray-400 py-12"><i class="fa-regular fa-folder-open text-4xl mb-2 opacity-30"></i><p>Không có đơn phù hợp bộ lọc.</p></div>';
+        return;
+    }
+    container.innerHTML = Mustache.render(tpl, { data: filtered });
 }
 
 // ===================================
