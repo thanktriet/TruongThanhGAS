@@ -73,8 +73,10 @@ function checkSession() {
         // Dashboard menu (Admin, GDKD, BKS, BGD)
         if (['ADMIN', 'GDKD', 'BKS', 'BGD'].includes(user.role)) {
             $('nav-reports-dashboard')?.classList.remove('hidden');
+            $('nav-reports-mtd-detail')?.classList.remove('hidden');
         } else {
             $('nav-reports-dashboard')?.classList.add('hidden');
+            $('nav-reports-mtd-detail')?.classList.add('hidden');
         }
         
         if (loginView) loginView.classList.add('hidden');

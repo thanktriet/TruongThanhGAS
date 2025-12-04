@@ -28,12 +28,15 @@
         
         <!-- Menu cho SALEADMIN -->
         <button onclick="switchTab('orders-admin')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-orders-admin" data-role="SALEADMIN">
-            <i class="fa-solid fa-key"></i> Cấp Mã Đơn Hàng
+            <i class="fa-solid fa-clipboard-list"></i> Quản Lý Đơn Hàng (Admin)
         </button>
         
         <!-- Menu cho Admin, GDKD, BKS, BGD -->
-        <button onclick="switchTab('reports-dashboard')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-reports-dashboard" data-roles="ADMIN,GDKD,BKS,BGD">
+        <button onclick="switchTab('reports-dashboard')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-reports-dashboard">
             <i class="fa-solid fa-chart-line"></i> Dashboard Báo Cáo
+        </button>
+        <button onclick="switchTab('reports-mtd-detail')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-reports-mtd-detail">
+            <i class="fa-solid fa-table"></i> Báo Cáo MTD Chi Tiết
         </button>
         
         <button onclick="switchTab('profile')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-profile">
