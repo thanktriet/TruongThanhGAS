@@ -966,7 +966,7 @@ function getRequestDetail(id, username) {
         gift_amount: formatCurrency(hasNewStructure ? row[18] : row[14]), 
         final_price: formatCurrency(hasNewStructure ? row[19] : row[15]),
         step: currentStep, 
-        status_text: hasNewStructure ? (row[21] || '') : (row[17] || ''), 
+        status_text: currentStep >= 4 ? 'Hoàn tất' : (hasNewStructure ? (row[21] || '') : (row[17] || '')), 
         logs: hasNewStructure ? (row[22] || '') : (row[18] || ''),
         other_requirements: hasFullStructure ? (row[23] || '') : '',
         max_cost_rate: hasFullStructure ? (row[24] ? formatCurrency(row[24]) : '') : '',
