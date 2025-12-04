@@ -286,12 +286,71 @@ async function handleCreateOrder(event) {
         return;
     }
 
-    // Upload files first (sẽ tích hợp với Google Drive sau)
+    // Show loading
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang xử lý...';
+
+    // Upload files to Google Drive first
     const cccdFront = document.getElementById('cccd_front').files[0];
     const cccdBack = document.getElementById('cccd_back').files[0];
     
-    // TODO: Upload files to Google Drive và lấy URLs
-    // Tạm thời bỏ qua upload files, sẽ tích hợp sau
+    let cccdFrontUrl = null;
+    let cccdBackUrl = null;
+    const attachments = [];
+
+    // Upload files if available
+    if (cccdFront || cccdBack) {
+        const filesToUpload = [];
+        if (cccdFront) {
+            filesToUpload.push({
+                file: cccdFront,
+                name: `CCCD_Front_${formData.get('cccd').trim()}_${Date.now()}.${cccdFront.name.split('.').pop()}`
+            });
+        }
+        if (cccdBack) {
+            filesToUpload.push({
+                file: cccdBack,
+                name: `CCCD_Back_${formData.get('cccd').trim()}_${Date.now()}.${cccdBack.name.split('.').pop()}`
+            });
+        }
+
+        try {
+            // Create FileList from array
+            const dataTransfer = new DataTransfer();
+            filesToUpload.forEach(f => dataTransfer.items.add(f.file));
+            const fileList = dataTransfer.files;
+
+            // Upload to Google Drive
+            if (window.googleDocsAPI && window.googleDocsAPI.uploadFiles) {
+                const uploadResult = await window.googleDocsAPI.uploadFiles(fileList);
+                
+                if (uploadResult.success && uploadResult.urls) {
+                    uploadResult.urls.forEach((uploadedFile, index) => {
+                        if (filesToUpload[index].file === cccdFront) {
+                            cccdFrontUrl = uploadedFile.url;
+                        } else if (filesToUpload[index].file === cccdBack) {
+                            cccdBackUrl = uploadedFile.url;
+                        }
+                        attachments.push({
+                            name: uploadedFile.name,
+                            url: uploadedFile.url
+                        });
+                    });
+                } else {
+                    console.warn('Upload files warning:', uploadResult.message);
+                    // Continue without URLs if upload fails
+                }
+            } else {
+                console.warn('Google Docs API not available, skipping file upload');
+            }
+        } catch (uploadError) {
+            console.error('Upload files error:', uploadError);
+            // Continue without URLs if upload fails
+            showToast('Lưu ý: Upload file thất bại, tiếp tục lưu đơn hàng không có file', 'warning');
+        }
+    }
 
     // Prepare customer data
     const customerData = {
@@ -302,8 +361,8 @@ async function handleCreateOrder(event) {
         address: formData.get('address') || null,
         issue_date: formData.get('issue_date') || null,
         issue_place: formData.get('issue_place') || null,
-        cccd_front_image_url: null, // TODO: URL sau khi upload
-        cccd_back_image_url: null // TODO: URL sau khi upload
+        cccd_front_image_url: cccdFrontUrl,
+        cccd_back_image_url: cccdBackUrl
     };
 
     // Upsert customer
@@ -326,7 +385,7 @@ async function handleCreateOrder(event) {
         car_color: formData.get('car_color') || null,
         payment_method: formData.get('payment_method') || null,
         notes: formData.get('notes') || null,
-        attachments: [] // TODO: Thêm URLs của files
+        attachments: attachments
     };
 
     // Create order
@@ -335,13 +394,17 @@ async function handleCreateOrder(event) {
         ...orderData
     });
 
+    // Restore button
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalBtnText;
+
     if (orderResult.success) {
         showToast('Đã tạo đơn hàng thành công!', 'success');
         resetOrderForm();
         // Có thể chuyển sang trang danh sách đơn hàng
         setTimeout(() => {
             if (window.switchTab) {
-                window.switchTab('tab-my-orders');
+                window.switchTab('my-orders');
             }
         }, 1500);
     } else {
