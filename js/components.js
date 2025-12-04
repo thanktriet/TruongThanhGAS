@@ -49,7 +49,7 @@ async function loadAllComponents() {
     await loadComponent('sidebar', 'sidebar-container');
     await loadComponent('header', 'header-container');
     
-    // Load tabs (append to container)
+    // Load tabs (append to container - all tabs go into tabs-container)
     await loadComponentAppend('create', 'tabs-container');
     await loadComponentAppend('approval', 'tabs-container');
     await loadComponentAppend('my-requests', 'tabs-container');
