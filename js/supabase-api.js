@@ -886,46 +886,43 @@ async function supabaseLookupContract(code) {
             return { success: false, message: 'Thiếu mã đơn hàng' };
         }
 
-        // TODO: Tạo bảng contracts trong Supabase và migrate data từ Google Sheets
-        // Hiện tại trả về false để frontend có thể fallback về Google Apps Script
-        
-        // Nếu có bảng contracts trong Supabase, implement ở đây:
-        /*
         const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // Tìm contract trong Supabase
         const { data, error } = await supabase
             .from('contracts')
             .select('*')
-            .eq('contract_code', code.toLowerCase())
+            .eq('contract_code', code.toUpperCase())
             .single();
         
         if (error || !data) {
-            return { success: false, message: 'Không tìm thấy đơn hàng: ' + code };
+            // Không tìm thấy trong Supabase, có thể fallback về Google Apps Script nếu cần
+            return { 
+                success: false, 
+                message: 'Không tìm thấy đơn hàng: ' + code,
+                fallback: true 
+            };
         }
         
         return {
             success: true,
             data: {
-                tvbh: data.tvbh,
-                name: data.name,
-                phone: data.phone,
-                cccd: data.cccd,
-                issueDate: formatDate(data.issue_date),
-                issuePlace: data.issue_place,
-                email: data.email,
-                carModel: data.car_model,
-                carVersion: data.car_version,
-                carColor: data.car_color,
-                payment: data.payment,
-                address: data.address
+                tvbh: data.tvbh || '',
+                name: data.name || '',
+                phone: data.phone || '',
+                cccd: data.cccd || '',
+                issueDate: data.issue_date ? formatDate(data.issue_date) : '',
+                issuePlace: data.issue_place || '',
+                email: data.email || '',
+                carModel: data.car_model || '',
+                carVersion: data.car_version || '',
+                carColor: data.car_color || '',
+                payment: data.payment || '',
+                address: data.address || ''
             }
-        };
-        */
-        
-        // Tạm thời return false để fallback
-        return { 
-            success: false, 
-            message: 'USE_FALLBACK', // Special message để frontend biết cần fallback
-            fallback: true 
         };
     } catch (e) {
         console.error('Lookup contract error:', e);
