@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS approvals (
   gift_details TEXT,
   gift_amount NUMERIC DEFAULT 0,
   final_price NUMERIC DEFAULT 0,
-  current_step INTEGER DEFAULT 0 CHECK (current_step >= 0 AND current_step <= 6),
+  current_step INTEGER DEFAULT 0 CHECK (current_step >= 0 AND current_step <= 4),
   status_text TEXT,
   history_log TEXT,
   other_requirements TEXT,
