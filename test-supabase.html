@@ -132,9 +132,28 @@
             try {
                 showResult('connection-result', '⏳ Testing connection...', 'info');
                 
+                // Khởi tạo Supabase client nếu chưa có
+                if (window.initSupabase) {
+                    const client = window.initSupabase();
+                    if (!client) {
+                        showResult('connection-result', '❌ Không thể khởi tạo Supabase client\nKiểm tra config và library đã load chưa', 'error');
+                        return;
+                    }
+                }
+                
                 if (!window.supabaseClient) {
-                    showResult('connection-result', '❌ Supabase client chưa được khởi tạo', 'error');
-                    return;
+                    showResult('connection-result', '❌ Supabase client chưa được khởi tạo\nĐang thử khởi tạo lại...', 'error');
+                    
+                    // Thử khởi tạo lại
+                    if (window.SUPABASE_CONFIG && window.supabase) {
+                        window.supabaseClient = window.supabase.createClient(
+                            window.SUPABASE_CONFIG.url,
+                            window.SUPABASE_CONFIG.anonKey
+                        );
+                    } else {
+                        showResult('connection-result', '❌ Supabase config hoặc library chưa được load', 'error');
+                        return;
+                    }
                 }
 
                 // Test connection bằng cách query một bảng đơn giản
@@ -186,6 +205,14 @@
             try {
                 showResult('users-result', '⏳ Getting users...', 'info');
 
+                // Khởi tạo client nếu chưa có
+                if (!window.supabaseClient && window.SUPABASE_CONFIG && window.supabase) {
+                    window.supabaseClient = window.supabase.createClient(
+                        window.SUPABASE_CONFIG.url,
+                        window.SUPABASE_CONFIG.anonKey
+                    );
+                }
+
                 if (!window.supabaseClient) {
                     showResult('users-result', '❌ Supabase client chưa được khởi tạo', 'error');
                     return;
@@ -210,6 +237,14 @@
         async function testGetApprovals() {
             try {
                 showResult('approvals-result', '⏳ Getting approvals...', 'info');
+
+                // Khởi tạo client nếu chưa có
+                if (!window.supabaseClient && window.SUPABASE_CONFIG && window.supabase) {
+                    window.supabaseClient = window.supabase.createClient(
+                        window.SUPABASE_CONFIG.url,
+                        window.SUPABASE_CONFIG.anonKey
+                    );
+                }
 
                 if (!window.supabaseClient) {
                     showResult('approvals-result', '❌ Supabase client chưa được khởi tạo', 'error');
@@ -259,9 +294,16 @@
             }
         }
 
-        // Auto check config on load
+        // Auto init và check config on load
         window.addEventListener('load', () => {
-            setTimeout(checkConfig, 500);
+            // Đợi các script load xong
+            setTimeout(() => {
+                // Thử khởi tạo Supabase client
+                if (window.initSupabase) {
+                    window.initSupabase();
+                }
+                checkConfig();
+            }, 500);
         });
     </script>
 </body>

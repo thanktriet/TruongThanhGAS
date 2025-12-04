@@ -11,13 +11,33 @@ function initSupabase() {
         return null;
     }
     
+    if (!window.supabase) {
+        console.error('Supabase library chưa được load. Đảm bảo đã load @supabase/supabase-js');
+        return null;
+    }
+    
     if (!supabaseClient) {
         supabaseClient = window.supabase.createClient(
             window.SUPABASE_CONFIG.url,
             window.SUPABASE_CONFIG.anonKey
         );
+        // Export ra window để có thể dùng trong test page
+        window.supabaseClient = supabaseClient;
+        console.log('✅ Supabase client đã được khởi tạo');
     }
     return supabaseClient;
+}
+
+// Tự động khởi tạo khi DOM ready
+if (typeof window !== 'undefined') {
+    // Khởi tạo ngay khi script load nếu config đã sẵn sàng
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => initSupabase(), 100);
+        });
+    } else {
+        setTimeout(() => initSupabase(), 100);
+    }
 }
 
 // Utility functions
@@ -1406,6 +1426,32 @@ window.supabaseAPI = {
     getRequestDetail: supabaseGetRequestDetail,
     updateRequest: supabaseUpdateRequest,
     resubmitRequest: supabaseResubmitRequest,
-    callAPI: callSupabaseAPI
+    callAPI: callSupabaseAPI,
+    init: initSupabase
 };
+
+// Export init function để có thể gọi từ bên ngoài
+window.initSupabase = initSupabase;
+
+// Tự động khởi tạo khi DOM ready
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    function autoInitSupabase() {
+        // Đợi cả SUPABASE_CONFIG và supabase library đều load xong
+        if (window.SUPABASE_CONFIG && window.supabase) {
+            const client = initSupabase();
+            if (client) {
+                console.log('✅ Supabase client đã được tự động khởi tạo');
+            }
+        } else {
+            // Retry sau 100ms nếu chưa sẵn sàng
+            setTimeout(autoInitSupabase, 100);
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', autoInitSupabase);
+    } else {
+        autoInitSupabase();
+    }
+}
 
