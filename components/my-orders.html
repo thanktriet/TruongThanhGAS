@@ -223,7 +223,11 @@ function createApprovalFromOrder(orderId) {
 
 // Create contract from order
 function createContractFromOrder(orderId) {
-    showToast('Tính năng tạo HĐMB đang được phát triển', 'info');
+    if (typeof openHDMBModal === 'function') {
+        openHDMBModal(orderId);
+    } else {
+        showToast('Modal chưa được load. Vui lòng reload trang.', 'warning');
+    }
 }
 
 // Create agreement from order

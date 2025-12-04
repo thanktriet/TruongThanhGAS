@@ -65,6 +65,7 @@ async function loadAllComponents() {
     
     // Load modals and templates
     await loadComponent('modals', 'modals-container');
+    await loadComponentAppend('modals-hdmb', 'modals-container');
     await loadComponent('templates', 'templates-container');
     
     // Wait a bit for DOM to update after loading components

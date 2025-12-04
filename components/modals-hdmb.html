@@ -1,0 +1,253 @@
+<!-- Modal tạo HĐMB -->
+<div id="modal-create-hdmb" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="bg-purple-600 text-white px-6 py-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold">
+                <i class="fa-solid fa-file-contract mr-2"></i>Tạo Hợp Đồng Mua Bán (HĐMB)
+            </h2>
+            <button onclick="closeHDMBModal()" class="text-2xl hover:text-red-200">&times;</button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-6">
+            <form id="form-hdmb" onsubmit="submitHDMBForm(event)">
+                <!-- Thông tin khách hàng (read-only, từ order) -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase mb-3">Thông tin khách hàng</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500">Khách hàng:</span>
+                            <span class="font-bold ml-2" id="hdmb-customer-name"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">CCCD:</span>
+                            <span class="font-bold ml-2" id="hdmb-customer-cccd"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">SĐT:</span>
+                            <span class="font-bold ml-2" id="hdmb-customer-phone"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Email:</span>
+                            <span class="font-bold ml-2" id="hdmb-customer-email"></span>
+                        </div>
+                        <div class="md:col-span-2">
+                            <span class="text-gray-500">Địa chỉ:</span>
+                            <span class="font-bold ml-2" id="hdmb-customer-address"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin hợp đồng -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase mb-3 border-b pb-1">Thông tin hợp đồng</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="label">Số hợp đồng *</label>
+                            <input type="text" id="hdmb-so_hop_dong" class="input" required>
+                        </div>
+                        <div>
+                            <label class="label">Ngày ký *</label>
+                            <input type="date" id="hdmb-ngay_ky" class="input" required>
+                        </div>
+                        <div>
+                            <label class="label">Loại xe</label>
+                            <input type="text" id="hdmb-loai_xe" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Phiên bản</label>
+                            <input type="text" id="hdmb-phien_ban" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Màu xe</label>
+                            <input type="text" id="hdmb-mau_xe" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Ngày cấp CCCD</label>
+                            <input type="date" id="hdmb-ngay_cap" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Nơi cấp CCCD</label>
+                            <input type="text" id="hdmb-noi_cap" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Số lượng</label>
+                            <input type="number" id="hdmb-so_luong" class="input" value="1" min="1" oninput="calculateHDMBTotal()">
+                        </div>
+                        <div>
+                            <label class="label">Đơn giá (VNĐ)</label>
+                            <input type="number" id="hdmb-don_gia" class="input" min="0" oninput="calculateHDMBTotal()">
+                        </div>
+                        <div>
+                            <label class="label">Tổng tiền (VNĐ)</label>
+                            <input type="text" id="hdmb-tong_tien" class="input bg-gray-100" readonly>
+                        </div>
+                        <div>
+                            <label class="label">Tiền cọc (VNĐ)</label>
+                            <input type="number" id="hdmb-tien_coc" class="input" min="0">
+                        </div>
+                        <div>
+                            <label class="label">Mã số thuế</label>
+                            <input type="text" id="hdmb-ma_so_thue" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Người đại diện</label>
+                            <input type="text" id="hdmb-nguoi_dai_dien" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Chức vụ</label>
+                            <input type="text" id="hdmb-chuc_vu" class="input">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="label">Chính sách bán hàng</label>
+                            <textarea id="hdmb-chinh_sach_ban_hang" class="input" rows="3" placeholder="Nhập chính sách bán hàng..."></textarea>
+                        </div>
+                        <div>
+                            <label class="label">Tiền đợt 2 (Trả thẳng) - VNĐ</label>
+                            <input type="number" id="hdmb-tien_dot_2_TT" class="input" min="0">
+                        </div>
+                        <div>
+                            <label class="label">Tiền đợt 2 (Trả góp) - VNĐ</label>
+                            <input type="number" id="hdmb-tien_dot_2_TG" class="input" min="0">
+                        </div>
+                        <div>
+                            <label class="label">Tiền đợt 3 - VNĐ</label>
+                            <input type="number" id="hdmb-tien_dot_3" class="input" min="0">
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="border-t p-4 bg-gray-50 flex justify-end gap-3">
+            <button onclick="closeHDMBModal()" class="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition font-bold">
+                Hủy
+            </button>
+            <button onclick="document.getElementById('form-hdmb').dispatchEvent(new Event('submit'))" class="px-6 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition font-bold">
+                <i class="fa-solid fa-file-contract mr-2"></i>Tạo HĐMB
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentOrderForHDMB = null;
+
+function openHDMBModal(orderId) {
+    const order = allOrders.find(o => o.id === orderId);
+    if (!order) {
+        showToast('Không tìm thấy đơn hàng', 'danger');
+        return;
+    }
+
+    currentOrderForHDMB = order;
+    const customer = order.customers || {};
+
+    // Fill customer info (read-only)
+    document.getElementById('hdmb-customer-name').textContent = customer.name || '';
+    document.getElementById('hdmb-customer-cccd').textContent = customer.cccd || '';
+    document.getElementById('hdmb-customer-phone').textContent = customer.phone || '';
+    document.getElementById('hdmb-customer-email').textContent = customer.email || '';
+    document.getElementById('hdmb-customer-address').textContent = customer.address || '';
+
+    // Fill form với dữ liệu từ order
+    document.getElementById('hdmb-so_hop_dong').value = order.contract_code || '';
+    document.getElementById('hdmb-ngay_ky').value = new Date().toISOString().split('T')[0];
+    document.getElementById('hdmb-loai_xe').value = order.car_model || '';
+    document.getElementById('hdmb-phien_ban').value = order.car_version || '';
+    document.getElementById('hdmb-mau_xe').value = order.car_color || '';
+    document.getElementById('hdmb-so_luong').value = 1;
+    
+    // Set customer data vào form fields
+    document.getElementById('hdmb-ngay_cap').value = customer.issue_date ? new Date(customer.issue_date).toISOString().split('T')[0] : '';
+    document.getElementById('hdmb-noi_cap').value = customer.issue_place || '';
+
+    document.getElementById('modal-create-hdmb').classList.remove('hidden');
+}
+
+function closeHDMBModal() {
+    document.getElementById('modal-create-hdmb').classList.add('hidden');
+    document.getElementById('form-hdmb').reset();
+    currentOrderForHDMB = null;
+}
+
+function calculateHDMBTotal() {
+    const soLuong = parseFloat(document.getElementById('hdmb-so_luong').value) || 0;
+    const donGia = parseFloat(document.getElementById('hdmb-don_gia').value) || 0;
+    const tongTien = soLuong * donGia;
+    document.getElementById('hdmb-tong_tien').value = tongTien.toLocaleString('vi-VN');
+}
+
+async function submitHDMBForm(event) {
+    event.preventDefault();
+    
+    if (!currentOrderForHDMB) {
+        showToast('Lỗi: Không tìm thấy đơn hàng', 'danger');
+        return;
+    }
+
+    const customer = currentOrderForHDMB.customers || {};
+    
+    const formData = {
+        so_hop_dong: document.getElementById('hdmb-so_hop_dong').value.trim(),
+        ngay_ky: document.getElementById('hdmb-ngay_ky').value,
+        khach_hang: customer.name || '',
+        dia_chi: customer.address || '',
+        sdt: customer.phone || '',
+        email: customer.email || '',
+        so_cccd: customer.cccd || '',
+        ngay_cap: document.getElementById('hdmb-ngay_cap').value || customer.issue_date || '',
+        noi_cap: document.getElementById('hdmb-noi_cap').value || customer.issue_place || '',
+        ma_so_thue: document.getElementById('hdmb-ma_so_thue').value.trim() || '',
+        nguoi_dai_dien: document.getElementById('hdmb-nguoi_dai_dien').value.trim() || '',
+        chuc_vu: document.getElementById('hdmb-chuc_vu').value.trim() || '',
+        loai_xe: document.getElementById('hdmb-loai_xe').value.trim(),
+        phien_ban: document.getElementById('hdmb-phien_ban').value.trim(),
+        mau_xe: document.getElementById('hdmb-mau_xe').value.trim(),
+        chinh_sach_ban_hang: document.getElementById('hdmb-chinh_sach_ban_hang').value.trim(),
+        so_luong: parseInt(document.getElementById('hdmb-so_luong').value) || 1,
+        don_gia: parseFloat(document.getElementById('hdmb-don_gia').value) || 0,
+        tien_coc: parseFloat(document.getElementById('hdmb-tien_coc').value) || 0,
+        tien_dot_2_TT: parseFloat(document.getElementById('hdmb-tien_dot_2_TT').value) || 0,
+        tien_dot_2_TG: parseFloat(document.getElementById('hdmb-tien_dot_2_TG').value) || 0,
+        tien_dot_3: parseFloat(document.getElementById('hdmb-tien_dot_3').value) || 0
+    };
+
+    // Validate
+    if (!formData.so_hop_dong || !formData.ngay_ky) {
+        showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+        return;
+    }
+
+    const submitBtn = event.target.querySelector('button[type="submit"]') || 
+                      event.target.closest('.bg-gray-50').querySelector('button:last-child');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tạo...';
+
+    try {
+        const result = await window.googleDocsAPI.createHDMB(formData);
+        
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+
+        if (result.success) {
+            showToast('Tạo HĐMB thành công!', 'success');
+            closeHDMBModal();
+            
+            // Mở file trong tab mới
+            if (result.fileUrl) {
+                setTimeout(() => {
+                    window.open(result.fileUrl, '_blank');
+                }, 500);
+            }
+        } else {
+            showToast('Lỗi: ' + (result.message || 'Không thể tạo HĐMB'), 'danger');
+        }
+    } catch (error) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        showToast('Lỗi: ' + error.message, 'danger');
+    }
+}
+</script>
+
