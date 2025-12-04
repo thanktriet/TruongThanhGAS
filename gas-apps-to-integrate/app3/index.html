@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    :root {
+      --primary-color: #2980b9;
+      --gradient-start: #2980b9;
+      --gradient-end: #3498db;
+      --bg-light: #f4f7f9;
+      --border-color: #dfe6e9;
+      --text-dark: #2c3e50;
+      --text-light: #34495e;
+      --success-bg: #e8f5e9;
+      --success-text: #2e7d32;
+      --error-bg: #ffebee;
+      --error-text: #c62828;
+    }
+    body {
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg-light);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .container {
+      width: 100%;
+      max-width: 900px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.07);
+    }
+    h1 {
+      text-align: center;
+      color: var(--text-dark);
+      font-size: 26px;
+      margin-bottom: 25px;
+      font-weight: 700;
+    }
+    .form-section {
+      margin-bottom: 30px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+    }
+    .form-section:first-child { border-top: none; padding-top: 0; }
+    .form-section h2 {
+      font-size: 18px;
+      color: var(--primary-color);
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-light);
+      font-size: 14px;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      box-sizing: border-box;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.2s ease-in-out;
+    }
+    input:focus, select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.2);
+      outline: none;
+    }
+    input[readonly] { background-color: #f0f0f0; cursor: not-allowed; }
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      box-shadow: 0 4px 15px rgba(41, 128, 185, 0.3);
+      transform: translateY(-2px);
+    }
+    button:disabled {
+      background: #bdc3c7;
+      cursor: wait;
+    }
+    #status { margin-top: 20px; padding: 12px; border-radius: 8px; text-align: center; display: none; }
+    .success { background-color: var(--success-bg); color: var(--success-text); }
+    .error { background-color: var(--error-bg); color: var(--error-text); }
+    .status-links a { color: var(--primary-color); text-decoration: none; font-weight: bold; margin: 0 10px; }
+    .status-links a:hover { text-decoration: underline; }
+    .checkbox-container { display: flex; align-items: center; margin-top: 10px; }
+    .checkbox-container input { width: auto; margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>TẠO THOẢ THUẬN LÃI SUẤT CHUYỄN ĐỔI XANH TỰ ĐỘNG</h1>
+    <form id="agreementForm">
+      
+      <div class="form-section">
+        <h2>Thông tin Khách hàng chính</h2>
+        <div class="grid">
+          <div><label for="TEN_KHACH_HANG">Tên khách hàng (*)</label><input type="text" id="TEN_KHACH_HANG" name="TEN_KHACH_HANG" required></div>
+          <div><label for="CCCD">CCCD số (*)</label><input type="text" id="CCCD" name="CCCD" required></div>
+          <div><label for="DIEN_THOAI">Điện thoại</label><input type="text" id="DIEN_THOAI" name="DIEN_THOAI"></div>
+          <div><label for="NGAY_CAP">Ngày cấp</label><input type="date" id="NGAY_CAP" name="NGAY_CAP"></div>
+          <div><label for="NOI_CAP">Nơi cấp</label><input type="text" id="NOI_CAP" name="NOI_CAP"></div>
+          <div><label for="DIA_CHI">Địa chỉ</label><input type="text" id="DIA_CHI" name="DIA_CHI"></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Thông tin Người đồng vay (Nếu có)</h2>
+        <div class="grid">
+          <div><label for="TEN_DONG_VAY">Tên người đồng vay</label><input type="text" id="TEN_DONG_VAY" name="TEN_DONG_VAY"></div>
+          <div><label for="CCCD_DONG_VAY">CCCD số</label><input type="text" id="CCCD_DONG_VAY" name="CCCD_DONG_VAY"></div>
+          <div><label for="DIEN_THOAI_DONG_VAY">Điện thoại</label><input type="text" id="DIEN_THOAI_DONG_VAY" name="DIEN_THOAI_DONG_VAY"></div>
+          <div><label for="NGAY_CAP_DONG_VAY">Ngày cấp</label><input type="date" id="NGAY_CAP_DONG_VAY" name="NGAY_CAP_DONG_VAY"></div>
+          <div><label for="NOI_CAP_DONG_VAY">Nơi cấp</label><input type="text" id="NOI_CAP_DONG_VAY" name="NOI_CAP_DONG_VAY"></div>
+          <div><label for="DIA_CHI_DONG_VAY">Địa chỉ</label><input type="text" id="DIA_CHI_DONG_VAY" name="DIA_CHI_DONG_VAY"></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Thông tin Hợp đồng & Khoản vay</h2>
+        <div class="grid">
+          <div><label for="SO_HOP_DONG">Số hợp đồng (*)</label><input type="text" id="SO_HOP_DONG" name="SO_HOP_DONG" required></div>
+          <div><label for="GIA_TRI_HOP_DONG">Giá trị hợp đồng (VNĐ)</label><input type="number" id="giaTriHopDong" name="GIA_TRI_HOP_DONG"></div>
+          <div><label for="SO_TIEN_VAY_SO">Số tiền vay (bằng số, VNĐ)</label><input type="number" id="soTienVaySo" name="SO_TIEN_VAY_SO"></div>
+          <div><label for="TY_LE_VAY">Tỷ lệ vay (%)</label><input type="number" id="tyLeVay" step="0.01" name="TY_LE_VAY" readonly></div>
+          <div><label for="THOI_HAN_VAY">Thời hạn vay (tháng)</label><input type="number" id="THOI_HAN_VAY" name="THOI_HAN_VAY"></div>
+          <div style="grid-column: 1 / -1;"><label for="soTienVayChu">Số tiền vay (bằng chữ)</label><input type="text" id="soTienVayChu" name="SO_TIEN_VAY_CHU" readonly></div>
+          <div><label for="LOAI_XE">Loại xe</label><input type="text" id="LOAI_XE" name="LOAI_XE"></div>
+          <div><label for="SO_KHUNG">Số khung</label><input type="text" id="SO_KHUNG" name="SO_KHUNG"></div>
+          <div><label for="SO_MAY">Số máy</label><input type="text" id="SO_MAY" name="SO_MAY"></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Tùy chọn xuất file</h2>
+        <div class="grid">
+            <div>
+                <label for="bankSelect">Chọn ngân hàng (*)</label>
+                <select id="bankSelect" name="BANK" required>
+                    <option value="">-- Đang tải danh sách ngân hàng --</option>
+                </select>
+            </div>
+            <div>
+                <label>Xuất file PDF?</label>
+                <div class="checkbox-container">
+                  <input type="checkbox" id="exportPdf" name="EXPORT_PDF" value="yes" checked>
+                  <label for="exportPdf">Tự động tạo và lưu file PDF</label>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      <button type="submit" id="submitButton">Tạo File Thỏa Thuận</button>
+    </form>
+    
+    <div id="status"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('agreementForm');
+    const submitButton = document.getElementById('submitButton');
+    const statusDiv = document.getElementById('status');
+    const bankSelect = document.getElementById('bankSelect');
+
+    // --- SCRIPT KHỞI CHẠY KHI TẢI TRANG ---
+    document.addEventListener('DOMContentLoaded', function() {
+      // Tải danh sách ngân hàng từ server
+      google.script.run.withSuccessHandler(populateBankOptions).getBanksAndTemplates();
+    });
+
+    function populateBankOptions(banks) {
+      bankSelect.innerHTML = '<option value="">-- Chọn một ngân hàng --</option>'; // Xóa lựa chọn mặc định
+      banks.forEach(bank => {
+        const option = document.createElement('option');
+        option.value = bank.key;
+        option.textContent = bank.name;
+        bankSelect.appendChild(option);
+      });
+    }
+    
+    // --- CÁC HÀM TIỆN ÍCH ---
+    function numberToWords(num) {
+        if (num === null || num === undefined) return "";
+        num = parseInt(num, 10);
+        if (isNaN(num) || num === 0) return "Không đồng";
+        const chuSo = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
+        const hang = ["", " nghìn", " triệu", " tỷ"];
+        let str = "";
+        let i = 0;
+        while (num > 0) {
+            let block = num % 1000;
+            if (block > 0) {
+                let tram = Math.floor(block / 100);
+                let chuc = Math.floor((block % 100) / 10);
+                let dv = block % 10;
+                let blockStr = "";
+                if (tram > 0) {
+                    blockStr += chuSo[tram] + " trăm";
+                    if (chuc === 0 && dv > 0) blockStr += " linh";
+                }
+                if (chuc > 1) {
+                    blockStr += " " + chuSo[chuc] + " mươi";
+                    if (dv === 1) blockStr += " mốt";
+                } else if (chuc === 1) {
+                    blockStr += " mười";
+                }
+                if (dv > 0 && chuc !== 1 && (chuc === 0 || dv !== 1)) {
+                    if (dv === 5 && chuc > 0) blockStr += " lăm";
+                    else blockStr += " " + chuSo[dv];
+                }
+                str = blockStr.trim() + hang[i] + " " + str;
+            }
+            num = Math.floor(num / 1000);
+            i++;
+        }
+        str = str.replace(/\s+/g, ' ').trim();
+        return str.charAt(0).toUpperCase() + str.slice(1) + " đồng chẵn";
+    }
+    
+    function updateLoanDetails() {
+      const giaTriHD = parseFloat(document.getElementById('giaTriHopDong').value) || 0;
+      const soTienVay = parseFloat(document.getElementById('soTienVaySo').value) || 0;
+      
+      // Cập nhật số tiền bằng chữ
+      document.getElementById('soTienVayChu').value = numberToWords(soTienVay);
+      
+      // Cập nhật tỷ lệ vay
+      if (giaTriHD > 0) {
+        const tyLe = (soTienVay / giaTriHD) * 100;
+        document.getElementById('tyLeVay').value = tyLe.toFixed(2);
+      } else {
+        document.getElementById('tyLeVay').value = '';
+      }
+    }
+
+    // --- XỬ LÝ SỰ KIỆN ---
+    document.getElementById('giaTriHopDong').addEventListener('input', updateLoanDetails);
+    document.getElementById('soTienVaySo').addEventListener('input', updateLoanDetails);
+    
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Vô hiệu hóa nút và hiển thị trạng thái
+      submitButton.disabled = true;
+      submitButton.textContent = 'Đang xử lý...';
+      statusDiv.style.display = 'block';
+      statusDiv.className = '';
+      statusDiv.innerHTML = 'Vui lòng chờ trong khi hệ thống tạo file...';
+
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      
+      google.script.run
+        .withSuccessHandler(onSuccess)
+        .withFailureHandler(onFailure)
+        .generateAgreement(formData);
+    });
+
+    function onSuccess(result) {
+      // Kích hoạt lại nút
+      submitButton.disabled = false;
+      submitButton.textContent = 'Tạo File Thỏa Thuận';
+      
+      // Hiển thị kết quả
+      statusDiv.className = 'success';
+      let linksHTML = `<strong>Tạo file thành công!</strong><div class="status-links">`;
+      linksHTML += `<a href="${result.docUrl}" target="_blank">Mở Google Doc</a>`;
+      if (result.pdfUrl) {
+        linksHTML += ` | <a href="${result.pdfUrl}" target="_blank">Mở File PDF</a>`;
+      }
+      linksHTML += '</div>';
+      statusDiv.innerHTML = linksHTML;
+    }
+
+    function onFailure(error) {
+      // Kích hoạt lại nút
+      submitButton.disabled = false;
+      submitButton.textContent = 'Tạo File Thỏa Thuận';
+      
+      // Hiển thị lỗi
+      statusDiv.className = 'error';
+      statusDiv.innerHTML = `<strong>Đã xảy ra lỗi:</strong> ${error.message}`;
+    }
+  </script>
+</body>
+</html>
