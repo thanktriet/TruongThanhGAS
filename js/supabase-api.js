@@ -1886,6 +1886,86 @@ async function supabaseGetTodayReport(tvbhName) {
 }
 
 // ======================================================
+// DASHBOARD & MTD REPORTS API - Báo cáo tổng hợp
+// ======================================================
+
+/**
+ * Lấy dữ liệu Dashboard (Báo cáo Ngày + MTD Tổng)
+ * Note: Logic này sẽ được cải thiện sau khi có đầy đủ dữ liệu
+ */
+async function supabaseGetDashboardData(filterMonth = null) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // TODO: Implement full logic từ app2
+        // Tạm thời trả về structure cơ bản
+        return { 
+            success: true, 
+            data: {
+                daily: [],
+                mtdTotal: []
+            },
+            message: 'Tính năng Dashboard đang được phát triển'
+        };
+    } catch (e) {
+        console.error('Get dashboard data error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Lấy báo cáo MTD chi tiết
+ */
+async function supabaseGetMtdDetailReport(filters = {}) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // TODO: Implement full logic từ app2
+        // Tạm thời trả về structure cơ bản
+        return { 
+            success: true, 
+            data: {
+                mtdDetail: []
+            },
+            message: 'Tính năng MTD chi tiết đang được phát triển'
+        };
+    } catch (e) {
+        console.error('Get MTD detail report error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Lấy báo cáo ngày cho một ngày cụ thể
+ */
+async function supabaseGetDailyReportForDate(dateString) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // TODO: Implement logic từ daily_reports table
+        return { 
+            success: true, 
+            data: {
+                daily: []
+            },
+            message: 'Tính năng báo cáo ngày cụ thể đang được phát triển'
+        };
+    } catch (e) {
+        console.error('Get daily report for date error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+// ======================================================
 // WRAPPER FUNCTION - Tương thích với callAPI hiện tại
 // ======================================================
 
@@ -1980,6 +2060,16 @@ async function callSupabaseAPI(data) {
             
             case 'get_today_report':
                 return await supabaseGetTodayReport(data.tvbhName);
+            
+            // Dashboard & Reports API
+            case 'get_dashboard_data':
+                return await supabaseGetDashboardData(data.filterMonth);
+            
+            case 'get_mtd_detail_report':
+                return await supabaseGetMtdDetailReport(data.filters || {});
+            
+            case 'get_daily_report_for_date':
+                return await supabaseGetDailyReportForDate(data.dateString);
             
             default:
                 return { success: false, message: 'Action không được hỗ trợ: ' + action };

@@ -14,6 +14,28 @@
         <button onclick="switchTab('approval')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3" id="nav-approval">
             <i class="fa-solid fa-list-check"></i> Duyệt Đơn
         </button>
+        
+        <!-- Menu cho TVBH -->
+        <button onclick="switchTab('order-create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-order-create" data-role="TVBH">
+            <i class="fa-solid fa-file-circle-plus"></i> Nhập Đơn Hàng
+        </button>
+        <button onclick="switchTab('my-orders')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-my-orders" data-role="TVBH">
+            <i class="fa-solid fa-list"></i> Quản Lý Đơn Hàng
+        </button>
+        <button onclick="switchTab('daily-report')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-daily-report" data-role="TVBH">
+            <i class="fa-solid fa-calendar-day"></i> Báo Cáo Ngày
+        </button>
+        
+        <!-- Menu cho SALEADMIN -->
+        <button onclick="switchTab('orders-admin')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-orders-admin" data-role="SALEADMIN">
+            <i class="fa-solid fa-key"></i> Cấp Mã Đơn Hàng
+        </button>
+        
+        <!-- Menu cho Admin, GDKD, BKS, BGD -->
+        <button onclick="switchTab('reports-dashboard')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-reports-dashboard" data-roles="ADMIN,GDKD,BKS,BGD">
+            <i class="fa-solid fa-chart-line"></i> Dashboard Báo Cáo
+        </button>
+        
         <button onclick="switchTab('profile')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-profile">
             <i class="fa-solid fa-id-badge"></i> Hồ sơ cá nhân
         </button>

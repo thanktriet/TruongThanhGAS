@@ -1,0 +1,100 @@
+<div id="tab-reports-mtd-detail" class="tab-content">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-orange-50 px-6 py-4 border-b border-orange-100">
+            <h2 class="text-lg font-bold text-orange-800">
+                <i class="fa-solid fa-table-list mr-2"></i>Báo Cáo MTD Chi Tiết
+            </h2>
+            <p class="text-sm text-gray-600 mt-1">Báo cáo chi tiết theo TVBH và dòng xe</p>
+        </div>
+        <div class="p-6">
+            <!-- Filters -->
+            <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div>
+                    <label class="label text-xs">Chọn tháng:</label>
+                    <input 
+                        type="month" 
+                        id="mtd-month-filter" 
+                        class="input bg-white" 
+                        onchange="loadMtdDetailReport()"
+                    >
+                </div>
+                <div>
+                    <label class="label text-xs">Nhóm:</label>
+                    <select id="mtd-group-filter" class="input bg-white" onchange="loadMtdDetailReport()">
+                        <option value="">Tất cả nhóm</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="label text-xs">TVBH:</label>
+                    <select id="mtd-tvbh-filter" class="input bg-white" onchange="loadMtdDetailReport()">
+                        <option value="">Tất cả TVBH</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="label text-xs">Dòng xe:</label>
+                    <select id="mtd-car-filter" class="input bg-white" onchange="loadMtdDetailReport()">
+                        <option value="">Tất cả dòng xe</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="mtd-loading" class="text-center py-8 hidden">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+                <p class="mt-2 text-gray-600">Đang tải...</p>
+            </div>
+
+            <!-- Reports Content -->
+            <div id="mtd-content" class="space-y-6">
+                <p class="text-center text-gray-500 py-12">
+                    <i class="fa-solid fa-info-circle mr-2"></i>
+                    Tính năng Báo cáo MTD chi tiết đang được phát triển. Vui lòng quay lại sau.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadMtdDetailReport() {
+    const filters = {
+        filterMonth: document.getElementById('mtd-month-filter').value || null,
+        group: document.getElementById('mtd-group-filter').value || null,
+        tvbh: document.getElementById('mtd-tvbh-filter').value || null,
+        carModel: document.getElementById('mtd-car-filter').value || null
+    };
+    
+    document.getElementById('mtd-loading').classList.remove('hidden');
+    document.getElementById('mtd-content').innerHTML = '';
+
+    const result = await window.callAPI({
+        action: 'get_mtd_detail_report',
+        filters: filters
+    });
+
+    document.getElementById('mtd-loading').classList.add('hidden');
+
+    if (result.success) {
+        // TODO: Render MTD detail data
+        document.getElementById('mtd-content').innerHTML = `
+            <p class="text-center text-gray-500 py-12">
+                Tính năng MTD chi tiết đang được phát triển. Dữ liệu sẽ được hiển thị tại đây.
+            </p>
+        `;
+    } else {
+        showToast('Lỗi: ' + result.message, 'danger');
+    }
+}
+
+// Set default month
+if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+        const monthInput = document.getElementById('mtd-month-filter');
+        if (monthInput && !monthInput.value) {
+            const now = new Date();
+            monthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        }
+    });
+}
+</script>
+

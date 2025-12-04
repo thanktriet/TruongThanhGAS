@@ -53,6 +53,13 @@ async function loadAllComponents() {
     await loadComponentAppend('create', 'tabs-container');
     await loadComponentAppend('approval', 'tabs-container');
     await loadComponentAppend('my-requests', 'tabs-container');
+    // New tabs for integration
+    await loadComponentAppend('order-create', 'tabs-container');
+    await loadComponentAppend('my-orders', 'tabs-container');
+    await loadComponentAppend('orders-admin', 'tabs-container');
+    await loadComponentAppend('daily-report', 'tabs-container');
+    await loadComponentAppend('reports-dashboard', 'tabs-container');
+    await loadComponentAppend('reports-mtd-detail', 'tabs-container');
     await loadComponentAppend('profile', 'tabs-container');
     await loadComponentAppend('users', 'tabs-container');
     

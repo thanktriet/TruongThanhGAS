@@ -15,6 +15,12 @@ function switchTab(id) {
     if (id === 'my-requests') loadMyRequests();
     if (id === 'profile') loadProfile();
     if (id === 'users') loadUserManagement();
+    // New tab handlers
+    if (id === 'my-orders' && typeof loadMyOrders === 'function') loadMyOrders();
+    if (id === 'orders-admin' && typeof loadOrdersForAdmin === 'function') loadOrdersForAdmin();
+    if (id === 'daily-report' && typeof loadTodayReport === 'function') loadTodayReport();
+    if (id === 'reports-dashboard' && typeof loadReportsDashboard === 'function') loadReportsDashboard();
+    if (id === 'reports-mtd-detail' && typeof loadMtdDetailReport === 'function') loadMtdDetailReport();
 }
 
 

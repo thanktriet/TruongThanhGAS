@@ -51,6 +51,32 @@ function checkSession() {
             }
         }
         
+        // Show/hide menu based on role for new integration features
+        // TVBH menus
+        if (user.role === 'TVBH' || user.role === 'SALE') {
+            $('nav-order-create')?.classList.remove('hidden');
+            $('nav-my-orders')?.classList.remove('hidden');
+            $('nav-daily-report')?.classList.remove('hidden');
+        } else {
+            $('nav-order-create')?.classList.add('hidden');
+            $('nav-my-orders')?.classList.add('hidden');
+            $('nav-daily-report')?.classList.add('hidden');
+        }
+        
+        // SALEADMIN menu
+        if (user.role === 'SALEADMIN') {
+            $('nav-orders-admin')?.classList.remove('hidden');
+        } else {
+            $('nav-orders-admin')?.classList.add('hidden');
+        }
+        
+        // Dashboard menu (Admin, GDKD, BKS, BGD)
+        if (['ADMIN', 'GDKD', 'BKS', 'BGD'].includes(user.role)) {
+            $('nav-reports-dashboard')?.classList.remove('hidden');
+        } else {
+            $('nav-reports-dashboard')?.classList.add('hidden');
+        }
+        
         if (loginView) loginView.classList.add('hidden');
         if (loginContainer) loginContainer.style.display = 'none';
         dash?.classList.remove('hidden');
