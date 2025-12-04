@@ -465,12 +465,11 @@ function renderApprovalList() {
                 const currentStepConfig = workflow.find(w => w.step === data.step);
                 const canEditAtCurrentStep = currentStepConfig && currentStepConfig.role === session.role;
                 const isCompleted = data.step >= 4; // Step 4 (KETOAN) là hoàn tất
-                // TVBH không được chỉnh sửa lương năng suất sau khi hoàn thành
-                const isTVBH = session && (session.role === 'TVBH' || session.role === 'SALE');
-                if (isCompleted && isTVBH) {
-                    data.can_edit_cost = false; // TVBH không được chỉnh sửa sau khi hoàn thành
+                // Không cho bất cứ ai chỉnh sửa lương năng suất sau khi hoàn thành
+                if (isCompleted) {
+                    data.can_edit_cost = false; // Không ai được chỉnh sửa sau khi hoàn thành
                 } else {
-                    data.can_edit_cost = (session && (session.role === 'ADMIN' || canEditAtCurrentStep || isCompleted));
+                    data.can_edit_cost = (session && (session.role === 'ADMIN' || canEditAtCurrentStep));
                 }
                 
                 // Kiểm tra quyền chỉnh sửa contract_code và vin_no khi đã hoàn tất

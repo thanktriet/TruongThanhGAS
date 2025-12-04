@@ -457,6 +457,16 @@ async function supabaseProcessApproval(d) {
             return { success: false, message: 'Không tìm thấy đơn hàng' };
         }
 
+        // Kiểm tra: Không cho điều chỉnh lương năng suất sau khi hoàn thành
+        const isCompleted = approval.current_step >= 4;
+        if (isCompleted && d.productivity_bonus !== undefined && d.productivity_bonus !== null && d.productivity_bonus !== '') {
+            const newProductivityBonus = parseVND(d.productivity_bonus);
+            const oldProductivityBonus = approval.productivity_bonus || 0;
+            if (newProductivityBonus !== oldProductivityBonus) {
+                return { success: false, message: 'Không được điều chỉnh lương năng suất sau khi tờ trình đã hoàn thành' };
+            }
+        }
+
         const WORKFLOW = [
             { step: 0, role: 'TPKD', label: 'Chờ TPKD duyệt', next: 1 },
             { step: 1, role: 'GDKD', label: 'Chờ GĐKD duyệt', next: 2 },
@@ -1381,11 +1391,10 @@ async function supabaseUpdateProductivityBonus(d) {
             return { success: false, message: 'Không tìm thấy tờ trình' };
         }
 
-        // Kiểm tra quyền: TVBH không được cập nhật lương năng suất sau khi hoàn thành
+        // Kiểm tra quyền: Không cho bất cứ ai cập nhật lương năng suất sau khi hoàn thành
         const isCompleted = approval.current_step >= 4;
-        const isTVBH = d.role === 'TVBH' || d.role === 'SALE';
-        if (isCompleted && isTVBH) {
-            return { success: false, message: 'TVBH không được cập nhật lương năng suất sau khi tờ trình đã hoàn thành' };
+        if (isCompleted) {
+            return { success: false, message: 'Không được cập nhật lương năng suất sau khi tờ trình đã hoàn thành' };
         }
 
         const oldProductivityBonus = approval.productivity_bonus || 0;
