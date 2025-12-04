@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Supabase Connection</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #1e40af;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1e3a8a;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Supabase Connection</h1>
+    
+    <div class="test-section">
+        <h2>1. Kiểm tra Supabase Config</h2>
+        <button onclick="checkConfig()">Check Config</button>
+        <div id="config-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Test Connection</h2>
+        <button onclick="testConnection()">Test Connection</button>
+        <div id="connection-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Test Login</h2>
+        <input type="text" id="test-username" placeholder="Username" value="admin" style="padding: 8px; margin: 5px;">
+        <input type="password" id="test-password" placeholder="Password" value="12345" style="padding: 8px; margin: 5px;">
+        <button onclick="testLogin()">Test Login</button>
+        <div id="login-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Test Get Users</h2>
+        <button onclick="testGetUsers()">Get Users</button>
+        <div id="users-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Test Get Approvals</h2>
+        <button onclick="testGetApprovals()">Get Approvals</button>
+        <div id="approvals-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>6. Test Full API Call</h2>
+        <button onclick="testFullAPI()">Test Full API</button>
+        <div id="api-result" class="result"></div>
+    </div>
+
+    <!-- Load Supabase Config -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-api.js"></script>
+
+    <script>
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = 'result ' + type;
+        }
+
+        async function checkConfig() {
+            try {
+                const config = window.SUPABASE_CONFIG;
+                if (!config) {
+                    showResult('config-result', '❌ SUPABASE_CONFIG không tồn tại\nCó thể file js/supabase-config.js chưa được load', 'error');
+                    return;
+                }
+                
+                const info = `✅ Supabase Config Found!\n\n` +
+                    `URL: ${config.url}\n` +
+                    `Anon Key: ${config.anonKey ? config.anonKey.substring(0, 20) + '...' : 'NOT SET'}\n` +
+                    `Supabase Client: ${window.supabaseClient ? '✅ Loaded' : '❌ Not loaded'}\n` +
+                    `Supabase API: ${window.supabaseAPI ? '✅ Loaded' : '❌ Not loaded'}`;
+                
+                showResult('config-result', info, 'success');
+            } catch (e) {
+                showResult('config-result', '❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        async function testConnection() {
+            try {
+                showResult('connection-result', '⏳ Testing connection...', 'info');
+                
+                if (!window.supabaseClient) {
+                    showResult('connection-result', '❌ Supabase client chưa được khởi tạo', 'error');
+                    return;
+                }
+
+                // Test connection bằng cách query một bảng đơn giản
+                const { data, error } = await window.supabaseClient
+                    .from('users')
+                    .select('count', { count: 'exact', head: true });
+
+                if (error) {
+                    showResult('connection-result', `❌ Connection Error:\n${error.message}\n\nCode: ${error.code}`, 'error');
+                    return;
+                }
+
+                showResult('connection-result', `✅ Connection Successful!\n\nUsers table accessible\nCount: ${data || 'N/A'}`, 'success');
+            } catch (e) {
+                showResult('connection-result', '❌ Error: ' + e.message + '\n\n' + e.stack, 'error');
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const username = document.getElementById('test-username').value;
+                const password = document.getElementById('test-password').value;
+                
+                if (!username || !password) {
+                    showResult('login-result', '❌ Vui lòng nhập username và password', 'error');
+                    return;
+                }
+
+                showResult('login-result', '⏳ Testing login...', 'info');
+
+                if (!window.supabaseAPI) {
+                    showResult('login-result', '❌ Supabase API chưa được load', 'error');
+                    return;
+                }
+
+                const result = await window.supabaseAPI.login(username, password);
+                
+                if (result.success) {
+                    showResult('login-result', `✅ Login Success!\n\nUser: ${JSON.stringify(result.user, null, 2)}`, 'success');
+                } else {
+                    showResult('login-result', `❌ Login Failed:\n${result.message}`, 'error');
+                }
+            } catch (e) {
+                showResult('login-result', '❌ Error: ' + e.message + '\n\n' + e.stack, 'error');
+            }
+        }
+
+        async function testGetUsers() {
+            try {
+                showResult('users-result', '⏳ Getting users...', 'info');
+
+                if (!window.supabaseClient) {
+                    showResult('users-result', '❌ Supabase client chưa được khởi tạo', 'error');
+                    return;
+                }
+
+                const { data, error } = await window.supabaseClient
+                    .from('users')
+                    .select('username, fullname, role, active')
+                    .limit(10);
+
+                if (error) {
+                    showResult('users-result', `❌ Error:\n${error.message}`, 'error');
+                    return;
+                }
+
+                showResult('users-result', `✅ Found ${data.length} users:\n\n${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (e) {
+                showResult('users-result', '❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        async function testGetApprovals() {
+            try {
+                showResult('approvals-result', '⏳ Getting approvals...', 'info');
+
+                if (!window.supabaseClient) {
+                    showResult('approvals-result', '❌ Supabase client chưa được khởi tạo', 'error');
+                    return;
+                }
+
+                const { data, error } = await window.supabaseClient
+                    .from('approvals')
+                    .select('id, date, requester, customer_name, current_step, status_text')
+                    .order('date', { ascending: false })
+                    .limit(5);
+
+                if (error) {
+                    showResult('approvals-result', `❌ Error:\n${error.message}`, 'error');
+                    return;
+                }
+
+                showResult('approvals-result', `✅ Found ${data.length} approvals:\n\n${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (e) {
+                showResult('approvals-result', '❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        async function testFullAPI() {
+            try {
+                showResult('api-result', '⏳ Testing full API call...', 'info');
+
+                if (!window.callAPI) {
+                    showResult('api-result', '❌ callAPI function không tồn tại\nCần load js/api.js', 'error');
+                    return;
+                }
+
+                // Test login qua callAPI
+                const result = await callAPI({
+                    action: 'login',
+                    username: 'admin',
+                    password: '12345'
+                });
+
+                if (result.success) {
+                    showResult('api-result', `✅ Full API Test Success!\n\nUsing: ${result.using || 'Supabase'}\n\nResult: ${JSON.stringify(result, null, 2)}`, 'success');
+                } else {
+                    showResult('api-result', `❌ API Test Failed:\n${result.message}`, 'error');
+                }
+            } catch (e) {
+                showResult('api-result', '❌ Error: ' + e.message + '\n\n' + e.stack, 'error');
+            }
+        }
+
+        // Auto check config on load
+        window.addEventListener('load', () => {
+            setTimeout(checkConfig, 500);
+        });
+    </script>
+</body>
+</html>
+
