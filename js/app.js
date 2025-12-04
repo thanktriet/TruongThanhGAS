@@ -1214,8 +1214,8 @@ async function resubmitRequest(id) {
 // MY REQUESTS MANAGEMENT
 // ===================================
 
-let myRequestsData = [];
-let myRequestsFilters = { search: '', status: 'all' };
+// Note: myRequestsData and myRequestsFilters are declared in utils.js
+// They are shared across modules
 
 async function loadMyRequests() {
     const session = getSession();
