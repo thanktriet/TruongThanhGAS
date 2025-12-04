@@ -1,0 +1,361 @@
+<div id="tab-order-create" class="tab-content">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden max-w-5xl mx-auto">
+        <div class="bg-blue-50 px-6 py-4 border-b border-blue-100">
+            <h2 class="text-lg font-bold text-blue-800">
+                <i class="fa-solid fa-file-circle-plus mr-2"></i>Nhập Liệu Đơn Hàng
+            </h2>
+        </div>
+        <div class="p-6">
+            <form id="form-create-order" onsubmit="handleCreateOrder(event)">
+                <!-- Tìm kiếm khách hàng theo CCCD -->
+                <div class="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass text-blue-600"></i>
+                        Tìm kiếm khách hàng (theo CCCD)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="md:col-span-2">
+                            <input 
+                                type="text" 
+                                id="search-cccd" 
+                                class="input" 
+                                placeholder="Nhập số CCCD để tìm kiếm khách hàng..."
+                                onkeypress="if(event.key === 'Enter') searchCustomerByCCCD(event)"
+                            >
+                        </div>
+                        <div>
+                            <button 
+                                type="button" 
+                                onclick="searchCustomerByCCCD(event)" 
+                                class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition"
+                            >
+                                <i class="fa-solid fa-search mr-2"></i>Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                    <div id="customer-search-result" class="mt-3 hidden"></div>
+                </div>
+
+                <!-- Thông tin Khách hàng -->
+                <div class="mb-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">
+                        1. Thông tin Khách hàng
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="label">Họ tên Khách hàng *</label>
+                            <input name="customer_name" id="customer_name" class="input" required>
+                        </div>
+                        <div>
+                            <label class="label">Số CCCD / CMND *</label>
+                            <input name="cccd" id="cccd" class="input" required>
+                        </div>
+                        <div>
+                            <label class="label">Số điện thoại</label>
+                            <input name="phone" id="phone" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Email</label>
+                            <input name="email" id="email" type="email" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Ngày cấp CCCD</label>
+                            <input name="issue_date" id="issue_date" type="date" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Nơi cấp CCCD</label>
+                            <input name="issue_place" id="issue_place" class="input">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="label">Địa chỉ</label>
+                            <textarea name="address" id="address" rows="2" class="input"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Upload file CCCD -->
+                    <div class="mt-4">
+                        <label class="label">Hình ảnh CCCD</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Mặt trước CCCD *
+                                </label>
+                                <div class="flex items-center gap-3">
+                                    <input 
+                                        type="file" 
+                                        id="cccd_front" 
+                                        name="cccd_front" 
+                                        accept="image/*" 
+                                        class="hidden"
+                                        onchange="handleFileSelect(this, 'cccd_front_preview')"
+                                    >
+                                    <label 
+                                        for="cccd_front" 
+                                        class="flex-1 cursor-pointer bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-100 transition"
+                                    >
+                                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-400 mb-2"></i>
+                                        <p class="text-sm text-gray-600">Chọn file ảnh</p>
+                                    </label>
+                                </div>
+                                <div id="cccd_front_preview" class="mt-2 hidden">
+                                    <img src="" alt="CCCD Front" class="max-w-full h-32 object-contain border rounded">
+                                    <button 
+                                        type="button" 
+                                        onclick="removeFile('cccd_front', 'cccd_front_preview')" 
+                                        class="mt-1 text-xs text-red-600 hover:text-red-800"
+                                    >
+                                        Xóa
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Mặt sau CCCD *
+                                </label>
+                                <div class="flex items-center gap-3">
+                                    <input 
+                                        type="file" 
+                                        id="cccd_back" 
+                                        name="cccd_back" 
+                                        accept="image/*" 
+                                        class="hidden"
+                                        onchange="handleFileSelect(this, 'cccd_back_preview')"
+                                    >
+                                    <label 
+                                        for="cccd_back" 
+                                        class="flex-1 cursor-pointer bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-100 transition"
+                                    >
+                                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-400 mb-2"></i>
+                                        <p class="text-sm text-gray-600">Chọn file ảnh</p>
+                                    </label>
+                                </div>
+                                <div id="cccd_back_preview" class="mt-2 hidden">
+                                    <img src="" alt="CCCD Back" class="max-w-full h-32 object-contain border rounded">
+                                    <button 
+                                        type="button" 
+                                        onclick="removeFile('cccd_back', 'cccd_back_preview')" 
+                                        class="mt-1 text-xs text-red-600 hover:text-red-800"
+                                    >
+                                        Xóa
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin Đơn hàng -->
+                <div class="mb-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">
+                        2. Thông tin Đơn hàng
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="label">Dòng Xe</label>
+                            <input name="car_model" id="car_model" class="input" placeholder="VD: VF 5 Plus">
+                        </div>
+                        <div>
+                            <label class="label">Phiên bản</label>
+                            <input name="car_version" id="car_version" class="input" placeholder="Eco / Plus">
+                        </div>
+                        <div>
+                            <label class="label">Màu sắc</label>
+                            <input name="car_color" id="car_color" class="input">
+                        </div>
+                        <div class="md:col-span-3">
+                            <label class="label">Hình thức thanh toán</label>
+                            <select name="payment_method" id="payment_method" class="input bg-white">
+                                <option value="">-- Chọn hình thức --</option>
+                                <option value="Tiền mặt">Tiền mặt</option>
+                                <option value="Trả góp">Trả góp ngân hàng</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-3">
+                            <label class="label">Ghi chú</label>
+                            <textarea name="notes" id="notes" rows="2" class="input" placeholder="Ghi chú thêm (nếu có)..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button 
+                        type="submit" 
+                        class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg transition transform active:scale-95"
+                    >
+                        <i class="fa-solid fa-floppy-disk mr-2"></i>Lưu Đơn Hàng
+                    </button>
+                    <button 
+                        type="button" 
+                        onclick="resetOrderForm()" 
+                        class="px-6 bg-gray-200 text-gray-700 font-bold py-3 rounded-lg hover:bg-gray-300 transition"
+                    >
+                        <i class="fa-solid fa-rotate-left mr-2"></i>Làm mới
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Search customer by CCCD
+async function searchCustomerByCCCD(event) {
+    event.preventDefault();
+    const cccdInput = document.getElementById('search-cccd');
+    const cccd = cccdInput.value.trim();
+    
+    if (!cccd) {
+        showToast('Vui lòng nhập số CCCD', 'warning');
+        return;
+    }
+
+    const result = await window.callAPI({
+        action: 'search_customer_by_cccd',
+        cccd: cccd
+    });
+
+    const resultDiv = document.getElementById('customer-search-result');
+    
+    if (result.success && result.data) {
+        // Fill form với dữ liệu khách hàng
+        document.getElementById('customer_name').value = result.data.name || '';
+        document.getElementById('cccd').value = result.data.cccd || '';
+        document.getElementById('phone').value = result.data.phone || '';
+        document.getElementById('email').value = result.data.email || '';
+        document.getElementById('address').value = result.data.address || '';
+        document.getElementById('issue_date').value = result.data.issue_date || '';
+        document.getElementById('issue_place').value = result.data.issue_place || '';
+        
+        resultDiv.className = 'mt-3 p-3 bg-green-50 border border-green-200 rounded-lg';
+        resultDiv.innerHTML = `
+            <p class="text-sm text-green-700">
+                <i class="fa-solid fa-check-circle mr-2"></i>
+                Đã tìm thấy khách hàng: <strong>${result.data.name}</strong>
+            </p>
+        `;
+        resultDiv.classList.remove('hidden');
+    } else {
+        resultDiv.className = 'mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg';
+        resultDiv.innerHTML = `
+            <p class="text-sm text-blue-700">
+                <i class="fa-solid fa-info-circle mr-2"></i>
+                Không tìm thấy khách hàng. Vui lòng nhập thông tin mới.
+            </p>
+        `;
+        resultDiv.classList.remove('hidden');
+    }
+}
+
+// Handle file select
+function handleFileSelect(input, previewId) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById(previewId);
+            preview.querySelector('img').src = e.target.result;
+            preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Remove file
+function removeFile(inputId, previewId) {
+    document.getElementById(inputId).value = '';
+    document.getElementById(previewId).classList.add('hidden');
+}
+
+// Handle create order
+async function handleCreateOrder(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    // Validate required fields
+    if (!formData.get('customer_name') || !formData.get('cccd')) {
+        showToast('Vui lòng điền đầy đủ thông tin khách hàng', 'warning');
+        return;
+    }
+
+    // Get session
+    const session = JSON.parse(localStorage.getItem('session') || '{}');
+    if (!session || !session.username) {
+        showToast('Vui lòng đăng nhập lại', 'danger');
+        return;
+    }
+
+    // Upload files first (sẽ tích hợp với Google Drive sau)
+    const cccdFront = document.getElementById('cccd_front').files[0];
+    const cccdBack = document.getElementById('cccd_back').files[0];
+    
+    // TODO: Upload files to Google Drive và lấy URLs
+    // Tạm thời bỏ qua upload files, sẽ tích hợp sau
+
+    // Prepare customer data
+    const customerData = {
+        cccd: formData.get('cccd').trim(),
+        name: formData.get('customer_name').trim(),
+        phone: formData.get('phone') || null,
+        email: formData.get('email') || null,
+        address: formData.get('address') || null,
+        issue_date: formData.get('issue_date') || null,
+        issue_place: formData.get('issue_place') || null,
+        cccd_front_image_url: null, // TODO: URL sau khi upload
+        cccd_back_image_url: null // TODO: URL sau khi upload
+    };
+
+    // Upsert customer
+    const customerResult = await window.callAPI({
+        action: 'upsert_customer',
+        ...customerData
+    });
+
+    if (!customerResult.success) {
+        showToast('Lỗi lưu thông tin khách hàng: ' + customerResult.message, 'danger');
+        return;
+    }
+
+    // Prepare order data
+    const orderData = {
+        requester: session.username,
+        customer_cccd: customerData.cccd,
+        car_model: formData.get('car_model') || null,
+        car_version: formData.get('car_version') || null,
+        car_color: formData.get('car_color') || null,
+        payment_method: formData.get('payment_method') || null,
+        notes: formData.get('notes') || null,
+        attachments: [] // TODO: Thêm URLs của files
+    };
+
+    // Create order
+    const orderResult = await window.callAPI({
+        action: 'create_order',
+        ...orderData
+    });
+
+    if (orderResult.success) {
+        showToast('Đã tạo đơn hàng thành công!', 'success');
+        resetOrderForm();
+        // Có thể chuyển sang trang danh sách đơn hàng
+        setTimeout(() => {
+            if (window.switchTab) {
+                window.switchTab('tab-my-orders');
+            }
+        }, 1500);
+    } else {
+        showToast('Lỗi tạo đơn hàng: ' + orderResult.message, 'danger');
+    }
+}
+
+// Reset form
+function resetOrderForm() {
+    document.getElementById('form-create-order').reset();
+    document.getElementById('customer-search-result').classList.add('hidden');
+    document.getElementById('cccd_front_preview').classList.add('hidden');
+    document.getElementById('cccd_back_preview').classList.add('hidden');
+    document.getElementById('search-cccd').value = '';
+}
+</script>
+
