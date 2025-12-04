@@ -3,63 +3,79 @@
 ## ✅ Đã cập nhật
 
 ### Vấn đề
-- TVBH vẫn có thể cập nhật lương năng suất sau khi tờ trình đã hoàn thành
+- Không cho bất cứ ai điều chỉnh lương năng suất sau khi tờ trình đã hoàn thành
 
 ### Đã sửa
 
 #### 1. Logic `can_edit_cost` trong Frontend
-- ✅ TVBH không được chỉnh sửa lương năng suất sau khi hoàn thành
-- ✅ Chỉ Admin, GĐKD, BKS, BGĐ, KT có thể chỉnh sửa sau khi hoàn thành
+- ✅ Không ai được chỉnh sửa lương năng suất sau khi hoàn thành (step >= 4)
+- ✅ Chỉ có thể điều chỉnh khi đang trong quá trình duyệt (step < 4)
 
 #### 2. Kiểm tra quyền trong Backend
-- ✅ `supabaseUpdateProductivityBonus`: Chặn TVBH nếu tờ trình đã hoàn thành (step >= 4)
+- ✅ `supabaseUpdateProductivityBonus`: Chặn tất cả mọi người nếu tờ trình đã hoàn thành
+- ✅ `supabaseProcessApproval`: Chặn điều chỉnh lương năng suất khi đã hoàn thành
 
 ## 📝 Logic đã cập nhật
 
 ### Frontend (`js/app.js`)
 
 ```javascript
-// TVBH không được chỉnh sửa lương năng suất sau khi hoàn thành
-const isTVBH = session && (session.role === 'TVBH' || session.role === 'SALE');
-if (isCompleted && isTVBH) {
-    data.can_edit_cost = false; // TVBH không được chỉnh sửa sau khi hoàn thành
+// Không cho bất cứ ai chỉnh sửa lương năng suất sau khi hoàn thành
+const isCompleted = data.step >= 4; // Step 4 (KETOAN) là hoàn tất
+if (isCompleted) {
+    data.can_edit_cost = false; // Không ai được chỉnh sửa sau khi hoàn thành
 } else {
-    data.can_edit_cost = (session && (session.role === 'ADMIN' || canEditAtCurrentStep || isCompleted));
+    data.can_edit_cost = (session && (session.role === 'ADMIN' || canEditAtCurrentStep));
 }
 ```
 
 ### Backend (`js/supabase-api.js`)
 
+#### `supabaseUpdateProductivityBonus`
 ```javascript
-// Kiểm tra quyền: TVBH không được cập nhật lương năng suất sau khi hoàn thành
+// Kiểm tra quyền: Không cho bất cứ ai cập nhật lương năng suất sau khi hoàn thành
 const isCompleted = approval.current_step >= 4;
-const isTVBH = d.role === 'TVBH' || d.role === 'SALE';
-if (isCompleted && isTVBH) {
-    return { success: false, message: 'TVBH không được cập nhật lương năng suất sau khi tờ trình đã hoàn thành' };
+if (isCompleted) {
+    return { success: false, message: 'Không được cập nhật lương năng suất sau khi tờ trình đã hoàn thành' };
+}
+```
+
+#### `supabaseProcessApproval`
+```javascript
+// Kiểm tra: Không cho điều chỉnh lương năng suất sau khi hoàn thành
+const isCompleted = approval.current_step >= 4;
+if (isCompleted && d.productivity_bonus !== undefined && d.productivity_bonus !== null && d.productivity_bonus !== '') {
+    const newProductivityBonus = parseVND(d.productivity_bonus);
+    const oldProductivityBonus = approval.productivity_bonus || 0;
+    if (newProductivityBonus !== oldProductivityBonus) {
+        return { success: false, message: 'Không được điều chỉnh lương năng suất sau khi tờ trình đã hoàn thành' };
+    }
 }
 ```
 
 ## ✅ Quyền cập nhật lương năng suất
 
-### TVBH/SALE
+### Tất cả mọi người
 - ✅ Có thể cập nhật khi:
-  - Tờ trình chưa hoàn thành (step < 4)
-  - Đang ở bước duyệt của họ (nếu có quyền)
+  - Đang trong quá trình duyệt (step < 4)
+  - Khi duyệt ở bước của họ (nếu có quyền)
 - ❌ Không thể cập nhật khi:
   - Tờ trình đã hoàn thành (step >= 4)
 
-### Admin, GĐKD, BKS, BGĐ, KT
-- ✅ Có thể cập nhật:
-  - Khi đang duyệt (trong bước của họ)
-  - Sau khi hoàn thành
+### Khi đang duyệt (step < 4)
+- ✅ TPKD: Có thể điều chỉnh khi duyệt ở step 0
+- ✅ GĐKD: Có thể điều chỉnh khi duyệt ở step 1
+- ✅ BKS: Có thể điều chỉnh khi duyệt ở step 2
+- ✅ BGĐ: Có thể điều chỉnh khi duyệt ở step 3
+- ✅ KETOAN: Có thể điều chỉnh khi duyệt ở step 4 (trước khi hoàn thành)
+- ✅ ADMIN: Có thể điều chỉnh ở bất kỳ bước nào
 
-### TPKD
-- ✅ Có thể cập nhật khi:
-  - Đang duyệt ở bước của họ (step 0)
+### Sau khi hoàn thành (step >= 4)
+- ❌ Không ai được điều chỉnh lương năng suất
 
 ## ✅ Đã commit
 
-- Commit: `fix: TVBH không được cập nhật lương năng suất sau khi tờ trình đã hoàn thành`
+- Commit: `fix: Không cho bất cứ ai điều chỉnh lương năng suất sau khi hoàn thành`
 - Đã push lên GitHub
 
 ## 🧪 Test
@@ -72,13 +88,19 @@ if (isCompleted && isTVBH) {
 
 ### Test với Admin/GĐKD/BKS/BGĐ/KT
 1. Login với `admin` / `12345`
-2. Xem tờ trình đã hoàn thành
+2. Xem tờ trình đã hoàn thành (step >= 4)
+3. Không thấy nút "Lưu" để cập nhật lương năng suất
+4. Nếu cố gắng cập nhật qua API, sẽ nhận lỗi
+
+### Test khi đang duyệt
+1. Login với `tpkd1` / `12345`
+2. Xem tờ trình đang chờ duyệt ở step 0
 3. Vẫn thấy nút "Lưu" để cập nhật lương năng suất
 4. Có thể cập nhật thành công
 
 ## 📊 Kết quả
 
-- ✅ TVBH không thể cập nhật lương năng suất sau khi hoàn thành
-- ✅ Admin, GĐKD, BKS, BGĐ, KT vẫn có thể cập nhật sau khi hoàn thành
-- ✅ TVBH chỉ có thể cập nhật khi tờ trình chưa hoàn thành
+- ✅ Không ai có thể cập nhật lương năng suất sau khi hoàn thành
+- ✅ Chỉ có thể điều chỉnh khi đang trong quá trình duyệt
+- ✅ Đảm bảo tính toàn vẹn dữ liệu sau khi hoàn thành
 
