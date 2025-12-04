@@ -321,11 +321,27 @@ async function supabaseGetPendingList(username, role) {
             const isCompleted = row.current_step >= 4;
             const canViewCompleted = (role === 'GDKD' || role === 'BGD' || role === 'BKS' || role === 'KETOAN') && isCompleted;
 
-            const show = isRejectedAndRequester ||
-                       (role === 'ADMIN') ||
-                       (targetSteps.includes(row.current_step)) ||
+            // Logic hiển thị theo role:
+            // - TPKD: chỉ xem tờ trình của chính mình hoặc tờ trình được TVBH trình cho họ
+            // - Admin, GĐKD, BKS, BGĐ, KT: xem được tất cả tờ trình
+            let show = false;
+            
+            if (role === 'TPKD') {
+                // TPKD chỉ xem được:
+                // 1. Tờ trình của chính mình (mình là requester)
+                // 2. Tờ trình mà TVBH trình cho họ (approver_step0 = username của họ)
+                const isMyRequest = String(row.requester).toLowerCase() === usernameLower;
+                const isAssignedToMe = String(row.approver_step0 || '').toLowerCase() === usernameLower;
+                show = isMyRequest || isAssignedToMe;
+            } else if (role === 'ADMIN' || role === 'GDKD' || role === 'BKS' || role === 'BGD' || role === 'KETOAN') {
+                // Admin, GĐKD, BKS, BGĐ, KT: xem được tất cả tờ trình
+                show = true;
+            } else {
+                // TVBH/SALE: chỉ xem tờ trình của mình
+                show = isRejectedAndRequester ||
                        (isRequester && row.current_step >= 0) ||
                        canViewCompleted;
+            }
 
             if (show) {
                 const item = {
@@ -355,7 +371,9 @@ async function supabaseGetPendingList(username, role) {
                     other_requirements: row.other_requirements || '',
                     max_cost_rate: row.max_cost_rate ? formatCurrency(row.max_cost_rate) : '',
                     productivity_bonus: row.productivity_bonus ? formatCurrency(row.productivity_bonus) : '',
-                    can_resubmit: (row.current_step === 0 && isRequester)
+                    can_resubmit: (row.current_step === 0 && isRequester),
+                    // Chỉ Admin, GĐKD, BKS, BGĐ, KT có thể in
+                    can_print: (role === 'ADMIN' || role === 'GDKD' || role === 'BKS' || role === 'BGD' || role === 'KETOAN') && isCompleted
                 };
 
                 // Parse logs
@@ -521,8 +539,18 @@ async function supabaseGetMyRequests(username, role) {
             .select('*')
             .order('date', { ascending: false });
 
-        // Nếu không phải ADMIN, chỉ lấy đơn của user này
-        if (role !== 'ADMIN') {
+        // Logic lọc theo role:
+        // - TPKD: chỉ lấy tờ trình của mình hoặc được trình cho mình
+        // - Admin, GĐKD, BKS, BGĐ, KT: lấy tất cả
+        // - TVBH/SALE: chỉ lấy tờ trình của mình
+        if (role === 'TPKD') {
+            // TPKD: tờ trình của mình hoặc được trình cho mình
+            query = query.or(`requester.eq.${username},approver_step0.eq.${username}`);
+        } else if (role === 'ADMIN' || role === 'GDKD' || role === 'BKS' || role === 'BGD' || role === 'KETOAN') {
+            // Admin, GĐKD, BKS, BGĐ, KT: lấy tất cả
+            // Không filter gì
+        } else {
+            // TVBH/SALE: chỉ lấy tờ trình của mình
             query = query.eq('requester', username);
         }
 
@@ -532,7 +560,25 @@ async function supabaseGetMyRequests(username, role) {
             return { success: false, message: 'Lỗi: ' + error.message };
         }
 
-        const resultList = data.map(row => {
+        // Filter theo role nếu cần
+        let filteredData = data;
+        if (role === 'TPKD') {
+            // TPKD: chỉ tờ trình của mình hoặc được trình cho mình
+            const usernameLower = String(username).toLowerCase();
+            filteredData = data.filter(row => {
+                const isMyRequest = String(row.requester || '').toLowerCase() === usernameLower;
+                const isAssignedToMe = String(row.approver_step0 || '').toLowerCase() === usernameLower;
+                return isMyRequest || isAssignedToMe;
+            });
+        } else if (role !== 'ADMIN' && role !== 'GDKD' && role !== 'BKS' && role !== 'BGD' && role !== 'KETOAN') {
+            // TVBH/SALE: chỉ tờ trình của mình
+            const usernameLower = String(username).toLowerCase();
+            filteredData = data.filter(row => 
+                String(row.requester || '').toLowerCase() === usernameLower
+            );
+        }
+
+        const resultList = filteredData.map(row => {
             const item = {
                 id: row.id,
                 date: formatDate(row.date),
@@ -560,7 +606,9 @@ async function supabaseGetMyRequests(username, role) {
                 other_requirements: row.other_requirements || '',
                 max_cost_rate: row.max_cost_rate ? formatCurrency(row.max_cost_rate) : '',
                 productivity_bonus: row.productivity_bonus ? formatCurrency(row.productivity_bonus) : '',
-                can_resubmit: (row.current_step === 0)
+                can_resubmit: (row.current_step === 0),
+                // Chỉ Admin, GĐKD, BKS, BGĐ, KT có thể in
+                can_print: (role === 'ADMIN' || role === 'GDKD' || role === 'BKS' || role === 'BGD' || role === 'KETOAN') && (row.current_step >= 4)
             };
 
             // Parse logs và gift_json tương tự như trên
@@ -597,11 +645,10 @@ async function supabaseGetRequestDetail(id, username) {
             return { success: false, message: 'Không tìm thấy tờ trình' };
         }
 
-        // Kiểm tra quyền
-        const requester = String(approval.requester).toLowerCase();
-        if (requester !== String(username).toLowerCase() && username !== 'admin') {
-            return { success: false, message: 'Không có quyền xem tờ trình này' };
-        }
+        // Kiểm tra quyền xem tờ trình
+        // Lấy user role từ session (cần truyền từ frontend)
+        // Sẽ kiểm tra ở frontend trước khi gọi function này
+        // Function này chỉ trả về data, không kiểm tra quyền chi tiết
 
         // Lấy fullname của requester
         const { data: userData } = await supabase
@@ -637,7 +684,9 @@ async function supabaseGetRequestDetail(id, username) {
             logs: approval.history_log || '',
             other_requirements: approval.other_requirements || '',
             max_cost_rate: approval.max_cost_rate ? formatCurrency(approval.max_cost_rate) : '',
-            productivity_bonus: approval.productivity_bonus ? formatCurrency(approval.productivity_bonus) : ''
+            productivity_bonus: approval.productivity_bonus ? formatCurrency(approval.productivity_bonus) : '',
+            // Chỉ Admin, GĐKD, BKS, BGĐ, KT có thể in (sẽ set ở frontend dựa vào role)
+            can_print: false // Sẽ được set ở frontend
         };
 
         // Parse gift_json

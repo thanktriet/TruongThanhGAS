@@ -478,6 +478,10 @@ function renderApprovalList() {
                      session.role === 'KETOAN' || session.role === 'ADMIN');
                 data.can_edit_completed = canEditCompletedByRequester || canEditCompletedByRole;
                 
+                // Kiểm tra quyền in: Chỉ Admin, GĐKD, BKS, BGĐ, KT có thể in
+                const canPrintRoles = ['ADMIN', 'GDKD', 'BKS', 'BGD', 'KETOAN'];
+                data.can_print = isCompleted && session && canPrintRoles.includes(session.role);
+                
                 // Tính toán chi phí và tỷ lệ
                 const discountAmount = parseInt((data.discount_amount || '').replace(/[^\d]/g, '')) || 0;
                 const giftAmount = parseInt((data.gift_amount || '').replace(/[^\d]/g, '')) || 0;
