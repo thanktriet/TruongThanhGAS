@@ -570,7 +570,7 @@ function getPendingList(username, role) {
         gift_amount: formatCurrency(hasNewStructure ? row[18] : row[14]), 
         final_price: formatCurrency(hasNewStructure ? row[19] : row[15]),
         step: hasNewStructure ? (row[20] || 0) : (row[16] || 0), 
-        status_text: hasNewStructure ? (row[21] || '') : (row[17] || ''), 
+        status_text: (hasNewStructure ? (row[20] || 0) : (row[16] || 0)) >= 4 ? 'Hoàn tất' : (hasNewStructure ? (row[21] || '') : (row[17] || '')), 
         logs: hasNewStructure ? (row[22] || '') : (row[18] || ''),
         other_requirements: hasFullStructure ? (row[23] || '') : '',
         max_cost_rate: hasFullStructure ? (row[24] ? formatCurrency(row[24]) : '') : '',
@@ -682,9 +682,9 @@ function processApproval(d) {
         // Nếu nextStep >= 6 hoặc currentStep = 4 (KETOAN) thì đã hoàn tất, có thể in
         // Step 4 (KETOAN) là bước cuối, sau khi duyệt là hoàn tất
         if (nextStep >= 6 || currentStep == 4) {
-          // Giữ step = 4 hoặc set thành 4 (KETOAN đã duyệt = hoàn tất)
+          // Giữ step = 4 (KETOAN đã duyệt = hoàn tất)
           sheet.getRange(i + 1, stepCol).setValue(4);
-          sheet.getRange(i + 1, statusCol).setValue('Hoàn tất - Có thể in');
+          sheet.getRange(i + 1, statusCol).setValue('Hoàn tất');
         } else {
         var nextLabel = 'Hoàn tất';
         var nextConfig = WORKFLOW.find(w => w.step == nextStep);
