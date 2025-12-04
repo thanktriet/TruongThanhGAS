@@ -77,3 +77,8 @@ async function callAPI(data) {
         };
     }
 }
+
+// Export callAPI ra window để có thể dùng từ bất kỳ đâu
+if (typeof window !== 'undefined') {
+    window.callAPI = callAPI;
+}

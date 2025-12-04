@@ -98,7 +98,10 @@
     </div>
 
     <!-- Load Supabase Config -->
+    <script src="js/config.js"></script>
     <script src="js/supabase-config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/supabase-api.js"></script>
 
     <script>
@@ -302,6 +305,19 @@
                 if (window.initSupabase) {
                     window.initSupabase();
                 }
+                
+                // Kiểm tra callAPI đã load chưa
+                if (!window.callAPI) {
+                    console.warn('callAPI chưa được load, đang retry...');
+                    setTimeout(() => {
+                        if (window.callAPI) {
+                            console.log('✅ callAPI đã được load');
+                        } else {
+                            console.error('❌ callAPI vẫn chưa được load. Kiểm tra js/api.js');
+                        }
+                    }, 500);
+                }
+                
                 checkConfig();
             }, 500);
         });
