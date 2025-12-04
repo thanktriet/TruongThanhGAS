@@ -1,0 +1,164 @@
+<!-- Modal tạo Đề nghị giải ngân -->
+<div id="modal-create-de-nghi" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="bg-orange-600 text-white px-6 py-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold">
+                <i class="fa-solid fa-file-invoice-dollar mr-2"></i>Tạo Đề Nghị Giải Ngân
+            </h2>
+            <button onclick="closeDeNghiModal()" class="text-2xl hover:text-red-200">&times;</button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-6">
+            <form id="form-de-nghi" onsubmit="submitDeNghiForm(event)">
+                <!-- Thông tin khách hàng (read-only, từ order) -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase mb-3">Thông tin khách hàng</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500">Khách hàng:</span>
+                            <span class="font-bold ml-2" id="dngn-customer-name"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Số hợp đồng:</span>
+                            <span class="font-bold ml-2" id="dngn-contract-code"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin đề nghị -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase mb-3 border-b pb-1">Thông tin đề nghị</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="label">Tên ngân hàng vay *</label>
+                            <input type="text" id="dngn-ten_ngan_hang_vay" class="input" placeholder="VD: Techcombank" required>
+                        </div>
+                        <div>
+                            <label class="label">Ngày cấp TBCV</label>
+                            <input type="date" id="dngn-ngay_captbcv" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Loại xe</label>
+                            <input type="text" id="dngn-loai_xe" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Số tài khoản</label>
+                            <input type="text" id="dngn-so_tai_khoan" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Số tiền đối ứng (VNĐ) *</label>
+                            <input type="number" id="dngn-so_tien_doi_ung" class="input" min="0" required oninput="calculateDeNghi()">
+                        </div>
+                        <div>
+                            <label class="label">Số tiền giải ngân (VNĐ) *</label>
+                            <input type="number" id="dngn-so_tien_giai_ngan" class="input" min="0" required oninput="calculateDeNghi()">
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="border-t p-4 bg-gray-50 flex justify-end gap-3">
+            <button onclick="closeDeNghiModal()" class="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition font-bold">
+                Hủy
+            </button>
+            <button onclick="document.getElementById('form-de-nghi').dispatchEvent(new Event('submit'))" class="px-6 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition font-bold">
+                <i class="fa-solid fa-file-invoice-dollar mr-2"></i>Tạo Đề Nghị
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentOrderForDeNghi = null;
+
+function openDeNghiModal(orderId) {
+    const order = allOrders.find(o => o.id === orderId);
+    if (!order) {
+        showToast('Không tìm thấy đơn hàng', 'danger');
+        return;
+    }
+
+    currentOrderForDeNghi = order;
+    const customer = order.customers || {};
+
+    // Fill customer info (read-only)
+    document.getElementById('dngn-customer-name').textContent = customer.name || '';
+    document.getElementById('dngn-contract-code').textContent = order.contract_code || '';
+
+    // Fill form với dữ liệu từ order
+    document.getElementById('dngn-loai_xe').value = order.car_model || '';
+    document.getElementById('dngn-ngay_captbcv').value = new Date().toISOString().split('T')[0];
+
+    document.getElementById('modal-create-de-nghi').classList.remove('hidden');
+}
+
+function closeDeNghiModal() {
+    document.getElementById('modal-create-de-nghi').classList.add('hidden');
+    document.getElementById('form-de-nghi').reset();
+    currentOrderForDeNghi = null;
+}
+
+function calculateDeNghi() {
+    // Có thể thêm logic tính toán nếu cần
+}
+
+async function submitDeNghiForm(event) {
+    event.preventDefault();
+    
+    if (!currentOrderForDeNghi) {
+        showToast('Lỗi: Không tìm thấy đơn hàng', 'danger');
+        return;
+    }
+
+    const customer = currentOrderForDeNghi.customers || {};
+    
+    const formData = {
+        ten_khach_hang: customer.name || '',
+        so_hop_dong: currentOrderForDeNghi.contract_code || '',
+        ten_ngan_hang_vay: document.getElementById('dngn-ten_ngan_hang_vay').value.trim(),
+        ngay_captbcv: document.getElementById('dngn-ngay_captbcv').value,
+        loai_xe: document.getElementById('dngn-loai_xe').value.trim(),
+        so_tai_khoan: document.getElementById('dngn-so_tai_khoan').value.trim(),
+        so_tien_doi_ung: parseFloat(document.getElementById('dngn-so_tien_doi_ung').value) || 0,
+        so_tien_giai_ngan: parseFloat(document.getElementById('dngn-so_tien_giai_ngan').value) || 0
+    };
+
+    // Validate
+    if (!formData.ten_ngan_hang_vay || !formData.so_tien_doi_ung || !formData.so_tien_giai_ngan) {
+        showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+        return;
+    }
+
+    const submitBtn = event.target.closest('.bg-gray-50').querySelector('button:last-child');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tạo...';
+
+    try {
+        const result = await window.googleDocsAPI.createDeNghiGiaiNgan(formData);
+        
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+
+        if (result.success) {
+            showToast('Tạo Đề nghị giải ngân thành công!', 'success');
+            closeDeNghiModal();
+            
+            // Mở file trong tab mới
+            if (result.fileUrl) {
+                setTimeout(() => {
+                    window.open(result.fileUrl, '_blank');
+                }, 500);
+            }
+        } else {
+            showToast('Lỗi: ' + (result.message || 'Không thể tạo Đề nghị giải ngân'), 'danger');
+        }
+    } catch (error) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        showToast('Lỗi: ' + error.message, 'danger');
+    }
+}
+</script>
+

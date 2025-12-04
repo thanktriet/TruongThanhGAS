@@ -1,0 +1,282 @@
+<!-- Modal tạo Thỏa thuận lãi suất -->
+<div id="modal-create-thoa-thuan" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="bg-indigo-600 text-white px-6 py-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold">
+                <i class="fa-solid fa-handshake mr-2"></i>Tạo Thỏa Thuận Lãi Suất
+            </h2>
+            <button onclick="closeThoaThuanModal()" class="text-2xl hover:text-red-200">&times;</button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-6">
+            <form id="form-thoa-thuan" onsubmit="submitThoaThuanForm(event)">
+                <!-- Chọn ngân hàng -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase mb-3 border-b pb-1">Chọn ngân hàng</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <label class="flex items-center gap-2 cursor-pointer border rounded p-3 hover:bg-gray-50">
+                            <input type="radio" name="bank" value="techcom" class="radio" required>
+                            <span class="text-sm font-bold">Techcombank</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer border rounded p-3 hover:bg-gray-50">
+                            <input type="radio" name="bank" value="vpbank" class="radio">
+                            <span class="text-sm font-bold">VPBank</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer border rounded p-3 hover:bg-gray-50">
+                            <input type="radio" name="bank" value="tpbank" class="radio">
+                            <span class="text-sm font-bold">TPBank</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer border rounded p-3 hover:bg-gray-50">
+                            <input type="radio" name="bank" value="bidv" class="radio">
+                            <span class="text-sm font-bold">BIDV</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer border rounded p-3 hover:bg-gray-50">
+                            <input type="radio" name="bank" value="sacombank" class="radio">
+                            <span class="text-sm font-bold">Sacombank</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Thông tin khách hàng (read-only, từ order) -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase mb-3">Thông tin khách hàng</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500">Khách hàng:</span>
+                            <span class="font-bold ml-2" id="tt-customer-name"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">CCCD:</span>
+                            <span class="font-bold ml-2" id="tt-customer-cccd"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">SĐT:</span>
+                            <span class="font-bold ml-2" id="tt-customer-phone"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Địa chỉ:</span>
+                            <span class="font-bold ml-2" id="tt-customer-address"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin hợp đồng vay -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase mb-3 border-b pb-1">Thông tin hợp đồng vay</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="label">Số hợp đồng *</label>
+                            <input type="text" id="tt-so_hop_dong" class="input" required>
+                        </div>
+                        <div>
+                            <label class="label">Loại xe</label>
+                            <input type="text" id="tt-loai_xe" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Số khung</label>
+                            <input type="text" id="tt-so_khung" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Số máy</label>
+                            <input type="text" id="tt-so_may" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Giá trị hợp đồng (VNĐ) *</label>
+                            <input type="number" id="tt-gia_tri_hop_dong" class="input" min="0" required oninput="calculateThoaThuan()">
+                        </div>
+                        <div>
+                            <label class="label">Số tiền vay (VNĐ) *</label>
+                            <input type="number" id="tt-so_tien_vay_so" class="input" min="0" required oninput="calculateThoaThuan()">
+                        </div>
+                        <div>
+                            <label class="label">Tỷ lệ vay (%)</label>
+                            <input type="text" id="tt-ty_le_vay" class="input bg-gray-100" readonly>
+                        </div>
+                        <div>
+                            <label class="label">Thời hạn vay (tháng)</label>
+                            <input type="number" id="tt-thoi_han_vay" class="input" min="1">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="label">Số tiền vay (bằng chữ)</label>
+                            <input type="text" id="tt-so_tien_vay_chu" class="input bg-gray-100" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin người đồng vay (optional) -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase mb-3 border-b pb-1">Người đồng vay (nếu có)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="label">Tên người đồng vay</label>
+                            <input type="text" id="tt-ten_dong_vay" class="input">
+                        </div>
+                        <div>
+                            <label class="label">CCCD</label>
+                            <input type="text" id="tt-cccd_dong_vay" class="input">
+                        </div>
+                        <div>
+                            <label class="label">SĐT</label>
+                            <input type="text" id="tt-dien_thoai_dong_vay" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Ngày cấp</label>
+                            <input type="date" id="tt-ngay_cap_dong_vay" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Nơi cấp</label>
+                            <input type="text" id="tt-noi_cap_dong_vay" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Địa chỉ</label>
+                            <input type="text" id="tt-dia_chi_dong_vay" class="input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export PDF -->
+                <div class="mb-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="tt-export-pdf" class="w-5 h-5">
+                        <span class="text-sm font-medium">Xuất PDF</span>
+                    </label>
+                </div>
+            </form>
+        </div>
+
+        <div class="border-t p-4 bg-gray-50 flex justify-end gap-3">
+            <button onclick="closeThoaThuanModal()" class="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition font-bold">
+                Hủy
+            </button>
+            <button onclick="document.getElementById('form-thoa-thuan').dispatchEvent(new Event('submit'))" class="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition font-bold">
+                <i class="fa-solid fa-handshake mr-2"></i>Tạo Thỏa Thuận
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentOrderForThoaThuan = null;
+
+function openThoaThuanModal(orderId) {
+    const order = allOrders.find(o => o.id === orderId);
+    if (!order) {
+        showToast('Không tìm thấy đơn hàng', 'danger');
+        return;
+    }
+
+    currentOrderForThoaThuan = order;
+    const customer = order.customers || {};
+
+    // Fill customer info (read-only)
+    document.getElementById('tt-customer-name').textContent = customer.name || '';
+    document.getElementById('tt-customer-cccd').textContent = customer.cccd || '';
+    document.getElementById('tt-customer-phone').textContent = customer.phone || '';
+    document.getElementById('tt-customer-address').textContent = customer.address || '';
+
+    // Fill form với dữ liệu từ order
+    document.getElementById('tt-so_hop_dong').value = order.contract_code || '';
+    document.getElementById('tt-loai_xe').value = order.car_model || '';
+
+    document.getElementById('modal-create-thoa-thuan').classList.remove('hidden');
+}
+
+function closeThoaThuanModal() {
+    document.getElementById('modal-create-thoa-thuan').classList.add('hidden');
+    document.getElementById('form-thoa-thuan').reset();
+    currentOrderForThoaThuan = null;
+}
+
+function calculateThoaThuan() {
+    const giaTriHD = parseFloat(document.getElementById('tt-gia_tri_hop_dong').value) || 0;
+    const soTienVay = parseFloat(document.getElementById('tt-so_tien_vay_so').value) || 0;
+    
+    // Cập nhật tỷ lệ vay
+    if (giaTriHD > 0 && soTienVay > 0) {
+        const tyLe = (soTienVay / giaTriHD) * 100;
+        document.getElementById('tt-ty_le_vay').value = tyLe.toFixed(2) + '%';
+    } else {
+        document.getElementById('tt-ty_le_vay').value = '';
+    }
+}
+
+async function submitThoaThuanForm(event) {
+    event.preventDefault();
+    
+    if (!currentOrderForThoaThuan) {
+        showToast('Lỗi: Không tìm thấy đơn hàng', 'danger');
+        return;
+    }
+
+    const customer = currentOrderForThoaThuan.customers || {};
+    const bankRadio = document.querySelector('input[name="bank"]:checked');
+    
+    if (!bankRadio) {
+        showToast('Vui lòng chọn ngân hàng', 'warning');
+        return;
+    }
+
+    const formData = {
+        BANK: bankRadio.value,
+        TEN_KHACH_HANG: customer.name || '',
+        DIA_CHI: customer.address || '',
+        DIEN_THOAI: customer.phone || '',
+        CCCD: customer.cccd || '',
+        NGAY_CAP: customer.issue_date || '',
+        NOI_CAP: customer.issue_place || '',
+        SO_HOP_DONG: document.getElementById('tt-so_hop_dong').value.trim(),
+        LOAI_XE: document.getElementById('tt-loai_xe').value.trim(),
+        SO_KHUNG: document.getElementById('tt-so_khung').value.trim(),
+        SO_MAY: document.getElementById('tt-so_may').value.trim(),
+        GIA_TRI_HOP_DONG: parseFloat(document.getElementById('tt-gia_tri_hop_dong').value) || 0,
+        SO_TIEN_VAY_SO: parseFloat(document.getElementById('tt-so_tien_vay_so').value) || 0,
+        SO_TIEN_VAY_CHU: document.getElementById('tt-so_tien_vay_chu').value.trim(),
+        TY_LE_VAY: document.getElementById('tt-ty_le_vay').value.replace('%', ''),
+        THOI_HAN_VAY: document.getElementById('tt-thoi_han_vay').value.trim(),
+        TEN_DONG_VAY: document.getElementById('tt-ten_dong_vay').value.trim(),
+        DIA_CHI_DONG_VAY: document.getElementById('tt-dia_chi_dong_vay').value.trim(),
+        DIEN_THOAI_DONG_VAY: document.getElementById('tt-dien_thoai_dong_vay').value.trim(),
+        CCCD_DONG_VAY: document.getElementById('tt-cccd_dong_vay').value.trim(),
+        NGAY_CAP_DONG_VAY: document.getElementById('tt-ngay_cap_dong_vay').value,
+        NOI_CAP_DONG_VAY: document.getElementById('tt-noi_cap_dong_vay').value.trim(),
+        EXPORT_PDF: document.getElementById('tt-export-pdf').checked ? 'yes' : 'no'
+    };
+
+    // Validate
+    if (!formData.SO_HOP_DONG || !formData.GIA_TRI_HOP_DONG || !formData.SO_TIEN_VAY_SO) {
+        showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+        return;
+    }
+
+    const submitBtn = event.target.closest('.bg-gray-50').querySelector('button:last-child');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tạo...';
+
+    try {
+        const result = await window.googleDocsAPI.createThoaThuan(formData);
+        
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+
+        if (result.success) {
+            showToast('Tạo Thỏa thuận thành công!', 'success');
+            closeThoaThuanModal();
+            
+            // Mở file trong tab mới
+            if (result.docUrl) {
+                setTimeout(() => {
+                    window.open(result.docUrl, '_blank');
+                }, 500);
+            }
+        } else {
+            showToast('Lỗi: ' + (result.message || 'Không thể tạo Thỏa thuận'), 'danger');
+        }
+    } catch (error) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        showToast('Lỗi: ' + error.message, 'danger');
+    }
+}
+</script>
+

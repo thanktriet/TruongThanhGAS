@@ -174,6 +174,12 @@ function renderOrders(orders) {
                     >
                         <i class="fa-solid fa-handshake mr-2"></i>Thỏa thuận
                     </button>
+                    <button 
+                        onclick="createDeNghiFromOrder('${order.id}')" 
+                        class="flex-1 bg-orange-600 text-white font-bold px-4 py-2 rounded hover:bg-orange-700 transition text-sm"
+                    >
+                        <i class="fa-solid fa-file-invoice-dollar mr-2"></i>Đề nghị
+                    </button>
                 ` : `
                     <div class="flex-1 text-xs text-gray-500 flex items-center justify-center">
                         Chờ SaleAdmin cấp mã đơn hàng
@@ -215,10 +221,53 @@ function createApprovalFromOrder(orderId) {
 
     // Chuyển sang tab tạo tờ trình và fill dữ liệu từ đơn hàng
     if (window.switchTab) {
-        window.switchTab('tab-create');
-        // TODO: Auto-fill form với dữ liệu từ order
-        showToast('Vui lòng điền thêm thông tin và gửi tờ trình', 'info');
+        window.switchTab('create');
+        
+        // Đợi form load xong rồi auto-fill
+        setTimeout(() => {
+            autoFillApprovalFormFromOrder(order);
+        }, 500);
     }
+}
+
+// Auto-fill approval form from order
+function autoFillApprovalFormFromOrder(order) {
+    const customer = order.customers || {};
+    const form = document.getElementById('form-manual-create');
+    if (!form) {
+        showToast('Form chưa sẵn sàng. Vui lòng thử lại.', 'warning');
+        return;
+    }
+
+    // Fill customer info
+    const contractCodeInput = form.querySelector('input[name="contract_code"]');
+    const customerNameInput = form.querySelector('input[name="customer_name"]');
+    const phoneInput = form.querySelector('input[name="phone"]');
+    const cccdInput = form.querySelector('input[name="cccd"]');
+    const emailInput = form.querySelector('input[name="email"]');
+    const addressInput = form.querySelector('input[name="address"]');
+    
+    if (contractCodeInput) contractCodeInput.value = order.contract_code || '';
+    if (customerNameInput) customerNameInput.value = customer.name || '';
+    if (phoneInput) phoneInput.value = customer.phone || '';
+    if (cccdInput) cccdInput.value = customer.cccd || '';
+    if (emailInput) emailInput.value = customer.email || '';
+    if (addressInput) addressInput.value = customer.address || '';
+
+    // Fill car info
+    const carModelInput = form.querySelector('input[name="car_model"]');
+    const carVersionInput = form.querySelector('input[name="car_version"]');
+    const carColorInput = form.querySelector('input[name="car_color"]');
+    const paymentMethodSelect = form.querySelector('select[name="payment_method"]');
+    
+    if (carModelInput) carModelInput.value = order.car_model || '';
+    if (carVersionInput) carVersionInput.value = order.car_version || '';
+    if (carColorInput) carColorInput.value = order.car_color || '';
+    if (paymentMethodSelect && order.payment_method) {
+        paymentMethodSelect.value = order.payment_method;
+    }
+
+    showToast('Đã điền sẵn thông tin từ đơn hàng. Vui lòng kiểm tra và điền thêm!', 'success');
 }
 
 // Create contract from order
@@ -232,7 +281,20 @@ function createContractFromOrder(orderId) {
 
 // Create agreement from order
 function createAgreementFromOrder(orderId) {
-    showToast('Tính năng tạo thỏa thuận đang được phát triển', 'info');
+    if (typeof openThoaThuanModal === 'function') {
+        openThoaThuanModal(orderId);
+    } else {
+        showToast('Modal chưa được load. Vui lòng reload trang.', 'warning');
+    }
+}
+
+// Create de nghi from order
+function createDeNghiFromOrder(orderId) {
+    if (typeof openDeNghiModal === 'function') {
+        openDeNghiModal(orderId);
+    } else {
+        showToast('Modal chưa được load. Vui lòng reload trang.', 'warning');
+    }
 }
 
 // Format date
