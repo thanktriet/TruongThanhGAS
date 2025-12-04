@@ -59,7 +59,7 @@ let allOrders = [];
 
 // Load my orders
 async function loadMyOrders() {
-    const session = JSON.parse(localStorage.getItem('session') || '{}');
+    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
     if (!session || !session.username) {
         showToast('Vui lòng đăng nhập lại', 'danger');
         return;
