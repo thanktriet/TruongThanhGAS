@@ -71,7 +71,7 @@ let carModelsList = ['VF 5 Plus', 'VF 6', 'VF 7', 'VF 8', 'VF 9', 'VF e34']; // 
 
 // Load today's report
 async function loadTodayReport() {
-    const session = JSON.parse(localStorage.getItem('session') || '{}');
+    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
     if (!session || !session.username) {
         showToast('Vui lòng đăng nhập lại', 'danger');
         return;
@@ -193,7 +193,7 @@ function clearReportForm() {
 async function handleSubmitDailyReport(event) {
     event.preventDefault();
     
-    const session = JSON.parse(localStorage.getItem('session') || '{}');
+    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
     if (!session || !session.username) {
         showToast('Vui lòng đăng nhập lại', 'danger');
         return;
