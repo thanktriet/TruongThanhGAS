@@ -57,7 +57,7 @@
         
         <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-2xl z-20 hidden md:flex">
             <div class="p-6 border-b border-slate-700">
-                <h1 class="text-xl font-bold tracking-wider">VINFAST TRƯƠNG THÀNH</h1>
+                <h1 class="text-xl font-bold tracking-wider">MY AUTO</h1>
                 <p class="text-xs text-slate-400 mt-1">Xin chào, <span id="user-fullname" class="font-bold text-white">User</span></p>
                 <span id="user-role" class="text-[10px] bg-blue-600 px-2 py-0.5 rounded mt-2 inline-block">ROLE</span>
             </div>
@@ -469,7 +469,14 @@
                     </div>
 
                     <div class="mb-6">
-                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">4. Yêu cầu khác</h3>
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">4. Lương năng suất</h3>
+                        <label class="label">Lương năng suất (VNĐ) *</label>
+                        <input name="edit_productivity_bonus" id="edit_productivity_bonus" type="text" class="input w-full" oninput="formatMoneyInput(this)" placeholder="0" required>
+                        <p class="text-xs text-gray-500 mt-1">TVBH tự đề xuất mức lương năng suất</p>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">5. Yêu cầu khác</h3>
                         <textarea name="edit_other_requirements" id="edit_other_requirements" rows="3" class="input w-full" placeholder="Nhập yêu cầu khác (nếu có)..."></textarea>
                     </div>
 
@@ -2405,6 +2412,7 @@ async function openEditRequest(id) {
         $('edit_contract_price').value = (data.contract_price || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         $('edit_discount_details').value = data.discount_details || '';
         $('edit_discount_amount').value = (data.discount_amount || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        $('edit_productivity_bonus').value = (data.productivity_bonus || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         
         // Load gifts từ data
         const giftList = $('gift-list-edit');
@@ -2483,6 +2491,7 @@ async function handleUpdateRequest(event) {
         action: 'update_request',
         id: formData.get('edit_request_id'),
         username: session.username,
+        role: session.role,
         contract_code: formData.get('edit_contract_code'),
         customer_name: formData.get('edit_customer_name'),
         phone: formData.get('edit_phone'),
@@ -2498,7 +2507,8 @@ async function handleUpdateRequest(event) {
         discount_details: formData.get('edit_discount_details'),
         discount_amount: formData.get('edit_discount_amount')?.replace(/\./g, '') || '0',
         gift_json: giftJson,
-        other_requirements: formData.get('edit_other_requirements') || ''
+        other_requirements: formData.get('edit_other_requirements') || '',
+        productivity_bonus: formData.get('edit_productivity_bonus')?.replace(/\./g, '') || '0'
     };
     
     try {
@@ -2565,6 +2575,7 @@ async function handleUpdateAndResubmit(event) {
         action: 'update_request',
         id: formData.get('edit_request_id'),
         username: session.username,
+        role: session.role,
         contract_code: formData.get('edit_contract_code'),
         customer_name: formData.get('edit_customer_name'),
         phone: formData.get('edit_phone'),
