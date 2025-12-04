@@ -32,27 +32,6 @@
 
     <!-- Login View Container -->
     <div id="login-container"></div>
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm border border-gray-200">
-            <div class="text-center mb-8">
-                <div class="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <i class="fa-solid fa-car text-white text-2xl"></i>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-800">Duyệt Giá Xe</h2>
-                <p class="text-gray-500 text-sm">Hệ thống quản trị nội bộ</p>
-            </div>
-            <form onsubmit="handleLogin(event)">
-                <div class="mb-4 relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa-solid fa-user"></i></span>
-                    <input type="text" id="login-user" class="w-full pl-10 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Tên đăng nhập" required>
-                </div>
-                <div class="mb-6 relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa-solid fa-lock"></i></span>
-                    <input type="password" id="login-pass" class="w-full pl-10 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Mật khẩu" required>
-                </div>
-                <button type="submit" id="btn-login" class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg hover:bg-blue-800 shadow-lg transition">Đăng Nhập</button>
-            </form>
-        </div>
-    </div>
 
     <div id="dashboard-view" class="flex h-full hidden">
         <!-- Sidebar Container -->
@@ -66,7 +45,7 @@
                 <!-- Tabs Container -->
                 <div id="tabs-container"></div>
             </div>
-            
+
             <!-- Mobile Navigation -->
             <div class="bg-white border-t flex justify-around p-2 md:hidden">
                 <button onclick="switchTab('create')" class="nav-mobile-item text-blue-600 flex flex-col items-center"><i class="fa-solid fa-plus-circle text-xl"></i><span class="text-[10px]">Tạo</span></button>
