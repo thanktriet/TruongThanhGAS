@@ -1,0 +1,114 @@
+    <div id="modal-detail" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95 transition" id="modal-content">
+            <div id="modal-detail-body"></div>
+        </div>
+    </div>
+
+    <div id="modal-edit-request" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform scale-95 transition" id="modal-edit-content">
+            <div class="bg-blue-600 text-white p-4 flex justify-between items-center sticky top-0 z-10">
+                <h3 class="font-bold text-lg">Sửa tờ trình</h3>
+                <button onclick="closeEditModal()" class="text-2xl hover:text-red-200">&times;</button>
+            </div>
+            <div class="p-6">
+                <form id="form-edit-request" onsubmit="handleUpdateRequest(event)">
+                    <input type="hidden" name="edit_request_id" id="edit_request_id">
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">1. Thông tin Khách hàng</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="label">Mã Hợp Đồng *</label><input name="edit_contract_code" id="edit_contract_code" class="input uppercase font-mono" required></div>
+                            <div><label class="label">Họ tên Khách hàng *</label><input name="edit_customer_name" id="edit_customer_name" class="input" required></div>
+                            <div><label class="label">Số điện thoại</label><input name="edit_phone" id="edit_phone" class="input"></div>
+                            <div><label class="label">CCCD / CMND</label><input name="edit_cccd" id="edit_cccd" class="input"></div>
+                            <div><label class="label">Email</label><input name="edit_email" id="edit_email" class="input"></div>
+                            <div><label class="label">Địa chỉ</label><input name="edit_address" id="edit_address" class="input"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">2. Thông tin Xe</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div><label class="label">Dòng Xe</label><input name="edit_car_model" id="edit_car_model" class="input"></div>
+                            <div><label class="label">Phiên bản</label><input name="edit_car_version" id="edit_car_version" class="input"></div>
+                            <div><label class="label">Màu sắc</label><input name="edit_car_color" id="edit_car_color" class="input"></div>
+                            <div><label class="label">Số Khung (VIN)</label><input name="edit_vin_no" id="edit_vin_no" class="input uppercase"></div>
+                            <div class="md:col-span-2"><label class="label">Hình thức thanh toán</label>
+                                <select name="edit_payment_method" id="edit_payment_method" class="input bg-white">
+                                    <option value="Tiền mặt">Tiền mặt</option>
+                                    <option value="Trả góp">Trả góp ngân hàng</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">3. Chính sách giá & Quà tặng</h3>
+                        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                            <div class="mb-4">
+                                <label class="block text-sm font-bold text-gray-800 mb-1">Giá trị Hợp đồng (VNĐ) *</label>
+                                <input name="edit_contract_price" id="edit_contract_price" type="text" class="w-full border-2 border-yellow-400 p-2 rounded text-lg font-bold text-gray-800 outline-none" oninput="formatMoneyInput(this)" required>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="label">Chi tiết giảm giá</label>
+                                    <textarea name="edit_discount_details" id="edit_discount_details" rows="2" class="input"></textarea>
+                                </div>
+                                <div>
+                                    <label class="label">Tiền giảm giá (VNĐ)</label>
+                                    <input name="edit_discount_amount" id="edit_discount_amount" type="text" class="input" oninput="formatMoneyInput(this)">
+                                </div>
+                            </div>
+
+                            <div class="border-t border-yellow-200 pt-3">
+                                <div class="flex justify-between items-center mb-3">
+                                    <div>
+                                        <label class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                                            <i class="fa-solid fa-gift text-yellow-600"></i>
+                                            Quà tặng kèm
+                                        </label>
+                                    </div>
+                                    <button type="button" onclick="addGiftRow('gift-list-edit')" class="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded font-bold hover:bg-blue-200 transition flex items-center gap-1">
+                                        <i class="fa-solid fa-plus"></i>
+                                        Thêm quà
+                                    </button>
+                                </div>
+                                <div id="gift-list-edit" class="space-y-2 min-h-[40px]">
+                                    <p class="text-xs text-gray-400 italic text-center py-2">Chưa có quà tặng. Nhấn "Thêm quà" để thêm.</p>
+                                </div>
+                                <input type="hidden" name="edit_gift_json" id="hidden_gift_json_edit">
+                                
+                                <div class="flex justify-between items-center mt-3 pt-3 border-t border-yellow-200">
+                                    <span class="text-xs text-gray-500 italic">Tổng giá trị quà tặng:</span>
+                                    <span id="total-gift-edit" class="font-bold text-blue-600 text-sm">0 đ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">4. Lương năng suất</h3>
+                        <label class="label">Lương năng suất (VNĐ) *</label>
+                        <input name="edit_productivity_bonus" id="edit_productivity_bonus" type="text" class="input w-full" oninput="formatMoneyInput(this)" placeholder="0" required>
+                        <p class="text-xs text-gray-500 mt-1">TVBH tự đề xuất mức lương năng suất</p>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">5. Yêu cầu khác</h3>
+                        <textarea name="edit_other_requirements" id="edit_other_requirements" rows="3" class="input w-full" placeholder="Nhập yêu cầu khác (nếu có)..."></textarea>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="button" onclick="closeEditModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-bold transition">Hủy</button>
+                        <button type="button" onclick="handleUpdateAndResubmit(event)" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-lg font-bold shadow-lg transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Lưu & Trình lại</span>
+                        </button>
+                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold shadow-lg transition">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+

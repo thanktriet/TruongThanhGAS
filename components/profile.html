@@ -1,0 +1,44 @@
+                <div id="tab-profile" class="tab-content max-w-3xl mx-auto">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800">Hồ sơ tư vấn bán hàng</h2>
+                                <p class="text-sm text-gray-500">Cập nhật thông tin liên hệ của bạn</p>
+                            </div>
+                            <button onclick="loadProfile()" class="text-sm text-blue-600 hover:text-blue-800"><i class="fa-solid fa-rotate mr-1"></i>Làm mới</button>
+                        </div>
+                        <form id="form-profile" class="space-y-4" onsubmit="handleProfileUpdate(event)">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="label">Tên đăng nhập</label>
+                                    <input type="text" name="profile_username" id="profile_username" class="input bg-gray-100" readonly>
+                                </div>
+                                <div>
+                                    <label class="label">Vai trò</label>
+                                    <input type="text" name="profile_role" id="profile_role" class="input bg-gray-100" readonly>
+                                </div>
+                                <div>
+                                    <label class="label">Họ và tên</label>
+                                    <input type="text" name="profile_fullname" id="profile_fullname" class="input" required>
+                                </div>
+                                <div>
+                                    <label class="label">Nhóm/Bộ phận</label>
+                                    <input type="text" name="profile_group" id="profile_group" class="input">
+                                </div>
+                                <div>
+                                    <label class="label">Email</label>
+                                    <input type="email" name="profile_email" id="profile_email" class="input">
+                                </div>
+                                <div>
+                                    <label class="label">Số điện thoại</label>
+                                    <input type="text" name="profile_phone" id="profile_phone" class="input">
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span id="profile-status" class="text-sm text-gray-500"></span>
+                                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Lưu thay đổi</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+

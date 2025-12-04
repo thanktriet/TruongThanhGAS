@@ -1,0 +1,71 @@
+                <div id="tab-users" class="tab-content max-w-6xl mx-auto">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <h2 class="text-lg font-bold text-gray-800 mb-4">Thêm người dùng</h2>
+                            <form id="form-create-user" class="space-y-3" onsubmit="handleCreateUser(event)">
+                                <div>
+                                    <label class="label">Tên đăng nhập *</label>
+                                    <input type="text" name="new_username" class="input" required>
+                                </div>
+                                <div>
+                                    <label class="label">Họ tên *</label>
+                                    <input type="text" name="new_fullname" class="input" required>
+                                </div>
+                                <div>
+                                    <label class="label">Vai trò *</label>
+                                    <select name="new_role" class="input bg-white" required>
+                                        <option value="">-- Chọn vai trò --</option>
+                                        <option value="TVBH">TVBH</option>
+                                        <option value="TPKD">TPKD</option>
+                                        <option value="GDKD">GDKD</option>
+                                        <option value="BKS">BKS</option>
+                                        <option value="BGD">BGD</option>
+                                        <option value="KETOAN">KẾ TOÁN</option>
+                                        <option value="ADMIN">ADMIN</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="label">Nhóm/Bộ phận</label>
+                                    <input type="text" name="new_group" class="input">
+                                </div>
+                                <div>
+                                    <label class="label">Email</label>
+                                    <input type="email" name="new_email" class="input">
+                                </div>
+                                <div>
+                                    <label class="label">Số điện thoại</label>
+                                    <input type="text" name="new_phone" class="input">
+                                </div>
+                                <div>
+                                    <label class="label">Mật khẩu tạm</label>
+                                    <input type="text" name="new_password" class="input" placeholder="Mặc định: 123456">
+                                </div>
+                                <div class="text-right">
+                                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition">Thêm người dùng</button>
+                                </div>
+                                <p id="create-user-status" class="text-sm text-gray-500"></p>
+                            </form>
+                        </div>
+
+                        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-lg font-bold text-gray-800">Danh sách người dùng</h2>
+                                <button onclick="loadUserManagement()" class="text-sm text-blue-600 hover:text-blue-800"><i class="fa-solid fa-rotate mr-1"></i>Làm mới</button>
+                            </div>
+                            <div id="user-list-container" class="overflow-x-auto">
+                                <div class="text-center text-gray-500 py-6">Chọn tab để tải dữ liệu...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white border-t flex justify-around p-2 md:hidden">
+                <button onclick="switchTab('create')" class="nav-mobile-item text-blue-600 flex flex-col items-center"><i class="fa-solid fa-plus-circle text-xl"></i><span class="text-[10px]">Tạo</span></button>
+                <button onclick="switchTab('approval')" class="nav-mobile-item text-gray-400 flex flex-col items-center"><i class="fa-solid fa-list-check text-xl"></i><span class="text-[10px]">Duyệt</span></button>
+                <button onclick="switchTab('profile')" id="nav-mobile-profile" class="nav-mobile-item text-gray-400 flex flex-col items-center hidden"><i class="fa-solid fa-id-badge text-xl"></i><span class="text-[10px]">Hồ sơ</span></button>
+                <button onclick="switchTab('users')" id="nav-mobile-users" class="nav-mobile-item text-gray-400 flex flex-col items-center hidden"><i class="fa-solid fa-users-gear text-xl"></i><span class="text-[10px]">User</span></button>
+            </div>
+        </main>
+    </div>
+
