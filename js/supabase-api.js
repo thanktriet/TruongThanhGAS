@@ -1442,6 +1442,450 @@ async function supabaseUpdateProductivityBonus(d) {
 }
 
 // ======================================================
+// CUSTOMERS API - Quản lý khách hàng
+// ======================================================
+
+/**
+ * Tìm kiếm khách hàng theo CCCD
+ */
+async function supabaseSearchCustomerByCCCD(cccd) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        if (!cccd || !cccd.trim()) {
+            return { success: false, message: 'Vui lòng nhập số CCCD' };
+        }
+
+        const { data, error } = await supabase
+            .from('customers')
+            .select('*')
+            .eq('cccd', cccd.trim())
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // Không tìm thấy
+                return { success: false, message: 'Không tìm thấy khách hàng với CCCD: ' + cccd };
+            }
+            throw error;
+        }
+
+        return { success: true, data: data };
+    } catch (e) {
+        console.error('Search customer error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Tạo hoặc cập nhật khách hàng
+ */
+async function supabaseUpsertCustomer(customerData) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        if (!customerData.cccd || !customerData.cccd.trim()) {
+            return { success: false, message: 'Số CCCD là bắt buộc' };
+        }
+
+        if (!customerData.name || !customerData.name.trim()) {
+            return { success: false, message: 'Tên khách hàng là bắt buộc' };
+        }
+
+        const customer = {
+            cccd: customerData.cccd.trim(),
+            name: customerData.name.trim(),
+            phone: customerData.phone || null,
+            email: customerData.email || null,
+            address: customerData.address || null,
+            issue_date: customerData.issue_date || null,
+            issue_place: customerData.issue_place || null,
+            cccd_front_image_url: customerData.cccd_front_image_url || null,
+            cccd_back_image_url: customerData.cccd_back_image_url || null,
+            updated_at: new Date().toISOString()
+        };
+
+        const { data, error } = await supabase
+            .from('customers')
+            .upsert(customer, { onConflict: 'cccd' })
+            .select()
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data, message: 'Đã lưu thông tin khách hàng thành công' };
+    } catch (e) {
+        console.error('Upsert customer error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+// ======================================================
+// ORDERS API - Quản lý đơn hàng
+// ======================================================
+
+/**
+ * TVBH tạo đơn hàng mới
+ */
+async function supabaseCreateOrder(orderData) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        if (!orderData.requester) {
+            return { success: false, message: 'Thiếu thông tin người tạo' };
+        }
+
+        if (!orderData.customer_cccd) {
+            return { success: false, message: 'Thiếu thông tin khách hàng (CCCD)' };
+        }
+
+        // Đảm bảo customer tồn tại
+        const customerCheck = await supabaseSearchCustomerByCCCD(orderData.customer_cccd);
+        if (!customerCheck.success) {
+            return { success: false, message: 'Khách hàng chưa được tạo. Vui lòng tạo khách hàng trước.' };
+        }
+
+        const order = {
+            requester: orderData.requester,
+            customer_cccd: orderData.customer_cccd.trim(),
+            car_model: orderData.car_model || null,
+            car_version: orderData.car_version || null,
+            car_color: orderData.car_color || null,
+            payment_method: orderData.payment_method || null,
+            status: 'pending', // Chưa có mã
+            attachments: orderData.attachments ? JSON.stringify(orderData.attachments) : '[]',
+            notes: orderData.notes || null
+        };
+
+        const { data, error } = await supabase
+            .from('orders')
+            .insert(order)
+            .select()
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data, message: 'Đã tạo đơn hàng thành công' };
+    } catch (e) {
+        console.error('Create order error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * TVBH lấy danh sách đơn hàng của mình
+ */
+async function supabaseGetMyOrders(username, filters = {}) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        let query = supabase
+            .from('orders')
+            .select(`
+                *,
+                customers:customer_cccd (
+                    cccd, name, phone, email, address
+                )
+            `)
+            .eq('requester', username)
+            .order('created_at', { ascending: false });
+
+        // Filter theo status
+        if (filters.status) {
+            query = query.eq('status', filters.status);
+        }
+
+        // Filter theo có/không có mã
+        if (filters.has_contract_code !== undefined) {
+            if (filters.has_contract_code) {
+                query = query.not('contract_code', 'is', null);
+            } else {
+                query = query.is('contract_code', null);
+            }
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data || [] };
+    } catch (e) {
+        console.error('Get my orders error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * SaleAdmin lấy danh sách tất cả đơn hàng (ưu tiên chưa có mã)
+ */
+async function supabaseGetOrdersForSaleAdmin(filters = {}) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        let query = supabase
+            .from('orders')
+            .select(`
+                *,
+                customers:customer_cccd (
+                    cccd, name, phone, email, address
+                ),
+                requester_user:requester (
+                    username, fullname, "group"
+                )
+            `)
+            .order('contract_code', { ascending: true, nullsFirst: true }) // Đơn chưa có mã lên đầu
+            .order('created_at', { ascending: false });
+
+        // Filter theo TVBH
+        if (filters.requester) {
+            query = query.eq('requester', filters.requester);
+        }
+
+        // Filter theo status
+        if (filters.status) {
+            query = query.eq('status', filters.status);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data || [] };
+    } catch (e) {
+        console.error('Get orders for sale admin error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * SaleAdmin cấp mã đơn hàng (contract_code)
+ */
+async function supabaseAssignContractCode(orderId, contractCode, assignedSale) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        if (!contractCode || !contractCode.trim()) {
+            return { success: false, message: 'Vui lòng nhập mã đơn hàng' };
+        }
+
+        // Kiểm tra mã đã tồn tại chưa
+        const { data: existingOrder, error: checkError } = await supabase
+            .from('orders')
+            .select('id')
+            .eq('contract_code', contractCode.trim())
+            .neq('id', orderId)
+            .single();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+            throw checkError;
+        }
+
+        if (existingOrder) {
+            return { success: false, message: 'Mã đơn hàng đã tồn tại: ' + contractCode };
+        }
+
+        // Cập nhật đơn hàng
+        const updateData = {
+            contract_code: contractCode.trim(),
+            assigned_sale: assignedSale || null,
+            status: 'assigned',
+            updated_at: new Date().toISOString()
+        };
+
+        const { data, error } = await supabase
+            .from('orders')
+            .update(updateData)
+            .eq('id', orderId)
+            .select()
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data, message: 'Đã cấp mã đơn hàng thành công' };
+    } catch (e) {
+        console.error('Assign contract code error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+// ======================================================
+// DAILY REPORTS API - Báo cáo ngày
+// ======================================================
+
+/**
+ * TVBH nhập báo cáo ngày
+ */
+async function supabaseSubmitDailyReport(reportData) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        if (!reportData.tvbh || !reportData.date) {
+            return { success: false, message: 'Thiếu thông tin báo cáo' };
+        }
+
+        // Xóa báo cáo cũ của ngày hôm nay (nếu có)
+        const today = new Date(reportData.date).toISOString().split('T')[0];
+        
+        const { error: deleteError } = await supabase
+            .from('daily_reports')
+            .delete()
+            .eq('tvbh', reportData.tvbh)
+            .eq('date', today);
+
+        if (deleteError && deleteError.code !== 'PGRST116') {
+            console.warn('Delete old reports error:', deleteError);
+        }
+
+        // Tạo báo cáo mới
+        const reports = [];
+
+        // Báo cáo KHTN
+        if (reportData.khtn && parseFloat(reportData.khtn) > 0) {
+            reports.push({
+                date: today,
+                tvbh: reportData.tvbh,
+                group: reportData.group || null,
+                car_model: null, // KHTN không có dòng xe
+                khtn: parseFloat(reportData.khtn) || 0,
+                hop_dong: 0,
+                xhd: 0,
+                doanh_thu: 0
+            });
+        }
+
+        // Báo cáo theo từng dòng xe
+        if (reportData.carModels && Array.isArray(reportData.carModels)) {
+            reportData.carModels.forEach(model => {
+                const hopDong = parseFloat(model.hopDong) || 0;
+                const xhd = parseFloat(model.xhd) || 0;
+                const doanhThu = parseFloat(model.doanhThu) || 0;
+
+                if (hopDong > 0 || xhd > 0 || doanhThu > 0) {
+                    reports.push({
+                        date: today,
+                        tvbh: reportData.tvbh,
+                        group: reportData.group || null,
+                        car_model: model.name || null,
+                        khtn: 0,
+                        hop_dong: hopDong,
+                        xhd: xhd,
+                        doanh_thu: doanhThu
+                    });
+                }
+            });
+        }
+
+        if (reports.length === 0) {
+            return { success: true, message: 'Không có dữ liệu mới để lưu' };
+        }
+
+        const { data, error } = await supabase
+            .from('daily_reports')
+            .insert(reports)
+            .select();
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data, message: `Đã lưu ${data.length} dòng báo cáo` };
+    } catch (e) {
+        console.error('Submit daily report error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Lấy báo cáo hôm nay của TVBH
+ */
+async function supabaseGetTodayReport(tvbhName) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+
+        const { data, error } = await supabase
+            .from('daily_reports')
+            .select('*')
+            .eq('tvbh', tvbhName)
+            .eq('date', today)
+            .order('car_model', { ascending: true, nullsFirst: true });
+
+        if (error) {
+            throw error;
+        }
+
+        if (!data || data.length === 0) {
+            return { success: true, data: null };
+        }
+
+        // Gom dữ liệu theo format như app2
+        const reportData = {
+            khtn: 0,
+            carModels: {}
+        };
+
+        data.forEach(row => {
+            if (!row.car_model) {
+                // KHTN
+                reportData.khtn += parseFloat(row.khtn) || 0;
+            } else {
+                // Dòng xe
+                if (!reportData.carModels[row.car_model]) {
+                    reportData.carModels[row.car_model] = {
+                        hopDong: 0,
+                        xhd: 0,
+                        doanhThu: 0
+                    };
+                }
+                reportData.carModels[row.car_model].hopDong += parseFloat(row.hop_dong) || 0;
+                reportData.carModels[row.car_model].xhd += parseFloat(row.xhd) || 0;
+                reportData.carModels[row.car_model].doanhThu += parseFloat(row.doanh_thu) || 0;
+            }
+        });
+
+        return { success: true, data: reportData };
+    } catch (e) {
+        console.error('Get today report error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+// ======================================================
 // WRAPPER FUNCTION - Tương thích với callAPI hiện tại
 // ======================================================
 
@@ -1510,6 +1954,33 @@ async function callSupabaseAPI(data) {
             case 'update_productivity_bonus':
                 return await supabaseUpdateProductivityBonus(data);
             
+            // Customers API
+            case 'search_customer_by_cccd':
+                return await supabaseSearchCustomerByCCCD(data.cccd);
+            
+            case 'upsert_customer':
+                return await supabaseUpsertCustomer(data);
+            
+            // Orders API
+            case 'create_order':
+                return await supabaseCreateOrder(data);
+            
+            case 'get_my_orders':
+                return await supabaseGetMyOrders(data.username, data.filters || {});
+            
+            case 'get_orders_for_saleadmin':
+                return await supabaseGetOrdersForSaleAdmin(data.filters || {});
+            
+            case 'assign_contract_code':
+                return await supabaseAssignContractCode(data.orderId, data.contract_code, data.assigned_sale);
+            
+            // Daily Reports API
+            case 'submit_daily_report':
+                return await supabaseSubmitDailyReport(data);
+            
+            case 'get_today_report':
+                return await supabaseGetTodayReport(data.tvbhName);
+            
             default:
                 return { success: false, message: 'Action không được hỗ trợ: ' + action };
         }
@@ -1530,6 +2001,18 @@ window.supabaseAPI = {
     getRequestDetail: supabaseGetRequestDetail,
     updateRequest: supabaseUpdateRequest,
     resubmitRequest: supabaseResubmitRequest,
+    // Customers API
+    searchCustomerByCCCD: supabaseSearchCustomerByCCCD,
+    upsertCustomer: supabaseUpsertCustomer,
+    // Orders API
+    createOrder: supabaseCreateOrder,
+    getMyOrders: supabaseGetMyOrders,
+    getOrdersForSaleAdmin: supabaseGetOrdersForSaleAdmin,
+    assignContractCode: supabaseAssignContractCode,
+    // Daily Reports API
+    submitDailyReport: supabaseSubmitDailyReport,
+    getTodayReport: supabaseGetTodayReport,
+    // Wrapper
     callAPI: callSupabaseAPI,
     init: initSupabase
 };
