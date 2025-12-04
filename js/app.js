@@ -538,10 +538,15 @@ function renderApprovalList() {
                 data.can_edit_cost = (session && (session.role === 'ADMIN' || canEditAtCurrentStep || isCompleted));
                 
                 // Kiểm tra quyền chỉnh sửa contract_code và vin_no khi đã hoàn tất
-                const canEditCompleted = isCompleted && session && 
+                // Cho phép: người tạo (requester), GDKD, BGD, BKS, KETOAN, ADMIN
+                const isRequester = data.requester && session && 
+                    data.requester.toLowerCase() === session.username.toLowerCase();
+                const isRequesterRole = session && (session.role === 'TVBH' || session.role === 'SALE');
+                const canEditCompletedByRequester = isCompleted && isRequester && isRequesterRole;
+                const canEditCompletedByRole = isCompleted && session && 
                     (session.role === 'GDKD' || session.role === 'BGD' || session.role === 'BKS' || 
                      session.role === 'KETOAN' || session.role === 'ADMIN');
-                data.can_edit_completed = canEditCompleted;
+                data.can_edit_completed = canEditCompletedByRequester || canEditCompletedByRole;
                 
                 // Tính toán chi phí và tỷ lệ
                 const discountAmount = parseInt((data.discount_amount || '').replace(/[^\d]/g, '')) || 0;

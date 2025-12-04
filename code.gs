@@ -1034,9 +1034,11 @@ function updateRequest(d) {
           return { success: false, message: 'Chỉ TVBH/SALE hoặc ADMIN mới có thể sửa tờ trình' };
         }
       } else if (isCompleted) {
-        // Khi đã hoàn tất: chỉ cho phép sửa contract_code và vin_no, và chỉ các role được phép
-        if (!canEditCompleted) {
-          return { success: false, message: 'Chỉ GDKD, BGD, BKS, KETOAN hoặc ADMIN mới có thể sửa tờ trình đã hoàn tất' };
+        // Khi đã hoàn tất: chỉ cho phép sửa contract_code và vin_no
+        // Cho phép: người tạo (requester), GDKD, BGD, BKS, KETOAN, ADMIN
+        var canEditCompletedByRequester = isRequester && (d.role == 'TVBH' || d.role == 'SALE');
+        if (!canEditCompleted && !canEditCompletedByRequester) {
+          return { success: false, message: 'Chỉ người tạo, GDKD, BGD, BKS, KETOAN hoặc ADMIN mới có thể sửa tờ trình đã hoàn tất' };
         }
       }
       
