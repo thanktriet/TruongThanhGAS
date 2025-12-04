@@ -679,9 +679,11 @@ function processApproval(d) {
         sheet.getRange(i + 1, statusCol).setValue(rejectMsg);
       } else {
         var nextStep = stepConfig.next;
-        // Nếu nextStep = 6 thì đã hoàn tất, có thể in
-        if (nextStep >= 6) {
-          sheet.getRange(i + 1, stepCol).setValue(6);
+        // Nếu nextStep >= 6 hoặc currentStep = 4 (KETOAN) thì đã hoàn tất, có thể in
+        // Step 4 (KETOAN) là bước cuối, sau khi duyệt là hoàn tất
+        if (nextStep >= 6 || currentStep == 4) {
+          // Giữ step = 4 hoặc set thành 4 (KETOAN đã duyệt = hoàn tất)
+          sheet.getRange(i + 1, stepCol).setValue(4);
           sheet.getRange(i + 1, statusCol).setValue('Hoàn tất - Có thể in');
         } else {
         var nextLabel = 'Hoàn tất';
