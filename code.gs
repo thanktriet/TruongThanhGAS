@@ -921,8 +921,28 @@ function getRequestDetail(id, username) {
       }
       
       var hasFullStructure = row.length >= 26;
+      
+      // Lấy fullname của requester từ Users sheet
+      var requesterUsername = row[2];
+      var requesterFullname = requesterUsername; // Default to username if not found
+      try {
+        var userSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_USERS);
+        if (userSheet) {
+          var userData = userSheet.getDataRange().getValues();
+          for (var u = 1; u < userData.length; u++) {
+            if (String(userData[u][0]).toLowerCase() == String(requesterUsername).toLowerCase()) {
+              requesterFullname = userData[u][3] || requesterUsername; // Column 3 is Fullname
+              break;
+            }
+          }
+        }
+      } catch (e) {
+        // If error, use username as fallback
+        requesterFullname = requesterUsername;
+      }
+      
       var item = {
-        id: row[0], date: formatDate(row[1]), requester: row[2], contract_code: row[3],
+        id: row[0], date: formatDate(row[1]), requester: row[2], requester_fullname: requesterFullname, contract_code: row[3],
         customer: row[4], phone: row[5], cccd: row[6] || '', 
         email: hasNewStructure ? (row[7] || '') : '',
         address: hasNewStructure ? (row[8] || '') : (row[7] || ''),

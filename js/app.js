@@ -1683,7 +1683,8 @@ function printRequest(id) {
             
             // VI. YÊU CẦU KHÁC
             printWindow.document.getElementById('print-other-requirements').textContent = d.other_requirements || '';
-            printWindow.document.getElementById('print-requester').textContent = d.requester || '';
+            // Hiển thị fullname thay vì username
+            printWindow.document.getElementById('print-requester').textContent = d.requester_fullname || d.requester || '';
             
             setTimeout(() => {
                 printWindow.print();
