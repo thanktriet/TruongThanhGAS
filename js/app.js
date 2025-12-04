@@ -534,7 +534,7 @@ function renderApprovalList() {
                 ];
                 const currentStepConfig = workflow.find(w => w.step === data.step);
                 const canEditAtCurrentStep = currentStepConfig && currentStepConfig.role === session.role;
-                const isCompleted = data.step >= 6;
+                const isCompleted = data.step >= 4; // Step 4 (KETOAN) là hoàn tất
                 data.can_edit_cost = (session && (session.role === 'ADMIN' || canEditAtCurrentStep || isCompleted));
                 
                 // Kiểm tra quyền chỉnh sửa contract_code và vin_no khi đã hoàn tất
@@ -553,19 +553,19 @@ function renderApprovalList() {
                 data.cost_percentage = costPercentage;
                 
                 // Tính next_status và is_completed nếu chưa có
-                // Step 4 (Kế Toán) là bước cuối, sau đó có thể in (step >= 6)
+                // Step 4 (Kế Toán) là bước cuối, sau đó có thể in (step >= 4)
                 if (!data.next_status && !data.is_completed) {
                     const workflow = [
                         { step: 0, next: 1, label: 'Chờ TPKD duyệt' },
                         { step: 1, next: 2, label: 'Chờ GĐKD duyệt' },
                         { step: 2, next: 3, label: 'Chờ Ban Kiểm Soát' },
                         { step: 3, next: 4, label: 'Chờ Ban Giám Đốc' },
-                        { step: 4, next: 6, label: 'Chờ Kế Toán kiểm tra' } // next: 6 = Hoàn tất
+                        { step: 4, next: 6, label: 'Chờ Kế Toán kiểm tra' } // Step 4 = Hoàn tất
                     ];
                     const stepConfig = workflow.find(w => w.step === data.step);
-                    if (data.step >= 6 || (stepConfig && stepConfig.next >= 6)) {
+                    if (data.step >= 4) {
                         data.is_completed = true;
-                    } else if (stepConfig && stepConfig.next < 6) {
+                    } else if (stepConfig && stepConfig.next < 4) {
                         const nextConfig = workflow.find(w => w.step === stepConfig.next);
                         if (nextConfig) {
                             data.next_status = nextConfig.label;

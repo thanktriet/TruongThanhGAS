@@ -539,10 +539,10 @@ function getPendingList(username, role) {
     // 1. Người tạo (TVBH/SALE) - đơn của họ (bao gồm cả đơn bị từ chối step=0)
     // 2. ADMIN - tất cả đơn
     // 3. Người có quyền duyệt ở bước hiện tại
-    // 4. GDKD, BGD, BKS, KETOAN - có thể xem lại tờ trình đã hoàn tất (step >= 6)
+    // 4. GDKD, BGD, BKS, KETOAN - có thể xem lại tờ trình đã hoàn tất (step >= 4, sau khi KETOAN duyệt)
     var isRequester = (role == 'TVBH' || role == 'SALE') && String(row[2]).toLowerCase() == String(username).toLowerCase();
     var isRejectedAndRequester = (currentStep == 0 && isRequester);
-    var isCompleted = currentStep >= 6;
+    var isCompleted = currentStep >= 4; // Step 4 (KETOAN) là hoàn tất
     var canViewCompleted = (role == 'GDKD' || role == 'BGD' || role == 'BKS' || role == 'KETOAN') && isCompleted;
     
     var show = isRejectedAndRequester ||
@@ -581,11 +581,11 @@ function getPendingList(username, role) {
       item.can_resubmit = (currentStep == 0 && isRequester);
       
       // Xác định trạng thái duyệt tiếp theo
-      // Step 4 (Kế Toán) là bước cuối, sau đó có thể in (step >= 6)
+      // Step 4 (Kế Toán) là bước cuối, sau đó có thể in (step >= 4)
       var stepConfig = WORKFLOW.find(w => w.step == currentStep);
-      if (currentStep >= 6 || (stepConfig && stepConfig.next >= 6)) {
+      if (currentStep >= 4) {
         item.is_completed = true;
-      } else if (stepConfig && stepConfig.next < 6) {
+      } else if (stepConfig && stepConfig.next < 4) {
         var nextConfig = WORKFLOW.find(w => w.step == stepConfig.next);
         if (nextConfig) {
           item.next_status = nextConfig.label;
@@ -848,11 +848,11 @@ function getMyRequests(username, role) {
     item.can_resubmit = (currentStep == 0);
     
     // Xác định trạng thái duyệt tiếp theo
-    // Step 4 (Kế Toán) là bước cuối, sau đó có thể in (step >= 6)
+    // Step 4 (Kế Toán) là bước cuối, sau đó có thể in (step >= 4)
     var stepConfig = WORKFLOW.find(w => w.step == currentStep);
-    if (currentStep >= 6 || (stepConfig && stepConfig.next >= 6)) {
+    if (currentStep >= 4) {
       item.is_completed = true;
-    } else if (stepConfig && stepConfig.next < 6) {
+    } else if (stepConfig && stepConfig.next < 4) {
       var nextConfig = WORKFLOW.find(w => w.step == stepConfig.next);
       if (nextConfig) {
         item.next_status = nextConfig.label;
@@ -1009,8 +1009,8 @@ function updateRequest(d) {
       
       // Cho phép sửa trong 2 trường hợp:
       // 1. Step = 0 (bị từ chối) - người tạo có thể sửa tất cả
-      // 2. Step >= 6 (đã hoàn tất) - chỉ cho phép sửa contract_code và vin_no
-      var isCompleted = currentStep >= 6;
+      // 2. Step >= 4 (đã hoàn tất, sau khi KETOAN duyệt) - chỉ cho phép sửa contract_code và vin_no
+      var isCompleted = currentStep >= 4;
       var isRejected = currentStep == 0;
       
       if (!isRejected && !isCompleted) {
