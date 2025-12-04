@@ -59,6 +59,9 @@ async function loadAllComponents() {
     // Load modals and templates
     await loadComponent('modals', 'modals-container');
     await loadComponent('templates', 'templates-container');
+    
+    // Wait a bit for DOM to update after loading components
+    await new Promise(resolve => setTimeout(resolve, 100));
 }
 
 // Load components when DOM is ready
