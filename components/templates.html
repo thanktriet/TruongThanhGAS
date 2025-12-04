@@ -218,7 +218,14 @@
             <div class="bg-blue-600 text-white p-4 flex justify-between items-center sticky top-0 z-10">
                 <div>
                     <h3 class="font-bold text-lg">CHI TIẾT TỜ TRÌNH</h3>
-                    <p class="text-xs opacity-80">Mã HĐ: {{contract_code}}</p>
+                    <p class="text-xs opacity-80">Mã HĐ: 
+                        {{#can_edit_completed}}
+                        <input type="text" id="detail-contract-code" value="{{contract_code}}" class="bg-white text-gray-800 px-2 py-1 rounded text-xs w-32" placeholder="Nhập số HĐ">
+                        {{/can_edit_completed}}
+                        {{^can_edit_completed}}
+                        {{contract_code}}
+                        {{/can_edit_completed}}
+                    </p>
                 </div>
                 <button onclick="closeModal()" class="text-2xl hover:text-red-200">&times;</button>
             </div>
@@ -287,12 +294,20 @@
                             <p class="font-bold text-gray-700">{{car_color}}</p>
                         </div>
                         {{/car_color}}
-                        {{#vin_no}}
                         <div>
                             <p class="text-gray-500 text-xs mb-1">Số VIN</p>
+                            {{#can_edit_completed}}
+                            <input type="text" id="detail-vin-no" value="{{vin_no}}" class="font-mono text-xs text-gray-700 bg-white px-2 py-1 rounded border w-full" placeholder="Nhập số khung">
+                            {{/can_edit_completed}}
+                            {{^can_edit_completed}}
+                            {{#vin_no}}
                             <p class="font-mono text-xs text-gray-700 bg-white px-2 py-1 rounded border">{{vin_no}}</p>
+                            {{/vin_no}}
+                            {{^vin_no}}
+                            <p class="text-gray-400 italic text-xs">Chưa có</p>
+                            {{/vin_no}}
+                            {{/can_edit_completed}}
                         </div>
-                        {{/vin_no}}
                         {{#payment}}
                         <div>
                             <p class="text-gray-500 text-xs mb-1">Phương thức thanh toán</p>

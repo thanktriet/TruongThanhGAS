@@ -539,13 +539,17 @@ function getPendingList(username, role) {
     // 1. Người tạo (TVBH/SALE) - đơn của họ (bao gồm cả đơn bị từ chối step=0)
     // 2. ADMIN - tất cả đơn
     // 3. Người có quyền duyệt ở bước hiện tại
+    // 4. GDKD, BGD, BKS, KETOAN - có thể xem lại tờ trình đã hoàn tất (step >= 6)
     var isRequester = (role == 'TVBH' || role == 'SALE') && String(row[2]).toLowerCase() == String(username).toLowerCase();
     var isRejectedAndRequester = (currentStep == 0 && isRequester);
+    var isCompleted = currentStep >= 6;
+    var canViewCompleted = (role == 'GDKD' || role == 'BGD' || role == 'BKS' || role == 'KETOAN') && isCompleted;
     
     var show = isRejectedAndRequester ||
                (role == 'ADMIN') ||
                (targetSteps.includes(currentStep)) ||
-               (isRequester && currentStep >= 0); // Người tạo thấy đơn của mình ở mọi bước
+               (isRequester && currentStep >= 0) || // Người tạo thấy đơn của mình ở mọi bước
+               canViewCompleted; // GDKD, BGD, BKS, KETOAN xem tờ trình đã hoàn tất
 
     if (show) {
       
@@ -1003,22 +1007,35 @@ function updateRequest(d) {
       var currentStep = hasNewStructure ? (row[20] || 0) : (row[16] || 0);
       var requester = String(row[2]).toLowerCase();
       
-      // Chỉ cho phép sửa khi step = 0 và là người tạo
-      if (currentStep != 0) {
-        return { success: false, message: 'Chỉ có thể sửa tờ trình đã bị từ chối (trả về)' };
+      // Cho phép sửa trong 2 trường hợp:
+      // 1. Step = 0 (bị từ chối) - người tạo có thể sửa tất cả
+      // 2. Step >= 6 (đã hoàn tất) - chỉ cho phép sửa contract_code và vin_no
+      var isCompleted = currentStep >= 6;
+      var isRejected = currentStep == 0;
+      
+      if (!isRejected && !isCompleted) {
+        return { success: false, message: 'Chỉ có thể sửa tờ trình đã bị từ chối hoặc đã hoàn tất' };
       }
       
-      // Kiểm tra quyền: chỉ người tạo (TVBH/SALE) hoặc ADMIN mới có thể sửa
+      // Kiểm tra quyền
       var isRequester = (requester == String(d.username).toLowerCase());
       var isAdmin = (d.username == 'admin' || d.role == 'ADMIN');
       var isTVBH = (d.role == 'TVBH' || d.role == 'SALE');
+      var canEditCompleted = (d.role == 'GDKD' || d.role == 'BGD' || d.role == 'BKS' || d.role == 'KETOAN' || isAdmin);
       
-      if (!isRequester && !isAdmin) {
-        return { success: false, message: 'Chỉ người tạo mới có thể sửa tờ trình' };
-      }
-      
-      if (isRequester && !isTVBH && !isAdmin) {
-        return { success: false, message: 'Chỉ TVBH/SALE hoặc ADMIN mới có thể sửa tờ trình' };
+      if (isRejected) {
+        // Khi bị từ chối: chỉ người tạo hoặc ADMIN có thể sửa
+        if (!isRequester && !isAdmin) {
+          return { success: false, message: 'Chỉ người tạo mới có thể sửa tờ trình đã bị từ chối' };
+        }
+        if (isRequester && !isTVBH && !isAdmin) {
+          return { success: false, message: 'Chỉ TVBH/SALE hoặc ADMIN mới có thể sửa tờ trình' };
+        }
+      } else if (isCompleted) {
+        // Khi đã hoàn tất: chỉ cho phép sửa contract_code và vin_no, và chỉ các role được phép
+        if (!canEditCompleted) {
+          return { success: false, message: 'Chỉ GDKD, BGD, BKS, KETOAN hoặc ADMIN mới có thể sửa tờ trình đã hoàn tất' };
+        }
       }
       
       // Tính toán lại giá trị
@@ -1055,46 +1072,85 @@ function updateRequest(d) {
       
       // Cập nhật dữ liệu
       var rowNum = i + 1;
-      if (hasNewStructure) {
-        sheet.getRange(rowNum, 4).setValue(d.contract_code); // ContractCode
-        sheet.getRange(rowNum, 5).setValue(d.customer_name); // CustomerName
-        sheet.getRange(rowNum, 6).setValue("'" + d.phone); // Phone
-        sheet.getRange(rowNum, 7).setValue("'" + d.cccd); // CCCD
-        sheet.getRange(rowNum, 8).setValue(d.email || ''); // Email
-        sheet.getRange(rowNum, 9).setValue(d.address); // Address
-        sheet.getRange(rowNum, 10).setValue(d.car_model || ''); // CarModel
-        sheet.getRange(rowNum, 11).setValue(d.car_version || ''); // CarVersion
-        sheet.getRange(rowNum, 12).setValue(d.car_color || ''); // CarColor
-        sheet.getRange(rowNum, 13).setValue(d.vin_no || ''); // VinNo
-        sheet.getRange(rowNum, 14).setValue(d.payment_method || ''); // PaymentMethod
-        sheet.getRange(rowNum, 15).setValue(contractPrice); // ContractPrice
-        sheet.getRange(rowNum, 16).setValue(d.discount_details || ''); // DiscountDetails
-        sheet.getRange(rowNum, 17).setValue(discountAmount); // DiscountAmount
-        sheet.getRange(rowNum, 18).setValue(finalGiftDetails); // GiftDetails
-        sheet.getRange(rowNum, 19).setValue(giftTotalMoney); // GiftAmount
-        sheet.getRange(rowNum, 20).setValue(finalPrice); // FinalPrice
-        // Cột 24: OtherRequirements, Cột 26: ProductivityBonus
-        if (row.length >= 24) {
-          sheet.getRange(rowNum, 24).setValue(d.other_requirements || '');
+      
+      // Nếu đã hoàn tất, chỉ cho phép update contract_code và vin_no
+      if (isCompleted) {
+        if (hasNewStructure) {
+          // Chỉ update contract_code (cột 4) và vin_no (cột 13)
+          if (d.contract_code !== undefined) {
+            sheet.getRange(rowNum, 4).setValue(d.contract_code);
+          }
+          if (d.vin_no !== undefined) {
+            sheet.getRange(rowNum, 13).setValue(d.vin_no || '');
+          }
+        } else {
+          // Cấu trúc cũ: contract_code (cột 4), vin_no (cột 10)
+          if (d.contract_code !== undefined) {
+            sheet.getRange(rowNum, 4).setValue(d.contract_code);
+          }
+          if (d.vin_no !== undefined) {
+            sheet.getRange(rowNum, 10).setValue(d.vin_no || '');
+          }
         }
-        if (row.length >= 26) {
-          sheet.getRange(rowNum, 26).setValue(parseVND(d.productivity_bonus || '0'));
+        
+        // Ghi log thay đổi
+        var logCol = hasNewStructure ? 23 : 19; // HistoryLog column
+        var oldLog = row[logCol - 1] || '';
+        var time = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "HH:mm dd/MM/yyyy");
+        var logChanges = [];
+        if (d.contract_code !== undefined && String(d.contract_code) !== String(row[3])) {
+          logChanges.push('Số hợp đồng: ' + (row[3] || '') + ' → ' + d.contract_code);
+        }
+        if (d.vin_no !== undefined && String(d.vin_no || '') !== String(row[hasNewStructure ? 12 : 9] || '')) {
+          logChanges.push('Số khung: ' + (row[hasNewStructure ? 12 : 9] || '') + ' → ' + (d.vin_no || ''));
+        }
+        if (logChanges.length > 0) {
+          var newLog = time + ' | ' + d.username + ' (' + d.role + ') | CẬP NHẬT THÔNG TIN | ' + logChanges.join(', ');
+          sheet.getRange(rowNum, logCol).setValue(oldLog ? oldLog + "\n" + newLog : newLog);
         }
       } else {
-        // Fallback cho cấu trúc cũ (19 cột)
-        sheet.getRange(rowNum, 4).setValue(d.contract_code);
-        sheet.getRange(rowNum, 5).setValue(d.customer_name);
-        sheet.getRange(rowNum, 6).setValue("'" + d.phone);
-        sheet.getRange(rowNum, 7).setValue("'" + d.cccd);
-        sheet.getRange(rowNum, 8).setValue(d.address);
-        sheet.getRange(rowNum, 9).setValue(d.car_model || '');
-        sheet.getRange(rowNum, 10).setValue(d.vin_no || '');
-        sheet.getRange(rowNum, 11).setValue(contractPrice);
-        sheet.getRange(rowNum, 12).setValue(d.discount_details || '');
-        sheet.getRange(rowNum, 13).setValue(discountAmount);
-        sheet.getRange(rowNum, 14).setValue(finalGiftDetails);
-        sheet.getRange(rowNum, 15).setValue(giftTotalMoney);
-        sheet.getRange(rowNum, 16).setValue(finalPrice);
+        // Khi bị từ chối: cho phép sửa tất cả
+        if (hasNewStructure) {
+          sheet.getRange(rowNum, 4).setValue(d.contract_code); // ContractCode
+          sheet.getRange(rowNum, 5).setValue(d.customer_name); // CustomerName
+          sheet.getRange(rowNum, 6).setValue("'" + d.phone); // Phone
+          sheet.getRange(rowNum, 7).setValue("'" + d.cccd); // CCCD
+          sheet.getRange(rowNum, 8).setValue(d.email || ''); // Email
+          sheet.getRange(rowNum, 9).setValue(d.address); // Address
+          sheet.getRange(rowNum, 10).setValue(d.car_model || ''); // CarModel
+          sheet.getRange(rowNum, 11).setValue(d.car_version || ''); // CarVersion
+          sheet.getRange(rowNum, 12).setValue(d.car_color || ''); // CarColor
+          sheet.getRange(rowNum, 13).setValue(d.vin_no || ''); // VinNo
+          sheet.getRange(rowNum, 14).setValue(d.payment_method || ''); // PaymentMethod
+          sheet.getRange(rowNum, 15).setValue(contractPrice); // ContractPrice
+          sheet.getRange(rowNum, 16).setValue(d.discount_details || ''); // DiscountDetails
+          sheet.getRange(rowNum, 17).setValue(discountAmount); // DiscountAmount
+          sheet.getRange(rowNum, 18).setValue(finalGiftDetails); // GiftDetails
+          sheet.getRange(rowNum, 19).setValue(giftTotalMoney); // GiftAmount
+          sheet.getRange(rowNum, 20).setValue(finalPrice); // FinalPrice
+          // Cột 24: OtherRequirements, Cột 26: ProductivityBonus
+          if (row.length >= 24) {
+            sheet.getRange(rowNum, 24).setValue(d.other_requirements || '');
+          }
+          if (row.length >= 26) {
+            sheet.getRange(rowNum, 26).setValue(parseVND(d.productivity_bonus || '0'));
+          }
+        } else {
+          // Fallback cho cấu trúc cũ (19 cột)
+          sheet.getRange(rowNum, 4).setValue(d.contract_code);
+          sheet.getRange(rowNum, 5).setValue(d.customer_name);
+          sheet.getRange(rowNum, 6).setValue("'" + d.phone);
+          sheet.getRange(rowNum, 7).setValue("'" + d.cccd);
+          sheet.getRange(rowNum, 8).setValue(d.address);
+          sheet.getRange(rowNum, 9).setValue(d.car_model || '');
+          sheet.getRange(rowNum, 10).setValue(d.vin_no || '');
+          sheet.getRange(rowNum, 11).setValue(contractPrice);
+          sheet.getRange(rowNum, 12).setValue(d.discount_details || '');
+          sheet.getRange(rowNum, 13).setValue(discountAmount);
+          sheet.getRange(rowNum, 14).setValue(finalGiftDetails);
+          sheet.getRange(rowNum, 15).setValue(giftTotalMoney);
+          sheet.getRange(rowNum, 16).setValue(finalPrice);
+        }
       }
       
       return { success: true, message: 'Đã cập nhật tờ trình thành công!' };

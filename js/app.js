@@ -537,6 +537,12 @@ function renderApprovalList() {
                 const isCompleted = data.step >= 6;
                 data.can_edit_cost = (session && (session.role === 'ADMIN' || canEditAtCurrentStep || isCompleted));
                 
+                // Kiểm tra quyền chỉnh sửa contract_code và vin_no khi đã hoàn tất
+                const canEditCompleted = isCompleted && session && 
+                    (session.role === 'GDKD' || session.role === 'BGD' || session.role === 'BKS' || 
+                     session.role === 'KETOAN' || session.role === 'ADMIN');
+                data.can_edit_completed = canEditCompleted;
+                
                 // Tính toán chi phí và tỷ lệ
                 const discountAmount = parseInt((data.discount_amount || '').replace(/[^\d]/g, '')) || 0;
                 const giftAmount = parseInt((data.gift_amount || '').replace(/[^\d]/g, '')) || 0;
@@ -2012,6 +2018,61 @@ async function resetUserPasswordPrompt(encodedUsername) {
     } catch (error) {
         console.error(error);
         Swal.fire('Lỗi', 'Không thể kết nối đến server', 'error');
+    }
+}
+
+async function saveCompletedRequestInfo(id) {
+    const session = getSession();
+    if (!session) {
+        Swal.fire('Lỗi', 'Phiên đăng nhập đã hết hạn', 'error');
+        logout();
+        return;
+    }
+    
+    const contractCodeInput = $('detail-contract-code');
+    const vinNoInput = $('detail-vin-no');
+    
+    if (!contractCodeInput && !vinNoInput) {
+        Swal.fire('Lỗi', 'Không tìm thấy các trường cần cập nhật', 'error');
+        return;
+    }
+    
+    const contractCode = contractCodeInput ? contractCodeInput.value.trim() : '';
+    const vinNo = vinNoInput ? vinNoInput.value.trim() : '';
+    
+    try {
+        Swal.fire({
+            title: 'Đang lưu...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        const res = await callAPI({
+            action: 'update_request',
+            id,
+            username: session.username,
+            role: session.role,
+            contract_code: contractCode,
+            vin_no: vinNo
+        });
+        
+        if (res.success) {
+            Swal.fire('Thành công', res.message || 'Đã cập nhật thông tin thành công', 'success');
+            // Reload detail to reflect changes
+            const currentDetailJson = $('modal-detail-body').dataset.json;
+            if (currentDetailJson) {
+                openDetail(currentDetailJson);
+            } else {
+                if (typeof loadApprovalList === 'function') loadApprovalList();
+            }
+        } else {
+            Swal.fire('Lỗi', res.message || 'Cập nhật thất bại', 'error');
+        }
+    } catch (error) {
+        console.error('Error in saveCompletedRequestInfo:', error);
+        Swal.fire('Lỗi', error.message || 'Không thể kết nối đến server', 'error');
     }
 }
 
