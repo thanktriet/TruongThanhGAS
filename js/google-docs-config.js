@@ -4,7 +4,7 @@
  */
 
 // Cập nhật URL này sau khi deploy Google Apps Script
-const GOOGLE_DOCS_SCRIPT_URL = null; // TODO: Thay bằng URL thực tế sau khi deploy
+const GOOGLE_DOCS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAyNjxqIFTX0w0c5Fg-vg01WYBQ2ieqfZnIyRKbVFCXZ0aIg0Nh5TgMvvPerHU9-nO/exec";
 
 // Export config
 if (typeof window !== 'undefined') {
