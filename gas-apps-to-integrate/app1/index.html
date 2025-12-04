@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+
+  /* === BIẾN MÀU SẮC & THIẾT KẾ CHUNG === */
+:root {
+  --primary-color: #0052D4; --secondary-color: #43A0F7;
+  --success-color: #28a745; --success-hover: #218838; --success-bg: #e9f7ef;
+  --danger-color: #dc3545; --warning-color: #ffc107; --warning-bg: #fff8e1; 
+  --title-color: #003366; --bg-color: #f7f8fc; --card-bg-color: #ffffff; 
+  --text-color: #333; --subtle-text-color: #777; --border-color: #e9ecef;
+  --shadow: 0 4px 6px rgba(0,0,0,0.04); --shadow-lg: 0 10px 25px rgba(0,0,0,0.08);
+  --radius: 12px; --transition: all 0.3s ease;
+}
+
+/* === CSS TỔNG THỂ === */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+.main-wrapper { max-width: 1400px; margin: 0 auto; }
+/* CSS cho nút Xóa */
+.btn-danger {
+  background: #dc3545; /* Màu đỏ */
+  color: white;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.btn-danger:hover {
+  background: #c82333;
+  box-shadow: var(--shadow);
+}
+/* === HEADER & TABS === */
+.header { background: var(--card-bg-color); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+.header h1 { font-size: 1.6em; color: var(--primary-color); font-weight: 700; }
+#adminLoginIcon { cursor: pointer; padding: 10px; border-radius: 50%; transition: var(--transition); background-color: transparent; border: none; }
+#adminLoginIcon svg { width: 24px; height: 24px; vertical-align: middle; color: var(--primary-color); }
+.tab-bar { background-color: var(--card-bg-color); padding: 5px 20px; border-bottom: 1px solid var(--border-color); display: flex; gap: 10px; position: sticky; top: 0; z-index: 999; flex-wrap: wrap; }
+.tab-link { background: none; border: none; padding: 12px 20px; cursor: pointer; font-size: 1em; font-weight: 500; color: var(--subtle-text-color); border-radius: 8px; transition: var(--transition); display: flex; align-items: center; gap: 8px; }
+.tab-link:hover { background-color: #f0f0f0; color: var(--primary-color); }
+.tab-link.active { background-color: var(--primary-color); color: white; }
+.tab-link svg { width: 18px; height: 18px; }
+.tab-content { display: none; padding: 25px; }
+.tab-content.active { display: block; animation: fadeIn 0.5s ease-in-out; }
+
+/* === THẺ CARD & TIÊU ĐỀ === */
+.card { background: var(--card-bg-color); padding: 30px 40px; border-radius: var(--radius); box-shadow: var(--shadow); }
+h2, h3, h4 { color: var(--title-color); }
+h2 { border-bottom: 2px solid var(--primary-color); padding-bottom: 12px; margin-bottom: 25px; font-weight: 700; font-size: 1.5em; }
+
+/* === CÁC THÀNH PHẦN FORM CHUNG === */
+label { font-weight: 500; margin-bottom: 8px; font-size: 0.9em; color: var(--subtle-text-color); display: block; }
+.form-group { position: relative; margin-bottom: 15px; }
+input, select, textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-size: 1em;
+  transition: var(--transition);
+  background-color: #fdfdfd;
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 82, 212, 0.15);
+}
+button, input[type="button"] {
+  color: white; cursor: pointer; border: none; font-weight: bold;
+  margin-top: 20px; border-radius: 8px; padding: 14px 20px;
+  font-size: 1em; transition: var(--transition);
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+}
+button:hover, input[type="button"]:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+button:disabled, input[type="button"]:disabled { background: #ccc !important; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-primary { background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); }
+.btn-secondary { background: var(--subtle-text-color); }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px 25px; }
+.form-group.full-width { grid-column: 1 / -1; }
+.order-list-container { display: flex; flex-direction: column; gap: 15px; }
+
+/* === CSS RIÊNG CHO FORM TẠO HỢP ĐỒNG === */
+#contractForm { font-family: 'Poppins', sans-serif; }
+#contractForm h1 {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  color: var(--primary-color);
+  font-weight: 700;
+  margin-bottom: 40px;
+  font-size: 1.8rem;
+}
+.form-section { margin-bottom: 40px; }
+.form-section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 25px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+#thanh_tien { background-color: var(--bg-color); font-weight: bold; color: var(--success-color); }
+.form-actions { text-align: center; margin-top: 40px; padding-top: 25px; border-top: 1px solid var(--border-color); }
+.form-actions input[type="button"] {
+  max-width: 300px;
+  width: 100%;
+  background-color: var(--success-color);
+  font-size: 1.1rem;
+}
+.form-actions input[type="button"]:hover { background-color: var(--success-hover); }
+#downloadLink { display: none; text-align: center; margin-top: 20px; padding: 12px; background-color: var(--primary-color); color: white; text-decoration: none; font-weight: 500; border-radius: 8px; }
+
+/* === TỐI ƯU CSS CHO CHÍNH SÁCH BÁN HÀNG === */
+.policy-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+  background-color: var(--bg-color);
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+}
+.policy-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease-in-out;
+}
+.policy-item:hover {
+  background-color: #eaf2ff;
+}
+.policy-item input[type="checkbox"] {
+  display: none; /* Ẩn checkbox gốc */
+}
+.policy-item label {
+  position: relative;
+  padding-left: 30px;
+  margin: 0;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-color);
+  flex-grow: 1;
+}
+/* Tạo checkbox tùy chỉnh - hình vuông */
+.policy-item label::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--subtle-text-color);
+  border-radius: 4px;
+  background: #fff;
+  transition: var(--transition);
+}
+/* Tạo dấu tick bên trong */
+.policy-item label::after {
+  content: '✔';
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
+  transition: var(--transition);
+}
+/* Style khi checkbox được chọn */
+.policy-item input[type="checkbox"]:checked + label::before {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+.policy-item input[type="checkbox"]:checked + label::after {
+  transform: translateY(-50%) scale(1);
+}
+
+/* === TỐI ƯU CSS CHO PHẦN THANH TOÁN === */
+.payment-method-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  background-color: var(--bg-color);
+  padding: 15px 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+}
+.payment-method-container > .payment-label {
+  font-weight: 600;
+  margin: 0;
+  color: var(--title-color);
+}
+.radio-option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.radio-option input[type="radio"] {
+  display: none; /* Ẩn radio gốc */
+}
+.radio-option label {
+  position: relative;
+  padding-left: 30px;
+  margin: 0;
+  font-weight: 500;
+  color: var(--text-color);
+}
+/* Vòng tròn ngoài của radio */
+.radio-option label::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--subtle-text-color);
+  border-radius: 50%;
+  background: #fff;
+  transition: var(--transition);
+}
+/* Dấu chấm bên trong của radio */
+.radio-option label::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  transition: var(--transition);
+}
+/* Style khi radio được chọn */
+.radio-option input[type="radio"]:checked + label::before {
+  border-color: var(--primary-color);
+}
+.radio-option input[type="radio"]:checked + label::after {
+  transform: translateY(-50%) scale(1);
+}
+
+#tra_thang_section, #tra_gop_section {
+  margin-top: 15px;
+  background-color: var(--bg-color);
+  padding: 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+}
+
+/* === CÁC THÀNH PHẦN KHÁC (SPINNER, TOAST, MODAL) === */
+.spinner { border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid #fff; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
+.loader-inline { display: none; vertical-align: middle; margin-left: 10px; font-size: 0.9em; font-weight: 500; color: var(--primary-color); }
+.modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); animation: fadeIn 0.3s; }
+.modal-content { background-color: var(--card-bg-color); margin: 10% auto; border-radius: var(--radius); width: 90%; max-width: 550px; box-shadow: var(--shadow-lg); overflow: hidden; animation: slideIn 0.4s; }
+.modal-header { padding: 18px 25px; background: var(--primary-color); color: white; }
+.modal-body { padding: 25px; }
+.close-button { color: white; float: right; font-size: 30px; font-weight: bold; cursor: pointer; }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 12px; }
+.detail-grid p { margin: 0; padding: 8px; border-radius: 6px; background-color: #f7f8fc; border: 1px solid var(--border-color); }
+.detail-grid strong { color: var(--primary-color); min-width: 120px; display: inline-block; }
+/* === CSS CHO THÔNG BÁO (TOAST) - ĐÃ SỬA MÀU CHỮ === */
+.toast-container { 
+  position: fixed; 
+  bottom: 20px; 
+  right: 20px; 
+  z-index: 9999; 
+}
+.toast { 
+  padding: 15px 20px; 
+  border-radius: 8px; 
+  box-shadow: var(--shadow-lg); 
+  margin-bottom: 10px; 
+  animation: slideInUp 0.5s, fadeOut 0.5s 4.5s forwards; 
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+/* Nền đỏ, chữ trắng (Giữ nguyên) */
+.toast.danger { 
+  background-color: var(--danger-color); 
+  color: white;
+  border-color: #d62535;
+}
+
+/* Nền xanh lá nhạt, chữ đen (Thay đổi) */
+.toast.success { 
+  background-color: #d4edda;
+  color: #155724; 
+  border-color: #c3e6cb;
+}
+
+/* Nền vàng nhạt, chữ đen (Thay đổi) */
+.toast.warning {
+  background-color: #fff3cd;
+  color: #856404;
+  border-color: #ffeeba;
+}
+
+/* Nền xanh dương nhạt, chữ đen (Thay đổi) */
+.toast.info {
+   background-color: #d1ecf1;
+   color: #0c5460;
+   border-color: #bee5eb;
+}
+
+/* === CSS MỚI CHO BỘ LỌC VÀ DANH SÁCH ĐƠN HÀNG === */
+
+.filter-container label {
+  font-weight: 600;
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+.filter-container select {
+  background-color: white;
+}
+/* Cập nhật CSS cho bộ lọc */
+.filter-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  max-width: 100%;
+  align-items: flex-end;
+}
+.filter-item {
+  display: flex;
+  flex-direction: column;
+}
+.filter-item.search-item input {
+  padding: 12px;
+}
+.order-list-table {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.order-list-header {
+  display: grid;
+  grid-template-columns: 2.5fr 2fr 2fr 1.5fr;
+  background-color: var(--bg-color);
+  font-weight: 600;
+  color: var(--title-color);
+  border-bottom: 1px solid var(--border-color);
+}
+.header-cell {
+  padding: 12px 15px;
+}
+
+/* Đổi tên .order-card thành .order-row để phù hợp giao diện mới */
+.order-row {
+  display: grid;
+  grid-template-columns: 2.5fr 2fr 2fr 1.5fr;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+.order-row:last-child {
+  border-bottom: none;
+}
+.order-row:hover {
+  background-color: #fafdff;
+  transform: none; /* Bỏ hiệu ứng translateY */
+  box-shadow: none; /* Bỏ hiệu ứng đổ bóng */
+}
+
+.order-cell {
+  padding: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.order-cell .name { font-weight: 500; font-size: 1.05em; }
+.order-cell .sub-text { color: var(--subtle-text-color); font-size: 0.9em; }
+
+.order-status .badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 700;
+}
+.badge.created { background-color: var(--success-bg); color: var(--success-color); }
+.badge.pending { background-color: var(--warning-bg); color: var(--warning-color); }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-50px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* === CSS MỚI CHO BẢNG QUẢN LÝ ADMIN === */
+.admin-table-header, .admin-row {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1.5fr 2fr 1.5fr; /* Chia 5 cột */
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+}
+.admin-table-header {
+  background-color: var(--bg-color);
+  font-weight: 600;
+  color: var(--title-color);
+  padding: 8px 15px;
+}
+.admin-row {
+  transition: background-color 0.2s;
+}
+.admin-row:hover {
+  background-color: #fafdff;
+}
+.admin-row.edit-mode {
+  background-color: var(--warning-bg); /* Nền vàng khi đang sửa */
+}
+.admin-cell {
+  padding: 10px 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-cell .cell-text {
+  display: block; /* Mặc định hiển thị text */
+  padding: 6px 0;
+}
+.admin-cell .cell-input {
+  display: none; /* Mặc định ẩn input */
+  width: 100%;
+  padding: 6px;
+  font-size: 0.9em;
+  border-radius: 4px;
+}
+.edit-mode .cell-text {
+  display: none; /* Ẩn text khi đang sửa */
+}
+.edit-mode .cell-input {
+  display: block; /* Hiện input khi đang sửa */
+}
+
+.admin-actions button {
+  margin: 2px;
+  padding: 6px 10px;
+  font-size: 0.85em;
+}
+.edit-buttons, .save-buttons {
+  display: flex;
+  gap: 5px;
+}
+.save-buttons {
+  display: none; /* Mặc định ẩn nút Lưu/Hủy */
+}
+.edit-mode .edit-buttons {
+  display: none; /* Ẩn nút Sửa/Xem khi đang sửa */
+}
+.edit-mode .save-buttons {
+  display: flex; /* Hiện nút Lưu/Hủy khi đang sửa */
+}
+  </style>
+</head>
+<body>
+<div class="main-wrapper">
+  <div class="header">
+    <h1>Hệ thống nhập liệu đơn hàng và tạo biểu mẫu</h1>
+    <button id="adminLoginIcon" title="Đăng nhập Admin">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+    </button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-link" onclick="openTab(event, 'form')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+      <span>Nhập liệu Đơn hàng</span>
+    </button>
+    <button class="tab-link" onclick="openTab(event, 'list')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12M8.25 17.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+      <span>Danh sách Đơn hàng</span>
+    </button>
+    <button class="tab-link" onclick="openTab(event, 'contract')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+      <span>Tạo Hợp đồng Mua bán</span>
+    </button>
+
+    <button class="tab-link" onclick="openTab(event, 'disbursement')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.75A.75.75 0 013 4.5h.75m0 0h.75A.75.75 0 005.25 6v.75m0 0v.75a.75.75 0 00.75.75h.75M6 12h.75a.75.75 0 00.75-.75V10.5a.75.75 0 00-.75-.75H6v2.25zm0 0h3.75m-3.75 0h.75a.75.75 0 01.75.75v2.25a.75.75 0 01-.75.75H6v-3z" /></svg>
+      <span>Đề nghị Giải ngân</span>
+    </button>
+    <button id="adminTabBtn" class="tab-link" onclick="openTab(event, 'admin')" style="display: none;">
+       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-1.007 1.11-1.226l.28-.1c.34-.121.68-.121 1.02 0l.28.1c.55.219 1.02.684 1.11 1.226l.09.542-.09.542c-.09-.542-.56-1.007-1.11-1.226l-.28-.1c-.34-.121-.68-.121-1.02 0l-.28.1c-.55.219-1.02.684-1.11 1.226l-.09.542.09.542zM8.25 5.25h7.5M8.25 5.25c0 .363-.03.722-.085 1.076a.75.75 0 01-1.085.603l-.283-.176a.75.75 0 00-.776 0l-.283.176a.75.75 0 01-1.085-.603A49.01 49.01 0 015.25 5.25m0 0c0 .363-.03.722-.085 1.076a.75.75 0 01-1.085.603l-.283-.176a.75.75 0 00-.776 0l-.283.176a.75.75 0 01-1.085-.603A49.01 49.01 0 012.25 5.25m13.5 0c0 .363.03.722.085 1.076a.75.75 0 001.085.603l.283-.176a.75.75 0 01.776 0l.283.176a.75.75 0 001.085-.603A49.01 49.01 0 0021.75 5.25m-16.5 0c.23.638.493 1.26.794 1.854a.75.75 0 00.941.44l.283-.109a.75.75 0 01.941 0l.283.109a.75.75 0 00.941-.44c.301-.594.564-1.216.794-1.854M12 9a3 3 0 100 6 3 3 0 000-6z" /></svg>
+      <span>Quản lý Admin</span>
+    </button>
+  </div>
+  <div id="formContent" class="tab-content">
+    <div class="card">
+      <h2>Thông tin khách hàng & Đơn hàng</h2>
+      <form id="customerForm">
+        <div class="form-grid">
+          <div class="form-group"><label>Tên TVBH</label><input name="tvbh" required></div>
+          <div class="form-group"><label>Tên Khách hàng</label><input name="khach" required></div>
+          <div class="form-group">
+              <label>SĐT</label>
+              <input 
+                  name="sdt" 
+                  required 
+                  type="tel" 
+                  pattern="\d{10}" 
+                  title="Vui lòng nhập đúng 10 chữ số."
+              >
+          </div>
+          <div class="form-group">
+              <label>CCCD</label>
+              <input 
+                  name="cccd" 
+                  required 
+                  type="text" 
+                  pattern="\d{12}" 
+                  title="Vui lòng nhập đúng 12 chữ số."
+              >
+          </div>
+          <div class="form-group"><label>Ngày cấp</label><input type="date" name="ngaycap" required></div>
+          <div class="form-group"><label>Nơi cấp</label><input name="noicap" required></div>
+          <div class="form-group"><label>Loại xe</label><input name="loaixe" required></div>
+          <div class="form-group"><label>Phiên bản</label><input name="phienban" required></div>
+          <div class="form-group"><label>Màu xe</label><input name="mauxe" required></div>
+          <div class="form-group">
+            <label>Hình thức thanh toán</label>
+            <select name="hinhthucthanhtoan" required><option value="" disabled selected>-- Chọn --</option><option value="Trả thẳng">Trả thẳng</option><option value="Trả góp">Trả góp</option></select>
+          </div>
+          <div class="form-group full-width"><label>Email khách</label><input type="email" name="email" required></div>
+          <div class="form-group full-width"><label>Địa chỉ</label><input name="diachi" required></div>
+          <div class="form-group full-width">
+            <label style="color: red; font-weight: bold;">File đính kèm bao gồm file hình chụp VNeID và Uỷ Nhiệm Chi Cọc (hình chụp chuyển khoản cọc) | Vui lòng cung cấp đầy đủ để admin lên đơn</label>
+            <input type="file" id="files" multiple>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary">Lưu Thông Tin</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="contractContent" class="tab-content">
+      <form id="contractForm">
+        <div class="card">
+        <h2>NHẬP THÔNG TIN HỢP ĐỒNG</h2>
+        <div class="form-section">
+          <h3 class="form-section-title">Thông tin Hợp đồng & Sản phẩm</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="so_hop_dong">Số hợp đồng (*)</label>
+              <input type="text" id="so_hop_dong" name="so_hop_dong" placeholder="Nhập mã đơn hàng rồi nhấn Tab">
+              <span id="lookupLoader" class="loader-inline">🔍 Đang tìm...</span>
+            </div>
+            <div class="form-group"> <label for="ngay_ky">Ngày ký</label> <input type="date" id="ngay_ky" name="ngay_ky"> </div>
+            <div class="form-group"> <label for="loai_xe">Loại xe</label> <input type="text" id="loai_xe" name="loai_xe"> </div>
+            <div class="form-group"> <label for="phien_ban">Phiên Bản</label> <input type="text" id="phien_ban" name="phien_ban"> </div>
+            <div class="form-group"> <label for="mau_xe">Màu xe</label> <input type="text" id="mau_xe" name="mau_xe"> </div>
+            <div class="form-group"> <label for="so_luong">Số lượng</label> <input type="number" id="so_luong" name="so_luong" oninput="updateTotal()" value="1"> </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <h3 class="form-section-title">Thông tin Khách hàng (Sẽ tự động điền)</h3>
+          <div class="form-grid">
+            <div class="form-group"><label for="khach_hang">Khách hàng (*)</label><input type="text" id="khach_hang" name="khach_hang"></div>
+            <div class="form-group"><label for="so_cccd">Số CCCD (*)</label><input type="text" id="so_cccd" name="so_cccd"></div>
+            <div class="form-group"><label for="sdt">Số điện thoại</label><input type="text" id="sdt" name="sdt"></div>
+            <div class="form-group"><label for="ngay_cap">Ngày cấp</label><input type="date" id="ngay_cap" name="ngay_cap"></div>
+            <div class="form-group"><label for="noi_cap">Nơi cấp</label><input type="text" id="noi_cap" name="noi_cap"></div>
+            <div class="form-group"><label for="dia_chi">Địa chỉ</label><input type="text" id="dia_chi" name="dia_chi"></div>
+            <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email"></div>
+            <div class="form-group"><label for="ma_so_thue">Mã số thuế</label><input type="text" id="ma_so_thue" name="ma_so_thue"></div>
+            <div class="form-group"><label for="nguoi_dai_dien">Người đại diện</label><input type="text" id="nguoi_dai_dien" name="nguoi_dai_dien"></div>
+            <div class="form-group"><label for="chuc_vu">Chức vụ</label><input type="text" id="chuc_vu" name="chuc_vu"></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <h3 class="form-section-title">Chính sách bán hàng</h3>
+        <div class="form-group full-width">
+            <label>Chính sách bán hàng (chọn một hoặc nhiều)</label>
+            <div class="policy-container">
+                <div class="policy-item">
+                    <input type="checkbox" id="policy-1" name="chinh_sach_ban_hang" value="Chính sách MÃNH LIỆT TINH THẦN VIỆT NAM - VÌ TƯƠNG LAI XANH LẦN 3: tặng 4% trên giá MSRP giảm giá bằng tiền mặt áp dụng từ 22/05/2025 đến 31/12/2025.">
+                    <label for="policy-1">CSBH MLTTVN 3 giảm 4%</label>
+                </div>
+                <div class="policy-item">
+                    <input type="checkbox" id="policy-2" name="chinh_sach_ban_hang" value="CSBH Tặng 2 năm bảo hiểm ưu đãi bằng tiền trị giá 12.000.000 VNĐ/xe cho xe VF5 Plus/HerioGreen đối với khách hàng xuất hoá đơn từ 15/08/2025 - 31/12/2025.">
+                    <label for="policy-2">Quy đổi tiền mặt VF5, Herio biển trắng</label>
+                </div>
+                <div class="policy-item">
+                    <input type="checkbox" id="policy-3" name="chinh_sach_ban_hang" value="CSBH Tặng 2 năm bảo hiểm ưu đãi bằng tiền trị giá 6.500.000 VNĐ/xe cho xe VF3 đối với khách hàng xuất hoá đơn từ 20/08/2025 - 31/12/2025.">
+                    <label for="policy-3">Quy đổi tiền mặt VF3</label>
+                </div>
+                <div class="policy-item">
+                    <input type="checkbox" id="policy-4" name="chinh_sach_ban_hang" value="CSBH ưu đãi bằng tiền trị giá 12.000.000 VNĐ/xe cho xe VF5 Plus/HerioGreen với mục đích kinh doanh vận tải,mua xe và xuất hoá đơn từ 15/08/2025 - 31/12/2025.">
+                    <label for="policy-4">Quy đổi TM VF5/Herio Green biển vàng</label>
+                </div>
+                <div class="policy-item">
+                    <input type="checkbox" id="policy-5" name="chinh_sach_ban_hang" value="CSBH ưu đãi miễn phí màu nâng cao VF3, VF5 trị giá 8.000.000 VNĐ đối với xe xuất hoá đơn từ 1/10/2025 đến 31/12/2025.">
+                    <label for="policy-5">Miễn phí màu nâng cao VF3 - VF5 </label>
+                </div>
+                <div class="policy-item">
+                    <input type="checkbox" id="policy-6" name="chinh_sach_ban_hang" value="CSBH ưu đãi giảm 50.000.000 VNĐ cho VF7 Plus xuất hoá đơn từ 3/10/2025. ">
+                    <label for="policy-6">Giảm 50tr cho VF7 Plus</label>
+                </div>
+                <div class="policy-item">
+                    <input type="checkbox" id="policy-7" name="chinh_sach_ban_hang" value="CSBH Khách hàng mua xe VF8 hoặc VF9 trong thời gian áp dụng chương trình sẽ nhận được voucher nghỉ dưỡng Vinpearl, có thể quy đổi tiền mặt với giá trị 50.000.000 VNĐ áp dụng từ 1/11/2025 đến 31/12/2025 theo ngày xuất hoá đơn ">
+                    <label for="policy-7">CSBH VF8, VF9 VC VinPearl 50tr quy đổi TM </label>
+                </div>
+                <div class="policy-item">
+                    <input type="checkbox" id="policy-8" name="chinh_sach_ban_hang" value="Chính sách ưu đãi lãi suất theo chương trình chuyển đổi xanh áp dụng từ 30/07/2025 đến 31/12/2025.">
+                    <label for="policy-8">CSBH hổ trợ lãi suất CĐX </label>
+                </div>
+                <div class="policy-item">
+                    <input type="checkbox" id="policy-9" name="chinh_sach_ban_hang" value="Chính sách ưu đãi chiết khấu thêm 3% trên giá MSRP dành cho chiến sĩ thuộc Quân đội nhân dân Việt Nam và Công an nhân dân Việt Nam đang công tác trong biên chế chính thức từ 14/10/2025 đến 31/12/2025.">
+                    <label for="policy-9">CSBH Công an và Quân Đội giảm 3% </label>
+                </div>
+                </div>
+        </div>
+        </div>
+        <div class="form-section">
+          <h3 class="form-section-title">Thông tin Thanh toán</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="don_gia">Đơn giá</label>
+              <input type="text" id="don_gia" name="don_gia" oninput="formatCurrencyInput(this); updateTotal(); calculatePaymentInstallments();">
+            </div>
+            <div class="form-group">
+              <label for="tien_coc">Số tiền đặt cọc</label>
+              <input type="text" id="tien_coc" name="tien_coc" oninput="formatCurrencyInput(this); calculatePaymentInstallments();">
+            </div>
+            <div class="form-group">
+              <label for="thanh_tien">Thành tiền (tự động)</label>
+              <input type="text" id="thanh_tien" name="thanh_tien" readonly style="background-color: var(--bg-color); font-weight: bold; color: var(--success-color);">
+            </div>
+            
+            <div class="form-group full-width">
+                <div class="payment-method-container">
+                    <label class="payment-label">Hình thức thanh toán:</label>
+                    <div class="radio-option">
+                      <input type="radio" id="tra_thang" name="hinh_thuc_thanh_toan" value="tra_thang" onchange="togglePaymentMethod(); calculatePaymentInstallments();">
+                      <label for="tra_thang">Trả thẳng</label>
+                    </div>
+                    <div class="radio-option">
+                      <input type="radio" id="tra_gop" name="hinh_thuc_thanh_toan" value="tra_gop" onchange="togglePaymentMethod(); calculatePaymentInstallments();">
+                      <label for="tra_gop">Trả góp</label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tra_thang_section" style="display:none;">
+                <label for="tien_dot_2_TT">Tiền đợt 2 trả thẳng (tự động):</label>
+                <input type="text" id="tien_dot_2_TT" name="tien_dot_2_TT" readonly style="background-color: var(--bg-color);">
+            </div>
+
+            <div id="tra_gop_section" style="display:none;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="tien_dot_2_TG">Tiền đợt 2 trả góp:</label>
+                        <input type="text" id="tien_dot_2_TG" name="tien_dot_2_TG" oninput="formatCurrencyInput(this); calculatePaymentInstallments();">
+                    </div>
+                    <div class="form-group">
+                        <label for="tien_dot_3">Tiền đợt 3 trả góp (tự động):</label>
+                        <input type="text" id="tien_dot_3" name="tien_dot_3" readonly style="background-color: var(--bg-color);">
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-actions">
+            <input type="button" id="submitContractButton" value="Tạo hợp đồng" onclick="submitContractForm()">
+            <span id="contractLoader" class="loader-inline">⏳ Đang xử lý...</span>
+            <a id="downloadLink" href="#" target="_blank">📄 Tải hợp đồng</a>
+        </div>
+        </div>
+      </form>
+  </div>
+  <div id="disbursementContent" class="tab-content">
+  <div class="card">
+    <form id="disbursementForm">
+      <h2>TẠO ĐỀ NGHỊ GIẢI NGÂN</h2>
+      <div class="form-section">
+        <h3 class="form-section-title">1. Tìm thông tin theo Mã đơn hàng</h3>
+        <div class="form-grid" style="grid-template-columns: 2fr 1fr; align-items: flex-end;">
+            <div class="form-group">
+              <label for="so_hop_dong_lookup">Nhập Mã đơn hàng</label>
+              <input type="text" id="so_hop_dong_lookup" placeholder="Nhập mã đơn hàng nhấn Tìm...">
+            </div>
+            <div class="form-group">
+              <input type="button" class="btn-primary" value="Tìm thông tin" onclick="findContractForDisbursement()">
+            </div>
+        </div>
+      </div>
+      <div id="disbursementDetails" style="display: none;">
+        <div class="form-section">
+          <h3 class="form-section-title">2. Thông tin giải ngân</h3>
+          <div class="form-grid">
+          <div class="form-group"> <label>Tên khách hàng</label> <input type="text" id="dngn_ten_khach_hang" readonly> </div>
+          <div class="form-group"> <label>Số hợp đồng</label> <input type="text" id="dngn_so_hop_dong" readonly> </div>
+          <div class="form-group"> <label>Loại xe</label> <input type="text" id="dngn_loai_xe" readonly> </div>
+          <div class="form-group"> <label for="dngn_ngay_captbcv">Ngày cấp TBCV (*)</label> <input type="date" id="dngn_ngay_captbcv"> </div>
+          <div class="form-group">
+            <label for="dngn_ten_ngan_hang">Kính gửi Ngân hàng (*)</label>
+            <select id="dngn_ten_ngan_hang">
+                <option value="" disabled selected>-- Chọn ngân hàng --</option>
+                <option value="Ngân hàng TMCP Ngoại thương Việt Nam (Vietcombank)">Vietcombank</option>
+                <option value="Ngân hàng TMCP Kỹ Thương Việt Nam CN Kiên Giang(Techcombank)">Techcombank KG</option>
+                <option value="Ngân hàng TMCP Việt Nam Thịnh Vượng CN Kiên Giang(VPBank)">VPBank KG</option>
+                <option value="Ngân hàng TMCP Việt Nam Thịnh Vượng CN Phú Quốc (VPBank)">VPBank Phú Quốc</option>
+                <option value="Ngân hàng TMCP Sài Gòn Thương Tín CN Kiên Giang(Sacombank)">Sacombank KG</option>
+                <option value="Ngân hàng TMCP Tiên Phong CN Kiên Giang(TPBank)">TPBank KG</option>
+                <option value="Ngân hàng TMCP Quân Đội CN Kiên Giang(MBBank)">MBBank KG</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dngn_tai_khoan_thu_huong">Tài khoản thụ hưởng (*)</label>
+            <select id="dngn_tai_khoan_thu_huong">
+              <option value="" disabled selected>-- Chọn tài khoản --</option>
+              <option value="0848563333 Ngân hàng TMCP Sài Gòn Thương Tín (Sacombank) - Chi nhánh Kiên Giang">0848563333 - Sacombank Kiên Giang</option>
+              <option value="0822442222 Ngân hàng TMCP Việt Nam Thịnh Vượng (VPBank) - Chi nhánh Kiên Giang">0822442222 - VPBank Kiên Giang</option>
+              <option value="848563333 Ngân hàng TMCP Quân Đội (MBBank) - Chi nhánh Kiên Giang">848563333 - MBBank Kiên Giang</option>
+
+
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dngn_so_tien_doi_ung">Số tiền đối ứng (*)</label>
+            <input type="text" id="dngn_so_tien_doi_ung" oninput="formatCurrencyInput(this)">
+          </div>
+          <div class="form-group">
+            <label for="dngn_so_tien_giai_ngan">Số tiền giải ngân (*)</label>
+            <input type="text" id="dngn_so_tien_giai_ngan" oninput="formatCurrencyInput(this)">
+          </div>
+        </div>
+        </div>
+        <div class="form-actions">
+          <input type="button" id="submitDisbursementButton" value="Tạo Đề nghị" onclick="submitDisbursementForm()">
+          <span id="disbursementLoader" class="loader-inline">⏳ Đang xử lý...</span>
+          <a id="disbursementDownloadLink" href="#" target="_blank" style="display: none;">📄 Tải Đề nghị Giải ngân</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+  <div id="listContent" class="tab-content">
+    <div class="card">
+      <h2>Danh sách đơn hàng đã nhập</h2>
+
+    <div class="filter-container">
+      <div class="filter-item">
+        <label for="salespersonFilter">Lọc theo TVBH:</label>
+        <select id="salespersonFilter"></select>
+      </div>
+      <div class="filter-item">
+        <label for="statusFilter">Lọc theo Trạng thái:</label>
+        <select id="statusFilter">
+          <option value="all">Tất cả Trạng thái</option>
+          <option value="pending">⏳ Chờ tạo</option>
+          <option value="created">✅ Đã tạo</option>
+        </select>
+      </div>
+      <div class="filter-item search-item">
+        <label for="searchInput">Tìm kiếm:</label>
+        <input type="text" id="searchInput" placeholder="Nhập tên KH hoặc mã đơn...">
+      </div>
+    </div>
+
+      <div class="order-list-table">
+        <div class="order-list-header">
+          <div class="header-cell">Khách hàng</div>
+          <div class="header-cell">Tên TVBH</div>
+          <div class="header-cell">Mã đơn hàng</div>
+          <div class="header-cell">Trạng thái</div>
+        </div>
+        <div id="orderListContainer" class="order-list-container">
+          </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="adminContent" class="tab-content">
+    <h2>Bảng Quản lý và Chỉnh sửa</h2>
+    <div class="filter-container" class="card">
+        <div class="filter-item">
+          <label for="adminSalespersonFilter">Lọc theo TVBH:</label>
+          <select id="adminSalespersonFilter"></select>
+        </div>
+        <div class="filter-item">
+          <label for="adminStatusFilter">Lọc theo Trạng thái:</label>
+          <select id="adminStatusFilter">
+            <option value="all">Tất cả Trạng thái</option>
+            <option value="pending">⏳ Chờ tạo</option>
+            <option value="created">✅ Đã tạo</option>
+          </select>
+        </div>
+        <div class="filter-item search-item">
+          <label for="adminSearchInput">Tìm kiếm:</label>
+          <input type="text" id="adminSearchInput" placeholder="Nhập tên KH, SĐT, mã đơn...">
+        </div>
+      </div>
+    <div id="adminDetailView" class="card" style="display: none; margin-top: 20px;margin-bottom: 20px"></div>
+    <div class="card">
+      <div id="adminListContainer" class="order-list-container"></div>
+    </div>
+    
+  </div>
+</div>
+
+<div id="loginModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header"><span class="close-button" onclick="closeLoginModal()">&times;</span><h3>Đăng nhập Admin</h3></div>
+    <div class="modal-body">
+      <label for="adminPass">Mật khẩu</label>
+      <input type="password" id="adminPass" placeholder="Nhập mật khẩu admin...">
+      <button id="loginSubmitBtn" class="btn-primary">Đăng nhập</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+// ===============================================================
+// === BIẾN TOÀN CỤC ===
+// ===============================================================
+let adminPassword = "";
+let isAdminLoggedIn = false;
+let adminDataCache = [];
+let allOrdersCache = []; // Cache cho danh sách đơn hàng
+let foundContractData = null; // Cache cho dữ liệu hợp đồng/đơn hàng tìm thấy
+
+
+// ===============================================================
+// === CÁC HÀM XỬ LÝ GIAO DIỆN CHUNG (UI) ===
+// ===============================================================
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.animation = 'fadeOut 0.5s forwards'; toast.addEventListener('animationend', () => toast.remove()); }, 4500);
+}
+
+function openTab(evt, tabName) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove("active"));
+  document.querySelectorAll('.tab-link').forEach(l => l.classList.remove("active"));
+  document.getElementById(tabName + 'Content').classList.add("active");
+  evt.currentTarget.classList.add("active");
+}
+
+function showLoginModal() { document.getElementById('loginModal').style.display = 'block'; }
+function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
+
+
+// ===============================================================
+// === CÁC HÀM TIỆN ÍCH CHO FORM (format, parse) ===
+// ===============================================================
+function formatCurrencyInput(input) { 
+  let value = input.value.replace(/\D/g, ""); 
+  input.value = value ? parseInt(value, 10).toLocaleString("vi-VN") : ""; 
+}
+function parseCurrency(value) { 
+  return parseInt(String(value).replace(/\D/g, ""), 10) || 0; 
+}
+
+
+// ===============================================================
+// === CÁC HÀM XỬ LÝ ĐĂNG NHẬP / ĐĂNG XUẤT ===
+// ===============================================================
+function handleAdminLogin() {
+    const pass = document.getElementById("adminPass").value;
+    const btn = document.getElementById("loginSubmitBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div><span>Đang kiểm tra...</span>';
+    google.script.run.withSuccessHandler(ok => {
+        if (ok) {
+            isAdminLoggedIn = true; adminPassword = pass; closeLoginModal();
+            document.getElementById("adminLoginIcon").onclick = handleAdminLogout;
+            const adminTabBtn = document.getElementById('adminTabBtn');
+            adminTabBtn.style.display = 'flex'; adminTabBtn.click();
+            loadAdminTable();
+
+            // --- THÊM CÁC DÒNG NÀY VÀO ---
+            populateAdminFilter();
+            document.getElementById('adminSalespersonFilter').addEventListener('change', filterAdminTable);
+            document.getElementById('adminStatusFilter').addEventListener('change', filterAdminTable);
+            document.getElementById('adminSearchInput').addEventListener('input', filterAdminTable);
+            // --- KẾT THÚC PHẦN THÊM ---
+
+        } else { showToast("Sai mật khẩu!", "danger"); }
+        btn.disabled = false; btn.innerHTML = 'Đăng nhập';
+    }).adminLogin(pass);
+}
+
+function handleAdminLogout() {
+    if (!confirm("Bạn có chắc muốn đăng xuất?")) return;
+    isAdminLoggedIn = false; adminPassword = "";
+    document.getElementById("adminLoginIcon").onclick = showLoginModal;
+    document.getElementById('adminTabBtn').style.display = 'none';
+    document.getElementById('adminDetailView').style.display = 'none';
+    document.querySelector('.tab-link').click();
+    showToast("Bạn đã đăng xuất.");
+}
+
+
+// ===============================================================
+// === CÁC HÀM CHO TAB NHẬP LIỆU, DANH SÁCH & ADMIN ===
+// ===============================================================
+function saveForm(data, files, btn) {
+    google.script.run.withSuccessHandler(msg => {
+        showToast(msg, 'success');
+        loadOrders();
+        document.getElementById("customerForm").reset();
+        btn.disabled = false;
+        btn.innerHTML = 'Lưu Thông Tin';
+    }).withFailureHandler(err => {
+        showToast("Lỗi: " + err.message, 'danger');
+        btn.disabled = false;
+        btn.innerHTML = 'Lưu Thông Tin';
+    }).submitFormWithFiles(data, files);
+}
+
+// Hàm mới để hiển thị danh sách đơn hàng
+function renderOrderList(orders) {
+    const listContainer = document.getElementById("orderListContainer");
+    listContainer.innerHTML = "";
+    if (!orders || orders.length === 0) {
+        listContainer.innerHTML = `<p style="text-align:center; padding: 20px;">Không có đơn hàng nào phù hợp.</p>`;
+        return;
+    }
+
+    const rowsHtml = orders.map(row => {
+        const statusClass = (row.trangthai === "✅ Đã tạo") ? "created" : "pending";
+        return `
+            <div class="order-row">
+            <div class="order-cell">
+                <div class="name">${row.khach || ""}</div>
+            </div>
+            <div class="order-cell">
+                <div class="sub-text">${row.tvbh || "N/A"}</div>
+            </div>
+            <div class="order-cell">
+                <div class="sub-text">${row.madon || "Chưa có"}</div>
+            </div>
+            <div class="order-cell order-status">
+                <span class="badge ${statusClass}">${row.trangthai}</span>
+            </div>
+            </div>`;
+    }).join('');
+    listContainer.innerHTML = rowsHtml;
+}
+
+// Hàm loadOrders được cập nhật: chỉ lấy dữ liệu và gọi hàm hiển thị
+function loadOrders() {
+    const listContainer = document.getElementById("orderListContainer");
+    listContainer.innerHTML = `<p style="padding: 20px;">Đang tải danh sách...</p>`;
+    
+    google.script.run.withSuccessHandler(data => {
+        allOrdersCache = data; // Lưu dữ liệu gốc vào cache
+        renderOrderList(allOrdersCache); // Hiển thị toàn bộ danh sách ban đầu
+        populateSalespersonFilter(); // Cập nhật bộ lọc sau khi có dữ liệu mới
+    }).getOrders();
+}
+
+// Hàm mới: Lọc danh sách đơn hàng
+function filterOrders() {
+    const selectedSalesperson = document.getElementById('salespersonFilter').value;
+    const selectedStatus = document.getElementById('statusFilter').value;
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+
+    let filteredOrders = allOrdersCache;
+
+    // Lọc theo TVBH
+    if (selectedSalesperson !== 'all') {
+        filteredOrders = filteredOrders.filter(order => order.tvbh === selectedSalesperson);
+    }
+
+    // Lọc theo Trạng thái
+    if (selectedStatus !== 'all') {
+        const statusText = selectedStatus === 'pending' ? '⏳ Chờ tạo' : '✅ Đã tạo';
+        filteredOrders = filteredOrders.filter(order => order.trangthai === statusText);
+    }
+
+    // Lọc theo ô tìm kiếm
+    if (searchTerm) {
+        filteredOrders = filteredOrders.filter(order => 
+            (order.khach && order.khach.toLowerCase().includes(searchTerm)) ||
+            (order.madon && order.madon.toLowerCase().includes(searchTerm))
+        );
+    }
+
+    renderOrderList(filteredOrders);
+}
+
+// Hàm mới: Lấy danh sách TVBH và điền vào dropdown
+function populateSalespersonFilter() {
+    google.script.run.withSuccessHandler(salespersons => {
+        const filterSelect = document.getElementById('salespersonFilter');
+        filterSelect.innerHTML = '<option value="all">Tất cả TVBH</option>'; // Lựa chọn mặc định
+        salespersons.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            filterSelect.appendChild(option);
+        });
+    }).getUniqueSalespersons();
+}
+
+
+function showDetailsInPanel(rowIndex, buttonElement) {
+    const orderData = adminDataCache.find(row => row.index === rowIndex);
+    if (!orderData) {
+        showToast("Không tìm thấy dữ liệu chi tiết.", "danger");
+        return;
+    }
+
+    // --- SỬA LỖI Ở ĐÂY ---
+    // Tìm đến class .admin-row thay vì .admin-card như cũ
+    document.querySelectorAll('.admin-row.active-row').forEach(row => row.classList.remove('active-row'));
+    if (buttonElement) { // Thêm kiểm tra để tránh lỗi
+        buttonElement.closest('.admin-row').classList.add('active-row');
+    }
+    // --- KẾT THÚC SỬA LỖI ---
+
+    const detailPanel = document.getElementById('adminDetailView');
+    
+    let filesHtml = "Không có file đính kèm.";
+    if (orderData['File đính kèm'] && orderData['File đính kèm'].trim() !== "") {
+        filesHtml = orderData['File đính kèm'].split(" , ").map(fileInfo => {
+            const [fileName, fileUrl] = fileInfo.split('|');
+            return `<li><a href="${fileUrl}" target="_blank" style="color: var(--primary-color);">${fileName || 'Link'}</a></li>`;
+        }).join("");
+        filesHtml = `<ul style="margin: 0; padding-left: 20px;">${filesHtml}</ul>`;
+    }
+
+    const detailsHtml = `
+      <h2>Chi tiết đơn hàng - ${orderData['Tên Khách hàng'] || ""}</h2>
+      <div class="detail-grid">
+        <p><strong>Ngày nhập:</strong> ${orderData['Ngày nhập'] || ""}</p>
+        <p><strong>Tên TVBH:</strong> ${orderData['Tên TVBH'] || ""}</p>
+        <p><strong>SĐT:</strong> ${orderData['SĐT'] || ""}</p>
+        <p><strong>CCCD:</strong> ${orderData['CCCD'] || ""}</p>
+        <p><strong>Ngày cấp:</strong> ${orderData['Ngày cấp'] || ""}</p>
+        <p><strong>Nơi cấp:</strong> ${orderData['Nơi cấp'] || ""}</p>
+        <p><strong>Email:</strong> ${orderData['Email khách'] || ""}</p>
+        <p><strong>Địa chỉ:</strong> ${orderData['Địa chỉ'] || ""}</p>
+        <p><strong>Loại xe:</strong> ${orderData['Loại xe'] || ""}</p>
+        <p><strong>Phiên bản:</strong> ${orderData['Phiên bản'] || ""}</p>
+        <p><strong>Màu xe:</strong> ${orderData['Màu xe'] || ""}</p>
+        <p><strong>Hình thức TT:</strong> ${orderData['Hình thức TT'] || ""}</p>
+        <p><strong>Mã đơn hàng:</strong> ${orderData['Mã đơn hàng'] || ""}</p>
+      </div>
+      <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+      <h4>File đính kèm:</h4>
+      <div>${filesHtml}</div>
+    `;
+    
+    detailPanel.innerHTML = detailsHtml;
+    detailPanel.style.display = 'block';
+    detailPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// HÀM MỚI: Dùng để hiển thị bảng admin
+function renderAdminTable(dataToRender) {
+    const adminContainer = document.getElementById("adminListContainer");
+    const oldHeader = adminContainer.parentElement.querySelector('.admin-table-header');
+    if (oldHeader) oldHeader.remove();
+
+    if (!dataToRender || dataToRender.length === 0) {
+        adminContainer.innerHTML = `<p style="text-align:center; padding: 20px;">Không có dữ liệu phù hợp.</p>`;
+        return;
+    }
+    const headerHtml = `<div class="admin-table-header"><div>Tên TVBH</div><div>Tên Khách hàng</div><div>SĐT</div><div>Mã đơn hàng</div><div>Hành động</div></div>`;
+    
+    const rowsHtml = dataToRender.map(row => `
+        <div class="admin-row" id="admin-row-${row.index}">
+            <div class="admin-cell"><span class="cell-text">${row['Tên TVBH'] || ""}</span><input class="cell-input" id="tvbh${row.index}" type="text" value="${row['Tên TVBH'] || ""}"></div>
+            <div class="admin-cell"><span class="cell-text">${row['Tên Khách hàng'] || ""}</span><input class="cell-input" id="khach${row.index}" type="text" value="${row['Tên Khách hàng'] || ""}"></div>
+            <div class="admin-cell"><span class="cell-text">${row['SĐT'] || ""}</span><input class="cell-input" id="sdt${row.index}" type="text" value="${row['SĐT'] || ""}"></div>
+            <div class="admin-cell"><span class="cell-text">${row['Mã đơn hàng'] || ""}</span><input class="cell-input" id="madon${row.index}" type="text" value="${row['Mã đơn hàng'] || ""}"></div>
+            <div class="admin-cell admin-actions">
+                <div class="edit-buttons">
+                    <button class="btn-primary" onclick="toggleEditMode(${row.index})">Sửa</button>
+                    <button class="btn-secondary" onclick="showDetailsInPanel(${row.index}, this)">Xem</button>
+                    <button class="btn-danger" onclick="handleDeleteOrder(${row.index})">Xóa</button>
+                </div>
+                <div class="save-buttons">
+                    <button class="btn-primary" onclick="saveAdminChanges(${row.index}, this)">Lưu</button>
+                    <button class="btn-secondary" onclick="toggleEditMode(${row.index})">Hủy</button>
+                </div>
+            </div>
+        </div>`
+    ).join('');
+    
+    adminContainer.parentElement.insertAdjacentHTML('afterbegin', headerHtml);
+    adminContainer.innerHTML = rowsHtml;
+}
+
+// Hàm xử lý xóa đơn hàng
+function handleDeleteOrder(rowIndex) {
+    // 1. Xác nhận với người dùng trước khi xóa
+    if (!confirm("CẢNH BÁO: Bạn có chắc chắn muốn XÓA vĩnh viễn đơn hàng này không?\nHành động này không thể hoàn tác.")) {
+        return; // Nếu chọn Cancel thì dừng lại
+    }
+
+    // 2. Hiển thị thông báo đang xử lý
+    showToast("Đang xóa dữ liệu...", "info");
+
+    // 3. Gọi server để xóa
+    google.script.run.withSuccessHandler(msg => {
+        showToast(msg, "success");
+        // 4. Tải lại bảng admin để cập nhật danh sách (quan trọng vì số dòng sẽ thay đổi)
+        loadAdminTable(); 
+        loadOrders(); // Cập nhật cả tab danh sách công khai
+    }).withFailureHandler(err => {
+        showToast("Lỗi khi xóa: " + err.message, "danger");
+    }).deleteOrder(adminPassword, rowIndex);
+}
+
+// HÀM CŨ ĐƯỢC CẬP NHẬT: Chỉ lấy dữ liệu
+function loadAdminTable() {
+    const adminContainer = document.getElementById("adminListContainer");
+    adminContainer.innerHTML = `<p>Đang tải dữ liệu admin...</p>`;
+    google.script.run.withSuccessHandler(data => {
+        adminDataCache = data;
+        renderAdminTable(adminDataCache); // Hiển thị toàn bộ dữ liệu ban đầu
+    }).getAllOrdersForAdmin(adminPassword);
+}
+
+// Hàm mới: Bật/tắt chế độ chỉnh sửa cho một dòng
+function toggleEditMode(rowIndex) {
+    const row = document.getElementById(`admin-row-${rowIndex}`);
+    if (row) {
+        row.classList.toggle('edit-mode');
+    }
+}
+
+// Hàm mới: Lưu các thay đổi sau khi sửa
+function saveAdminChanges(rowIndex, btn) {
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div>';
+
+    let updateData = {
+        tvbh: document.getElementById("tvbh" + rowIndex).value,
+        khach: document.getElementById("khach" + rowIndex).value,
+        sdt: document.getElementById("sdt" + rowIndex).value,
+        madon: document.getElementById("madon" + rowIndex).value
+    };
+
+    google.script.run.withSuccessHandler(msg => {
+        showToast(msg, 'success');
+        // Tắt chế độ sửa và làm mới dữ liệu
+        toggleEditMode(rowIndex);
+        loadAdminTable(); // Tải lại để cập nhật cache và hiển thị
+        loadOrders(); // Cập nhật lại cả danh sách công khai
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }).withFailureHandler(err => {
+        showToast("Lỗi: " + err.message, 'danger');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }).updateOrder(adminPassword, rowIndex, updateData);
+}
+
+// ===============================================================
+// === CÁC HÀM CHO TAB TẠO HỢP ĐỒNG ===
+// ===============================================================
+function updateTotal() {
+    var soLuong = parseCurrency(document.getElementById("so_luong").value);
+    var donGia = parseCurrency(document.getElementById("don_gia").value);
+    document.getElementById("thanh_tien").value = (soLuong > 0 && donGia > 0) ? (soLuong * donGia).toLocaleString("vi-VN") + " VND" : "";
+}
+
+function prepareFormData() {
+    var checkedPolicies = document.querySelectorAll('input[name="chinh_sach_ban_hang"]:checked');
+    var policiesString = Array.from(checkedPolicies).map(cb => cb.value).join("\n- ");
+    return {
+        so_hop_dong: document.getElementById('so_hop_dong').value.trim(), ngay_ky: document.getElementById('ngay_ky').value.trim(),
+        khach_hang: document.getElementById('khach_hang').value.trim(), dia_chi: document.getElementById('dia_chi').value.trim(),
+        sdt: document.getElementById('sdt').value.trim(), email: document.getElementById('email').value.trim(),
+        so_cccd: document.getElementById('so_cccd').value.trim(), ngay_cap: document.getElementById('ngay_cap').value.trim(),
+        noi_cap: document.getElementById('noi_cap').value.trim(), loai_xe: document.getElementById('loai_xe').value.trim(),
+        phien_ban: document.getElementById('phien_ban').value.trim(), mau_xe: document.getElementById('mau_xe').value.trim(),
+        chinh_sach_ban_hang: policiesString ? "- " + policiesString : "",
+        so_luong: parseCurrency(document.getElementById('so_luong').value), don_gia: parseCurrency(document.getElementById('don_gia').value),
+        tien_coc: parseCurrency(document.getElementById('tien_coc').value),
+        tien_dot_2_TT: parseCurrency(document.getElementById('tien_dot_2_TT').value) || 0,
+        tien_dot_2_TG: parseCurrency(document.getElementById('tien_dot_2_TG').value) || 0,
+        tien_dot_3: parseCurrency(document.getElementById('tien_dot_3').value) || 0,
+        thanh_tien: parseCurrency(document.getElementById('thanh_tien').value)
+    };
+}
+
+function submitContractForm() {
+    var button = document.getElementById("submitContractButton");
+    var loader = document.getElementById("contractLoader");
+    var downloadLink = document.getElementById("downloadLink");
+    button.disabled = true; loader.style.display = "inline-block"; downloadLink.style.display = "none";
+    var formData = prepareFormData();
+    google.script.run.withSuccessHandler(function(response) {
+        loader.style.display = "none"; button.disabled = false;
+        if (response.success) {
+            showToast("Hợp đồng đã được tạo thành công!");
+            downloadLink.href = response.fileUrl;
+            downloadLink.style.display = "block";
+        } else { showToast("Lỗi khi tạo hợp đồng: " + response.message, "danger"); }
+    }).withFailureHandler(function(error) {
+        loader.style.display = "none"; button.disabled = false;
+        showToast("Có lỗi xảy ra: " + error.message, "danger");
+    }).createContract(formData);
+}
+
+function togglePaymentMethod() {
+    const isTraThang = document.getElementById("tra_thang").checked;
+    document.getElementById("tra_thang_section").style.display = isTraThang ? "block" : "none";
+    document.getElementById("tra_gop_section").style.display = !isTraThang ? "block" : "none";
+}
+
+function findOrderData() {
+    const codeInput = document.getElementById('so_hop_dong');
+    const orderCode = codeInput.value.trim();
+    const loader = document.getElementById('lookupLoader');
+    if (!orderCode) return;
+    loader.style.display = 'inline-block';
+    google.script.run.withSuccessHandler(response => {
+        loader.style.display = 'none';
+        if (response && response.success === true && response.data) {
+            const data = response.data;
+            try {
+                document.getElementById('khach_hang').value = data['Tên Khách hàng'] || '';
+                document.getElementById('so_cccd').value = data['CCCD'] || '';
+                document.getElementById('sdt').value = data['SĐT'] || '';
+                document.getElementById('ngay_cap').value = data['Ngày cấp'] ? new Date(data['Ngày cấp']).toISOString().split('T')[0] : '';
+                document.getElementById('noi_cap').value = data['Nơi cấp'] || '';
+                document.getElementById('dia_chi').value = data['Địa chỉ'] || ''; 
+                document.getElementById('email').value = data['Email khách'] || '';
+                document.getElementById('loai_xe').value = data['Loại xe'] || '';
+                document.getElementById('phien_ban').value = data['Phiên bản'] || '';
+                document.getElementById('mau_xe').value = data['Màu xe'] || '';
+                showToast('Đã điền thông tin thành công!', 'success');
+            } catch (error) { alert("Lỗi JavaScript khi điền dữ liệu: " + error.message); }
+        } else {
+            const errorMessage = response ? response.error : "Không nhận được phản hồi từ server.";
+            showToast("Tìm kiếm thất bại: " + errorMessage, "danger");
+        }
+    }).withFailureHandler(err => {
+        loader.style.display = 'none';
+        alert('Lỗi nghiêm trọng khi gọi server: ' + err.message);
+    }).getOrderDataByCode(orderCode);
+}
+
+// ===============================================================
+// === CÁC HÀM CHO TAB ĐỀ NGHỊ GIẢI NGÂN ===
+// ===============================================================
+function findContractForDisbursement() {
+    const contractNumber = document.getElementById('so_hop_dong_lookup').value.trim();
+    if (!contractNumber) {
+        showToast("Vui lòng nhập Mã đơn hàng.", "warning");
+        return;
+    }
+    showToast("Đang tìm thông tin...", "info");
+    google.script.run.withSuccessHandler(response => {
+        if (response.success) {
+            showToast("Đã tìm thấy thông tin!", "success");
+            foundContractData = response.data;
+            document.getElementById('dngn_ten_khach_hang').value = foundContractData['Tên Khách hàng'] || '';
+            document.getElementById('dngn_so_hop_dong').value = foundContractData['Mã đơn hàng'] || '';
+            document.getElementById('dngn_loai_xe').value = foundContractData['Loại xe'] || ''; 
+            document.getElementById('dngn_so_tien_giai_ngan').value = ''; 
+            document.getElementById('disbursementDetails').style.display = 'block';
+            document.getElementById('dngn_so_tien_giai_ngan').focus();
+        } else {
+            showToast(response.error, "danger");
+        }
+    }).getOrderDataByCode(contractNumber);
+}
+
+function submitDisbursementForm() {
+    if (!foundContractData) {
+        showToast("Lỗi: Không có thông tin hợp đồng. Vui lòng tìm lại.", "danger");
+        return;
+    }
+    const button = document.getElementById("submitDisbursementButton");
+    const loader = document.getElementById("disbursementLoader");
+    const downloadLink = document.getElementById("disbursementDownloadLink");
+    button.disabled = true; loader.style.display = "inline-block"; downloadLink.style.display = "none";
+    
+    const taiKhoanThuhuongValue = document.getElementById('dngn_tai_khoan_thu_huong').value;
+    const [soTaiKhoan, tenNganHangThuhuong] = taiKhoanThuhuongValue ? taiKhoanThuhuongValue.split('|') : [null, null];
+    
+    const requestData = {
+      ten_khach_hang: document.getElementById('dngn_ten_khach_hang').value,
+      so_hop_dong: document.getElementById('dngn_so_hop_dong').value,
+      ten_ngan_hang_vay: document.getElementById('dngn_ten_ngan_hang').value,
+      ngay_captbcv: document.getElementById('dngn_ngay_captbcv').value,
+      loai_xe: document.getElementById('dngn_loai_xe').value,
+      so_tai_khoan: soTaiKhoan,
+      ten_ngan_hang_thu_huong: tenNganHangThuhuong,
+      so_tien_doi_ung: parseCurrency(document.getElementById('dngn_so_tien_doi_ung').value),
+      so_tien_giai_ngan: parseCurrency(document.getElementById('dngn_so_tien_giai_ngan').value)
+    };
+
+    if (!requestData.ten_ngan_hang_vay || !requestData.so_tai_khoan || !requestData.ngay_captbcv || !requestData.so_tien_giai_ngan || !requestData.so_tien_doi_ung) {
+        showToast("Vui lòng điền đầy đủ các trường có dấu (*).", "warning");
+        button.disabled = false; loader.style.display = "none";
+        return;
+    }
+
+    google.script.run.withSuccessHandler(response => {
+        if (response.success) {
+            showToast("Tạo Đề nghị Giải ngân thành công!", "success");
+            downloadLink.href = response.fileUrl;
+            downloadLink.style.display = "block";
+        } else {
+            showToast("Lỗi: " + response.message, "danger");
+        }
+        button.disabled = false; loader.style.display = "none";
+    }).createDisbursementRequest(requestData);
+}
+
+// ===============================================================
+// === GÁN SỰ KIỆN KHI TẢI TRANG ===
+// ===============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelector('.tab-link').click();
+    loadOrders();
+    populateSalespersonFilter(); 
+    
+    // Gán sự kiện cho các bộ lọc
+    document.getElementById('salespersonFilter').addEventListener('change', filterOrders);
+    document.getElementById('statusFilter').addEventListener('change', filterOrders);
+    document.getElementById('searchInput').addEventListener('input', filterOrders); // 'input' để tìm kiếm ngay khi gõ
+    document.getElementById('adminLoginIcon').addEventListener("click", showLoginModal);
+    document.getElementById('loginSubmitBtn').addEventListener("click", handleAdminLogin);
+    
+    // --- BẮT ĐẦU THAY ĐỔI TẠI ĐÂY ---
+    document.getElementById("customerForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        
+        // KIỂM TRA FILE ĐÍNH KÈM
+        const fileInput = document.getElementById("files");
+        if (fileInput.files.length === 0) {
+            showToast("Vui lòng đính kèm ít nhất một file.", "warning");
+            return; // Dừng lại nếu chưa chọn file
+        }
+        
+        // Nếu đã chọn file, tiếp tục xử lý như cũ
+        const btn = e.target.querySelector("button[type='submit']");
+        btn.disabled = true; 
+        btn.innerHTML = '<div class="spinner"></div><span>Đang lưu...</span>';
+        let data = Object.fromEntries(new FormData(this).entries());
+        
+        if (fileInput.files.length > 3) {
+            showToast("Chỉ được upload tối đa 3 file!", 'danger');
+            btn.disabled = false; 
+            btn.innerHTML = 'Lưu Thông Tin'; 
+            return;
+        }
+
+        let files = []; 
+        let count = 0;
+        [...fileInput.files].forEach(file => {
+            let reader = new FileReader();
+            reader.onload = evt => {
+                files.push({ name: file.name, mimeType: file.type, data: evt.target.result.split(",")[1] });
+                if (++count === fileInput.files.length) {
+                    saveForm(data, files, btn);
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+    // --- KẾT THÚC THAY ĐỔI ---
+
+    document.getElementById('so_hop_dong').addEventListener('blur', findOrderData);
+    window.onclick = function(event) { 
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = "none"; 
+        }
+    }
+});
+
+// HÀM MỚI: Điền dữ liệu vào bộ lọc của Admin
+function populateAdminFilter() {
+    google.script.run.withSuccessHandler(salespersons => {
+        const filterSelect = document.getElementById('adminSalespersonFilter');
+        filterSelect.innerHTML = '<option value="all">Tất cả TVBH</option>';
+        salespersons.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            filterSelect.appendChild(option);
+        });
+    }).getUniqueSalespersons();
+}
+
+// HÀM MỚI: Lọc bảng Admin
+function filterAdminTable() {
+    const selectedSalesperson = document.getElementById('adminSalespersonFilter').value;
+    const selectedStatus = document.getElementById('adminStatusFilter').value;
+    const searchTerm = document.getElementById('adminSearchInput').value.toLowerCase().trim();
+
+    let filteredData = adminDataCache;
+
+    if (selectedSalesperson !== 'all') {
+        filteredData = filteredData.filter(row => row['Tên TVBH'] === selectedSalesperson);
+    }
+    if (selectedStatus !== 'all') {
+        const hasCode = selectedStatus === 'created';
+        filteredData = filteredData.filter(row => !!(row['Mã đơn hàng'] && row['Mã đơn hàng'].trim()) === hasCode);
+    }
+    if (searchTerm) {
+        filteredData = filteredData.filter(row => 
+            (row['Tên Khách hàng'] && row['Tên Khách hàng'].toLowerCase().includes(searchTerm)) ||
+            (row['SĐT'] && row['SĐT'].toString().toLowerCase().includes(searchTerm)) ||
+            (row['Mã đơn hàng'] && row['Mã đơn hàng'].toLowerCase().includes(searchTerm))
+        );
+    }
+    renderAdminTable(filteredData);
+}
+// Dán hàm này vào bên trong thẻ <script>
+function calculatePaymentInstallments() {
+  // Lấy giá trị số từ các ô input
+  const donGia = parseCurrency(document.getElementById('don_gia').value);
+  const tienCoc = parseCurrency(document.getElementById('tien_coc').value);
+
+  // Tính toán cho trường hợp Trả thẳng
+  const tienDot2TT = donGia - tienCoc;
+  const tienDot2TT_Input = document.getElementById('tien_dot_2_TT');
+  // Hiển thị kết quả, nếu âm thì hiển thị 0
+  tienDot2TT_Input.value = (tienDot2TT > 0) ? tienDot2TT.toLocaleString("vi-VN") : "0";
+
+  // Tính toán cho trường hợp Trả góp
+  const tienDot2TG = parseCurrency(document.getElementById('tien_dot_2_TG').value);
+  const tienDot3 = donGia - tienCoc - tienDot2TG;
+  const tienDot3_Input = document.getElementById('tien_dot_3');
+  // Hiển thị kết quả, nếu âm thì hiển thị 0
+  tienDot3_Input.value = (tienDot3 > 0) ? tienDot3.toLocaleString("vi-VN") : "0";
+}
+
+</script>
+</body>
+</html>
