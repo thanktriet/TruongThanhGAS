@@ -1,0 +1,263 @@
+<div id="tab-my-orders" class="tab-content">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-blue-50 px-6 py-4 border-b border-blue-100">
+            <h2 class="text-lg font-bold text-blue-800">
+                <i class="fa-solid fa-list-check mr-2"></i>Quản Lý Đơn Hàng Của Tôi
+            </h2>
+        </div>
+        <div class="p-6">
+            <!-- Filter -->
+            <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div>
+                    <label class="label text-xs">Lọc theo trạng thái:</label>
+                    <select id="filter-status" class="input bg-white text-sm" onchange="loadMyOrders()">
+                        <option value="">Tất cả</option>
+                        <option value="pending">Chưa có mã</option>
+                        <option value="assigned">Đã có mã</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="label text-xs">Tìm kiếm:</label>
+                    <input 
+                        type="text" 
+                        id="search-orders" 
+                        class="input text-sm" 
+                        placeholder="Tên KH, CCCD, mã đơn..."
+                        onkeyup="filterOrders()"
+                    >
+                </div>
+                <div class="md:col-span-2 flex items-end">
+                    <button 
+                        onclick="loadMyOrders()" 
+                        class="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                    >
+                        <i class="fa-solid fa-rotate mr-2"></i>Làm mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Orders List -->
+            <div id="orders-loading" class="text-center py-8 hidden">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p class="mt-2 text-gray-600">Đang tải...</p>
+            </div>
+
+            <div id="orders-list" class="space-y-3">
+                <!-- Orders will be loaded here -->
+            </div>
+
+            <div id="orders-empty" class="text-center py-12 hidden">
+                <i class="fa-solid fa-inbox text-4xl text-gray-300 mb-3"></i>
+                <p class="text-gray-500">Chưa có đơn hàng nào</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allOrders = [];
+
+// Load my orders
+async function loadMyOrders() {
+    const session = JSON.parse(localStorage.getItem('session') || '{}');
+    if (!session || !session.username) {
+        showToast('Vui lòng đăng nhập lại', 'danger');
+        return;
+    }
+
+    document.getElementById('orders-loading').classList.remove('hidden');
+    document.getElementById('orders-list').innerHTML = '';
+    document.getElementById('orders-empty').classList.add('hidden');
+
+    const filterStatus = document.getElementById('filter-status').value;
+    const filters = {};
+    
+    if (filterStatus === 'pending') {
+        filters.has_contract_code = false;
+    } else if (filterStatus === 'assigned') {
+        filters.has_contract_code = true;
+    }
+
+    const result = await window.callAPI({
+        action: 'get_my_orders',
+        username: session.username,
+        filters: filters
+    });
+
+    document.getElementById('orders-loading').classList.add('hidden');
+
+    if (result.success && result.data && result.data.length > 0) {
+        allOrders = result.data;
+        renderOrders(allOrders);
+        document.getElementById('orders-empty').classList.add('hidden');
+    } else {
+        allOrders = [];
+        document.getElementById('orders-list').innerHTML = '';
+        document.getElementById('orders-empty').classList.remove('hidden');
+    }
+}
+
+// Render orders
+function renderOrders(orders) {
+    const container = document.getElementById('orders-list');
+    container.innerHTML = '';
+
+    orders.forEach(order => {
+        const customer = order.customers || {};
+        const hasContractCode = order.contract_code && order.contract_code.trim();
+        
+        const orderCard = document.createElement('div');
+        orderCard.className = 'bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition';
+        orderCard.innerHTML = `
+            <div class="flex justify-between items-start mb-3">
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                        <h3 class="font-bold text-gray-800 text-lg">${customer.name || 'Chưa có tên'}</h3>
+                        ${hasContractCode ? `
+                            <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">
+                                <i class="fa-solid fa-check-circle mr-1"></i>Đã có mã
+                            </span>
+                        ` : `
+                            <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded">
+                                <i class="fa-solid fa-clock mr-1"></i>Chờ cấp mã
+                            </span>
+                        `}
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-gray-600">
+                        <div>
+                            <span class="font-medium">CCCD:</span> ${customer.cccd || '-'}
+                        </div>
+                        <div>
+                            <span class="font-medium">SĐT:</span> ${customer.phone || '-'}
+                        </div>
+                        <div>
+                            <span class="font-medium">Xe:</span> ${order.car_model || '-'} ${order.car_version ? `(${order.car_version})` : ''}
+                        </div>
+                        <div>
+                            <span class="font-medium">Màu:</span> ${order.car_color || '-'}
+                        </div>
+                        ${hasContractCode ? `
+                            <div class="md:col-span-2">
+                                <span class="font-medium">Mã đơn hàng:</span> 
+                                <span class="font-bold text-blue-600">${order.contract_code}</span>
+                            </div>
+                        ` : ''}
+                        <div class="md:col-span-2">
+                            <span class="font-medium">Ngày tạo:</span> ${formatDate(order.created_at)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2 pt-3 border-t border-gray-200">
+                <button 
+                    onclick="viewOrderDetail('${order.id}')" 
+                    class="flex-1 bg-blue-600 text-white font-bold px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
+                >
+                    <i class="fa-solid fa-eye mr-2"></i>Xem chi tiết
+                </button>
+                ${hasContractCode ? `
+                    <button 
+                        onclick="createApprovalFromOrder('${order.id}')" 
+                        class="flex-1 bg-green-600 text-white font-bold px-4 py-2 rounded hover:bg-green-700 transition text-sm"
+                    >
+                        <i class="fa-solid fa-file-circle-plus mr-2"></i>Tạo tờ trình
+                    </button>
+                    <button 
+                        onclick="createContractFromOrder('${order.id}')" 
+                        class="flex-1 bg-purple-600 text-white font-bold px-4 py-2 rounded hover:bg-purple-700 transition text-sm"
+                    >
+                        <i class="fa-solid fa-file-contract mr-2"></i>Tạo HĐMB
+                    </button>
+                    <button 
+                        onclick="createAgreementFromOrder('${order.id}')" 
+                        class="flex-1 bg-indigo-600 text-white font-bold px-4 py-2 rounded hover:bg-indigo-700 transition text-sm"
+                    >
+                        <i class="fa-solid fa-handshake mr-2"></i>Thỏa thuận
+                    </button>
+                ` : `
+                    <div class="flex-1 text-xs text-gray-500 flex items-center justify-center">
+                        Chờ SaleAdmin cấp mã đơn hàng
+                    </div>
+                `}
+            </div>
+        `;
+        container.appendChild(orderCard);
+    });
+}
+
+// Filter orders
+function filterOrders() {
+    const searchTerm = document.getElementById('search-orders').value.toLowerCase();
+    if (!searchTerm) {
+        renderOrders(allOrders);
+        return;
+    }
+
+    const filtered = allOrders.filter(order => {
+        const customer = order.customers || {};
+        const searchText = `${customer.name || ''} ${customer.cccd || ''} ${order.contract_code || ''}`.toLowerCase();
+        return searchText.includes(searchTerm);
+    });
+
+    renderOrders(filtered);
+}
+
+// View order detail
+async function viewOrderDetail(orderId) {
+    // TODO: Implement modal to view order detail
+    showToast('Tính năng xem chi tiết đang được phát triển', 'info');
+}
+
+// Create approval from order
+function createApprovalFromOrder(orderId) {
+    const order = allOrders.find(o => o.id === orderId);
+    if (!order) return;
+
+    // Chuyển sang tab tạo tờ trình và fill dữ liệu từ đơn hàng
+    if (window.switchTab) {
+        window.switchTab('tab-create');
+        // TODO: Auto-fill form với dữ liệu từ order
+        showToast('Vui lòng điền thêm thông tin và gửi tờ trình', 'info');
+    }
+}
+
+// Create contract from order
+function createContractFromOrder(orderId) {
+    showToast('Tính năng tạo HĐMB đang được phát triển', 'info');
+}
+
+// Create agreement from order
+function createAgreementFromOrder(orderId) {
+    showToast('Tính năng tạo thỏa thuận đang được phát triển', 'info');
+}
+
+// Format date
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN');
+}
+
+// Auto load when tab is shown
+if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+        // Load orders when tab is activated
+        const observer = new MutationObserver((mutations) => {
+            const myOrdersTab = document.getElementById('tab-my-orders');
+            if (myOrdersTab && myOrdersTab.classList.contains('active')) {
+                loadMyOrders();
+            }
+        });
+        
+        const container = document.querySelector('.tab-content');
+        if (container) {
+            observer.observe(container.parentElement, { 
+                attributes: true, 
+                attributeFilter: ['class'],
+                subtree: true 
+            });
+        }
+    });
+}
+</script>
+
