@@ -62,9 +62,70 @@ async function loadAllComponents() {
 }
 
 // Load components when DOM is ready
+async function initializeApp() {
+    // First load all components
+    await loadAllComponents();
+    
+    // Then initialize app functions after components are loaded
+    if (typeof loadTPKDUsers === 'function') {
+        loadTPKDUsers();
+    }
+    if (typeof checkSession === 'function') {
+        checkSession();
+    }
+    if (typeof addGiftRow === 'function') {
+        addGiftRow('gift-list-manual');
+    }
+    if (typeof initContractLookup === 'function') {
+        initContractLookup();
+    }
+    
+    // Setup filters
+    const approvalSearch = $('approval-search');
+    if (approvalSearch) {
+        approvalSearch.addEventListener('input', (e) => {
+            if (typeof setApprovalFilter === 'function') {
+                setApprovalFilter('search', e.target.value);
+            }
+        });
+    }
+    const approvalStatus = $('approval-status-filter');
+    if (approvalStatus) {
+        approvalStatus.addEventListener('change', (e) => {
+            if (typeof setApprovalFilter === 'function') {
+                setApprovalFilter('status', e.target.value);
+            }
+        });
+    }
+    
+    // My requests filters
+    const myRequestsSearch = $('my-requests-search');
+    if (myRequestsSearch) {
+        myRequestsSearch.addEventListener('input', (e) => {
+            if (typeof myRequestsFilters !== 'undefined') {
+                myRequestsFilters.search = e.target.value;
+                if (typeof renderMyRequestsList === 'function') {
+                    renderMyRequestsList();
+                }
+            }
+        });
+    }
+    const myRequestsStatus = $('my-requests-status-filter');
+    if (myRequestsStatus) {
+        myRequestsStatus.addEventListener('change', (e) => {
+            if (typeof myRequestsFilters !== 'undefined') {
+                myRequestsFilters.status = e.target.value;
+                if (typeof renderMyRequestsList === 'function') {
+                    renderMyRequestsList();
+                }
+            }
+        });
+    }
+}
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadAllComponents);
+    document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
-    loadAllComponents();
+    initializeApp();
 }
 

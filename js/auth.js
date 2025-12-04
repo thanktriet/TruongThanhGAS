@@ -17,8 +17,11 @@ function checkSession() {
             return;
         }
         
-        $('user-fullname').textContent = user.fullname || 'User';
-        $('user-role').textContent = user.role || 'ROLE';
+        // Wait for sidebar to be loaded before accessing elements
+        const userFullname = $('user-fullname');
+        const userRole = $('user-role');
+        if (userFullname) userFullname.textContent = user.fullname || 'User';
+        if (userRole) userRole.textContent = user.role || 'ROLE';
         
         $('nav-profile')?.classList.remove('hidden');
         $('nav-mobile-profile')?.classList.remove('hidden');

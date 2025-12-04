@@ -2390,6 +2390,3 @@ async function saveProductivityBonus(id) {
         document.head.appendChild(style);
     }
 })();
-    </script>
-</body>
-</html>

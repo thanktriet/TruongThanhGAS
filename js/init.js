@@ -105,36 +105,6 @@ function initContractLookup() {
     }
 }
 
-// Initialize on DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-    loadTPKDUsers();
-    checkSession();
-    addGiftRow('gift-list-manual');
-    initContractLookup();
-
-    const approvalSearch = $('approval-search');
-    if (approvalSearch) {
-        approvalSearch.addEventListener('input', (e) => setApprovalFilter('search', e.target.value));
-    }
-    const approvalStatus = $('approval-status-filter');
-    if (approvalStatus) {
-        approvalStatus.addEventListener('change', (e) => setApprovalFilter('status', e.target.value));
-    }
-    
-    // My requests filters
-    const myRequestsSearch = $('my-requests-search');
-    if (myRequestsSearch) {
-        myRequestsSearch.addEventListener('input', (e) => {
-            myRequestsFilters.search = e.target.value;
-            renderMyRequestsList();
-        });
-    }
-    const myRequestsStatus = $('my-requests-status-filter');
-    if (myRequestsStatus) {
-        myRequestsStatus.addEventListener('change', (e) => {
-            myRequestsFilters.status = e.target.value;
-            renderMyRequestsList();
-        });
-    }
-});
+// Note: Initialization is now handled in components.js after components are loaded
+// This prevents accessing DOM elements before they exist
 
