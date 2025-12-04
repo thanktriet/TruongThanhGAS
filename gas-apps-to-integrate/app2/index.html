@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Báo Cáo TVBH</title>
+    <style>
+      :root {
+        --primary-color: #005B9A; --primary-light: #E6F0F8; --accent-color: #0d6efd;
+        --success-color: #198754; --danger-color: #dc3545; --bg-color: #f8f9fa;
+        --border-color: #dee2e6; --text-color: #212529; --text-light: #6c757d;
+        --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 6px 12px rgba(0,0,0,0.08);
+        --border-radius: 12px;
+      }
+      html { box-sizing: border-box; }
+      *, *:before, *:after { box-sizing: inherit; }
+      body { 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+        margin: 0; background-color: var(--bg-color); color: var(--text-color);
+      }
+      
+      .filter-bar {
+        background-color: var(--bg-color);
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px dashed var(--border-color);
+        border-radius: var(--border-radius);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+        align-items: flex-end; 
+      }
+      /* Cấu hình cột cho bộ lọc ngày/tháng đơn giản */
+      .simple-filter-bar {
+        grid-template-columns: 1fr 150px; 
+        max-width: 400px;
+      }
+      
+      .filter-group { display: flex; flex-direction: column; }
+      .filter-group label {
+        font-size: 0.8em; font-weight: 600; color: var(--text-light); margin-bottom: 5px;
+      }
+      .filter-group select, .filter-group input[type="date"], .filter-group input[type="month"] {
+        width: 100%; padding: 8px 10px;
+        border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.9em;
+        background-color: #fff; box-sizing: border-box;
+      }
+      .filter-buttons { display: flex; gap: 10px; }
+      .filter-button, .reset-button, .export-button {
+        padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer;
+        font-weight: 600; font-size: 0.9em; transition: all 0.2s ease; height: 35px;
+      }
+      .filter-button { background-color: var(--primary-color); color: white; flex: 1; }
+      .filter-button:hover { background-color: var(--accent-color); }
+      .reset-button { background-color: #fff; color: var(--text-light); border: 1px solid var(--border-color); }
+      .reset-button:hover { background-color: #e9ecef; }
+      .export-button { background-color: var(--success-color); color: white; }
+      .export-button:hover { background-color: #157347; }
+      .filter-button:disabled, .reset-button:disabled, .export-button:disabled {
+        background-color: #aaa; cursor: not-allowed; border-color: #aaa;
+      }
+      
+      /* TAB NAV */
+      .tab-nav {
+        display: flex; background-color: #fff; box-shadow: var(--shadow-sm);
+        position: -webkit-sticky; position: sticky; top: 0; z-index: 1000;
+      }
+      .tab-button {
+        flex: 1; padding: 16px 5px; text-align: center; cursor: pointer;
+        font-weight: 600; color: var(--text-light); border: none;
+        background-color: transparent; font-size: 0.9em;
+        transition: all 0.2s ease-in-out; border-bottom: 4px solid transparent; white-space: nowrap;
+      }
+      .tab-button:hover { background-color: var(--primary-light); color: var(--primary-color); }
+      .tab-button.active { color: var(--primary-color); border-bottom: 4px solid var(--primary-color); }
+      
+      .tab-content { display: none; padding: 25px 15px; animation: fadeIn 0.4s ease; }
+      .tab-content.active { display: block; }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      
+      .card {
+        background-color: #fff; border-radius: var(--border-radius); box-shadow: var(--shadow-md);
+        padding: 25px; margin: 0 auto; max-width: 1300px;
+        border: 1px solid var(--border-color); overflow: hidden;
+      }
+      .card-form { max-width: 700px; }
+      h2 { color: var(--primary-color); text-align: center; margin-top: 0; margin-bottom: 10px; font-weight: 700; }
+      .subtitle { text-align: center; margin-top: -5px; margin-bottom: 25px; color: var(--text-light); font-size: 0.95em; }
+
+      /* TABLE STYLES */
+      .table-container {
+        overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; 
+        max-height: 70vh; overflow-y: auto; border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+      }
+      table { border-collapse: collapse; width: 100%; background-color: #fff; }
+      th, td { border: 1px solid var(--border-color); padding: 14px 16px; text-align: left; min-width: 130px; vertical-align: middle; }
+      
+      thead th {
+        background-color: var(--primary-light); font-weight: 600; color: var(--primary-color);
+        position: -webkit-sticky; position: sticky; top: 0; z-index: 10;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05); text-align: center; vertical-align: middle;
+      }
+      thead th[colspan] { background-color: #dceaf9; z-index: 11; }
+      thead .sub-header th { top: 51px; font-size: 0.9em; padding: 10px 12px; min-width: 80px; max-width: 80px; }
+      
+      tbody tr { transition: background-color 0.15s ease; }
+      tbody tr:nth-child(even) { background-color: #fdfdfd; }
+      tbody tr:hover { background-color: #f0f6ff; }
+      
+      .sticky-col-1, .sticky-col-2, .sticky-col-3 {
+        position: -webkit-sticky; position: sticky; background-color: #fff; z-index: 5; 
+      }
+      .sticky-col-1 { left: 0; }
+      .sticky-col-2 { left: 80px; }
+      .sticky-col-3 { left: 210px; }
+
+      tbody tr:nth-child(even) .sticky-col-1, tbody tr:nth-child(even) .sticky-col-2, tbody tr:nth-child(even) .sticky-col-3 { background-color: #fdfdfd; }
+      tbody tr:hover .sticky-col-1, tbody tr:hover .sticky-col-2, tbody tr:hover .sticky-col-3 { background-color: #f0f6ff; }
+      thead th.sticky-col-1, thead th.sticky-col-2, thead th.sticky-col-3 { z-index: 12; border-right: 2px solid #c0d8f0; }
+      thead th.sticky-col-1 { z-index: 13; }
+      
+      tbody tr.total-row { background-color: var(--primary-light); font-weight: 700; color: var(--primary-color); }
+      tbody tr.total-row .sticky-col-1, tbody tr.total-row .sticky-col-2, tbody tr.total-row .sticky-col-3 { background-color: var(--primary-light); }
+      
+      tbody tr.not-reported td { color: var(--danger-color); background-color: #fdecea; }
+      tbody tr.not-reported .sticky-col-1, tbody tr.not-reported .sticky-col-2, tbody tr.not-reported .sticky-col-3 { background-color: #fdecea; }
+      tbody tr.not-reported:hover td { background-color: #fadadd; }
+      
+      #mtd-total-report-container th.sticky-col-1, #mtd-total-report-container td.sticky-col-1 { text-align: center; font-weight: 700; min-width: 80px; max-width: 80px; }
+      #mtd-total-report-container .sticky-col-2 { left: 80px; }
+      #mtd-total-report-container .sticky-col-3 { left: 210px; }
+
+      .percent-col { background-color: #f8f9fa !important; font-weight: 600; text-align: center !important; min-width: 80px; max-width: 80px; }
+      tbody tr.total-row .percent-col { background-color: var(--primary-light) !important; }
+      tbody tr.not-reported .percent-col { background-color: #fdecea !important; }
+
+      /* FORM & CAR MODEL */
+      .form-group { margin-bottom: 20px; }
+      .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-light); }
+      .form-group input, .form-group select { width: 100%; padding: 12px 14px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1em; transition: all 0.2s; background-color: #fff; }
+      .form-group select:disabled { background-color: #e9ecef; }
+      .form-group input:focus, .form-group select:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2); outline: none; }
+      .car-model-entry { border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; background-color: #fdfdfd; }
+      .car-model-entry h3 { margin: 0 0 15px 0; color: var(--primary-color); font-size: 1.1em; }
+      .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+      .input-grid .span-2 { grid-column: 1 / -1; }
+      .form-button { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--accent-color), var(--primary-color)); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold; transition: all 0.2s ease; box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3); }
+      .form-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4); }
+      .form-button:disabled { background: #aaa; transform: none; box-shadow: none; cursor: not-allowed; }
+      
+      .loading-placeholder { font-size: 1.1em; text-align: center; padding: 40px 20px; color: var(--text-light); font-style: italic; }
+      #form-data-status { font-style: italic; color: var(--text-light); margin-bottom: 25px; text-align: center; padding: 12px; background-color: var(--bg-color); border-radius: 8px; border: 1px dashed var(--border-color); }
+      #form-status, #export-status { text-align: center; font-weight: 600; margin-top: 15px; padding: 10px; border-radius: 8px; display: none; }
+      #form-status.success, #export-status.success { color: var(--success-color); background-color: #e8f5e9; display: block; }
+      #form-status.error, #export-status.error { color: var(--danger-color); background-color: #fdecea; display: block; }
+
+      @media (max-width: 768px) {
+        .filter-bar { grid-template-columns: 1fr 1fr; }
+        .daily-filter-bar, .simple-filter-bar { grid-template-columns: 1fr 100px; }
+        .filter-buttons { grid-column: 1 / -1; }
+        .tab-button { font-size: 0.8em; padding: 12px 3px; }
+        .card { padding: 15px; border-radius: 0; border-left: 0; border-right: 0; box-shadow: none; }
+        h2 { font-size: 1.4em; }
+        th, td { padding: 10px 12px; min-width: 110px; }
+        .input-grid { grid-template-columns: 1fr; } 
+        .sticky-col-2 { left: 110px; } .sticky-col-3 { left: 220px; } 
+        #mtd-total-report-container th.sticky-col-1, #mtd-total-report-container td.sticky-col-1 { min-width: 60px; max-width: 60px; }
+        #mtd-total-report-container .sticky-col-2 { left: 60px; }
+        #mtd-total-report-container .sticky-col-3 { left: 170px; } 
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="tab-nav">
+      <button class="tab-button" onclick="showTab('entry')">✍️ Nhập Báo Cáo</button>
+      <button class="tab-button active" onclick="showTab('daily')">📊 Báo Cáo Ngày</button>
+      <button class="tab-button" onclick="showTab('mtd_total')">📈 MTD - Tổng</button>
+      <button class="tab-button" onclick="showTab('mtd_detail')">🚗 MTD - Chi tiết Xe</button>
+    </div>
+
+    <div id="entry" class="tab-content">
+      <div class="card card-form">
+        <form id="entry-form" onsubmit="handleFormSubmit(event)">
+          <h2 id="entry-title">Báo Cáo Trong Ngày</h2>
+          <p class="subtitle">Chọn nhóm và tên của bạn để nhập hoặc cập nhật báo cáo hôm nay.</p>
+          <div class="form-group">
+            <label for="group">Chọn Nhóm</label>
+            <select id="group" name="group" required onchange="populateTvbhEntryList(this.value)">
+              <option value="">Đang tải danh sách nhóm...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="tvbh">Chọn TVBH</label>
+            <select id="tvbh" name="tvbh" required onchange="loadDailyData(this.value)" disabled>
+              <option value="">-- Vui lòng chọn nhóm trước --</option>
+            </select>
+          </div>
+          <div id="form-fields" style="display:none;">
+            <div id="form-data-status">Vui lòng chọn tên của bạn...</div>
+            <hr style="border:0; border-top: 1px solid var(--border-color); margin: 25px 0;">
+            <div class="form-group">
+              <label for="khtn" style="font-size: 1.1em; font-weight: 700; color: var(--text-color);">Tổng Khách Hàng Tiềm Năng (KHTN)</label>
+              <input type="number" id="khtn" name="khtn" required min="0" value="0">
+            </div>
+            <hr style="border:0; border-top: 1px solid var(--border-color); margin: 25px 0;">
+            <div id="car-model-inputs"><p class="loading-placeholder">Đang tải danh sách dòng xe...</p></div>
+            <button type="submit" id="submitButton" class="form-button">Lưu Báo Cáo</button>
+            <div id="form-status"></div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="daily" class="tab-content active">
+      <div class="card">
+        <h2>Báo Cáo Ngày (Tổng hợp)</h2>
+        <p class="subtitle">Mặc định hiển thị ngày hôm nay. Chọn ngày để xem lại.</p>
+        <div class="filter-bar daily-filter-bar">
+          <div class="filter-group">
+            <label for="daily-date-picker">Chọn ngày</label>
+            <input type="date" id="daily-date-picker">
+          </div>
+          <div class="filter-buttons">
+             <button id="daily-filter-btn" class="filter-button" onclick="loadDailyReportByDate()">Xem</button>
+          </div>
+        </div>
+        <div id="daily-report-container" class="table-container">
+          <div id="loading-daily" class="loading-placeholder">Đang tải dữ liệu...</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mtd_total" class="tab-content">
+      <div class="card">
+        <h2>Báo Cáo MTD (Tổng hợp)</h2>
+         <p class="subtitle">Số liệu tổng hợp, Chỉ tiêu & Xếp hạng.</p>
+         
+         <div class="filter-bar simple-filter-bar">
+          <div class="filter-group">
+            <label for="mtd-total-month-picker">Chọn Tháng</label>
+            <input type="month" id="mtd-total-month-picker">
+          </div>
+          <div class="filter-buttons">
+             <button id="mtd-total-filter-btn" class="filter-button" onclick="loadMtdTotalReportByMonth()">Xem</button>
+          </div>
+        </div>
+
+        <div id="mtd-total-report-container" class="table-container">
+          <div id="loading-mtd-total" class="loading-placeholder">Đang tải dữ liệu...</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mtd_detail" class="tab-content">
+      <div class="card">
+        <h2>Báo Cáo MTD (Chi tiết Dòng Xe)</h2>
+         <p class="subtitle">Chi tiết MTD theo TVBH và Dòng Xe.</p>
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label for="filter-month">Chọn Tháng</label>
+            <input type="month" id="filter-month">
+          </div>
+          <div class="filter-group">
+            <label for="filter-group">Lọc theo Nhóm</label>
+            <select id="filter-group" onchange="populateTvbhFilter(this.value)"><option value="">Tất cả các Nhóm</option></select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-tvbh">Lọc theo TVBH</label>
+            <select id="filter-tvbh"><option value="">Tất cả TVBH</option></select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-car-model">Lọc theo Dòng Xe</label>
+            <select id="filter-car-model"><option value="">Tất cả Dòng Xe</option></select>
+          </div>
+          <div class="filter-buttons">
+            <button id="filter-btn" class="filter-button" onclick="applyFilters()">Lọc</button>
+            <button id="reset-btn" class="reset-button" onclick="resetFilters()">Xóa Lọc</button>
+            <button id="export-btn" class="export-button" onclick="exportToExcel()">Excel</button>
+          </div>
+        </div>
+        <div id="export-status"></div>
+        <div id="mtd-detail-report-container" class="table-container">
+          <div id="loading-mtd-detail" class="loading-placeholder">Đang tải dữ liệu...</div>
+        </div>
+      </div>
+    </div>
+
+
+    <script>
+      let groupData = {};
+      let carModelList = [];
+
+      document.addEventListener("DOMContentLoaded", function() {
+        loadInitialData(); // Tải 2 báo cáo đầu
+        loadMtdDetailReport({}); // Tải MTD Chi tiết
+        loadFormInitData(); // Tải dữ liệu form
+        
+        document.getElementById('entry-title').innerText = 'Báo Cáo Ngày ' + new Date().toLocaleDateString('vi-VN');
+        setDatePickerToToday();
+        showTab('daily');
+      });
+
+      function showTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        document.querySelector(`.tab-button[onclick="showTab('${tabName}')"]`).classList.add('active');
+      }
+
+      // --- LOGIC LỌC ---
+      
+      // 1. Lọc MTD Chi Tiết
+      function applyFilters() {
+        const filters = {
+          filterMonth: document.getElementById('filter-month').value,
+          group: document.getElementById('filter-group').value,
+          tvbh: document.getElementById('filter-tvbh').value,
+          carModel: document.getElementById('filter-car-model').value
+        };
+        loadMtdDetailReport(filters);
+      }
+      
+      function resetFilters() {
+        setMonthPickerToCurrent('filter-month');
+        document.getElementById('filter-group').value = "";
+        document.getElementById('filter-tvbh').value = "";
+        document.getElementById('filter-car-model').value = "";
+        populateTvbhFilter("");
+        
+        // Reset luôn MTD Tổng về tháng hiện tại cho đồng bộ (tuỳ chọn)
+        setMonthPickerToCurrent('mtd-total-month-picker');
+        loadMtdTotalReportByMonth(); // Tải lại MTD Tổng
+        
+        loadMtdDetailReport({}); 
+      }
+      
+      // 2. Lọc MTD Tổng (MỚI)
+      function loadMtdTotalReportByMonth() {
+        const month = document.getElementById('mtd-total-month-picker').value;
+        document.getElementById("mtd-total-report-container").innerHTML = '<div class="loading-placeholder">Đang tải dữ liệu...</div>';
+        document.getElementById("mtd-total-filter-btn").disabled = true;
+        
+        // Gọi lại hàm getDashboardData với tham số tháng
+        google.script.run
+          .withSuccessHandler(function(data) {
+             document.getElementById("mtd-total-filter-btn").disabled = false;
+             if(data.error) {
+               document.getElementById("mtd-total-report-container").innerText = "Lỗi: " + data.error.message;
+             } else {
+               document.getElementById("mtd-total-report-container").innerHTML = createMtdTotalTable(data.mtdTotal);
+             }
+          })
+          .withFailureHandler(function(err) {
+             document.getElementById("mtd-total-filter-btn").disabled = false;
+             document.getElementById("mtd-total-report-container").innerText = "Lỗi: " + err.message;
+          })
+          .getDashboardData(month);
+      }
+
+      function toggleFilterButtons(enabled, text = "Lọc") {
+        document.getElementById('filter-btn').disabled = !enabled;
+        document.getElementById('reset-btn').disabled = !enabled;
+        document.getElementById('export-btn').disabled = !enabled; 
+        document.getElementById('filter-btn').innerText = enabled ? "Lọc" : text;
+      }
+
+      function populateTvbhFilter(selectedGroup) {
+        const tvbhSelect = document.getElementById("filter-tvbh");
+        tvbhSelect.innerHTML = '<option value="">Tất cả TVBH</option>';
+        if (selectedGroup && groupData[selectedGroup]) {
+          groupData[selectedGroup].sort().forEach(tvbh => {
+            const option = document.createElement("option"); option.value = tvbh; option.text = tvbh;
+            tvbhSelect.appendChild(option);
+          });
+        } else if (!selectedGroup) { 
+          Object.keys(groupData).forEach(group => {
+            groupData[group].sort().forEach(tvbh => {
+              const option = document.createElement("option"); option.value = tvbh; option.text = tvbh;
+              tvbhSelect.appendChild(option);
+            });
+          });
+        }
+      }
+      
+      // --- LOGIC LOAD DATA ---
+      
+      function loadInitialData() {
+        document.getElementById("loading-daily").innerText = "Đang tải dữ liệu...";
+        document.getElementById("loading-mtd-total").innerText = "Đang tải dữ liệu...";
+        
+        google.script.run
+          .withSuccessHandler(onInitialDataLoaded) 
+          .withFailureHandler(onInitialDataFailed) 
+          .getDashboardData(null); // Null = tháng hiện tại
+      }
+
+      function loadMtdDetailReport(filters) {
+        document.getElementById("mtd-detail-report-container").innerHTML = '<div id="loading-mtd-detail" class="loading-placeholder">Đang tải dữ liệu...</div>';
+        toggleFilterButtons(false, "Đang tải...");
+        google.script.run
+          .withSuccessHandler(onMtdDetailDataLoaded)
+          .withFailureHandler(onMtdDetailDataFailed)
+          .getMtdDetailReport(filters); 
+      }
+
+      function loadDailyReportByDate() {
+        const dateString = document.getElementById("daily-date-picker").value;
+        if (!dateString) { alert("Vui lòng chọn ngày."); return; }
+        document.getElementById("daily-report-container").innerHTML = '<div class="loading-placeholder">Đang tải...</div>';
+        document.getElementById("daily-filter-btn").disabled = true;
+        google.script.run
+          .withSuccessHandler(onDailyDataLoaded)
+          .withFailureHandler(onDailyDataFailed)
+          .getDailyReportForSpecificDate(dateString);
+      }
+
+      // --- HANDLERS ---
+
+      function onInitialDataLoaded(data) {
+        if (data.error) { onInitialDataFailed({ message: data.error }); return; }
+        document.getElementById("daily-report-container").innerHTML = createHtmlTable(data.daily, 2, true); 
+        document.getElementById("mtd-total-report-container").innerHTML = createMtdTotalTable(data.mtdTotal);
+      }
+      
+      function onInitialDataFailed(error) {
+        const msg = "Lỗi: " + error.message;
+        document.getElementById("loading-daily").innerText = msg;
+        document.getElementById("loading-mtd-total").innerText = msg;
+      }
+      
+      function onMtdDetailDataLoaded(data) {
+        toggleFilterButtons(true);
+        if (data.error) { onMtdDetailDataFailed({ message: data.error }); return; }
+        document.getElementById("mtd-detail-report-container").innerHTML = createHtmlTable(data.mtdDetail, 2, false);
+      }
+      
+      function onMtdDetailDataFailed(error) {
+        toggleFilterButtons(true);
+        document.getElementById("loading-mtd-detail").innerText = "Lỗi: " + error.message;
+      }
+      
+      function onDailyDataLoaded(data) {
+        document.getElementById("daily-filter-btn").disabled = false;
+         if (data.error) { document.getElementById("daily-report-container").innerText = "Lỗi: " + data.error.message; return; }
+         document.getElementById("daily-report-container").innerHTML = createHtmlTable(data.daily, 2, true);
+      }
+      
+      function onDailyDataFailed(error) {
+        document.getElementById("daily-filter-btn").disabled = false;
+        document.getElementById("daily-report-container").innerText = "Lỗi: " + error.message;
+      }
+
+      // --- TABLE CREATORS ---
+
+      function createHtmlTable(dataArray, stickyColCount = 0, checkNonReporters = false) {
+        if (!dataArray || dataArray.length < 2) return "<p class='loading-placeholder'>Không có dữ liệu.</p>";
+        let html = "<table><thead><tr>";
+        dataArray[0].forEach((cell, index) => {
+          let stickyClass = index < stickyColCount ? `sticky-col-${index + 1}` : '';
+          let colClass = cell.includes("(%)") ? 'percent-col' : '';
+          html += `<th class="${stickyClass} ${colClass}">${cell}</th>`;
+        });
+        html += "</tr></thead><tbody>";
+        for (let i = 1; i < dataArray.length; i++) {
+          const rowData = dataArray[i];
+          const isTotalRow = (rowData[0] === "TỔNG CỘNG" || rowData[1] === "TỔNG CỘNG");
+          let rowClass = isTotalRow ? 'total-row' : '';
+          if (!isTotalRow && checkNonReporters) {
+            let allZero = true;
+            for (let j = stickyColCount; j < rowData.length; j++) {
+              if (parseFloat(String(rowData[j]).replace(/[^0-9,-]/g, '').replace(',', '.')) !== 0) { allZero = false; break; }
+            }
+            if (allZero) rowClass = 'not-reported';
+          }
+          html += `<tr class="${rowClass}">`; 
+          rowData.forEach((cell, index) => {
+            let stickyClass = index < stickyColCount ? `sticky-col-${index + 1}` : '';
+            let colClass = dataArray[0][index].includes("(%)") ? 'percent-col' : '';
+            html += `<td class="${stickyClass} ${colClass}">${cell}</td>`;
+          });
+          html += "</tr>";
+        }
+        html += "</tbody></table>";
+        return html;
+      }
+      
+      function createMtdTotalTable(dataArray) {
+        if (!dataArray || dataArray.length < 2) return "<p class='loading-placeholder'>Không có dữ liệu.</p>";
+        const headers = dataArray[0]; 
+        let html = "<table><thead><tr>";
+        html += `<th rowspan="2" class="sticky-col-1">${headers[0]}</th>`;
+        html += `<th rowspan="2" class="sticky-col-2">${headers[1]}</th>`;
+        html += `<th rowspan="2" class="sticky-col-3">${headers[2]}</th>`;
+        html += `<th colspan="3">Khách Hàng Tiềm Năng</th><th colspan="3">Hợp Đồng</th><th colspan="3">Xuất Hóa Đơn</th><th colspan="3">Doanh Thu</th></tr>`;
+        html += "<tr class='sub-header'>";
+        for (let i = 0; i < 4; i++) { 
+          html += `<th>${headers[3 + i*3].split('(')[1].replace(')', '')}</th>`;
+          html += `<th>${headers[4 + i*3].split('(')[1].replace(')', '')}</th>`;
+          html += `<th class="percent-col">${headers[5 + i*3].split('(')[1].replace(')', '')}</th>`;
+        }
+        html += "</tr></thead><tbody>";
+        for (let i = 1; i < dataArray.length; i++) {
+          const rowData = dataArray[i];
+          const isTotalRow = (rowData[1] === "TỔNG CỘNG");
+          let rowClass = isTotalRow ? 'total-row' : '';
+          html += `<tr class="${rowClass}">`; 
+          rowData.forEach((cell, index) => {
+            let stickyClass = index < 3 ? `sticky-col-${index + 1}` : '';
+            let colClass = [5, 8, 11, 14].includes(index) ? 'percent-col' : '';
+            html += `<td class="${stickyClass} ${colClass}">${cell}</td>`;
+          });
+          html += "</tr>";
+        }
+        html += "</tbody></table>";
+        return html;
+      }
+      
+      // --- EXPORT ---
+      function exportToExcel() {
+        const filters = {
+          filterMonth: document.getElementById('filter-month').value,
+          group: document.getElementById('filter-group').value,
+          tvbh: document.getElementById('filter-tvbh').value,
+          carModel: document.getElementById('filter-car-model').value
+        };
+        const exportStatus = document.getElementById("export-status");
+        exportStatus.innerText = "Đang chuẩn bị tệp..."; exportStatus.className = "success";
+        toggleFilterButtons(false, "Lọc"); document.getElementById("export-btn").innerText = "Đang xuất...";
+        google.script.run.withSuccessHandler(onExportSuccess).withFailureHandler(onExportFailed).exportAllReports(filters);
+      }
+      
+      function onExportSuccess(response) {
+        toggleFilterButtons(true); document.getElementById("export-btn").innerText = "Excel";
+        const exportStatus = document.getElementById("export-status");
+        if (response.error) { onExportFailed({ message: response.error }); return; }
+        exportStatus.innerHTML = `Tệp <strong>${response.fileName}.xlsx</strong> sẵn sàng. Đang tải...`;
+        window.open(response.url, '_blank'); 
+        setTimeout(() => { exportStatus.style.display = "none"; }, 10000);
+      }
+      
+      function onExportFailed(error) {
+        toggleFilterButtons(true); document.getElementById("export-btn").innerText = "Excel";
+        const exportStatus = document.getElementById("export-status");
+        exportStatus.innerText = "Lỗi: " + error.message; exportStatus.className = "error";
+      }
+
+      // --- UTILS ---
+      
+      function loadFormInitData() {
+        google.script.run.withSuccessHandler(function(data) {
+          if (data.error) return;
+          groupData = data.groups || {};
+          const groupSelectEntry = document.getElementById("group"); 
+          const groupSelectFilter = document.getElementById("filter-group"); 
+          groupSelectEntry.innerHTML = '<option value="">-- Chọn Nhóm --</option>'; 
+          groupSelectFilter.innerHTML = '<option value="">Tất cả các Nhóm</option>';
+          Object.keys(groupData).sort().forEach(group => {
+              const option = document.createElement("option"); option.value = group; option.text = group;
+              groupSelectEntry.appendChild(option); groupSelectFilter.appendChild(option.cloneNode(true));
+          });
+          populateTvbhFilter("");
+          carModelList = data.carModels || [];
+          const carInputs = document.getElementById("car-model-inputs");
+          const carFilter = document.getElementById("filter-car-model");
+          carInputs.innerHTML = ""; carFilter.innerHTML = '<option value="">Tất cả Dòng Xe</option>';
+          carModelList.sort().forEach(model => { 
+              carInputs.innerHTML += createCarModelInputHTML(model);
+              const option = document.createElement("option"); option.value = model; option.text = model;
+              carFilter.appendChild(option);
+          });
+        }).getFormInitData();
+      }
+
+      function createCarModelInputHTML(modelName) {
+        const modelId = modelName.replace(/\s+/g, '-').toLowerCase();
+        return `<div class="car-model-entry"><h3>${modelName}</h3><div class="input-grid"><div class="form-group"><label>Số ký Hợp đồng</label><input type="number" class="car-model-input" id="hopDong-${modelId}" data-model="${modelName}" data-field="hopDong" min="0" value="0"></div><div class="form-group"><label>Số Xuất HĐ</label><input type="number" class="car-model-input" id="xhd-${modelId}" data-model="${modelName}" data-field="xhd" min="0" value="0"></div><div class="form-group span-2"><label>Doanh thu</label><input type="number" class="car-model-input" id="doanhThu-${modelId}" data-model="${modelName}" data-field="doanhThu" min="0" value="0"></div></div></div>`;
+      }
+
+      function populateTvbhEntryList(g) {
+        const s = document.getElementById("tvbh"); s.innerHTML = '<option value="">-- Chọn TVBH --</option>'; s.disabled = true;
+        document.getElementById("form-fields").style.display = "none";
+        if (g && groupData[g]) {
+          groupData[g].sort().forEach(t => { const o = document.createElement("option"); o.value = t; o.text = t; s.appendChild(o); });
+          s.disabled = false;
+        }
+      }
+
+      function loadDailyData(tvbh) {
+        if (!tvbh) { document.getElementById("form-fields").style.display = "none"; return; }
+        document.getElementById("form-fields").style.display = "block";
+        document.getElementById("form-data-status").innerText = "Đang tải dữ liệu...";
+        clearForm();
+        google.script.run.withSuccessHandler(populateForm).getTodaysReportForTvbh(tvbh);
+      }
+
+      function populateForm(data) {
+        document.getElementById("form-data-status").innerText = data ? "Đã tìm thấy báo cáo hôm nay. Cập nhật:" : "Nhập báo cáo mới:";
+        document.getElementById('khtn').value = data ? (data.khtn || 0) : 0;
+        if(data && data.carModels) {
+          Object.keys(data.carModels).forEach(m => {
+            const id = m.replace(/\s+/g, '-').toLowerCase();
+            const s = data.carModels[m];
+            if(document.getElementById(`hopDong-${id}`)) document.getElementById(`hopDong-${id}`).value = s.hopDong || 0;
+            if(document.getElementById(`xhd-${id}`)) document.getElementById(`xhd-${id}`).value = s.xhd || 0;
+            if(document.getElementById(`doanhThu-${id}`)) document.getElementById(`doanhThu-${id}`).value = s.doanhThu || 0;
+          });
+        }
+      }
+
+      function clearForm() {
+        document.getElementById('khtn').value = 0;
+        document.querySelectorAll('.car-model-input').forEach(i => i.value = 0);
+      }
+
+      function handleFormSubmit(e) {
+        e.preventDefault(); 
+        const btn = document.getElementById("submitButton"); btn.disabled = true; btn.innerText = "Đang lưu...";
+        const formData = { group: document.getElementById("group").value, tvbh: document.getElementById("tvbh").value, khtn: document.getElementById("khtn").value, carModels: [] };
+        document.querySelectorAll('.car-model-input').forEach(i => {
+          const m = i.dataset.model, f = i.dataset.field;
+          let entry = formData.carModels.find(x => x.name === m);
+          if (!entry) { entry = { name: m, hopDong: 0, xhd: 0, doanhThu: 0 }; formData.carModels.push(entry); }
+          entry[f] = i.value;
+        });
+        google.script.run.withSuccessHandler(onSubmissionSuccess).withFailureHandler(onSubmissionFailed).submitDailyReport(formData);
+      }
+      
+      function onSubmissionSuccess(res) {
+        const btn = document.getElementById("submitButton"); btn.disabled = false; btn.innerText = "Lưu Báo Cáo";
+        const status = document.getElementById("form-status");
+        if (res.success) {
+          status.innerText = res.message; status.className = "success"; status.style.display = "block";
+          loadInitialData(); resetFilters(); // Reload all
+          setTimeout(() => { showTab('daily'); status.style.display = "none"; }, 1500);
+        } else { onSubmissionFailed({ message: res.message }); }
+      }
+      
+      function onSubmissionFailed(err) {
+        const btn = document.getElementById("submitButton"); btn.disabled = false; btn.innerText = "Lưu Báo Cáo";
+        const status = document.getElementById("form-status"); status.innerText = "Lỗi: " + err.message; status.className = "error"; status.style.display = "block";
+      }
+
+      function setDatePickerToToday() {
+        const today = new Date();
+        const str = today.toISOString().split('T')[0];
+        document.getElementById('daily-date-picker').value = str;
+        // Mặc định cho 2 tháng picker
+        setMonthPickerToCurrent('mtd-total-month-picker');
+        setMonthPickerToCurrent('filter-month');
+      }
+      
+      function setMonthPickerToCurrent(id) {
+        const today = new Date();
+        const monthStr = today.toISOString().substring(0, 7); // yyyy-MM
+        document.getElementById(id).value = monthStr;
+      }
+    </script>
+  </body>
+</html>
