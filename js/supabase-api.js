@@ -1381,6 +1381,13 @@ async function supabaseUpdateProductivityBonus(d) {
             return { success: false, message: 'Không tìm thấy tờ trình' };
         }
 
+        // Kiểm tra quyền: TVBH không được cập nhật lương năng suất sau khi hoàn thành
+        const isCompleted = approval.current_step >= 4;
+        const isTVBH = d.role === 'TVBH' || d.role === 'SALE';
+        if (isCompleted && isTVBH) {
+            return { success: false, message: 'TVBH không được cập nhật lương năng suất sau khi tờ trình đã hoàn thành' };
+        }
+
         const oldProductivityBonus = approval.productivity_bonus || 0;
 
         if (d.productivity_bonus !== undefined && d.productivity_bonus !== null && d.productivity_bonus !== '') {

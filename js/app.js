@@ -465,7 +465,13 @@ function renderApprovalList() {
                 const currentStepConfig = workflow.find(w => w.step === data.step);
                 const canEditAtCurrentStep = currentStepConfig && currentStepConfig.role === session.role;
                 const isCompleted = data.step >= 4; // Step 4 (KETOAN) là hoàn tất
-                data.can_edit_cost = (session && (session.role === 'ADMIN' || canEditAtCurrentStep || isCompleted));
+                // TVBH không được chỉnh sửa lương năng suất sau khi hoàn thành
+                const isTVBH = session && (session.role === 'TVBH' || session.role === 'SALE');
+                if (isCompleted && isTVBH) {
+                    data.can_edit_cost = false; // TVBH không được chỉnh sửa sau khi hoàn thành
+                } else {
+                    data.can_edit_cost = (session && (session.role === 'ADMIN' || canEditAtCurrentStep || isCompleted));
+                }
                 
                 // Kiểm tra quyền chỉnh sửa contract_code và vin_no khi đã hoàn tất
                 // Cho phép: người tạo (requester), GDKD, BGD, BKS, KETOAN, ADMIN
