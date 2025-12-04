@@ -3,13 +3,17 @@
  */
 function checkSession() {
     const user = getSession();
-    const login = $('login-view');
+    // Components are loaded into containers, so we need to find the actual elements
+    // login-view is inside login-container, dashboard-view is the container itself
+    const loginContainer = $('login-container');
+    const loginView = $('login-view') || loginContainer?.querySelector('#login-view');
     const dash = $('dashboard-view');
     
     if (user) {
         // Kiểm tra nếu cần đổi mật khẩu
         if (user.need_change_pass) {
-            login?.classList.remove('hidden');
+            if (loginView) loginView.classList.remove('hidden');
+            if (loginContainer) loginContainer.style.display = 'block';
             dash?.classList.add('hidden');
             dash?.classList.remove('flex');
             // Hiển thị modal đổi mật khẩu
@@ -34,16 +38,21 @@ function checkSession() {
             $('nav-mobile-users')?.classList.add('hidden');
         }
         
-        loadProfile();
+        if (typeof loadProfile === 'function') {
+            loadProfile();
+        }
         
         const navApproval = $('nav-approval');
         if (user.role === 'SALE' || user.role === 'TVBH') {
             navApproval?.classList.add('hidden');
         } else {
-            switchTab('approval');
+            if (typeof switchTab === 'function') {
+                switchTab('approval');
+            }
         }
         
-        login?.classList.add('hidden');
+        if (loginView) loginView.classList.add('hidden');
+        if (loginContainer) loginContainer.style.display = 'none';
         dash?.classList.remove('hidden');
         dash?.classList.add('flex');
     } else {
@@ -52,9 +61,11 @@ function checkSession() {
 }
 
 function showLogin() {
-    const login = $('login-view');
+    const loginContainer = $('login-container');
+    const loginView = $('login-view') || loginContainer?.querySelector('#login-view');
     const dash = $('dashboard-view');
-    login?.classList.remove('hidden');
+    if (loginView) loginView.classList.remove('hidden');
+    if (loginContainer) loginContainer.style.display = 'block';
     dash?.classList.add('hidden');
     dash?.classList.remove('flex');
 }

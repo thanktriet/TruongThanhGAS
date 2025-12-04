@@ -66,21 +66,28 @@ async function loadAllComponents() {
 
 // Load components when DOM is ready
 async function initializeApp() {
-    // First load all components
-    await loadAllComponents();
-    
-    // Then initialize app functions after components are loaded
-    if (typeof loadTPKDUsers === 'function') {
-        loadTPKDUsers();
-    }
-    if (typeof checkSession === 'function') {
-        checkSession();
-    }
-    if (typeof addGiftRow === 'function') {
-        addGiftRow('gift-list-manual');
-    }
-    if (typeof initContractLookup === 'function') {
-        initContractLookup();
+    try {
+        // First load all components
+        await loadAllComponents();
+        
+        // Wait a bit more to ensure DOM is fully updated
+        await new Promise(resolve => setTimeout(resolve, 150));
+        
+        // Then initialize app functions after components are loaded
+        if (typeof loadTPKDUsers === 'function') {
+            loadTPKDUsers();
+        }
+        if (typeof checkSession === 'function') {
+            checkSession();
+        }
+        if (typeof addGiftRow === 'function') {
+            addGiftRow('gift-list-manual');
+        }
+        if (typeof initContractLookup === 'function') {
+            initContractLookup();
+        }
+    } catch (error) {
+        console.error('Error initializing app:', error);
     }
     
     // Setup filters
