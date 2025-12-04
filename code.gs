@@ -923,6 +923,8 @@ function getRequestDetail(id, username) {
       var hasFullStructure = row.length >= 26;
       
       // Lấy fullname của requester từ Users sheet
+      // USER_HEADERS: ['Username', 'Password', 'Fullname', 'Role', 'NeedChangePass', 'Phone', 'Email', 'Group', 'Active']
+      // Index: Username=0, Password=1, Fullname=2, Role=3, ...
       var requesterUsername = row[2];
       var requesterFullname = requesterUsername; // Default to username if not found
       try {
@@ -931,7 +933,7 @@ function getRequestDetail(id, username) {
           var userData = userSheet.getDataRange().getValues();
           for (var u = 1; u < userData.length; u++) {
             if (String(userData[u][0]).toLowerCase() == String(requesterUsername).toLowerCase()) {
-              requesterFullname = userData[u][3] || requesterUsername; // Column 3 is Fullname
+              requesterFullname = userData[u][2] || requesterUsername; // Column 2 is Fullname (index 2)
               break;
             }
           }
