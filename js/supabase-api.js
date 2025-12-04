@@ -372,6 +372,7 @@ async function supabaseGetPendingList(username, role) {
                     max_cost_rate: row.max_cost_rate ? formatCurrency(row.max_cost_rate) : '',
                     productivity_bonus: row.productivity_bonus ? formatCurrency(row.productivity_bonus) : '',
                     can_resubmit: (row.current_step === 0 && isRequester),
+                    is_completed: isCompleted, // Flag để template biết tờ trình đã hoàn tất
                     // Quyền in:
                     // - Admin, GĐKD, BKS, BGĐ, KT: có thể in tất cả tờ trình đã hoàn tất
                     // - TVBH/SALE: có thể in tờ trình của chính mình khi hoàn tất
@@ -626,6 +627,7 @@ async function supabaseGetMyRequests(username, role) {
                 max_cost_rate: row.max_cost_rate ? formatCurrency(row.max_cost_rate) : '',
                 productivity_bonus: row.productivity_bonus ? formatCurrency(row.productivity_bonus) : '',
                 can_resubmit: (row.current_step === 0),
+                is_completed: row.current_step >= 4, // Flag để template biết tờ trình đã hoàn tất
                 // Quyền in sẽ được tính ở đây
                 can_print: false
             };
