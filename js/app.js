@@ -33,84 +33,14 @@ function initContractLookup() {
     const searchInput = $('search_code_input');
     if (!searchInput) return;
     
-    // Set hx-post URL
-    searchInput.setAttribute('hx-post', API_URL);
+    // ĐÃ CHUYỂN SANG SUPABASE - Không dùng Google Apps Script nữa
+    // Xóa hx-post attribute nếu có
+    searchInput.removeAttribute('hx-post');
     
-    // Process with htmx if available
-    if (typeof htmx !== 'undefined') {
-        htmx.process(searchInput);
-        
-        // Override htmx request to send JSON with search_code (backend expects search_code)
-        searchInput.addEventListener('htmx:configRequest', (event) => {
-            const searchCode = searchInput.value.trim().toUpperCase();
-            if (!searchCode) {
-                event.preventDefault();
-                return;
-            }
-            
-            // Override to send JSON instead of form data
-            event.detail.headers['Content-Type'] = 'application/json';
-            // Clear parameters and set body as JSON string
-            event.detail.parameters = {};
-            const requestBody = {
-                action: 'lookup_contract',
-                search_code: searchCode  // Backend expects 'search_code', not 'contract_code'
-            };
-            event.detail.body = JSON.stringify(requestBody);
-            
-            console.log('Sending lookup request:', requestBody);
-        });
-        
-        // Handle response for debugging
-        searchInput.addEventListener('htmx:afterRequest', (event) => {
-            console.log('Response status:', event.detail.xhr.status);
-            if (event.detail.xhr.status === 200) {
-                try {
-                    const response = JSON.parse(event.detail.xhr.responseText);
-                    console.log('Response data:', response);
-                } catch (e) {
-                    console.error('Error parsing response:', e);
-                }
-            }
-        });
-        
-        // Handle successful response after swap
-        searchInput.addEventListener('htmx:afterSwap', (event) => {
-            // Wait a bit for DOM to update
-            setTimeout(() => {
-                const actionArea = $('action-area');
-                if (actionArea) actionArea.classList.remove('hidden');
-                
-                // Store contract_code in the hidden field
-                const contractCode = searchInput.value.trim().toUpperCase();
-                const hiddenContractCode = $('lookup-contract-code') || 
-                                          document.querySelector('#form-create-request input[name="contract_code"]');
-                
-                if (hiddenContractCode) {
-                    hiddenContractCode.value = contractCode;
-                } else {
-                    // Create hidden field if not exists
-                    const form = $('form-create-request');
-                    if (form) {
-                        const hiddenInput = document.createElement('input');
-                        hiddenInput.type = 'hidden';
-                        hiddenInput.name = 'contract_code';
-                        hiddenInput.id = 'lookup-contract-code';
-                        hiddenInput.value = contractCode;
-                        form.appendChild(hiddenInput);
-                    }
-                }
-                
-                // Initialize gift row if template rendered successfully
-                if (typeof addGiftRow === 'function') {
-                    const giftList = $('gift-list-search');
-                    if (giftList && giftList.children.length === 0) {
-                        addGiftRow('gift-list-search');
-                    }
-                }
-            }, 100);
-        });
-    }
+    // Dùng JavaScript để gọi Supabase API thay vì htmx
+    // Function này sẽ được override trong init.js với logic Supabase
+    // Giữ lại đây để tương thích ngược
+    console.log('initContractLookup: Đã chuyển sang Supabase API');
 }
 
 // Note: Authentication functions (checkSession, handleLogin, showLogin, showChangePasswordModal, logout) are in auth.js and utils.js
@@ -2144,59 +2074,10 @@ async function saveProductivityBonus(id) {
 }
 
 // ===================================
-// API CALLER
+// API CALLER - ĐÃ CHUYỂN SANG SUPABASE
 // ===================================
-        async function callAPI(data) {
-            try {
-        console.log('Calling API:', data.action, data);
-        
-        // Sử dụng FormData để tránh CORS preflight request
-        // Google Apps Script Web App xử lý FormData tốt hơn JSON và không trigger preflight
-        const formData = new FormData();
-        Object.keys(data).forEach(key => {
-            const value = data[key];
-            if (value !== null && value !== undefined) {
-                formData.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
-            }
-        });
-        
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            mode: 'cors', // Giữ cors mode
-            body: formData
-            // Không set Content-Type header để browser tự set với boundary cho FormData
-            // Điều này giúp tránh preflight request
-        });
-        
-        console.log('API Response status:', res.status, res.statusText);
-        
-        if (!res.ok) {
-            const errorText = await res.text();
-            console.error('API Error Response:', errorText);
-            throw new Error(`HTTP error! status: ${res.status} - ${errorText}`);
-        }
-        
-        const responseText = await res.text();
-        console.log('API Response text:', responseText);
-        
-        let result;
-        try {
-            result = JSON.parse(responseText);
-        } catch (parseError) {
-            console.error('JSON Parse Error:', parseError, 'Response:', responseText);
-            throw new Error('Invalid JSON response from server');
-        }
-        
-        console.log('API Result:', result);
-        return result;
-    } catch (e) {
-        console.error('API call error:', e);
-        return { 
-            success: false, 
-            message: e.message || 'Lỗi kết nối đến server. Vui lòng kiểm tra kết nối mạng.' 
-        };
-    }
-}
+// Function callAPI đã được migrate sang Supabase trong js/api.js
+// Không cần định nghĩa lại ở đây, sẽ dùng function từ js/api.js
 
 // ===================================
 // CSS HELPER

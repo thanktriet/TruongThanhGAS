@@ -25,84 +25,55 @@ function initContractLookup() {
     const searchInput = $('search_code_input');
     if (!searchInput) return;
     
-    // Set hx-post URL
-    searchInput.setAttribute('hx-post', API_URL);
+    // Dùng JavaScript để gọi Supabase API thay vì htmx với Google Apps Script
+    // Xóa hx-post attribute nếu có
+    searchInput.removeAttribute('hx-post');
     
-    // Process with htmx if available
-    if (typeof htmx !== 'undefined') {
-        htmx.process(searchInput);
+    // Handle lookup với Supabase API
+    searchInput.addEventListener('blur', async () => {
+        const searchCode = searchInput.value.trim().toUpperCase();
+        if (!searchCode) return;
         
-        // Override htmx request to send JSON with search_code (backend expects search_code)
-        searchInput.addEventListener('htmx:configRequest', (event) => {
-            const searchCode = searchInput.value.trim().toUpperCase();
-            if (!searchCode) {
-                event.preventDefault();
+        try {
+            // Gọi Supabase API thông qua callAPI
+            if (typeof callAPI !== 'function') {
+                console.error('callAPI function chưa được load');
                 return;
             }
             
-            // Override to send JSON instead of form data
-            event.detail.headers['Content-Type'] = 'application/json';
-            // Clear parameters and set body as JSON string
-            event.detail.parameters = {};
-            const requestBody = {
+            const result = await callAPI({
                 action: 'lookup_contract',
-                search_code: searchCode  // Backend expects 'search_code', not 'contract_code'
-            };
-            event.detail.body = JSON.stringify(requestBody);
+                search_code: searchCode
+            });
             
-            console.log('Sending lookup request:', requestBody);
-        });
-        
-        // Handle response for debugging
-        searchInput.addEventListener('htmx:afterRequest', (event) => {
-            console.log('Response status:', event.detail.xhr.status);
-            if (event.detail.xhr.status === 200) {
-                try {
-                    const response = JSON.parse(event.detail.xhr.responseText);
-                    console.log('Response data:', response);
-                } catch (e) {
-                    console.error('Error parsing response:', e);
-                }
-            }
-        });
-        
-        // Handle successful response after swap
-        searchInput.addEventListener('htmx:afterSwap', (event) => {
-            // Wait a bit for DOM to update
-            setTimeout(() => {
+            if (result.success && result.data) {
+                // Fill form với data từ Supabase
+                fillContractData(result.data);
+                
+                // Show action area
                 const actionArea = $('action-area');
                 if (actionArea) actionArea.classList.remove('hidden');
-                
-                // Store contract_code in the hidden field
-                const contractCode = searchInput.value.trim().toUpperCase();
-                const hiddenContractCode = $('lookup-contract-code') || 
-                                          document.querySelector('#form-create-request input[name="contract_code"]');
-                
-                if (hiddenContractCode) {
-                    hiddenContractCode.value = contractCode;
-                } else {
-                    // Create hidden field if not exists
-                    const form = $('form-create-request');
-                    if (form) {
-                        const hiddenInput = document.createElement('input');
-                        hiddenInput.type = 'hidden';
-                        hiddenInput.name = 'contract_code';
-                        hiddenInput.id = 'lookup-contract-code';
-                        hiddenInput.value = contractCode;
-                        form.appendChild(hiddenInput);
-                    }
-                }
-                
-                // Initialize gift row if template rendered successfully
-                if (typeof addGiftRow === 'function') {
-                    const giftList = $('gift-list-search');
-                    if (giftList && giftList.children.length === 0) {
-                        addGiftRow('gift-list-search');
-                    }
-                }
-            }, 100);
-        });
-    }
+            } else {
+                console.warn('Lookup contract result:', result);
+                // Nếu không tìm thấy, vẫn show form để nhập thủ công
+            }
+        } catch (error) {
+            console.error('Error looking up contract:', error);
+        }
+    });
+}
+
+// Helper function để fill contract data vào form
+function fillContractData(data) {
+    if ($('customer_name')) $('customer_name').value = data.name || '';
+    if ($('phone')) $('phone').value = data.phone || '';
+    if ($('cccd')) $('cccd').value = data.cccd || '';
+    if ($('email')) $('email').value = data.email || '';
+    if ($('address')) $('address').value = data.address || '';
+    if ($('car_model')) $('car_model').value = data.carModel || '';
+    if ($('car_version')) $('car_version').value = data.carVersion || '';
+    if ($('car_color')) $('car_color').value = data.carColor || '';
+    if ($('payment_method')) $('payment_method').value = data.payment || '';
 }
 
 // Note: Initialization is now handled in components.js after components are loaded
