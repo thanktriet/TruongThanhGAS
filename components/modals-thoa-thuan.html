@@ -198,6 +198,18 @@ function calculateThoaThuan() {
     } else {
         document.getElementById('tt-ty_le_vay').value = '';
     }
+    
+    // Cập nhật số tiền vay bằng chữ
+    if (soTienVay > 0) {
+        if (typeof window.numberToWords === 'function') {
+            document.getElementById('tt-so_tien_vay_chu').value = window.numberToWords(soTienVay);
+        } else {
+            // Fallback nếu function chưa load
+            document.getElementById('tt-so_tien_vay_chu').value = '';
+        }
+    } else {
+        document.getElementById('tt-so_tien_vay_chu').value = '';
+    }
 }
 
 async function submitThoaThuanForm(event) {
@@ -230,7 +242,7 @@ async function submitThoaThuanForm(event) {
         SO_MAY: document.getElementById('tt-so_may').value.trim(),
         GIA_TRI_HOP_DONG: parseFloat(document.getElementById('tt-gia_tri_hop_dong').value) || 0,
         SO_TIEN_VAY_SO: parseFloat(document.getElementById('tt-so_tien_vay_so').value) || 0,
-        SO_TIEN_VAY_CHU: document.getElementById('tt-so_tien_vay_chu').value.trim(),
+        SO_TIEN_VAY_CHU: document.getElementById('tt-so_tien_vay_chu').value.trim() || (typeof window.numberToWords === 'function' ? window.numberToWords(parseFloat(document.getElementById('tt-so_tien_vay_so').value) || 0) : ''),
         TY_LE_VAY: document.getElementById('tt-ty_le_vay').value.replace('%', ''),
         THOI_HAN_VAY: document.getElementById('tt-thoi_han_vay').value.trim(),
         TEN_DONG_VAY: document.getElementById('tt-ten_dong_vay').value.trim(),
