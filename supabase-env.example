@@ -1,0 +1,20 @@
+# Supabase Configuration
+# Copy this file to .env and fill in your actual values
+
+# Supabase Project URL (find in your Supabase dashboard: Settings > API)
+SUPABASE_URL=https://your-project-id.supabase.co
+
+# Supabase Anon Key (Public key, safe for frontend)
+SUPABASE_ANON_KEY=your-anon-key-here
+
+# Supabase Service Role Key (Private key, only for backend - NEVER expose to frontend!)
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+# Database Connection String (for migrations and direct DB access)
+# Format: postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres
+SUPABASE_DB_URL=postgresql://postgres:your-password@db.your-project-ref.supabase.co:5432/postgres
+
+# Project Reference ID (find in your Supabase dashboard: Settings > General)
+SUPABASE_PROJECT_REF=your-project-ref-id
+
+

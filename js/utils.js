@@ -38,3 +38,4 @@ function formatMoneyInput(el) {
     calcGiftTotal(containerId);
 }
 
+

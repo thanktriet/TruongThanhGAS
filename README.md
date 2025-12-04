@@ -13,8 +13,9 @@ Hệ thống quản lý và phê duyệt đề xuất chương trình bán hàng
 ## 📋 Yêu cầu
 
 - Google Apps Script (GAS) - Backend
-- Google Sheets - Database
+- Google Sheets - Database (hoặc Supabase - tùy chọn)
 - GitHub Pages - Frontend hosting (tùy chọn)
+- Supabase CLI - Để kết nối với Supabase (nếu sử dụng Supabase)
 
 ## 🛠️ Cài đặt
 
@@ -51,26 +52,59 @@ npx serve .
 
 Truy cập: `http://localhost:8000`
 
+### 3. Kết nối Supabase với Cursor (Tùy chọn)
+
+Nếu bạn muốn sử dụng Supabase thay vì Google Sheets:
+
+1. **Cài đặt Supabase CLI** (nếu chưa có):
+   ```bash
+   brew install supabase/tap/supabase
+   ```
+
+2. **Xem hướng dẫn chi tiết:**
+   - Quick Start: `QUICK_START_SUPABASE.md`
+   - Hướng dẫn đầy đủ: `SUPABASE_SETUP.md`
+
+3. **Các bước nhanh:**
+   ```bash
+   # Login vào Supabase
+   supabase login
+   
+   # Link với project của bạn
+   supabase link --project-ref YOUR_PROJECT_REF
+   
+   # Pull schema từ Supabase
+   supabase db pull
+   ```
+
+Sau khi kết nối, Cursor sẽ tự động nhận diện schema trong `supabase/migrations/`.
+
 ## 📁 Cấu trúc thư mục
 
 ```
 TruongThanhGAS/
-├── index.html          # Frontend chính
-├── code.gs             # Backend Google Apps Script
-├── js/                 # JavaScript modules
-│   ├── config.js       # Cấu hình API URL
-│   ├── utils.js        # Utility functions
-│   ├── api.js          # API caller
-│   ├── auth.js         # Authentication
-│   ├── requests.js      # Request management
-│   ├── approval.js     # Approval workflow
-│   ├── profile.js      # User profile
-│   ├── admin.js        # Admin functions
-│   ├── print.js        # Print functionality
-│   ├── gifts.js        # Gift management
-│   └── navigation.js   # Navigation
+├── index.html              # Frontend chính
+├── code.gs                 # Backend Google Apps Script
+├── js/                     # JavaScript modules
+│   ├── config.js           # Cấu hình API URL
+│   ├── utils.js            # Utility functions
+│   ├── api.js              # API caller
+│   ├── auth.js             # Authentication
+│   ├── requests.js         # Request management
+│   ├── approval.js         # Approval workflow
+│   ├── profile.js          # User profile
+│   ├── admin.js            # Admin functions
+│   ├── print.js            # Print functionality
+│   ├── gifts.js            # Gift management
+│   └── navigation.js       # Navigation
+├── supabase/               # Supabase configuration (nếu sử dụng)
+│   ├── config.toml         # Supabase local config
+│   └── migrations/         # Database migrations
 ├── .gitignore
-├── .nojekyll          # GitHub Pages config
+├── .nojekyll               # GitHub Pages config
+├── supabase-env.example    # Supabase env template
+├── QUICK_START_SUPABASE.md # Hướng dẫn nhanh Supabase
+├── SUPABASE_SETUP.md       # Hướng dẫn chi tiết Supabase
 └── README.md
 ```
 

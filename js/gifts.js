@@ -92,3 +92,4 @@ function packGiftData(containerId, hiddenInputId) {
     console.log('packGiftData result:', hiddenInput.value);
 }
 
+
