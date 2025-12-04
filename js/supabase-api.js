@@ -372,9 +372,28 @@ async function supabaseGetPendingList(username, role) {
                     max_cost_rate: row.max_cost_rate ? formatCurrency(row.max_cost_rate) : '',
                     productivity_bonus: row.productivity_bonus ? formatCurrency(row.productivity_bonus) : '',
                     can_resubmit: (row.current_step === 0 && isRequester),
-                    // Chỉ Admin, GĐKD, BKS, BGĐ, KT có thể in
-                    can_print: (role === 'ADMIN' || role === 'GDKD' || role === 'BKS' || role === 'BGD' || role === 'KETOAN') && isCompleted
+                    // Quyền in:
+                    // - Admin, GĐKD, BKS, BGĐ, KT: có thể in tất cả tờ trình đã hoàn tất
+                    // - TVBH/SALE: có thể in tờ trình của chính mình khi hoàn tất
+                    // - TPKD: có thể in tờ trình của mình hoặc được giao cho họ khi hoàn tất
+                    can_print: false // Sẽ được tính ở đây
                 };
+
+                // Tính can_print dựa vào role và quyền sở hữu
+                if (isCompleted) {
+                    if (role === 'ADMIN' || role === 'GDKD' || role === 'BKS' || role === 'BGD' || role === 'KETOAN') {
+                        // Admin, GĐKD, BKS, BGĐ, KT: in được tất cả
+                        item.can_print = true;
+                    } else if (role === 'TVBH' || role === 'SALE') {
+                        // TVBH/SALE: chỉ in được tờ trình của chính mình
+                        item.can_print = isRequester;
+                    } else if (role === 'TPKD') {
+                        // TPKD: in được tờ trình của mình hoặc được giao cho họ
+                        const isMyRequest = String(row.requester).toLowerCase() === usernameLower;
+                        const isAssignedToMe = String(row.approver_step0 || '').toLowerCase() === usernameLower;
+                        item.can_print = isMyRequest || isAssignedToMe;
+                    }
+                }
 
                 // Parse logs
                 if (item.logs) {
@@ -607,9 +626,29 @@ async function supabaseGetMyRequests(username, role) {
                 max_cost_rate: row.max_cost_rate ? formatCurrency(row.max_cost_rate) : '',
                 productivity_bonus: row.productivity_bonus ? formatCurrency(row.productivity_bonus) : '',
                 can_resubmit: (row.current_step === 0),
-                // Chỉ Admin, GĐKD, BKS, BGĐ, KT có thể in
-                can_print: (role === 'ADMIN' || role === 'GDKD' || role === 'BKS' || role === 'BGD' || role === 'KETOAN') && (row.current_step >= 4)
+                // Quyền in sẽ được tính ở đây
+                can_print: false
             };
+
+            // Tính can_print dựa vào role và quyền sở hữu
+            const isCompleted = row.current_step >= 4;
+            const usernameLower = String(username).toLowerCase();
+            
+            if (isCompleted) {
+                if (role === 'ADMIN' || role === 'GDKD' || role === 'BKS' || role === 'BGD' || role === 'KETOAN') {
+                    // Admin, GĐKD, BKS, BGĐ, KT: in được tất cả
+                    item.can_print = true;
+                } else if (role === 'TVBH' || role === 'SALE') {
+                    // TVBH/SALE: chỉ in được tờ trình của chính mình
+                    const isMyRequest = String(row.requester).toLowerCase() === usernameLower;
+                    item.can_print = isMyRequest;
+                } else if (role === 'TPKD') {
+                    // TPKD: in được tờ trình của mình hoặc được giao cho họ
+                    const isMyRequest = String(row.requester).toLowerCase() === usernameLower;
+                    const isAssignedToMe = String(row.approver_step0 || '').toLowerCase() === usernameLower;
+                    item.can_print = isMyRequest || isAssignedToMe;
+                }
+            }
 
             // Parse logs và gift_json tương tự như trên
             // ... (code tương tự)
@@ -685,8 +724,9 @@ async function supabaseGetRequestDetail(id, username) {
             other_requirements: approval.other_requirements || '',
             max_cost_rate: approval.max_cost_rate ? formatCurrency(approval.max_cost_rate) : '',
             productivity_bonus: approval.productivity_bonus ? formatCurrency(approval.productivity_bonus) : '',
-            // Chỉ Admin, GĐKD, BKS, BGĐ, KT có thể in (sẽ set ở frontend dựa vào role)
-            can_print: false // Sẽ được set ở frontend
+            approver_step0: approval.approver_step0 || '', // Cần để kiểm tra quyền in cho TPKD
+            // can_print sẽ được set ở frontend dựa vào role
+            can_print: false
         };
 
         // Parse gift_json

@@ -478,9 +478,32 @@ function renderApprovalList() {
                      session.role === 'KETOAN' || session.role === 'ADMIN');
                 data.can_edit_completed = canEditCompletedByRequester || canEditCompletedByRole;
                 
-                // Kiểm tra quyền in: Chỉ Admin, GĐKD, BKS, BGĐ, KT có thể in
-                const canPrintRoles = ['ADMIN', 'GDKD', 'BKS', 'BGD', 'KETOAN'];
-                data.can_print = isCompleted && session && canPrintRoles.includes(session.role);
+                // Kiểm tra quyền in:
+                // - Admin, GĐKD, BKS, BGĐ, KT: có thể in tất cả tờ trình đã hoàn tất
+                // - TVBH/SALE: có thể in tờ trình của chính mình khi hoàn tất
+                // - TPKD: có thể in tờ trình của mình hoặc được giao cho họ khi hoàn tất
+                if (isCompleted && session) {
+                    const isRequester = data.requester && data.requester.toLowerCase() === session.username.toLowerCase();
+                    const canPrintRoles = ['ADMIN', 'GDKD', 'BKS', 'BGD', 'KETOAN'];
+                    
+                    if (canPrintRoles.includes(session.role)) {
+                        // Admin, GĐKD, BKS, BGĐ, KT: in được tất cả
+                        data.can_print = true;
+                    } else if (session.role === 'TVBH' || session.role === 'SALE') {
+                        // TVBH/SALE: chỉ in được tờ trình của chính mình
+                        data.can_print = isRequester;
+                    } else if (session.role === 'TPKD') {
+                        // TPKD: in được tờ trình của mình hoặc được giao cho họ
+                        const isMyRequest = isRequester;
+                        const isAssignedToMe = data.approver_step0 && 
+                                             data.approver_step0.toLowerCase() === session.username.toLowerCase();
+                        data.can_print = isMyRequest || isAssignedToMe;
+                    } else {
+                        data.can_print = false;
+                    }
+                } else {
+                    data.can_print = false;
+                }
                 
                 // Tính toán chi phí và tỷ lệ
                 const discountAmount = parseInt((data.discount_amount || '').replace(/[^\d]/g, '')) || 0;
