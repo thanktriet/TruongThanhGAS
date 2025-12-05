@@ -238,8 +238,15 @@ function filterOrders() {
 
 // View order detail
 async function viewOrderDetail(orderId) {
-    // TODO: Implement modal to view order detail
-    showToast('Tính năng xem chi tiết đang được phát triển', 'info');
+    if (typeof window.openOrderDetailModal === 'function') {
+        await window.openOrderDetailModal(orderId, false);
+    } else {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Modal chưa được load. Vui lòng reload trang.', 'warning');
+        } else {
+            alert('Modal chưa được load. Vui lòng reload trang.');
+        }
+    }
 }
 
 // Create approval from order

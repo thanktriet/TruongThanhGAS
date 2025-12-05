@@ -1,0 +1,443 @@
+<!-- Modal Xem Chi Tiết Đơn Hàng -->
+<div id="modal-order-detail" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="bg-blue-600 px-6 py-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-white">
+                <i class="fa-solid fa-file-lines mr-2"></i>Chi Tiết Đơn Hàng
+            </h2>
+            <button 
+                onclick="closeOrderDetailModal()" 
+                class="text-white hover:text-gray-200 transition"
+            >
+                <i class="fa-solid fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-6">
+            <!-- Loading -->
+            <div id="order-detail-loading" class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                <p class="mt-4 text-gray-600">Đang tải thông tin...</p>
+            </div>
+
+            <!-- Order Detail Content -->
+            <div id="order-detail-content" class="hidden">
+                <!-- Customer Info -->
+                <div class="mb-6 bg-blue-50 rounded-lg p-5 border border-blue-200">
+                    <h3 class="text-lg font-bold text-blue-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-user mr-2"></i>Thông Tin Khách Hàng
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Họ tên:</label>
+                            <p class="text-gray-800 font-semibold" id="detail-customer-name">-</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Số CCCD/CMND:</label>
+                            <p class="text-gray-800 font-semibold font-mono" id="detail-customer-cccd">-</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Số điện thoại:</label>
+                            <p class="text-gray-800" id="detail-customer-phone">-</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Email:</label>
+                            <p class="text-gray-800" id="detail-customer-email">-</p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-xs font-bold text-gray-500 uppercase">Địa chỉ:</label>
+                            <p class="text-gray-800" id="detail-customer-address">-</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Ngày cấp CCCD:</label>
+                            <p class="text-gray-800" id="detail-customer-issue-date">-</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Nơi cấp CCCD:</label>
+                            <p class="text-gray-800" id="detail-customer-issue-place">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CCCD Images -->
+                <div class="mb-6 bg-gray-50 rounded-lg p-5 border border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-id-card mr-2"></i>Ảnh CCCD
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- CCCD Front -->
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Mặt trước:</label>
+                            <div id="detail-cccd-front-container" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center bg-white min-h-[200px] flex items-center justify-center">
+                                <p class="text-gray-400">Không có ảnh</p>
+                            </div>
+                        </div>
+                        <!-- CCCD Back -->
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Mặt sau:</label>
+                            <div id="detail-cccd-back-container" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center bg-white min-h-[200px] flex items-center justify-center">
+                                <p class="text-gray-400">Không có ảnh</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Info -->
+                <div class="mb-6 bg-green-50 rounded-lg p-5 border border-green-200">
+                    <h3 class="text-lg font-bold text-green-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-cart-shopping mr-2"></i>Thông Tin Đơn Hàng
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">TVBH tạo đơn:</label>
+                            <p class="text-gray-800 font-semibold" id="detail-requester">-</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Mã đơn hàng (Số hợp đồng):</label>
+                            <p class="text-gray-800 font-semibold font-mono text-lg" id="detail-contract-code">
+                                <span class="text-yellow-600">Chưa có mã</span>
+                            </p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Dòng xe:</label>
+                            <p class="text-gray-800" id="detail-car-model">-</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Phiên bản:</label>
+                            <p class="text-gray-800" id="detail-car-version">-</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Màu sắc:</label>
+                            <p class="text-gray-800" id="detail-car-color">-</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Hình thức thanh toán:</label>
+                            <p class="text-gray-800" id="detail-payment-method">-</p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-xs font-bold text-gray-500 uppercase">Ghi chú:</label>
+                            <p class="text-gray-800" id="detail-notes">-</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Ngày tạo:</label>
+                            <p class="text-gray-800" id="detail-created-at">-</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Trạng thái:</label>
+                            <p class="text-gray-800" id="detail-status">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other Attachments -->
+                <div id="detail-other-attachments-container" class="mb-6 bg-purple-50 rounded-lg p-5 border border-purple-200 hidden">
+                    <h3 class="text-lg font-bold text-purple-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-paperclip mr-2"></i>File Đính Kèm Khác
+                    </h3>
+                    <div id="detail-other-attachments" class="space-y-2">
+                        <!-- Other attachments will be listed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+            <button 
+                onclick="closeOrderDetailModal()" 
+                class="px-6 py-2 bg-gray-500 text-white font-bold rounded-lg hover:bg-gray-600 transition"
+            >
+                Đóng
+            </button>
+            <!-- Button cấp mã (chỉ hiện cho SaleAdmin khi chưa có mã) -->
+            <button 
+                id="btn-assign-code-from-detail" 
+                onclick="assignContractCodeFromDetail()" 
+                class="px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition hidden"
+            >
+                <i class="fa-solid fa-key mr-2"></i>Cấp Mã Đơn Hàng
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentOrderDetail = null;
+let isAdminView = false;
+
+async function openOrderDetailModal(orderId, fromAdmin = false) {
+    isAdminView = fromAdmin;
+    currentOrderDetail = null;
+    
+    // Show modal
+    const modal = document.getElementById('modal-order-detail');
+    modal.classList.remove('hidden');
+    
+    // Show loading, hide content
+    document.getElementById('order-detail-loading').classList.remove('hidden');
+    document.getElementById('order-detail-content').classList.add('hidden');
+    
+    try {
+        // Try to find order from window.allOrders or window.allAdminOrders
+        let order = null;
+        if (fromAdmin && typeof window !== 'undefined' && window.allAdminOrders && Array.isArray(window.allAdminOrders)) {
+            order = window.allAdminOrders.find(o => o.id === orderId);
+        } else if (!fromAdmin && typeof window !== 'undefined' && window.allOrders && Array.isArray(window.allOrders)) {
+            order = window.allOrders.find(o => o.id === orderId);
+        }
+        
+        // If not found, fetch from API
+        if (!order) {
+            const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+            if (session && session.username) {
+                let result;
+                if (fromAdmin) {
+                    result = await window.callAPI({
+                        action: 'get_orders_for_saleadmin'
+                    });
+                } else {
+                    result = await window.callAPI({
+                        action: 'get_my_orders',
+                        username: session.username
+                    });
+                }
+                
+                if (result.success && result.data) {
+                    order = result.data.find(o => o.id === orderId);
+                }
+            }
+        }
+        
+        if (!order) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Không tìm thấy đơn hàng', 'danger');
+            } else {
+                alert('Không tìm thấy đơn hàng');
+            }
+            closeOrderDetailModal();
+            return;
+        }
+        
+        currentOrderDetail = order;
+        renderOrderDetail(order);
+        
+        // Show/hide assign code button for admin
+        if (fromAdmin && (!order.contract_code || !order.contract_code.trim())) {
+            document.getElementById('btn-assign-code-from-detail').classList.remove('hidden');
+        } else {
+            document.getElementById('btn-assign-code-from-detail').classList.add('hidden');
+        }
+        
+    } catch (error) {
+        console.error('Error loading order detail:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi tải thông tin đơn hàng: ' + error.message, 'danger');
+        } else {
+            alert('Lỗi tải thông tin đơn hàng: ' + error.message);
+        }
+        closeOrderDetailModal();
+    }
+}
+
+function renderOrderDetail(order) {
+    const customer = order.customers || {};
+    const requester = order.requester_user || {};
+    
+    // Customer Info
+    document.getElementById('detail-customer-name').textContent = customer.name || '-';
+    document.getElementById('detail-customer-cccd').textContent = customer.cccd || '-';
+    document.getElementById('detail-customer-phone').textContent = customer.phone || '-';
+    document.getElementById('detail-customer-email').textContent = customer.email || '-';
+    document.getElementById('detail-customer-address').textContent = customer.address || '-';
+    document.getElementById('detail-customer-issue-date').textContent = customer.issue_date 
+        ? new Date(customer.issue_date).toLocaleDateString('vi-VN') 
+        : '-';
+    document.getElementById('detail-customer-issue-place').textContent = customer.issue_place || '-';
+    
+    // CCCD Images
+    const frontContainer = document.getElementById('detail-cccd-front-container');
+    const backContainer = document.getElementById('detail-cccd-back-container');
+    
+    if (customer.cccd_front_image_url) {
+        frontContainer.innerHTML = `
+            <img 
+                src="${customer.cccd_front_image_url}" 
+                alt="CCCD Mặt trước" 
+                class="max-w-full max-h-[300px] mx-auto rounded-lg cursor-pointer hover:opacity-80 transition"
+                onclick="window.open('${customer.cccd_front_image_url}', '_blank')"
+                onerror="this.parentElement.innerHTML='<p class=\\'text-red-400\\'>Không thể tải ảnh</p>'"
+            >
+            <p class="text-xs text-gray-500 mt-2">
+                <i class="fa-solid fa-magnifying-glass-plus mr-1"></i>Click để xem ảnh lớn
+            </p>
+        `;
+    } else {
+        frontContainer.innerHTML = '<p class="text-gray-400">Không có ảnh</p>';
+    }
+    
+    if (customer.cccd_back_image_url) {
+        backContainer.innerHTML = `
+            <img 
+                src="${customer.cccd_back_image_url}" 
+                alt="CCCD Mặt sau" 
+                class="max-w-full max-h-[300px] mx-auto rounded-lg cursor-pointer hover:opacity-80 transition"
+                onclick="window.open('${customer.cccd_back_image_url}', '_blank')"
+                onerror="this.parentElement.innerHTML='<p class=\\'text-red-400\\'>Không thể tải ảnh</p>'"
+            >
+            <p class="text-xs text-gray-500 mt-2">
+                <i class="fa-solid fa-magnifying-glass-plus mr-1"></i>Click để xem ảnh lớn
+            </p>
+        `;
+    } else {
+        backContainer.innerHTML = '<p class="text-gray-400">Không có ảnh</p>';
+    }
+    
+    // Order Info
+    document.getElementById('detail-requester').textContent = requester.fullname || requester.username || '-';
+    
+    const contractCodeEl = document.getElementById('detail-contract-code');
+    if (order.contract_code && order.contract_code.trim()) {
+        contractCodeEl.innerHTML = `<span class="text-green-600 font-bold">${order.contract_code}</span>`;
+    } else {
+        contractCodeEl.innerHTML = '<span class="text-yellow-600 font-bold">Chưa có mã</span>';
+    }
+    
+    document.getElementById('detail-car-model').textContent = order.car_model || '-';
+    document.getElementById('detail-car-version').textContent = order.car_version || '-';
+    document.getElementById('detail-car-color').textContent = order.car_color || '-';
+    document.getElementById('detail-payment-method').textContent = order.payment_method || '-';
+    document.getElementById('detail-notes').textContent = order.notes || '-';
+    document.getElementById('detail-created-at').textContent = order.created_at 
+        ? new Date(order.created_at).toLocaleString('vi-VN') 
+        : '-';
+    
+    // Status
+    const statusEl = document.getElementById('detail-status');
+    if (order.contract_code && order.contract_code.trim()) {
+        statusEl.innerHTML = '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold">Đã có mã</span>';
+    } else {
+        statusEl.innerHTML = '<span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-bold">Chờ cấp mã</span>';
+    }
+    
+    // Other Attachments
+    let attachments = [];
+    if (order.attachments && Array.isArray(order.attachments)) {
+        attachments = order.attachments;
+    } else if (order.attachments && typeof order.attachments === 'string') {
+        try {
+            attachments = JSON.parse(order.attachments);
+        } catch (e) {
+            console.warn('Error parsing attachments:', e);
+        }
+    }
+    
+    const otherAttachmentsContainer = document.getElementById('detail-other-attachments-container');
+    const otherAttachmentsEl = document.getElementById('detail-other-attachments');
+    
+    // Filter out CCCD images
+    const otherAttachments = attachments.filter(att => {
+        if (!att.url) return false;
+        const url = att.url.toLowerCase();
+        return !url.includes('cccd_front') && !url.includes('cccd_back');
+    });
+    
+    if (otherAttachments.length > 0) {
+        otherAttachmentsEl.innerHTML = otherAttachments.map(att => `
+            <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-file text-gray-400"></i>
+                    <span class="text-gray-800">${att.name || 'File đính kèm'}</span>
+                </div>
+                <a 
+                    href="${att.url}" 
+                    target="_blank" 
+                    class="text-blue-600 hover:text-blue-800 transition"
+                >
+                    <i class="fa-solid fa-external-link mr-1"></i>Mở
+                </a>
+            </div>
+        `).join('');
+        otherAttachmentsContainer.classList.remove('hidden');
+    } else {
+        otherAttachmentsContainer.classList.add('hidden');
+    }
+    
+    // Show content, hide loading
+    document.getElementById('order-detail-loading').classList.add('hidden');
+    document.getElementById('order-detail-content').classList.remove('hidden');
+}
+
+function closeOrderDetailModal() {
+    document.getElementById('modal-order-detail').classList.add('hidden');
+    currentOrderDetail = null;
+    isAdminView = false;
+}
+
+function assignContractCodeFromDetail() {
+    if (!currentOrderDetail) return;
+    
+    // Prompt for contract code
+    const contractCode = prompt('Nhập mã đơn hàng (số hợp đồng):');
+    if (!contractCode || !contractCode.trim()) {
+        return;
+    }
+    
+    // Call assign function
+    if (typeof assignContractCode === 'function') {
+        // Create a temporary input to use with assignContractCode
+        const tempInput = document.createElement('input');
+        tempInput.id = `contract-code-${currentOrderDetail.id}`;
+        tempInput.value = contractCode.trim().toUpperCase();
+        document.body.appendChild(tempInput);
+        
+        assignContractCode(currentOrderDetail.id).then(() => {
+            document.body.removeChild(tempInput);
+            // Reload order detail if successful
+            setTimeout(() => {
+                openOrderDetailModal(currentOrderDetail.id, isAdminView);
+            }, 500);
+        }).catch(() => {
+            document.body.removeChild(tempInput);
+        });
+    } else {
+        // Fallback: direct API call
+        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+        if (!session || !session.username) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Vui lòng đăng nhập lại', 'danger');
+            }
+            return;
+        }
+        
+        window.callAPI({
+            action: 'assign_contract_code',
+            orderId: currentOrderDetail.id,
+            contract_code: contractCode.trim().toUpperCase(),
+            assigned_sale: session.username
+        }).then(result => {
+            if (result.success) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Đã cấp mã đơn hàng thành công!', 'success');
+                }
+                // Reload order detail
+                setTimeout(() => {
+                    openOrderDetailModal(currentOrderDetail.id, isAdminView);
+                }, 500);
+            } else {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Lỗi: ' + result.message, 'danger');
+                }
+            }
+        });
+    }
+}
+
+// Expose to window
+if (typeof window !== 'undefined') {
+    window.openOrderDetailModal = openOrderDetailModal;
+    window.closeOrderDetailModal = closeOrderDetailModal;
+}
+</script>
+

@@ -206,10 +206,15 @@ function renderAdminOrders(orders) {
                     </div>
                 </div>
             </div>
-            ${!hasContractCode ? `
-                <div class="bg-white border border-gray-200 rounded-lg p-4 mb-3">
-                    <h4 class="font-bold text-gray-800 mb-2">Cấp mã đơn hàng:</h4>
-                    <div class="flex gap-2">
+            <div class="flex gap-2 pt-3 border-t border-gray-200">
+                <button 
+                    onclick="viewOrderDetailAdmin('${order.id}')" 
+                    class="flex-1 bg-blue-600 text-white font-bold px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
+                >
+                    <i class="fa-solid fa-eye mr-2"></i>Xem chi tiết
+                </button>
+                ${!hasContractCode ? `
+                    <div class="flex-1 flex gap-2">
                         <input 
                             type="text" 
                             id="contract-code-${order.id}" 
@@ -224,11 +229,13 @@ function renderAdminOrders(orders) {
                             <i class="fa-solid fa-check mr-2"></i>Cấp mã
                         </button>
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">
-                        <i class="fa-solid fa-info-circle mr-1"></i>
-                        Mã đơn hàng phải là duy nhất (không trùng với đơn hàng khác)
-                    </p>
-                </div>
+                ` : `
+                    <div class="flex-1 text-center text-sm text-gray-600 flex items-center justify-center">
+                        Đã cấp mã: <strong class="ml-1 text-green-600">${order.contract_code}</strong>
+                    </div>
+                `}
+            </div>
+            ${!hasContractCode ? `
             ` : `
                 <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
                     <div class="flex items-center justify-between">
@@ -265,6 +272,19 @@ function filterOrdersAdmin() {
     });
 
     renderAdminOrders(filtered);
+}
+
+// View order detail for admin
+async function viewOrderDetailAdmin(orderId) {
+    if (typeof window.openOrderDetailModal === 'function') {
+        await window.openOrderDetailModal(orderId, true);
+    } else {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Modal chưa được load. Vui lòng reload trang.', 'warning');
+        } else {
+            alert('Modal chưa được load. Vui lòng reload trang.');
+        }
+    }
 }
 
 // Assign contract code

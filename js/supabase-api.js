@@ -1665,7 +1665,9 @@ async function supabaseGetOrdersForSaleAdmin(filters = {}) {
             .select(`
                 *,
                 customers:customer_cccd (
-                    cccd, name, phone, email, address
+                    cccd, name, phone, email, address, 
+                    cccd_front_image_url, cccd_back_image_url,
+                    issue_date, issue_place
                 ),
                 requester_user:requester (
                     username, fullname, "group"
