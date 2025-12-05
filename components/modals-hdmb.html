@@ -212,7 +212,9 @@ async function submitHDMBForm(event) {
     event.preventDefault();
     
     if (!currentOrderForHDMB) {
-        showToast('Lỗi: Không tìm thấy đơn hàng', 'danger');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: Không tìm thấy đơn hàng', 'danger');
+        }
         return;
     }
 
@@ -245,12 +247,65 @@ async function submitHDMBForm(event) {
 
     // Validate
     if (!formData.so_hop_dong || !formData.ngay_ky) {
-        showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+        }
         return;
     }
 
-    const submitBtn = event.target.querySelector('button[type="submit"]') || 
-                      event.target.closest('.bg-gray-50').querySelector('button:last-child');
+    // Get submit button - try multiple ways
+    let submitBtn = null;
+    const modal = document.getElementById('modal-create-hdmb');
+    
+    if (modal) {
+        // Try to find button by text or class
+        const buttons = modal.querySelectorAll('button');
+        for (let btn of buttons) {
+            if (btn.textContent.includes('Tạo HĐMB') || btn.textContent.includes('Đang tạo')) {
+                submitBtn = btn;
+                break;
+            }
+        }
+    }
+    
+    // Fallback: try from event target
+    if (!submitBtn && event.target) {
+        if (event.target.tagName === 'BUTTON') {
+            submitBtn = event.target;
+        } else {
+            const closestBtn = event.target.closest('button');
+            if (closestBtn) {
+                submitBtn = closestBtn;
+            }
+        }
+    }
+    
+    // Final fallback: get from form's parent
+    if (!submitBtn) {
+        const form = document.getElementById('form-hdmb');
+        if (form) {
+            const modalFooter = form.closest('.bg-white')?.querySelector('.bg-gray-50');
+            if (modalFooter) {
+                const buttons = modalFooter.querySelectorAll('button');
+                // Get the button that contains "Tạo HĐMB"
+                for (let btn of buttons) {
+                    if (btn.textContent.includes('Tạo HĐMB')) {
+                        submitBtn = btn;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    if (!submitBtn) {
+        console.error('Cannot find submit button');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: Không tìm thấy nút submit', 'danger');
+        }
+        return;
+    }
+    
     const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tạo...';
@@ -262,7 +317,9 @@ async function submitHDMBForm(event) {
         submitBtn.innerHTML = originalText;
 
         if (result.success) {
-            showToast('Tạo HĐMB thành công!', 'success');
+            if (typeof window.showToast === 'function') {
+                window.showToast('Tạo HĐMB thành công!', 'success');
+            }
             closeHDMBModal();
             
             // Mở file trong tab mới
@@ -272,12 +329,19 @@ async function submitHDMBForm(event) {
                 }, 500);
             }
         } else {
-            showToast('Lỗi: ' + (result.message || 'Không thể tạo HĐMB'), 'danger');
+            if (typeof window.showToast === 'function') {
+                window.showToast('Lỗi: ' + (result.message || 'Không thể tạo HĐMB'), 'danger');
+            }
         }
     } catch (error) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-        showToast('Lỗi: ' + error.message, 'danger');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        console.error('Error creating HDMB:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + (error.message || 'Không thể tạo HĐMB'), 'danger');
+        }
     }
 }
 </script>
