@@ -588,8 +588,43 @@ function createDeNghiGiaiNgan(requestData) {
       '{{so_tien_giai_ngan_bang_chu}}': numberToWords(soTienGiaiNgan)
     };
     
+    // Thực hiện replace với logging và validation
     for (var key in replacements) {
-      body.replaceText(key, replacements[key] || '');
+      try {
+        var value = replacements[key] || '';
+        Logger.log('Replacing placeholder: ' + key);
+        Logger.log('With value: ' + value);
+        
+        // Escape regex special characters
+        var escapedKey = key.replace(/[{}[\]()+\-*?.^$|\\]/g, '\\$&');
+        Logger.log('Escaped key: ' + escapedKey);
+        
+        // Thử replace với escaped key
+        var found = body.findText(escapedKey);
+        if (found) {
+          Logger.log('Found placeholder in document, replacing...');
+          body.replaceText(escapedKey, value);
+          Logger.log('✅ Successfully replaced: ' + key);
+        } else {
+          // Thử với key gốc
+          Logger.log('⚠️ Not found with escaped key, trying original key...');
+          var found2 = body.findText(key);
+          if (found2) {
+            body.replaceText(key, value);
+            Logger.log('✅ Successfully replaced with original key: ' + key);
+          } else {
+            Logger.log('❌ Placeholder not found in document: ' + key);
+          }
+        }
+      } catch (replaceError) {
+        Logger.log('Error replacing ' + key + ': ' + replaceError.toString());
+        try {
+          body.replaceText(key, replacements[key] || '');
+          Logger.log('✅ Successfully replaced without escape: ' + key);
+        } catch (e) {
+          Logger.log('❌ Second attempt also failed for ' + key + ': ' + e.toString());
+        }
+      }
     }
     
     doc.saveAndClose();
