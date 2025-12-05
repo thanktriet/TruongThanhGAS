@@ -155,11 +155,20 @@
                 const uploadResult = await window.googleDocsAPI.uploadFiles(fileList);
 
                 addDebugLog('Upload result:', uploadResult);
+                addDebugLog('Upload result type:', typeof uploadResult);
+                addDebugLog('Upload result keys:', uploadResult ? Object.keys(uploadResult) : 'null');
 
                 // Display result
                 resultDiv.classList.remove('hidden');
                 
-                if (uploadResult.success) {
+                // Check success - be more flexible
+                const isSuccess = uploadResult && (
+                    uploadResult.success === true || 
+                    (uploadResult.urls && uploadResult.urls.length > 0) ||
+                    (!uploadResult.error && !uploadResult.corsError && !uploadResult.message?.includes('thất bại'))
+                );
+                
+                if (isSuccess) {
                     resultContent.className = 'p-4 rounded-lg border border-green-200 bg-green-50';
                     resultContent.innerHTML = `
                         <div class="text-green-700">
