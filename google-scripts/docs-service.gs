@@ -43,8 +43,46 @@ function doGet(e) {
 
 function doPost(e) {
   try {
-    const data = JSON.parse(e.postData.contents);
+    let data = {};
+    
+    // Xử lý cả JSON và FormData
+    if (e.postData && e.postData.contents) {
+      const contentType = e.postData.type || '';
+      if (contentType.indexOf('application/json') !== -1) {
+        // JSON request
+        data = JSON.parse(e.postData.contents);
+      } else {
+        // FormData request - parse từ e.parameter
+        data = e.parameter;
+        // Parse JSON strings từ FormData
+        if (data.files && typeof data.files === 'string') {
+          try {
+            data.files = JSON.parse(data.files);
+          } catch (e) {
+            Logger.log('Error parsing files from FormData: ' + e.toString());
+          }
+        }
+        if (data.formData && typeof data.formData === 'string') {
+          try {
+            data.formData = JSON.parse(data.formData);
+          } catch (e) {
+            Logger.log('Error parsing formData from FormData: ' + e.toString());
+          }
+        }
+      }
+    } else {
+      // Fallback: lấy từ parameter (FormData hoặc URL params)
+      data = e.parameter;
+    }
+    
     const action = data.action;
+    
+    if (!action) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        message: "Missing 'action' parameter"
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
     
     switch (action) {
       case 'upload_files':
@@ -67,6 +105,7 @@ function doPost(e) {
     }
   } catch (error) {
     Logger.log('Error in doPost: ' + error.toString());
+    Logger.log('Error stack: ' + error.stack);
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       message: error.toString()

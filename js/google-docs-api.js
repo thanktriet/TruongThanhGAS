@@ -60,37 +60,55 @@ async function uploadFilesToGoogleDrive(files, folderId = null) {
         const fileData = await Promise.all(filePromises);
 
         // Call Google Apps Script API
-        // Google Apps Script Web App doesn't support CORS well from external domains
-        // We'll use FormData which works better with Google Apps Script
+        // Use JSON for better compatibility with Google Apps Script
+        // After deploying with correct settings (Anyone access), CORS should work
         
         try {
-            const formData = new FormData();
-            formData.append('action', 'upload_files');
-            formData.append('files', JSON.stringify(fileData));
-            if (folderId) {
-                formData.append('folderId', folderId);
-            }
-
-            // Try with FormData first (works better with Google Apps Script)
             const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'upload_files',
+                    files: fileData,
+                    folderId: folderId || null
+                })
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
             }
 
             const result = await response.json();
+            
+            // Log for debugging
+            if (result.success) {
+                console.log('✅ Upload successful:', result);
+            } else {
+                console.warn('⚠️ Upload returned error:', result);
+            }
+            
             return result;
-        } catch (corsError) {
-            // CORS error - Google Apps Script Web App doesn't support CORS from external domains
-            console.error('CORS error when calling Google Apps Script:', corsError);
+        } catch (error) {
+            console.error('❌ Error calling Google Apps Script:', error);
+            
+            // Check if it's a CORS error
+            if (error.message && (error.message.includes('CORS') || error.message.includes('Failed to fetch'))) {
+                return {
+                    success: false,
+                    message: 'Lỗi CORS: Không thể kết nối đến Google Apps Script từ domain này. ' +
+                            'Vui lòng kiểm tra lại cấu hình deploy (Who has access: Anyone).',
+                    corsError: true,
+                    error: error.message
+                };
+            }
+            
             return {
                 success: false,
-                message: 'Lỗi CORS: Không thể kết nối đến Google Apps Script từ domain này. ' +
-                        'Vui lòng kiểm tra cấu hình deploy hoặc sử dụng upload files lên Supabase Storage.',
-                corsError: true
+                message: 'Lỗi upload file: ' + error.message,
+                error: error.message
             };
         }
     } catch (error) {
