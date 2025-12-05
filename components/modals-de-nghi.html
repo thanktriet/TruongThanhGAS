@@ -72,10 +72,41 @@
 <script>
 let currentOrderForDeNghi = null;
 
-function openDeNghiModal(orderId) {
-    const order = allOrders.find(o => o.id === orderId);
+async function openDeNghiModal(orderId) {
+    // Try to find order from window.allOrders or fetch it
+    let order = null;
+    if (typeof window !== 'undefined' && window.allOrders && Array.isArray(window.allOrders)) {
+        order = window.allOrders.find(o => o.id === orderId);
+    }
+    
+    // If not found, try to fetch order
     if (!order) {
-        showToast('Không tìm thấy đơn hàng', 'danger');
+        try {
+            const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+            if (session && session.username) {
+                const result = await window.callAPI({
+                    action: 'get_my_orders',
+                    username: session.username
+                });
+                if (result.success && result.data) {
+                    order = result.data.find(o => o.id === orderId);
+                    // Update window.allOrders
+                    if (typeof window !== 'undefined') {
+                        window.allOrders = result.data;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error fetching order:', e);
+        }
+    }
+    
+    if (!order) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Không tìm thấy đơn hàng', 'danger');
+        } else {
+            alert('Không tìm thấy đơn hàng');
+        }
         return;
     }
 

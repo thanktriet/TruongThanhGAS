@@ -57,6 +57,17 @@
 <script>
 let allOrders = [];
 
+// Expose allOrders to window for modals to access
+if (typeof window !== 'undefined') {
+    window.allOrders = allOrders;
+    Object.defineProperty(window, 'allOrders', {
+        get: () => allOrders,
+        set: (value) => { allOrders = value; },
+        enumerable: true,
+        configurable: true
+    });
+}
+
 // Load my orders
 async function loadMyOrders() {
     const session = JSON.parse(localStorage.getItem('user_session') || '{}');
@@ -88,10 +99,27 @@ async function loadMyOrders() {
 
     if (result.success && result.data && result.data.length > 0) {
         allOrders = result.data;
+        // Update window.allOrders
+        if (typeof window !== 'undefined') {
+            Object.defineProperty(window, 'allOrders', {
+                get: () => allOrders,
+                set: (value) => { allOrders = value; },
+                enumerable: true,
+                configurable: true
+            });
+        }
         renderOrders(allOrders);
         document.getElementById('orders-empty').classList.add('hidden');
     } else {
         allOrders = [];
+        if (typeof window !== 'undefined') {
+            Object.defineProperty(window, 'allOrders', {
+                get: () => allOrders,
+                set: (value) => { allOrders = value; },
+                enumerable: true,
+                configurable: true
+            });
+        }
         document.getElementById('orders-list').innerHTML = '';
         document.getElementById('orders-empty').classList.remove('hidden');
     }
