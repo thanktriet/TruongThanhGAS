@@ -161,12 +161,12 @@
                 // Display result
                 resultDiv.classList.remove('hidden');
                 
-                // Check success - be more flexible
-                const isSuccess = uploadResult && (
-                    uploadResult.success === true || 
-                    (uploadResult.urls && uploadResult.urls.length > 0) ||
-                    (!uploadResult.error && !uploadResult.corsError && !uploadResult.message?.includes('thất bại'))
-                );
+                // Check success - phải có URLs mới là thành công
+                const isSuccess = uploadResult && 
+                    uploadResult.success === true && 
+                    uploadResult.urls && 
+                    Array.isArray(uploadResult.urls) && 
+                    uploadResult.urls.length > 0;
                 
                 if (isSuccess) {
                     resultContent.className = 'p-4 rounded-lg border border-green-200 bg-green-50';
