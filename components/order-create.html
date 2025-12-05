@@ -205,7 +205,9 @@ async function searchCustomerByCCCD(event) {
     const cccd = cccdInput.value.trim();
     
     if (!cccd) {
-        showToast('Vui lòng nhập số CCCD', 'warning');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng nhập số CCCD', 'warning');
+        }
         return;
     }
 
@@ -263,7 +265,9 @@ function handleFileSelect(input, previewId) {
         };
         reader.onerror = function(error) {
             console.error('Error reading file:', error);
-            showToast('Lỗi đọc file. Vui lòng thử lại.', 'danger');
+            if (typeof window.showToast === 'function') {
+                window.showToast('Lỗi đọc file. Vui lòng thử lại.', 'danger');
+            }
         };
         reader.readAsDataURL(file);
     }
@@ -290,14 +294,18 @@ async function handleCreateOrder(event) {
     
     // Validate required fields
     if (!formData.get('customer_name') || !formData.get('cccd')) {
-        showToast('Vui lòng điền đầy đủ thông tin khách hàng', 'warning');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng điền đầy đủ thông tin khách hàng', 'warning');
+        }
         return;
     }
 
     // Get session
     const session = JSON.parse(localStorage.getItem('user_session') || '{}');
     if (!session || !session.username) {
-        showToast('Vui lòng đăng nhập lại', 'danger');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng đăng nhập lại', 'danger');
+        }
         return;
     }
 
@@ -368,10 +376,20 @@ async function handleCreateOrder(event) {
                             });
                         }
                     });
-                    showToast('Đã upload file thành công!', 'success');
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Đã upload file thành công!', 'success');
+                    }
                 } else {
                     console.warn('⚠️ Upload files warning:', uploadResult);
-                    showToast('Lưu ý: Upload file thất bại: ' + (uploadResult.message || 'Unknown error'), 'warning');
+                    const errorMsg = uploadResult.corsError 
+                        ? 'Lỗi CORS: Không thể upload file. Vui lòng liên hệ admin để cấu hình Google Apps Script hoặc sử dụng Supabase Storage.'
+                        : 'Lưu ý: Upload file thất bại: ' + (uploadResult.message || 'Unknown error');
+                    
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(errorMsg, uploadResult.corsError ? 'danger' : 'warning');
+                    } else {
+                        console.error(errorMsg);
+                    }
                 }
             }
         } catch (uploadError) {
@@ -403,7 +421,9 @@ async function handleCreateOrder(event) {
         // Restore button
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalBtnText;
-        showToast('Lỗi lưu thông tin khách hàng: ' + customerResult.message, 'danger');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi lưu thông tin khách hàng: ' + customerResult.message, 'danger');
+        }
         console.error('Customer upsert error:', customerResult);
         return;
     }
@@ -436,7 +456,9 @@ async function handleCreateOrder(event) {
 
     if (orderResult.success) {
         console.log('✅ Order created successfully:', orderResult.data);
-        showToast('Đã tạo đơn hàng thành công!', 'success');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Đã tạo đơn hàng thành công!', 'success');
+        }
         resetOrderForm();
         // Có thể chuyển sang trang danh sách đơn hàng
         setTimeout(() => {
@@ -446,7 +468,9 @@ async function handleCreateOrder(event) {
         }, 1500);
     } else {
         console.error('❌ Order creation error:', orderResult);
-        showToast('Lỗi tạo đơn hàng: ' + orderResult.message, 'danger');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi tạo đơn hàng: ' + orderResult.message, 'danger');
+        }
     }
 }
 

@@ -60,20 +60,39 @@ async function uploadFilesToGoogleDrive(files, folderId = null) {
         const fileData = await Promise.all(filePromises);
 
         // Call Google Apps Script API
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                action: 'upload_files',
-                files: fileData,
-                folderId: folderId
-            })
-        });
+        // Google Apps Script Web App doesn't support CORS well from external domains
+        // We'll use FormData which works better with Google Apps Script
+        
+        try {
+            const formData = new FormData();
+            formData.append('action', 'upload_files');
+            formData.append('files', JSON.stringify(fileData));
+            if (folderId) {
+                formData.append('folderId', folderId);
+            }
 
-        const result = await response.json();
-        return result;
+            // Try with FormData first (works better with Google Apps Script)
+            const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            return result;
+        } catch (corsError) {
+            // CORS error - Google Apps Script Web App doesn't support CORS from external domains
+            console.error('CORS error when calling Google Apps Script:', corsError);
+            return {
+                success: false,
+                message: 'Lỗi CORS: Không thể kết nối đến Google Apps Script từ domain này. ' +
+                        'Vui lòng kiểm tra cấu hình deploy hoặc sử dụng upload files lên Supabase Storage.',
+                corsError: true
+            };
+        }
     } catch (error) {
         console.error('Upload files error:', error);
         return {
