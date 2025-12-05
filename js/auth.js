@@ -104,10 +104,10 @@ function checkSession() {
                 $('nav-daily-report')?.classList.add('hidden');
             }
             
-            // SALEADMIN menu
+            // SALEADMIN/ADMIN menu - Xem tất cả đơn hàng
             if (typeof hasPermission === 'function' && hasPermission(user, 'view_all_orders')) {
                 $('nav-orders-admin')?.classList.remove('hidden');
-            } else if (user.role === 'SALEADMIN') {
+            } else if (user.role === 'SALEADMIN' || user.role === 'ADMIN') {
                 $('nav-orders-admin')?.classList.remove('hidden');
             } else {
                 $('nav-orders-admin')?.classList.add('hidden');

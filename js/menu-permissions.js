@@ -46,10 +46,10 @@ function updateMenuItemsByPermissions(user) {
     // TỜ TRÌNH MENUS
     // =====================================================
     toggleMenuByPermission('nav-create', 'create_request', 
-        ['TVBH', 'SALE', 'TPKD', 'GDKD', 'BKS', 'BGD', 'KETOAN']);
+        ['ADMIN', 'TVBH', 'SALE', 'TPKD', 'GDKD', 'BKS', 'BGD', 'KETOAN']);
     
     toggleMenuByPermission('nav-my-requests', 'view_my_requests',
-        ['TVBH', 'SALE', 'TPKD', 'GDKD', 'BKS', 'BGD', 'KETOAN']);
+        ['ADMIN', 'TVBH', 'SALE', 'TPKD', 'GDKD', 'BKS', 'BGD', 'KETOAN']);
     
     // Approval menu - logic đặc biệt
     const navApproval = $('nav-approval');
@@ -64,6 +64,9 @@ function updateMenuItemsByPermissions(user) {
             // Ẩn nếu là SALE hoặc TVBH (không có quyền duyệt mặc định)
             if (user.role === 'SALE' || user.role === 'TVBH') {
                 shouldShowApproval = false;
+            } else if (user.role === 'ADMIN') {
+                // ADMIN luôn có quyền duyệt
+                shouldShowApproval = true;
             } else {
                 // Các role khác có quyền duyệt
                 shouldShowApproval = true;
@@ -82,7 +85,7 @@ function updateMenuItemsByPermissions(user) {
     // =====================================================
     toggleMenuByPermission('nav-order-create', 'create_order', ['TVBH', 'SALE']);
     toggleMenuByPermission('nav-my-orders', 'view_my_orders', ['TVBH', 'SALE']);
-    toggleMenuByPermission('nav-orders-admin', 'view_all_orders', ['SALEADMIN']);
+    toggleMenuByPermission('nav-orders-admin', 'view_all_orders', ['ADMIN', 'SALEADMIN']);
     
     // =====================================================
     // BÁO CÁO MENUS
