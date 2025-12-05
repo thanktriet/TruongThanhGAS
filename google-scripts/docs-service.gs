@@ -309,22 +309,41 @@ function uploadFilesToDrive(files, folderId) {
  */
 function createHDMB(formData) {
   try {
+    Logger.log('=== CREATE HDMB START ===');
+    Logger.log('formData type: ' + typeof formData);
+    Logger.log('formData keys: ' + (formData ? Object.keys(formData).join(', ') : 'null'));
+    Logger.log('formData value: ' + JSON.stringify(formData));
+    
+    if (!formData) {
+      throw new Error('formData không được cung cấp');
+    }
+    
     if (!CONFIG.TEMPLATE_ID_HDMB || CONFIG.TEMPLATE_ID_HDMB.startsWith("REPLACE")) {
       throw new Error('Chưa cấu hình TEMPLATE_ID_HDMB trong CONFIG');
     }
     
+    Logger.log('Opening template: ' + CONFIG.TEMPLATE_ID_HDMB);
     const templateDoc = DocumentApp.openById(CONFIG.TEMPLATE_ID_HDMB);
     const contractName = "HĐMB_" + (formData.khach_hang || formData.customer_name || 'KH').replace(/\s+/g, "_") + "_" + (formData.so_hop_dong || formData.contract_code || '');
+    Logger.log('Contract name: ' + contractName);
+    
     const newFile = DriveApp.getFileById(templateDoc.getId()).makeCopy(contractName);
     const newDocId = newFile.getId();
+    Logger.log('New file created with ID: ' + newDocId);
     
     const doc = DocumentApp.openById(newDocId);
     const body = doc.getBody();
+    
+    // Lấy toàn bộ text để kiểm tra placeholder
+    const fullText = body.getText();
+    Logger.log('Document full text (first 500 chars): ' + fullText.substring(0, 500));
     
     // Tính toán các giá trị
     const soLuong = parseInt(formData.so_luong || formData.quantity || 1) || 1;
     const donGia = parseFloat(formData.don_gia || formData.unit_price || 0) || 0;
     const tongTien = soLuong * donGia;
+    
+    Logger.log('Calculated values: soLuong=' + soLuong + ', donGia=' + donGia + ', tongTien=' + tongTien);
     
     // Thay thế placeholders
     const replacements = {
@@ -358,49 +377,76 @@ function createHDMB(formData) {
       '{{tien_dot_3_bangchu}}': numberToWords(parseFloat(formData.tien_dot_3 || 0))
     };
     
-    // Thực hiện replace - escape regex characters trong placeholder
+    Logger.log('Total replacements: ' + Object.keys(replacements).length);
+    
+    // Thực hiện replace - thử nhiều cách
+    var successCount = 0;
+    var failCount = 0;
+    
     for (var key in replacements) {
       try {
         var value = replacements[key] || '';
-        // Log để debug
-        Logger.log('Replacing placeholder: ' + key);
-        Logger.log('With value: ' + value);
+        Logger.log('--- Processing placeholder: ' + key + ' ---');
+        Logger.log('Value: ' + value);
         
-        // replaceText sử dụng regex, cần escape tất cả ký tự đặc biệt
-        // Escape regex special characters: { } [ ] ( ) + * ? . ^ $ | \
-        // Nhưng giữ nguyên dấu gạch dưới _ vì không phải ký tự đặc biệt
-        var escapedKey = key.replace(/[{}[\]()+\-*?.^$|\\]/g, '\\$&');
-        
-        Logger.log('Escaped key: ' + escapedKey);
-        
-        // Thử replace với escaped key
-        var found = body.findText(escapedKey);
-        if (found) {
-          Logger.log('Found placeholder in document, replacing...');
-          body.replaceText(escapedKey, value);
-          Logger.log('✅ Successfully replaced: ' + key);
-        } else {
-          // Nếu không tìm thấy với escaped key, thử với key gốc
-          Logger.log('⚠️ Not found with escaped key, trying original key...');
-          var found2 = body.findText(key);
-          if (found2) {
-            body.replaceText(key, value);
-            Logger.log('✅ Successfully replaced with original key: ' + key);
-          } else {
-            Logger.log('❌ Placeholder not found in document: ' + key);
-          }
-        }
-      } catch (replaceError) {
-        Logger.log('Error replacing ' + key + ': ' + replaceError.toString());
-        // Thử lại không escape nếu có lỗi
+        // Cách 1: Thử replace trực tiếp với key gốc (không escape)
         try {
-          body.replaceText(key, replacements[key] || '');
-          Logger.log('✅ Successfully replaced without escape: ' + key);
+          var found1 = body.findText(key);
+          if (found1) {
+            Logger.log('✅ Found with original key, replacing...');
+            body.replaceText(key, value);
+            successCount++;
+            Logger.log('✅ Successfully replaced: ' + key);
+            continue;
+          }
         } catch (e) {
-          Logger.log('❌ Second attempt also failed for ' + key + ': ' + e.toString());
+          Logger.log('Method 1 failed: ' + e.toString());
         }
+        
+        // Cách 2: Thử escape các ký tự đặc biệt
+        var escapedKey = key.replace(/[{}[\]()+\-*?.^$|\\]/g, '\\$&');
+        Logger.log('Escaped key: ' + escapedKey);
+        try {
+          var found2 = body.findText(escapedKey);
+          if (found2) {
+            Logger.log('✅ Found with escaped key, replacing...');
+            body.replaceText(escapedKey, value);
+            successCount++;
+            Logger.log('✅ Successfully replaced: ' + key);
+            continue;
+          }
+        } catch (e) {
+          Logger.log('Method 2 failed: ' + e.toString());
+        }
+        
+        // Cách 3: Thử chỉ escape {}
+        var simpleEscaped = key.replace(/[{}]/g, '\\$&');
+        Logger.log('Simple escaped: ' + simpleEscaped);
+        try {
+          var found3 = body.findText(simpleEscaped);
+          if (found3) {
+            Logger.log('✅ Found with simple escaped, replacing...');
+            body.replaceText(simpleEscaped, value);
+            successCount++;
+            Logger.log('✅ Successfully replaced: ' + key);
+            continue;
+          }
+        } catch (e) {
+          Logger.log('Method 3 failed: ' + e.toString());
+        }
+        
+        // Không tìm thấy với bất kỳ cách nào
+        Logger.log('❌ Placeholder not found in document: ' + key);
+        failCount++;
+      } catch (replaceError) {
+        Logger.log('❌ Error replacing ' + key + ': ' + replaceError.toString());
+        failCount++;
       }
     }
+    
+    Logger.log('=== REPLACE SUMMARY ===');
+    Logger.log('Success: ' + successCount);
+    Logger.log('Failed: ' + failCount);
     
     doc.saveAndClose();
     
