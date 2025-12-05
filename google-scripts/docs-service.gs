@@ -116,7 +116,12 @@ function doPost(e) {
         return createJSONResponse(uploadFilesToDrive(data.files, data.folderId || CONFIG.FOLDER_ID_DON_HANG));
       
       case 'create_hdmb':
-        return createJSONResponse(createHDMB(data.formData));
+        Logger.log('=== CREATE HDMB ACTION ===');
+        Logger.log('data.formData type: ' + typeof data.formData);
+        Logger.log('data.formData: ' + JSON.stringify(data.formData));
+        Logger.log('data keys: ' + Object.keys(data).join(', '));
+        // Fallback: nếu data.formData không có, thử dùng data trực tiếp
+        return createJSONResponse(createHDMB(data.formData || data));
       
       case 'create_thoa_thuan':
         return createJSONResponse(createThoaThuan(data.formData));
