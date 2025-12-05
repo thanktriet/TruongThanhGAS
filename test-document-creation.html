@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Tạo Tài Liệu - HĐMB, TTLS, ĐNGN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">
+            <i class="fa-solid fa-file-contract mr-2"></i>Test Tạo Tài Liệu
+        </h1>
+
+        <!-- Test HĐMB -->
+        <div class="mb-6 p-4 border rounded-lg">
+            <h2 class="text-lg font-bold text-gray-700 mb-3">
+                <i class="fa-solid fa-file-contract mr-2"></i>1. Test Tạo Hợp Đồng Mua Bán (HĐMB)
+            </h2>
+            <button 
+                onclick="testCreateHDMB()" 
+                class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition"
+            >
+                <i class="fa-solid fa-play mr-2"></i>Test Tạo HĐMB
+            </button>
+            <div id="result-hdmb" class="mt-3 hidden"></div>
+        </div>
+
+        <!-- Test Thỏa Thuận Lãi Suất -->
+        <div class="mb-6 p-4 border rounded-lg">
+            <h2 class="text-lg font-bold text-gray-700 mb-3">
+                <i class="fa-solid fa-handshake mr-2"></i>2. Test Tạo Thỏa Thuận Lãi Suất (TTLS)
+            </h2>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Chọn Ngân Hàng:</label>
+                <select id="bank-select" class="block w-full p-2 border rounded-lg">
+                    <option value="techcom">Techcombank</option>
+                    <option value="vpbank">VPBank</option>
+                    <option value="tpbank">TPBank</option>
+                    <option value="bidv">BIDV</option>
+                    <option value="sacombank">Sacombank</option>
+                </select>
+            </div>
+            <button 
+                onclick="testCreateThoaThuan()" 
+                class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition"
+            >
+                <i class="fa-solid fa-play mr-2"></i>Test Tạo Thỏa Thuận
+            </button>
+            <div id="result-thoa-thuan" class="mt-3 hidden"></div>
+        </div>
+
+        <!-- Test Đề Nghị Giải Ngân -->
+        <div class="mb-6 p-4 border rounded-lg">
+            <h2 class="text-lg font-bold text-gray-700 mb-3">
+                <i class="fa-solid fa-file-invoice-dollar mr-2"></i>3. Test Tạo Đề Nghị Giải Ngân (ĐNGN)
+            </h2>
+            <button 
+                onclick="testCreateDeNghi()" 
+                class="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition"
+            >
+                <i class="fa-solid fa-play mr-2"></i>Test Tạo Đề Nghị Giải Ngân
+            </button>
+            <div id="result-de-nghi" class="mt-3 hidden"></div>
+        </div>
+
+        <!-- Debug Info -->
+        <div id="debug" class="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h2 class="text-lg font-bold text-gray-800 mb-3">Debug Info:</h2>
+            <pre id="debug-content" class="text-xs text-gray-600 overflow-auto max-h-64"></pre>
+        </div>
+    </div>
+
+    <!-- Load scripts -->
+    <script src="js/google-docs-config.js"></script>
+    <script src="js/google-docs-api.js"></script>
+    <script src="js/utils.js"></script>
+
+    <script>
+        let debugLogs = [];
+
+        function addDebugLog(message, data = null) {
+            const timestamp = new Date().toLocaleTimeString('vi-VN');
+            const logEntry = `[${timestamp}] ${message}` + (data ? '\n' + JSON.stringify(data, null, 2) : '');
+            debugLogs.push(logEntry);
+            updateDebugDisplay();
+            console.log(message, data || '');
+        }
+
+        function updateDebugDisplay() {
+            const debugContent = document.getElementById('debug-content');
+            if (debugContent) {
+                debugContent.textContent = debugLogs.join('\n\n');
+            }
+        }
+
+        // Test data mẫu
+        const sampleHDMBData = {
+            so_hop_dong: 'HDMB001',
+            ngay_ky: new Date().toISOString(),
+            khach_hang: 'Nguyễn Văn A',
+            dia_chi: '123 Đường ABC, Quận 1, TP.HCM',
+            sdt: '0901234567',
+            email: 'nguyenvana@example.com',
+            so_cccd: '123456789012',
+            ngay_cap: '2020-01-15',
+            noi_cap: 'CA TP.HCM',
+            loai_xe: 'VF8',
+            phien_ban: 'Premium',
+            mau_xe: 'Đen',
+            so_luong: 1,
+            don_gia: 500000000,
+            tien_coc: 100000000,
+            chinh_sach_ban_hang: 'Chính sách ưu đãi đặc biệt'
+        };
+
+        const sampleThoaThuanData = {
+            TEN_KHACH_HANG: 'Nguyễn Văn A',
+            DIA_CHI: '123 Đường ABC, Quận 1, TP.HCM',
+            DIEN_THOAI: '0901234567',
+            CCCD: '123456789012',
+            NGAY_CAP: '2020-01-15',
+            NOI_CAP: 'CA TP.HCM',
+            SO_HOP_DONG: 'HDMB001',
+            LOAI_XE: 'VF8',
+            SO_KHUNG: 'VIN123456789',
+            SO_MAY: 'ENG123456',
+            GIA_TRI_HOP_DONG: 500000000,
+            SO_TIEN_VAY_SO: 400000000,
+            TY_LE_VAY: '80%',
+            THOI_HAN_VAY: '60 tháng'
+        };
+
+        const sampleDeNghiData = {
+            ten_khach_hang: 'Nguyễn Văn A',
+            so_hop_dong: 'HDMB001',
+            loai_xe: 'VF8',
+            ten_ngan_hang_vay: 'Techcombank',
+            so_tai_khoan: '1234567890',
+            so_tien_doi_ung: 400000000,
+            so_tien_giai_ngan: 400000000,
+            ngay_captbcv: new Date().toISOString()
+        };
+
+        async function testCreateHDMB() {
+            const resultDiv = document.getElementById('result-hdmb');
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = '<p class="text-blue-600"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tạo HĐMB...</p>';
+
+            try {
+                addDebugLog('=== Bắt đầu test tạo HĐMB ===');
+                addDebugLog('Test data:', sampleHDMBData);
+
+                if (!window.googleDocsAPI || !window.googleDocsAPI.createHDMB) {
+                    throw new Error('Google Docs API chưa được load. Kiểm tra js/google-docs-api.js');
+                }
+
+                addDebugLog('Đang gọi createHDMB...');
+                const result = await window.googleDocsAPI.createHDMB(sampleHDMBData);
+                addDebugLog('Kết quả:', result);
+
+                if (result.success) {
+                    resultDiv.className = 'mt-3 p-4 rounded-lg border border-green-200 bg-green-50';
+                    resultDiv.innerHTML = `
+                        <div class="text-green-700">
+                            <p class="font-bold mb-2"><i class="fa-solid fa-check-circle mr-2"></i>Tạo HĐMB thành công!</p>
+                            <p class="text-sm mb-2">File ID: ${result.fileId || 'N/A'}</p>
+                            <p class="text-sm mb-2">File Name: ${result.fileName || 'N/A'}</p>
+                            ${result.fileUrl ? `
+                                <p class="text-sm">
+                                    <a href="${result.fileUrl}" target="_blank" class="text-blue-600 hover:underline">
+                                        <i class="fa-solid fa-link mr-1"></i>Mở file trên Google Drive
+                                    </a>
+                                </p>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Tạo HĐMB thành công!', 'success');
+                    }
+                } else {
+                    resultDiv.className = 'mt-3 p-4 rounded-lg border border-red-200 bg-red-50';
+                    resultDiv.innerHTML = `
+                        <div class="text-red-700">
+                            <p class="font-bold mb-2"><i class="fa-solid fa-exclamation-circle mr-2"></i>Tạo HĐMB thất bại!</p>
+                            <p class="text-sm">${result.message || 'Lỗi không xác định'}</p>
+                        </div>
+                    `;
+                    
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Tạo HĐMB thất bại: ' + (result.message || 'Lỗi không xác định'), 'danger');
+                    }
+                }
+            } catch (error) {
+                addDebugLog('Exception:', error);
+                resultDiv.className = 'mt-3 p-4 rounded-lg border border-red-200 bg-red-50';
+                resultDiv.innerHTML = `
+                    <div class="text-red-700">
+                        <p class="font-bold mb-2"><i class="fa-solid fa-exclamation-circle mr-2"></i>Lỗi!</p>
+                        <p class="text-sm">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testCreateThoaThuan() {
+            const bank = document.getElementById('bank-select').value;
+            const resultDiv = document.getElementById('result-thoa-thuan');
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = '<p class="text-green-600"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tạo Thỏa Thuận...</p>';
+
+            try {
+                addDebugLog('=== Bắt đầu test tạo Thỏa Thuận ===');
+                addDebugLog('Ngân hàng:', bank);
+                addDebugLog('Test data:', sampleThoaThuanData);
+
+                const formData = { ...sampleThoaThuanData, bank: bank };
+
+                if (!window.googleDocsAPI || !window.googleDocsAPI.createThoaThuan) {
+                    throw new Error('Google Docs API chưa được load');
+                }
+
+                addDebugLog('Đang gọi createThoaThuan...');
+                const result = await window.googleDocsAPI.createThoaThuan(formData);
+                addDebugLog('Kết quả:', result);
+
+                if (result.success) {
+                    resultDiv.className = 'mt-3 p-4 rounded-lg border border-green-200 bg-green-50';
+                    resultDiv.innerHTML = `
+                        <div class="text-green-700">
+                            <p class="font-bold mb-2"><i class="fa-solid fa-check-circle mr-2"></i>Tạo Thỏa Thuận thành công!</p>
+                            <p class="text-sm mb-2">File Name: ${result.fileName || 'N/A'}</p>
+                            ${result.docUrl ? `
+                                <p class="text-sm mb-2">
+                                    <a href="${result.docUrl}" target="_blank" class="text-blue-600 hover:underline">
+                                        <i class="fa-solid fa-link mr-1"></i>Mở file trên Google Drive
+                                    </a>
+                                </p>
+                            ` : ''}
+                            ${result.pdfUrl ? `
+                                <p class="text-sm">
+                                    <a href="${result.pdfUrl}" target="_blank" class="text-blue-600 hover:underline">
+                                        <i class="fa-solid fa-file-pdf mr-1"></i>Mở PDF
+                                    </a>
+                                </p>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Tạo Thỏa Thuận thành công!', 'success');
+                    }
+                } else {
+                    resultDiv.className = 'mt-3 p-4 rounded-lg border border-red-200 bg-red-50';
+                    resultDiv.innerHTML = `
+                        <div class="text-red-700">
+                            <p class="font-bold mb-2"><i class="fa-solid fa-exclamation-circle mr-2"></i>Tạo Thỏa Thuận thất bại!</p>
+                            <p class="text-sm">${result.message || 'Lỗi không xác định'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                addDebugLog('Exception:', error);
+                resultDiv.className = 'mt-3 p-4 rounded-lg border border-red-200 bg-red-50';
+                resultDiv.innerHTML = `
+                    <div class="text-red-700">
+                        <p class="font-bold mb-2"><i class="fa-solid fa-exclamation-circle mr-2"></i>Lỗi!</p>
+                        <p class="text-sm">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testCreateDeNghi() {
+            const resultDiv = document.getElementById('result-de-nghi');
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = '<p class="text-purple-600"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tạo Đề Nghị Giải Ngân...</p>';
+
+            try {
+                addDebugLog('=== Bắt đầu test tạo Đề Nghị Giải Ngân ===');
+                addDebugLog('Test data:', sampleDeNghiData);
+
+                if (!window.googleDocsAPI || !window.googleDocsAPI.createDeNghiGiaiNgan) {
+                    throw new Error('Google Docs API chưa được load');
+                }
+
+                addDebugLog('Đang gọi createDeNghiGiaiNgan...');
+                const result = await window.googleDocsAPI.createDeNghiGiaiNgan(sampleDeNghiData);
+                addDebugLog('Kết quả:', result);
+
+                if (result.success) {
+                    resultDiv.className = 'mt-3 p-4 rounded-lg border border-green-200 bg-green-50';
+                    resultDiv.innerHTML = `
+                        <div class="text-green-700">
+                            <p class="font-bold mb-2"><i class="fa-solid fa-check-circle mr-2"></i>Tạo Đề Nghị Giải Ngân thành công!</p>
+                            <p class="text-sm mb-2">File ID: ${result.fileId || 'N/A'}</p>
+                            <p class="text-sm mb-2">File Name: ${result.fileName || 'N/A'}</p>
+                            ${result.fileUrl ? `
+                                <p class="text-sm">
+                                    <a href="${result.fileUrl}" target="_blank" class="text-blue-600 hover:underline">
+                                        <i class="fa-solid fa-link mr-1"></i>Mở file trên Google Drive
+                                    </a>
+                                </p>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Tạo Đề Nghị Giải Ngân thành công!', 'success');
+                    }
+                } else {
+                    resultDiv.className = 'mt-3 p-4 rounded-lg border border-red-200 bg-red-50';
+                    resultDiv.innerHTML = `
+                        <div class="text-red-700">
+                            <p class="font-bold mb-2"><i class="fa-solid fa-exclamation-circle mr-2"></i>Tạo Đề Nghị Giải Ngân thất bại!</p>
+                            <p class="text-sm">${result.message || 'Lỗi không xác định'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                addDebugLog('Exception:', error);
+                resultDiv.className = 'mt-3 p-4 rounded-lg border border-red-200 bg-red-50';
+                resultDiv.innerHTML = `
+                    <div class="text-red-700">
+                        <p class="font-bold mb-2"><i class="fa-solid fa-exclamation-circle mr-2"></i>Lỗi!</p>
+                        <p class="text-sm">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Check on load
+        window.addEventListener('load', () => {
+            addDebugLog('=== Page loaded ===');
+            addDebugLog('Google Docs API:', typeof window.googleDocsAPI !== 'undefined' ? 'Đã load' : 'Chưa load');
+            addDebugLog('Google Docs Config:', window.GOOGLE_DOCS_CONFIG ? 'Đã load' : 'Chưa load');
+            if (window.GOOGLE_DOCS_CONFIG) {
+                addDebugLog('Script URL:', window.GOOGLE_DOCS_CONFIG.url);
+            }
+        });
+    </script>
+</body>
+</html>
+
