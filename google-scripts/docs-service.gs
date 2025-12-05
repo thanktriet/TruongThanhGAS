@@ -35,24 +35,20 @@ const CONFIG = {
 // === PUBLIC WEB APP ENTRY ===
 // ===============================================================
 // ===============================================================
-// === CORS HEADERS HELPER ===
+// === RESPONSE HELPER ===
 // ===============================================================
 /**
- * Helper function để tạo response với CORS headers
+ * Helper function để tạo JSON response
+ * Lưu ý: Google Apps Script ContentService không hỗ trợ setHeaders()
+ * CORS headers được xử lý bởi deployment settings (Who has access: Anyone)
  */
-function createCORSResponse(data) {
+function createJSONResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON)
-    .setHeaders({
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Max-Age': '3600'
-    });
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function doGet(e) {
-  return createCORSResponse({
+  return createJSONResponse({
     success: false,
     message: "This is a POST-only service. Use POST method."
   });
@@ -60,14 +56,9 @@ function doGet(e) {
 
 function doOptions(e) {
   // Handle CORS preflight requests
+  // Google Apps Script tự động xử lý OPTIONS nếu deploy với "Anyone" access
   return ContentService.createTextOutput('')
-    .setMimeType(ContentService.MimeType.TEXT)
-    .setHeaders({
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Max-Age': '3600'
-    });
+    .setMimeType(ContentService.MimeType.TEXT);
 }
 
 function doPost(e) {
@@ -114,7 +105,7 @@ function doPost(e) {
     const action = data.action;
     
     if (!action) {
-      return createCORSResponse({
+      return createJSONResponse({
         success: false,
         message: "Missing 'action' parameter"
       });
@@ -122,19 +113,19 @@ function doPost(e) {
     
     switch (action) {
       case 'upload_files':
-        return createCORSResponse(uploadFilesToDrive(data.files, data.folderId || CONFIG.FOLDER_ID_DON_HANG));
+        return createJSONResponse(uploadFilesToDrive(data.files, data.folderId || CONFIG.FOLDER_ID_DON_HANG));
       
       case 'create_hdmb':
-        return createCORSResponse(createHDMB(data.formData));
+        return createJSONResponse(createHDMB(data.formData));
       
       case 'create_thoa_thuan':
-        return createCORSResponse(createThoaThuan(data.formData));
+        return createJSONResponse(createThoaThuan(data.formData));
       
       case 'create_de_nghi_giai_ngan':
-        return createCORSResponse(createDeNghiGiaiNgan(data.formData));
+        return createJSONResponse(createDeNghiGiaiNgan(data.formData));
       
       default:
-        return createCORSResponse({
+        return createJSONResponse({
           success: false,
           message: "Unknown action: " + action
         });
@@ -142,7 +133,7 @@ function doPost(e) {
   } catch (error) {
     Logger.log('Error in doPost: ' + error.toString());
     Logger.log('Error stack: ' + error.stack);
-    return createCORSResponse({
+    return createJSONResponse({
       success: false,
       message: error.toString()
     });
