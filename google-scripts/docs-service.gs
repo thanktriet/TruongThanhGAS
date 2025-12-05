@@ -124,16 +124,41 @@ function doPost(e) {
     } else {
       // Fallback: lấy từ parameter (FormData hoặc URL params)
       data = e.parameter || {};
+      Logger.log('No postData, using e.parameter');
+      Logger.log('e.parameter keys: ' + Object.keys(data).join(', '));
+      
+      // Parse formData nếu có
+      if (data.formData && typeof data.formData === 'string') {
+        try {
+          data.formData = JSON.parse(data.formData);
+          Logger.log('Parsed formData from e.parameter');
+        } catch (e) {
+          Logger.log('Error parsing formData from e.parameter: ' + e.toString());
+        }
+      }
+    }
+    
+    // Final check: Nếu không có postData và không có e.parameter, thử parse từ e
+    if (!data || Object.keys(data).length === 0) {
+      Logger.log('⚠️ No data found, trying e directly...');
+      if (e.parameter) {
+        data = e.parameter;
+        Logger.log('Using e.parameter: ' + Object.keys(data).join(', '));
+      }
     }
     
     const action = data.action;
     
     if (!action) {
+      Logger.log('❌ No action found in data');
+      Logger.log('data keys: ' + Object.keys(data).join(', '));
       return createJSONResponse({
         success: false,
         message: "Missing 'action' parameter"
       });
     }
+    
+    Logger.log('Action: ' + action);
     
     switch (action) {
       case 'upload_files':
@@ -144,13 +169,15 @@ function doPost(e) {
         Logger.log('data.formData type: ' + typeof data.formData);
         Logger.log('data.formData: ' + JSON.stringify(data.formData));
         Logger.log('data keys: ' + Object.keys(data).join(', '));
+        Logger.log('data values: ' + JSON.stringify(data));
         
         // Đảm bảo formData có giá trị
         var formDataToUse = data.formData;
         
         // Nếu formData không có, thử tạo từ data (trừ action)
-        if (!formDataToUse || typeof formDataToUse !== 'object') {
+        if (!formDataToUse || typeof formDataToUse !== 'object' || formDataToUse === null) {
           Logger.log('⚠️ formData không có hoặc không đúng type, tạo từ data...');
+          Logger.log('data có ' + Object.keys(data).length + ' keys');
           formDataToUse = {};
           for (var key in data) {
             if (key !== 'action') {
@@ -158,15 +185,18 @@ function doPost(e) {
             }
           }
           Logger.log('Created formDataToUse with keys: ' + Object.keys(formDataToUse).join(', '));
+          Logger.log('formDataToUse values: ' + JSON.stringify(formDataToUse));
         }
         
         if (!formDataToUse || Object.keys(formDataToUse).length === 0) {
+          Logger.log('❌ formDataToUse is empty');
           return createJSONResponse({
             success: false,
-            message: 'Không có dữ liệu formData. Vui lòng kiểm tra request.'
+            message: 'Không có dữ liệu formData. Vui lòng kiểm tra request. Data keys: ' + Object.keys(data).join(', ')
           });
         }
         
+        Logger.log('Calling createHDMB with formDataToUse...');
         return createJSONResponse(createHDMB(formDataToUse));
       
       case 'create_thoa_thuan':
