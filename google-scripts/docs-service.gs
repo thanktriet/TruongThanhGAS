@@ -151,8 +151,17 @@ function doPost(e) {
  */
 function uploadFilesToDrive(files, folderId) {
   try {
+    Logger.log('=== Upload Files To Drive ===');
+    Logger.log('Files count: ' + (files ? files.length : 0));
+    Logger.log('Folder ID: ' + folderId);
+    
     if (!files || files.length === 0) {
+      Logger.log('No files to upload');
       return { success: true, urls: [] };
+    }
+    
+    if (!folderId) {
+      throw new Error('Folder ID không được cung cấp');
     }
     
     const folder = DriveApp.getFolderById(folderId);
@@ -160,26 +169,81 @@ function uploadFilesToDrive(files, folderId) {
       throw new Error('Folder không tồn tại: ' + folderId);
     }
     
-    const fileUrls = [];
+    Logger.log('Folder found: ' + folder.getName());
     
-    files.forEach(file => {
+    const fileUrls = [];
+    const errors = [];
+    
+    files.forEach((file, index) => {
       try {
+        Logger.log(`Processing file ${index + 1}/${files.length}: ${file.name}`);
+        
+        if (!file.data) {
+          throw new Error('File data không tồn tại');
+        }
+        
+        if (!file.mimeType) {
+          file.mimeType = 'application/octet-stream';
+        }
+        
+        // Decode base64 và tạo blob
         const blob = Utilities.newBlob(
           Utilities.base64Decode(file.data),
           file.mimeType,
           file.name
         );
+        
+        Logger.log(`Blob created: ${blob.getName()}, size: ${blob.getBytes().length}`);
+        
+        // Upload file
         const savedFile = folder.createFile(blob);
+        Logger.log(`File created on Drive: ${savedFile.getName()}, ID: ${savedFile.getId()}`);
+        
+        // Set sharing
         savedFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        
+        // Get URL
+        const fileUrl = savedFile.getUrl();
+        const fileId = savedFile.getId();
+        
+        Logger.log(`File URL: ${fileUrl}`);
+        
         fileUrls.push({
           name: file.name,
-          url: savedFile.getUrl(),
-          id: savedFile.getId()
+          url: fileUrl,
+          id: fileId
         });
+        
+        Logger.log(`✅ Successfully uploaded: ${file.name}`);
       } catch (fileError) {
-        Logger.log('Error uploading file ' + file.name + ': ' + fileError.toString());
+        const errorMsg = 'Error uploading file ' + file.name + ': ' + fileError.toString();
+        Logger.log('❌ ' + errorMsg);
+        errors.push({ fileName: file.name, error: errorMsg });
       }
     });
+    
+    Logger.log(`Upload completed. Success: ${fileUrls.length}, Errors: ${errors.length}`);
+    
+    // Chỉ return success nếu có ít nhất 1 file được upload
+    if (fileUrls.length === 0) {
+      Logger.log('❌ No files uploaded successfully');
+      return {
+        success: false,
+        message: 'Không thể upload bất kỳ file nào. ' + (errors.length > 0 ? errors[0].error : 'Lỗi không xác định'),
+        errors: errors
+      };
+    }
+    
+    // Nếu có file nào đó fail, vẫn return success nhưng có warning
+    if (errors.length > 0) {
+      Logger.log('⚠️ Some files failed to upload');
+      return {
+        success: true,
+        urls: fileUrls,
+        message: `Đã upload ${fileUrls.length}/${files.length} file thành công`,
+        warnings: errors
+      };
+    }
     
     return {
       success: true,
@@ -187,10 +251,12 @@ function uploadFilesToDrive(files, folderId) {
       message: `Đã upload ${fileUrls.length} file thành công`
     };
   } catch (e) {
-    Logger.log('Upload files error: ' + e.toString());
+    Logger.log('❌ Upload files error: ' + e.toString());
+    Logger.log('Error stack: ' + e.stack);
     return {
       success: false,
-      message: 'Lỗi upload file: ' + e.toString()
+      message: 'Lỗi upload file: ' + e.toString(),
+      error: e.toString()
     };
   }
 }
