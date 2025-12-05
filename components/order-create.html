@@ -330,66 +330,102 @@ async function handleCreateOrder(event) {
             console.log('Front file:', cccdFront?.name);
             console.log('Back file:', cccdBack?.name);
             
-            // Check if Google Docs API is available
-            if (!window.googleDocsAPI || !window.googleDocsAPI.uploadFiles) {
-                console.warn('⚠️ Google Docs API not available');
-                showToast('Lưu ý: Không thể upload file. Vui lòng kiểm tra cấu hình Google Apps Script.', 'warning');
-            } else {
-                // Create FileList from files
+            // Try upload - Priority: Supabase Storage (no CORS) > Google Drive
+            let uploadResult = null;
+            
+            // Method 1: Try Supabase Storage first (no CORS issues)
+            if (window.supabaseStorageAPI && window.supabaseStorageAPI.uploadFiles) {
+                console.log('🔄 Trying Supabase Storage upload...');
+                
                 const dataTransfer = new DataTransfer();
-                const fileMapping = []; // Track which file is front/back
+                const fileMapping = [];
                 
                 if (cccdFront) {
-                    const newName = `CCCD_Front_${formData.get('cccd').trim()}_${Date.now()}.${cccdFront.name.split('.').pop()}`;
-                    // Create a new File object with the new name
-                    const renamedFile = new File([cccdFront], newName, { type: cccdFront.type });
-                    dataTransfer.items.add(renamedFile);
-                    fileMapping.push({ file: renamedFile, type: 'front', original: cccdFront });
+                    dataTransfer.items.add(cccdFront);
+                    fileMapping.push({ file: cccdFront, type: 'front' });
                 }
                 
                 if (cccdBack) {
-                    const newName = `CCCD_Back_${formData.get('cccd').trim()}_${Date.now()}.${cccdBack.name.split('.').pop()}`;
-                    const renamedFile = new File([cccdBack], newName, { type: cccdBack.type });
-                    dataTransfer.items.add(renamedFile);
-                    fileMapping.push({ file: renamedFile, type: 'back', original: cccdBack });
+                    dataTransfer.items.add(cccdBack);
+                    fileMapping.push({ file: cccdBack, type: 'back' });
                 }
                 
-                const fileList = dataTransfer.files;
-                console.log('📁 Files to upload:', fileList.length);
+                uploadResult = await window.supabaseStorageAPI.uploadFiles(
+                    dataTransfer.files,
+                    'order-files',
+                    'cccd'
+                );
                 
-                // Upload to Google Drive
-                const uploadResult = await window.googleDocsAPI.uploadFiles(fileList);
-                
-                if (uploadResult.success && uploadResult.urls && uploadResult.urls.length > 0) {
-                    console.log('✅ Upload successful:', uploadResult.urls);
-                    uploadResult.urls.forEach((uploadedFile, index) => {
-                        const mapping = fileMapping[index];
-                        if (mapping) {
-                            if (mapping.type === 'front') {
-                                cccdFrontUrl = uploadedFile.url;
-                            } else if (mapping.type === 'back') {
-                                cccdBackUrl = uploadedFile.url;
-                            }
-                            attachments.push({
-                                name: uploadedFile.name,
-                                url: uploadedFile.url
-                            });
-                        }
-                    });
-                    if (typeof window.showToast === 'function') {
-                        window.showToast('Đã upload file thành công!', 'success');
+                if (uploadResult.success) {
+                    console.log('✅ Upload successful via Supabase Storage:', uploadResult.urls);
+                } else {
+                    console.warn('⚠️ Supabase Storage upload failed, trying Google Drive...');
+                }
+            }
+            
+            // Method 2: Fallback to Google Drive if Supabase failed or not available
+            if (!uploadResult || !uploadResult.success) {
+                if (window.googleDocsAPI && window.googleDocsAPI.uploadFiles) {
+                    console.log('🔄 Trying Google Drive upload...');
+                    
+                    // Create FileList from files
+                    const dataTransfer = new DataTransfer();
+                    const fileMapping = []; // Track which file is front/back
+                    
+                    if (cccdFront) {
+                        const newName = `CCCD_Front_${formData.get('cccd').trim()}_${Date.now()}.${cccdFront.name.split('.').pop()}`;
+                        const renamedFile = new File([cccdFront], newName, { type: cccdFront.type });
+                        dataTransfer.items.add(renamedFile);
+                        fileMapping.push({ file: renamedFile, type: 'front', original: cccdFront });
+                    }
+                    
+                    if (cccdBack) {
+                        const newName = `CCCD_Back_${formData.get('cccd').trim()}_${Date.now()}.${cccdBack.name.split('.').pop()}`;
+                        const renamedFile = new File([cccdBack], newName, { type: cccdBack.type });
+                        dataTransfer.items.add(renamedFile);
+                        fileMapping.push({ file: renamedFile, type: 'back', original: cccdBack });
+                    }
+                    
+                    uploadResult = await window.googleDocsAPI.uploadFiles(dataTransfer.files);
+                    
+                    if (uploadResult.success && uploadResult.urls && uploadResult.urls.length > 0) {
+                        console.log('✅ Upload successful via Google Drive:', uploadResult.urls);
                     }
                 } else {
-                    console.warn('⚠️ Upload files warning:', uploadResult);
-                    const errorMsg = uploadResult.corsError 
-                        ? 'Lỗi CORS: Không thể upload file. Vui lòng liên hệ admin để cấu hình Google Apps Script hoặc sử dụng Supabase Storage.'
-                        : 'Lưu ý: Upload file thất bại: ' + (uploadResult.message || 'Unknown error');
-                    
-                    if (typeof window.showToast === 'function') {
-                        window.showToast(errorMsg, uploadResult.corsError ? 'danger' : 'warning');
-                    } else {
-                        console.error(errorMsg);
+                    console.warn('⚠️ Neither Supabase Storage nor Google Drive API available');
+                }
+            }
+            
+            // Process upload result
+            if (uploadResult && uploadResult.success && uploadResult.urls && uploadResult.urls.length > 0) {
+                console.log('✅ Upload successful:', uploadResult.urls);
+                
+                // Map files to front/back based on order
+                uploadResult.urls.forEach((uploadedFile, index) => {
+                    if (index === 0 && cccdFront) {
+                        cccdFrontUrl = uploadedFile.url;
+                    } else if (index === 1 && cccdBack) {
+                        cccdBackUrl = uploadedFile.url;
                     }
+                    attachments.push({
+                        name: uploadedFile.name,
+                        url: uploadedFile.url
+                    });
+                });
+                
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Đã upload file thành công!', 'success');
+                }
+            } else {
+                console.warn('⚠️ Upload files warning:', uploadResult);
+                const errorMsg = uploadResult && uploadResult.corsError 
+                    ? 'Lỗi CORS với Google Drive. Đã thử Supabase Storage nhưng cũng thất bại. Vui lòng kiểm tra cấu hình.'
+                    : 'Lưu ý: Upload file thất bại: ' + (uploadResult?.message || 'Unknown error');
+                
+                if (typeof window.showToast === 'function') {
+                    window.showToast(errorMsg, uploadResult && uploadResult.corsError ? 'danger' : 'warning');
+                } else {
+                    console.error(errorMsg);
                 }
             }
         } catch (uploadError) {

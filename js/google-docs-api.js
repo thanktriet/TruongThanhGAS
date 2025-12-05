@@ -60,20 +60,21 @@ async function uploadFilesToGoogleDrive(files, folderId = null) {
         const fileData = await Promise.all(filePromises);
 
         // Call Google Apps Script API
-        // Use JSON for better compatibility with Google Apps Script
-        // After deploying with correct settings (Anyone access), CORS should work
+        // Try multiple methods to avoid CORS issues
         
+        // Method 1: Try FormData (works better with Google Apps Script for CORS)
         try {
+            console.log('🔹 Trying FormData method...');
+            const formData = new FormData();
+            formData.append('action', 'upload_files');
+            formData.append('files', JSON.stringify(fileData));
+            if (folderId) {
+                formData.append('folderId', folderId);
+            }
+
             const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    action: 'upload_files',
-                    files: fileData,
-                    folderId: folderId || null
-                })
+                body: formData
             });
 
             if (!response.ok) {
@@ -81,35 +82,109 @@ async function uploadFilesToGoogleDrive(files, folderId = null) {
                 throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
             }
 
-            const result = await response.json();
+            const responseText = await response.text();
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (parseError) {
+                throw new Error('Invalid JSON response: ' + responseText);
+            }
             
             // Log for debugging
             if (result.success) {
-                console.log('✅ Upload successful:', result);
+                console.log('✅ Upload successful (FormData):', result);
             } else {
-                console.warn('⚠️ Upload returned error:', result);
+                console.warn('⚠️ Upload returned error (FormData):', result);
             }
             
             return result;
-        } catch (error) {
-            console.error('❌ Error calling Google Apps Script:', error);
+        } catch (formDataError) {
+            console.warn('⚠️ FormData method failed, trying JSON with text/plain...', formDataError);
             
-            // Check if it's a CORS error
-            if (error.message && (error.message.includes('CORS') || error.message.includes('Failed to fetch'))) {
-                return {
-                    success: false,
-                    message: 'Lỗi CORS: Không thể kết nối đến Google Apps Script từ domain này. ' +
-                            'Vui lòng kiểm tra lại cấu hình deploy (Who has access: Anyone).',
-                    corsError: true,
-                    error: error.message
-                };
+            // Method 2: Try JSON with text/plain Content-Type (avoids preflight)
+            try {
+                console.log('🔹 Trying JSON with text/plain method...');
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    },
+                    body: JSON.stringify({
+                        action: 'upload_files',
+                        files: fileData,
+                        folderId: folderId || null
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                }
+
+                const responseText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    throw new Error('Invalid JSON response: ' + responseText);
+                }
+                
+                if (result.success) {
+                    console.log('✅ Upload successful (text/plain):', result);
+                } else {
+                    console.warn('⚠️ Upload returned error (text/plain):', result);
+                }
+                
+                return result;
+            } catch (textPlainError) {
+                console.warn('⚠️ text/plain method failed, trying JSON...', textPlainError);
+                
+                // Method 3: Try standard JSON
+                try {
+                    console.log('🔹 Trying standard JSON method...');
+                    const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            action: 'upload_files',
+                            files: fileData,
+                            folderId: folderId || null
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        console.log('✅ Upload successful (JSON):', result);
+                    } else {
+                        console.warn('⚠️ Upload returned error (JSON):', result);
+                    }
+                    
+                    return result;
+                } catch (jsonError) {
+                    console.error('❌ All methods failed. Last error:', jsonError);
+                    
+                    // All methods failed - likely CORS issue
+                    if (jsonError.message && (jsonError.message.includes('CORS') || jsonError.message.includes('Failed to fetch'))) {
+                        return {
+                            success: false,
+                            message: 'Lỗi CORS: Không thể kết nối đến Google Apps Script từ domain này. ' +
+                                    'Google Apps Script Web App có hạn chế về CORS. Vui lòng xem ALTERNATIVE_UPLOAD.md để tìm giải pháp thay thế.',
+                            corsError: true,
+                            error: jsonError.message
+                        };
+                    }
+                    
+                    throw jsonError;
+                }
             }
-            
-            return {
-                success: false,
-                message: 'Lỗi upload file: ' + error.message,
-                error: error.message
-            };
         }
     } catch (error) {
         console.error('Upload files error:', error);

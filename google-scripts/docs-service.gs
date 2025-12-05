@@ -45,15 +45,22 @@ function doPost(e) {
   try {
     let data = {};
     
-    // Xử lý cả JSON và FormData
+    // Xử lý cả JSON và FormData và text/plain
     if (e.postData && e.postData.contents) {
       const contentType = e.postData.type || '';
-      if (contentType.indexOf('application/json') !== -1) {
-        // JSON request
-        data = JSON.parse(e.postData.contents);
+      
+      if (contentType.indexOf('application/json') !== -1 || contentType.indexOf('text/plain') !== -1) {
+        // JSON request hoặc text/plain với JSON content
+        try {
+          data = JSON.parse(e.postData.contents);
+        } catch (parseError) {
+          Logger.log('Error parsing JSON from postData: ' + parseError.toString());
+          // Fallback to parameter
+          data = e.parameter || {};
+        }
       } else {
         // FormData request - parse từ e.parameter
-        data = e.parameter;
+        data = e.parameter || {};
         // Parse JSON strings từ FormData
         if (data.files && typeof data.files === 'string') {
           try {
@@ -72,7 +79,7 @@ function doPost(e) {
       }
     } else {
       // Fallback: lấy từ parameter (FormData hoặc URL params)
-      data = e.parameter;
+      data = e.parameter || {};
     }
     
     const action = data.action;
