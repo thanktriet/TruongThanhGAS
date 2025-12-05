@@ -34,11 +34,40 @@ const CONFIG = {
 // ===============================================================
 // === PUBLIC WEB APP ENTRY ===
 // ===============================================================
+// ===============================================================
+// === CORS HEADERS HELPER ===
+// ===============================================================
+/**
+ * Helper function để tạo response với CORS headers
+ */
+function createCORSResponse(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeaders({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '3600'
+    });
+}
+
 function doGet(e) {
-  return ContentService.createTextOutput(JSON.stringify({
+  return createCORSResponse({
     success: false,
     message: "This is a POST-only service. Use POST method."
-  })).setMimeType(ContentService.MimeType.JSON);
+  });
+}
+
+function doOptions(e) {
+  // Handle CORS preflight requests
+  return ContentService.createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT)
+    .setHeaders({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '3600'
+    });
 }
 
 function doPost(e) {
@@ -85,38 +114,38 @@ function doPost(e) {
     const action = data.action;
     
     if (!action) {
-      return ContentService.createTextOutput(JSON.stringify({
+      return createCORSResponse({
         success: false,
         message: "Missing 'action' parameter"
-      })).setMimeType(ContentService.MimeType.JSON);
+      });
     }
     
     switch (action) {
       case 'upload_files':
-        return ContentService.createTextOutput(JSON.stringify(uploadFilesToDrive(data.files, data.folderId || CONFIG.FOLDER_ID_DON_HANG))).setMimeType(ContentService.MimeType.JSON);
+        return createCORSResponse(uploadFilesToDrive(data.files, data.folderId || CONFIG.FOLDER_ID_DON_HANG));
       
       case 'create_hdmb':
-        return ContentService.createTextOutput(JSON.stringify(createHDMB(data.formData))).setMimeType(ContentService.MimeType.JSON);
+        return createCORSResponse(createHDMB(data.formData));
       
       case 'create_thoa_thuan':
-        return ContentService.createTextOutput(JSON.stringify(createThoaThuan(data.formData))).setMimeType(ContentService.MimeType.JSON);
+        return createCORSResponse(createThoaThuan(data.formData));
       
       case 'create_de_nghi_giai_ngan':
-        return ContentService.createTextOutput(JSON.stringify(createDeNghiGiaiNgan(data.formData))).setMimeType(ContentService.MimeType.JSON);
+        return createCORSResponse(createDeNghiGiaiNgan(data.formData));
       
       default:
-        return ContentService.createTextOutput(JSON.stringify({
+        return createCORSResponse({
           success: false,
           message: "Unknown action: " + action
-        })).setMimeType(ContentService.MimeType.JSON);
+        });
     }
   } catch (error) {
     Logger.log('Error in doPost: ' + error.toString());
     Logger.log('Error stack: ' + error.stack);
-    return ContentService.createTextOutput(JSON.stringify({
+    return createCORSResponse({
       success: false,
       message: error.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
+    });
   }
 }
 
