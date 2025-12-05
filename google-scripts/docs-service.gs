@@ -144,8 +144,30 @@ function doPost(e) {
         Logger.log('data.formData type: ' + typeof data.formData);
         Logger.log('data.formData: ' + JSON.stringify(data.formData));
         Logger.log('data keys: ' + Object.keys(data).join(', '));
-        // Fallback: nếu data.formData không có, thử dùng data trực tiếp
-        return createJSONResponse(createHDMB(data.formData || data));
+        
+        // Đảm bảo formData có giá trị
+        var formDataToUse = data.formData;
+        
+        // Nếu formData không có, thử tạo từ data (trừ action)
+        if (!formDataToUse || typeof formDataToUse !== 'object') {
+          Logger.log('⚠️ formData không có hoặc không đúng type, tạo từ data...');
+          formDataToUse = {};
+          for (var key in data) {
+            if (key !== 'action') {
+              formDataToUse[key] = data[key];
+            }
+          }
+          Logger.log('Created formDataToUse with keys: ' + Object.keys(formDataToUse).join(', '));
+        }
+        
+        if (!formDataToUse || Object.keys(formDataToUse).length === 0) {
+          return createJSONResponse({
+            success: false,
+            message: 'Không có dữ liệu formData. Vui lòng kiểm tra request.'
+          });
+        }
+        
+        return createJSONResponse(createHDMB(formDataToUse));
       
       case 'create_thoa_thuan':
         return createJSONResponse(createThoaThuan(data.formData));
