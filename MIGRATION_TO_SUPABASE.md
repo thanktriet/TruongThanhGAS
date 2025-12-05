@@ -109,3 +109,4 @@ Tự động chuyển đổi giữa Supabase và Google Apps Script.
 - Kiểm tra thứ tự load script trong `index.html`
 - Xem console log để biết đang dùng API nào
 
+

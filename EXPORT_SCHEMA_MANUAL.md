@@ -81,3 +81,4 @@ Cursor vẫn có thể làm việc với Supabase mà không cần local schema 
 - Sử dụng Supabase API từ code
 - Schema files chỉ cần thiết nếu bạn muốn version control migrations
 
+

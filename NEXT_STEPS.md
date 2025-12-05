@@ -61,3 +61,4 @@ Bạn có thể:
 - Pull schema mới: `supabase db pull`
 - Xem database: `supabase studio` (local) hoặc Supabase Dashboard (cloud)
 
+

@@ -27,3 +27,4 @@ else
     echo "   https://supabase.com/dashboard/project/knrnlfsokkrtpvtkuuzr/sql/new"
 fi
 
+

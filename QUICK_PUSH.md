@@ -63,3 +63,4 @@ Cursor sẽ:
 2. Viết SQL
 3. Bạn chỉ cần chạy `supabase db push`
 
+

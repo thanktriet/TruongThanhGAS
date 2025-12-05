@@ -132,3 +132,4 @@ Test tất cả các functions:
 - ✅ Performance tốt hơn
 - ✅ Dễ maintain và scale
 
+

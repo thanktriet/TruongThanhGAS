@@ -1556,6 +1556,23 @@ async function supabaseCreateOrder(orderData) {
             return { success: false, message: 'Khách hàng chưa được tạo. Vui lòng tạo khách hàng trước.' };
         }
 
+        // Handle attachments - ensure it's a valid JSON array
+        let attachmentsJSON = '[]';
+        if (orderData.attachments) {
+            if (Array.isArray(orderData.attachments)) {
+                attachmentsJSON = JSON.stringify(orderData.attachments);
+            } else if (typeof orderData.attachments === 'string') {
+                // Already a JSON string, validate it
+                try {
+                    JSON.parse(orderData.attachments);
+                    attachmentsJSON = orderData.attachments;
+                } catch (e) {
+                    console.warn('Invalid attachments JSON string, using empty array');
+                    attachmentsJSON = '[]';
+                }
+            }
+        }
+
         const order = {
             requester: orderData.requester,
             customer_cccd: orderData.customer_cccd.trim(),
@@ -1564,7 +1581,7 @@ async function supabaseCreateOrder(orderData) {
             car_color: orderData.car_color || null,
             payment_method: orderData.payment_method || null,
             status: 'pending', // Chưa có mã
-            attachments: orderData.attachments ? JSON.stringify(orderData.attachments) : '[]',
+            attachments: attachmentsJSON,
             notes: orderData.notes || null
         };
 

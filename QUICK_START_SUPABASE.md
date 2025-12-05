@@ -59,3 +59,4 @@ Bây giờ Cursor đã kết nối với Supabase project của bạn. Bạn có
 Xem file `SUPABASE_SETUP.md` để biết chi tiết và các lệnh nâng cao.
 
 
+

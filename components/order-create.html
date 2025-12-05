@@ -302,53 +302,66 @@ async function handleCreateOrder(event) {
 
     // Upload files if available
     if (cccdFront || cccdBack) {
-        const filesToUpload = [];
-        if (cccdFront) {
-            filesToUpload.push({
-                file: cccdFront,
-                name: `CCCD_Front_${formData.get('cccd').trim()}_${Date.now()}.${cccdFront.name.split('.').pop()}`
-            });
-        }
-        if (cccdBack) {
-            filesToUpload.push({
-                file: cccdBack,
-                name: `CCCD_Back_${formData.get('cccd').trim()}_${Date.now()}.${cccdBack.name.split('.').pop()}`
-            });
-        }
-
         try {
-            // Create FileList from array
-            const dataTransfer = new DataTransfer();
-            filesToUpload.forEach(f => dataTransfer.items.add(f.file));
-            const fileList = dataTransfer.files;
-
-            // Upload to Google Drive
-            if (window.googleDocsAPI && window.googleDocsAPI.uploadFiles) {
+            console.log('📤 Starting file upload...');
+            console.log('Front file:', cccdFront?.name);
+            console.log('Back file:', cccdBack?.name);
+            
+            // Check if Google Docs API is available
+            if (!window.googleDocsAPI || !window.googleDocsAPI.uploadFiles) {
+                console.warn('⚠️ Google Docs API not available');
+                showToast('Lưu ý: Không thể upload file. Vui lòng kiểm tra cấu hình Google Apps Script.', 'warning');
+            } else {
+                // Create FileList from files
+                const dataTransfer = new DataTransfer();
+                const fileMapping = []; // Track which file is front/back
+                
+                if (cccdFront) {
+                    const newName = `CCCD_Front_${formData.get('cccd').trim()}_${Date.now()}.${cccdFront.name.split('.').pop()}`;
+                    // Create a new File object with the new name
+                    const renamedFile = new File([cccdFront], newName, { type: cccdFront.type });
+                    dataTransfer.items.add(renamedFile);
+                    fileMapping.push({ file: renamedFile, type: 'front', original: cccdFront });
+                }
+                
+                if (cccdBack) {
+                    const newName = `CCCD_Back_${formData.get('cccd').trim()}_${Date.now()}.${cccdBack.name.split('.').pop()}`;
+                    const renamedFile = new File([cccdBack], newName, { type: cccdBack.type });
+                    dataTransfer.items.add(renamedFile);
+                    fileMapping.push({ file: renamedFile, type: 'back', original: cccdBack });
+                }
+                
+                const fileList = dataTransfer.files;
+                console.log('📁 Files to upload:', fileList.length);
+                
+                // Upload to Google Drive
                 const uploadResult = await window.googleDocsAPI.uploadFiles(fileList);
                 
-                if (uploadResult.success && uploadResult.urls) {
+                if (uploadResult.success && uploadResult.urls && uploadResult.urls.length > 0) {
+                    console.log('✅ Upload successful:', uploadResult.urls);
                     uploadResult.urls.forEach((uploadedFile, index) => {
-                        if (filesToUpload[index].file === cccdFront) {
-                            cccdFrontUrl = uploadedFile.url;
-                        } else if (filesToUpload[index].file === cccdBack) {
-                            cccdBackUrl = uploadedFile.url;
+                        const mapping = fileMapping[index];
+                        if (mapping) {
+                            if (mapping.type === 'front') {
+                                cccdFrontUrl = uploadedFile.url;
+                            } else if (mapping.type === 'back') {
+                                cccdBackUrl = uploadedFile.url;
+                            }
+                            attachments.push({
+                                name: uploadedFile.name,
+                                url: uploadedFile.url
+                            });
                         }
-                        attachments.push({
-                            name: uploadedFile.name,
-                            url: uploadedFile.url
-                        });
                     });
+                    showToast('Đã upload file thành công!', 'success');
                 } else {
-                    console.warn('Upload files warning:', uploadResult.message);
-                    // Continue without URLs if upload fails
+                    console.warn('⚠️ Upload files warning:', uploadResult);
+                    showToast('Lưu ý: Upload file thất bại: ' + (uploadResult.message || 'Unknown error'), 'warning');
                 }
-            } else {
-                console.warn('Google Docs API not available, skipping file upload');
             }
         } catch (uploadError) {
-            console.error('Upload files error:', uploadError);
-            // Continue without URLs if upload fails
-            showToast('Lưu ý: Upload file thất bại, tiếp tục lưu đơn hàng không có file', 'warning');
+            console.error('❌ Upload files error:', uploadError);
+            showToast('Lưu ý: Upload file thất bại, tiếp tục lưu đơn hàng không có file: ' + uploadError.message, 'warning');
         }
     }
 
@@ -372,9 +385,15 @@ async function handleCreateOrder(event) {
     });
 
     if (!customerResult.success) {
+        // Restore button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
         showToast('Lỗi lưu thông tin khách hàng: ' + customerResult.message, 'danger');
+        console.error('Customer upsert error:', customerResult);
         return;
     }
+
+    console.log('✅ Customer saved successfully:', customerResult.data);
 
     // Prepare order data
     const orderData = {
@@ -385,8 +404,10 @@ async function handleCreateOrder(event) {
         car_color: formData.get('car_color') || null,
         payment_method: formData.get('payment_method') || null,
         notes: formData.get('notes') || null,
-        attachments: attachments
+        attachments: attachments.length > 0 ? attachments : []
     };
+
+    console.log('📦 Creating order with data:', orderData);
 
     // Create order
     const orderResult = await window.callAPI({
@@ -399,6 +420,7 @@ async function handleCreateOrder(event) {
     submitBtn.innerHTML = originalBtnText;
 
     if (orderResult.success) {
+        console.log('✅ Order created successfully:', orderResult.data);
         showToast('Đã tạo đơn hàng thành công!', 'success');
         resetOrderForm();
         // Có thể chuyển sang trang danh sách đơn hàng
@@ -408,6 +430,7 @@ async function handleCreateOrder(event) {
             }
         }, 1500);
     } else {
+        console.error('❌ Order creation error:', orderResult);
         showToast('Lỗi tạo đơn hàng: ' + orderResult.message, 'danger');
     }
 }

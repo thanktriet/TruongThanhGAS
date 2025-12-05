@@ -25,3 +25,4 @@ supabase db pull
 - Docker Desktop cần chạy mỗi khi bạn muốn sử dụng Supabase CLI local
 - Nếu không muốn cài Docker, xem Cách 2 bên dưới
 
+

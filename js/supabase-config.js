@@ -14,3 +14,4 @@ window.SUPABASE_CONFIG = {
     anonKey: SUPABASE_ANON_KEY
 };
 
+
