@@ -81,10 +81,15 @@ function doPost(e) {
       } else {
         // FormData request - parse từ e.parameter
         data = e.parameter || {};
+        Logger.log('FormData request detected');
+        Logger.log('e.parameter keys: ' + Object.keys(data).join(', '));
+        Logger.log('data.formData before parse: ' + (data.formData ? (typeof data.formData + ' - ' + data.formData.substring(0, 200)) : 'null'));
+        
         // Parse JSON strings từ FormData
         if (data.files && typeof data.files === 'string') {
           try {
             data.files = JSON.parse(data.files);
+            Logger.log('Parsed files successfully');
           } catch (e) {
             Logger.log('Error parsing files from FormData: ' + e.toString());
           }
@@ -92,8 +97,27 @@ function doPost(e) {
         if (data.formData && typeof data.formData === 'string') {
           try {
             data.formData = JSON.parse(data.formData);
+            Logger.log('Parsed formData successfully');
+            Logger.log('formData keys after parse: ' + Object.keys(data.formData).join(', '));
+            Logger.log('formData.so_hop_dong: ' + data.formData.so_hop_dong);
+            Logger.log('formData.khach_hang: ' + data.formData.khach_hang);
           } catch (e) {
             Logger.log('Error parsing formData from FormData: ' + e.toString());
+            Logger.log('formData string value: ' + data.formData);
+          }
+        } else if (!data.formData) {
+          Logger.log('⚠️ data.formData is null or undefined');
+          Logger.log('Trying to use data directly...');
+          // Nếu không có formData, thử dùng data trực tiếp (trừ action)
+          var tempFormData = {};
+          for (var key in data) {
+            if (key !== 'action') {
+              tempFormData[key] = data[key];
+            }
+          }
+          if (Object.keys(tempFormData).length > 0) {
+            data.formData = tempFormData;
+            Logger.log('Created formData from data: ' + Object.keys(tempFormData).join(', '));
           }
         }
       }
