@@ -152,12 +152,50 @@ function doPost(e) {
 function uploadFilesToDrive(files, folderId) {
   try {
     Logger.log('=== Upload Files To Drive ===');
-    Logger.log('Files count: ' + (files ? files.length : 0));
+    Logger.log('Files type: ' + typeof files);
+    Logger.log('Files is array: ' + Array.isArray(files));
+    Logger.log('Files value: ' + JSON.stringify(files));
+    
+    // Validate và convert files thành array
+    if (!files) {
+      Logger.log('No files provided');
+      return { success: false, message: 'Không có file nào được cung cấp' };
+    }
+    
+    // Nếu files là string, thử parse JSON
+    if (typeof files === 'string') {
+      try {
+        Logger.log('Files is string, parsing JSON...');
+        files = JSON.parse(files);
+        Logger.log('Parsed files type: ' + typeof files);
+        Logger.log('Parsed files is array: ' + Array.isArray(files));
+      } catch (parseError) {
+        Logger.log('Error parsing files string: ' + parseError.toString());
+        return { success: false, message: 'Lỗi parse file data: ' + parseError.toString() };
+      }
+    }
+    
+    // Đảm bảo files là array
+    if (!Array.isArray(files)) {
+      Logger.log('Files is not an array, converting...');
+      // Nếu là object với keys là numbers hoặc có length property, thử convert
+      if (typeof files === 'object' && files !== null) {
+        // Thử convert object thành array
+        const filesArray = Object.keys(files).map(key => files[key]);
+        files = filesArray;
+        Logger.log('Converted to array, length: ' + files.length);
+      } else {
+        Logger.log('Cannot convert files to array');
+        return { success: false, message: 'File data không đúng định dạng. Cần một array.' };
+      }
+    }
+    
+    Logger.log('Files count: ' + files.length);
     Logger.log('Folder ID: ' + folderId);
     
-    if (!files || files.length === 0) {
+    if (files.length === 0) {
       Logger.log('No files to upload');
-      return { success: true, urls: [] };
+      return { success: false, message: 'Không có file nào để upload' };
     }
     
     if (!folderId) {
