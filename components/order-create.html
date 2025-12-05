@@ -397,35 +397,72 @@ async function handleCreateOrder(event) {
             }
             
             // Process upload result
-            if (uploadResult && uploadResult.success && uploadResult.urls && uploadResult.urls.length > 0) {
-                console.log('✅ Upload successful:', uploadResult.urls);
+            // Check if upload was successful (even if response format is off)
+            console.log('📋 Upload result:', uploadResult);
+            
+            if (uploadResult) {
+                // Check multiple ways to determine success
+                const hasUrls = uploadResult.urls && Array.isArray(uploadResult.urls) && uploadResult.urls.length > 0;
+                const hasSuccessFlag = uploadResult.success === true;
+                const hasNoError = !uploadResult.error && !uploadResult.corsError;
                 
-                // Map files to front/back based on order
-                uploadResult.urls.forEach((uploadedFile, index) => {
-                    if (index === 0 && cccdFront) {
-                        cccdFrontUrl = uploadedFile.url;
-                    } else if (index === 1 && cccdBack) {
-                        cccdBackUrl = uploadedFile.url;
+                // If we have URLs or success flag, consider it successful
+                if ((hasUrls || hasSuccessFlag) && hasNoError) {
+                    console.log('✅ Upload successful:', uploadResult.urls || 'No URLs but success flag is true');
+                    
+                    // Map files to front/back based on order if URLs available
+                    if (hasUrls) {
+                        uploadResult.urls.forEach((uploadedFile, index) => {
+                            if (index === 0 && cccdFront) {
+                                cccdFrontUrl = uploadedFile.url || uploadedFile;
+                            } else if (index === 1 && cccdBack) {
+                                cccdBackUrl = uploadedFile.url || uploadedFile;
+                            }
+                            attachments.push({
+                                name: uploadedFile.name || `File ${index + 1}`,
+                                url: uploadedFile.url || uploadedFile
+                            });
+                        });
+                    } else {
+                        // File uploaded but no URLs in response - still continue
+                        console.log('⚠️ Upload successful but no URLs in response. Files should be in Drive folder.');
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('File đã được upload (kiểm tra Google Drive folder)', 'success');
+                        }
                     }
-                    attachments.push({
-                        name: uploadedFile.name,
-                        url: uploadedFile.url
-                    });
-                });
-                
-                if (typeof window.showToast === 'function') {
-                    window.showToast('Đã upload file thành công!', 'success');
+                    
+                    if (typeof window.showToast === 'function' && hasUrls) {
+                        window.showToast('Đã upload file thành công!', 'success');
+                    }
+                } else {
+                    // Check if it's just a warning (file might still be uploaded)
+                    console.warn('⚠️ Upload response warning:', uploadResult);
+                    
+                    // Even if response says failed, check if we should continue
+                    // (file might be uploaded but response parsing failed)
+                    const shouldContinue = !uploadResult.corsError && !uploadResult.error;
+                    
+                    if (shouldContinue) {
+                        console.log('ℹ️ Upload may have succeeded despite response. Continuing...');
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('File có thể đã được upload. Kiểm tra Google Drive folder.', 'info');
+                        }
+                    } else {
+                        const errorMsg = uploadResult.corsError 
+                            ? 'Lỗi CORS với Google Drive. Đã thử Supabase Storage nhưng cũng thất bại. Vui lòng kiểm tra cấu hình.'
+                            : 'Lưu ý: Upload file thất bại: ' + (uploadResult.message || uploadResult.error || 'Unknown error');
+                        
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(errorMsg, uploadResult.corsError ? 'danger' : 'warning');
+                        } else {
+                            console.error(errorMsg);
+                        }
+                    }
                 }
             } else {
-                console.warn('⚠️ Upload files warning:', uploadResult);
-                const errorMsg = uploadResult && uploadResult.corsError 
-                    ? 'Lỗi CORS với Google Drive. Đã thử Supabase Storage nhưng cũng thất bại. Vui lòng kiểm tra cấu hình.'
-                    : 'Lưu ý: Upload file thất bại: ' + (uploadResult?.message || 'Unknown error');
-                
+                console.warn('⚠️ No upload result received');
                 if (typeof window.showToast === 'function') {
-                    window.showToast(errorMsg, uploadResult && uploadResult.corsError ? 'danger' : 'warning');
-                } else {
-                    console.error(errorMsg);
+                    window.showToast('Không nhận được phản hồi từ server. File có thể đã được upload.', 'warning');
                 }
             }
         } catch (uploadError) {
