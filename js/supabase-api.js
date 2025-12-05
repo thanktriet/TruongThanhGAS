@@ -113,7 +113,8 @@ async function supabaseLogin(username, password) {
             phone: data.phone || '',
             email: data.email || '',
             group: data.group || '',
-            active: data.active
+            active: data.active,
+            permissions: data.permissions || {}  // ✅ Thêm permissions từ database
         };
 
         return { success: true, user };

@@ -42,41 +42,100 @@ function checkSession() {
             loadProfile();
         }
         
-        const navApproval = $('nav-approval');
-        if (user.role === 'SALE' || user.role === 'TVBH') {
-            navApproval?.classList.add('hidden');
+        // Show/hide menu based on permissions - dùng helper function nếu có, fallback về logic cũ
+        if (typeof window.updateMenuItemsByPermissions === 'function') {
+            window.updateMenuItemsByPermissions(user);
         } else {
-            if (typeof switchTab === 'function') {
-                switchTab('approval');
+            // Fallback: Logic cũ với permission checks
+            // TỜ TRÌNH menus
+            if (typeof hasPermission === 'function' && hasPermission(user, 'create_request')) {
+                $('nav-create')?.classList.remove('hidden');
+            } else if (user.role === 'TVBH' || user.role === 'SALE' || user.role === 'TPKD' || user.role === 'GDKD' || user.role === 'BKS' || user.role === 'BGD' || user.role === 'KETOAN') {
+                $('nav-create')?.classList.remove('hidden');
+            } else {
+                $('nav-create')?.classList.add('hidden');
             }
-        }
-        
-        // Show/hide menu based on role for new integration features
-        // TVBH menus
-        if (user.role === 'TVBH' || user.role === 'SALE') {
-            $('nav-order-create')?.classList.remove('hidden');
-            $('nav-my-orders')?.classList.remove('hidden');
-            $('nav-daily-report')?.classList.remove('hidden');
-        } else {
-            $('nav-order-create')?.classList.add('hidden');
-            $('nav-my-orders')?.classList.add('hidden');
-            $('nav-daily-report')?.classList.add('hidden');
-        }
-        
-        // SALEADMIN menu
-        if (user.role === 'SALEADMIN') {
-            $('nav-orders-admin')?.classList.remove('hidden');
-        } else {
-            $('nav-orders-admin')?.classList.add('hidden');
-        }
-        
-        // Dashboard menu (Admin, GDKD, BKS, BGD)
-        if (['ADMIN', 'GDKD', 'BKS', 'BGD'].includes(user.role)) {
-            $('nav-reports-dashboard')?.classList.remove('hidden');
-            $('nav-reports-mtd-detail')?.classList.remove('hidden');
-        } else {
-            $('nav-reports-dashboard')?.classList.add('hidden');
-            $('nav-reports-mtd-detail')?.classList.add('hidden');
+            
+            if (typeof hasPermission === 'function' && hasPermission(user, 'view_my_requests')) {
+                $('nav-my-requests')?.classList.remove('hidden');
+            } else if (user.role === 'TVBH' || user.role === 'SALE' || user.role === 'TPKD' || user.role === 'GDKD' || user.role === 'BKS' || user.role === 'BGD' || user.role === 'KETOAN') {
+                $('nav-my-requests')?.classList.remove('hidden');
+            } else {
+                $('nav-my-requests')?.classList.add('hidden');
+            }
+            
+            const navApproval = $('nav-approval');
+            if (typeof hasPermission === 'function' && hasPermission(user, 'approve_request')) {
+                navApproval?.classList.remove('hidden');
+                if (typeof switchTab === 'function') {
+                    switchTab('approval');
+                }
+            } else if (user.role === 'SALE' || user.role === 'TVBH') {
+                navApproval?.classList.add('hidden');
+            } else {
+                navApproval?.classList.remove('hidden');
+                if (typeof switchTab === 'function') {
+                    switchTab('approval');
+                }
+            }
+            
+            // TVBH menus
+            if (typeof hasPermission === 'function' && hasPermission(user, 'create_order')) {
+                $('nav-order-create')?.classList.remove('hidden');
+            } else if (user.role === 'TVBH' || user.role === 'SALE') {
+                $('nav-order-create')?.classList.remove('hidden');
+            } else {
+                $('nav-order-create')?.classList.add('hidden');
+            }
+            
+            if (typeof hasPermission === 'function' && hasPermission(user, 'view_my_orders')) {
+                $('nav-my-orders')?.classList.remove('hidden');
+            } else if (user.role === 'TVBH' || user.role === 'SALE') {
+                $('nav-my-orders')?.classList.remove('hidden');
+            } else {
+                $('nav-my-orders')?.classList.add('hidden');
+            }
+            
+            if (typeof hasPermission === 'function' && hasPermission(user, 'submit_daily_report')) {
+                $('nav-daily-report')?.classList.remove('hidden');
+            } else if (user.role === 'TVBH' || user.role === 'SALE') {
+                $('nav-daily-report')?.classList.remove('hidden');
+            } else {
+                $('nav-daily-report')?.classList.add('hidden');
+            }
+            
+            // SALEADMIN menu
+            if (typeof hasPermission === 'function' && hasPermission(user, 'view_all_orders')) {
+                $('nav-orders-admin')?.classList.remove('hidden');
+            } else if (user.role === 'SALEADMIN') {
+                $('nav-orders-admin')?.classList.remove('hidden');
+            } else {
+                $('nav-orders-admin')?.classList.add('hidden');
+            }
+            
+            // Dashboard menu
+            if (typeof hasPermission === 'function' && hasPermission(user, 'view_dashboard')) {
+                $('nav-reports-dashboard')?.classList.remove('hidden');
+                $('nav-reports-mtd-detail')?.classList.remove('hidden');
+            } else if (['ADMIN', 'GDKD', 'BKS', 'BGD'].includes(user.role)) {
+                $('nav-reports-dashboard')?.classList.remove('hidden');
+                $('nav-reports-mtd-detail')?.classList.remove('hidden');
+            } else {
+                $('nav-reports-dashboard')?.classList.add('hidden');
+                $('nav-reports-mtd-detail')?.classList.add('hidden');
+            }
+            
+            // Manage users menu
+            if (typeof hasPermission === 'function' && hasPermission(user, 'manage_users')) {
+                $('nav-users')?.classList.remove('hidden');
+                $('nav-mobile-users')?.classList.remove('hidden');
+            } else if (user.role === 'ADMIN') {
+                $('nav-users')?.classList.remove('hidden');
+                $('nav-mobile-users')?.classList.remove('hidden');
+            } else {
+                $('nav-users')?.classList.add('hidden');
+                $('nav-mobile-users')?.classList.add('hidden');
+            }
         }
         
         if (loginView) loginView.classList.add('hidden');

@@ -297,6 +297,22 @@ async function saveUserPermissions() {
                     loadUserManagement();
                 }, 500);
             }
+            
+            // Nếu đang quản lý quyền của chính user đang đăng nhập, refresh menu items
+            const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+            if (session.username && session.username.toLowerCase() === currentPermissionUser.username.toLowerCase()) {
+                // Refresh session và menu items
+                if (typeof window.refreshUserSessionAndMenu === 'function') {
+                    setTimeout(() => {
+                        window.refreshUserSessionAndMenu();
+                    }, 500);
+                } else {
+                    // Fallback: reload page để cập nhật menu
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                }
+            }
         } else {
             if (typeof window.showToast === 'function') {
                 window.showToast('Lỗi: ' + result.message, 'danger');
