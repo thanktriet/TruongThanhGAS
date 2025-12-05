@@ -85,6 +85,7 @@
 <script>
 let currentPermissionUser = null;
 let currentPermissions = {};
+let savedTargetUsername = null; // Backup username để tránh mất dữ liệu
 
 async function openUserPermissionsModal(username) {
     if (!username) {
@@ -96,9 +97,11 @@ async function openUserPermissionsModal(username) {
 
     currentPermissionUser = null;
     currentPermissions = {};
+    savedTargetUsername = username.toLowerCase(); // Lưu username ngay từ đầu
 
     // Show modal
     const modal = document.getElementById('modal-user-permissions');
+    modal.setAttribute('data-target-username', savedTargetUsername); // Lưu vào data attribute
     modal.classList.remove('hidden');
 
     // Show loading
@@ -133,12 +136,19 @@ async function openUserPermissionsModal(username) {
         }
 
         currentPermissionUser = user;
+        savedTargetUsername = user.username.toLowerCase(); // Đảm bảo username được lưu
 
         // Display user info
         document.getElementById('perm-username-display').textContent = user.username;
         document.getElementById('perm-user-username').textContent = user.username;
         document.getElementById('perm-user-fullname').textContent = user.fullname || '-';
         document.getElementById('perm-user-role').textContent = user.role || '-';
+        
+        // Lưu username vào data attribute của modal
+        const modal = document.getElementById('modal-user-permissions');
+        if (modal) {
+            modal.setAttribute('data-target-username', savedTargetUsername);
+        }
 
         // Load permissions
         await loadUserPermissions(user);
@@ -256,11 +266,33 @@ function applyDefaultPermissions() {
 }
 
 async function saveUserPermissions() {
-    // Validate currentPermissionUser
-    if (!currentPermissionUser || !currentPermissionUser.username) {
-        console.error('currentPermissionUser is null or missing username:', currentPermissionUser);
+    // Get username từ nhiều nguồn để đảm bảo không bị mất
+    let targetUsername = null;
+    
+    // Ưu tiên 1: Từ currentPermissionUser
+    if (currentPermissionUser && currentPermissionUser.username) {
+        targetUsername = currentPermissionUser.username;
+    }
+    // Ưu tiên 2: Từ savedTargetUsername
+    else if (savedTargetUsername) {
+        targetUsername = savedTargetUsername;
+    }
+    // Ưu tiên 3: Từ data attribute của modal
+    else {
+        const modal = document.getElementById('modal-user-permissions');
+        if (modal) {
+            const usernameFromAttr = modal.getAttribute('data-target-username');
+            if (usernameFromAttr) {
+                targetUsername = usernameFromAttr;
+            }
+        }
+    }
+    
+    // Nếu vẫn không có username, báo lỗi
+    if (!targetUsername) {
+        console.error('Cannot get target username. currentPermissionUser:', currentPermissionUser, 'savedTargetUsername:', savedTargetUsername);
         if (typeof window.showToast === 'function') {
-            window.showToast('Lỗi: Không có thông tin user để lưu', 'danger');
+            window.showToast('Lỗi: Không có thông tin user để lưu. Vui lòng đóng và mở lại modal.', 'danger');
         }
         return;
     }
@@ -273,9 +305,9 @@ async function saveUserPermissions() {
         return;
     }
 
-    // Save username và target info trước khi có thể bị mất
-    const targetUsername = currentPermissionUser.username;
-    const isCurrentUser = session.username && session.username.toLowerCase() === targetUsername.toLowerCase();
+    // Normalize username
+    targetUsername = targetUsername.toLowerCase();
+    const isCurrentUser = session.username && session.username.toLowerCase() === targetUsername;
 
     // Show loading - Get button from DOM by ID
     const saveBtn = document.getElementById('btn-save-permissions');
@@ -366,9 +398,14 @@ async function saveUserPermissions() {
 }
 
 function closeUserPermissionsModal() {
-    document.getElementById('modal-user-permissions').classList.add('hidden');
+    const modal = document.getElementById('modal-user-permissions');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.removeAttribute('data-target-username');
+    }
     currentPermissionUser = null;
     currentPermissions = {};
+    savedTargetUsername = null;
 }
 
 // Expose to window
