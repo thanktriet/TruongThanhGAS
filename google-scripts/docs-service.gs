@@ -362,12 +362,18 @@ function createHDMB(formData) {
   try {
     Logger.log('=== CREATE HDMB START ===');
     Logger.log('formData type: ' + typeof formData);
-    Logger.log('formData keys: ' + (formData ? Object.keys(formData).join(', ') : 'null'));
-    Logger.log('formData value: ' + JSON.stringify(formData));
+    Logger.log('formData is null: ' + (formData === null));
+    Logger.log('formData is undefined: ' + (formData === undefined));
     
-    if (!formData) {
-      throw new Error('formData không được cung cấp');
+    // Validate formData
+    if (!formData || typeof formData !== 'object') {
+      Logger.log('❌ formData không hợp lệ');
+      Logger.log('formData value: ' + JSON.stringify(formData));
+      throw new Error('formData không được cung cấp hoặc không đúng định dạng. Type: ' + typeof formData);
     }
+    
+    Logger.log('formData keys: ' + Object.keys(formData).join(', '));
+    Logger.log('formData value: ' + JSON.stringify(formData));
     
     if (!CONFIG.TEMPLATE_ID_HDMB || CONFIG.TEMPLATE_ID_HDMB.startsWith("REPLACE")) {
       throw new Error('Chưa cấu hình TEMPLATE_ID_HDMB trong CONFIG');
