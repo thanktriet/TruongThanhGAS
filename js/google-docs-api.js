@@ -212,24 +212,121 @@ async function createHDMB(formData) {
             };
         }
 
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                action: 'create_hdmb',
-                formData: formData
-            })
-        });
+        // Try multiple methods to avoid CORS issues
+        // Method 1: Try FormData
+        try {
+            console.log('🔹 Trying FormData method for createHDMB...');
+            const formDataObj = new FormData();
+            formDataObj.append('action', 'create_hdmb');
+            formDataObj.append('formData', JSON.stringify(formData));
 
-        const result = await response.json();
-        return result;
+            const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: formDataObj
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+            }
+
+            const responseText = await response.text();
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (parseError) {
+                throw new Error('Invalid JSON response: ' + responseText);
+            }
+
+            if (result.success) {
+                console.log('✅ Create HDMB successful (FormData):', result);
+            }
+            return result;
+        } catch (formDataError) {
+            console.warn('⚠️ FormData method failed, trying text/plain...', formDataError);
+            
+            // Method 2: Try text/plain
+            try {
+                console.log('🔹 Trying text/plain method for createHDMB...');
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    },
+                    body: JSON.stringify({
+                        action: 'create_hdmb',
+                        formData: formData
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                }
+
+                const responseText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    throw new Error('Invalid JSON response: ' + responseText);
+                }
+
+                if (result.success) {
+                    console.log('✅ Create HDMB successful (text/plain):', result);
+                }
+                return result;
+            } catch (textPlainError) {
+                console.warn('⚠️ text/plain method failed, trying JSON...', textPlainError);
+                
+                // Method 3: Try standard JSON
+                try {
+                    console.log('🔹 Trying standard JSON method for createHDMB...');
+                    const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            action: 'create_hdmb',
+                            formData: formData
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        console.log('✅ Create HDMB successful (JSON):', result);
+                    }
+                    return result;
+                } catch (jsonError) {
+                    console.error('❌ All methods failed for createHDMB:', jsonError);
+                    
+                    // Check if it's a CORS error
+                    if (jsonError.message && (jsonError.message.includes('CORS') || jsonError.message.includes('Failed to fetch'))) {
+                        return {
+                            success: false,
+                            message: 'Lỗi CORS: Không thể kết nối đến Google Apps Script. Vui lòng kiểm tra lại cấu hình deploy.',
+                            corsError: true,
+                            error: jsonError.message
+                        };
+                    }
+                    
+                    throw jsonError;
+                }
+            }
+        }
     } catch (error) {
         console.error('Create HDMB error:', error);
         return {
             success: false,
-            message: 'Lỗi tạo HĐMB: ' + error.message
+            message: 'Lỗi tạo HĐMB: ' + error.message,
+            error: error.message
         };
     }
 }
@@ -251,24 +348,121 @@ async function createThoaThuan(formData) {
             };
         }
 
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                action: 'create_thoa_thuan',
-                formData: formData
-            })
-        });
+        // Try multiple methods to avoid CORS issues
+        // Method 1: Try FormData
+        try {
+            console.log('🔹 Trying FormData method for createThoaThuan...');
+            const formDataObj = new FormData();
+            formDataObj.append('action', 'create_thoa_thuan');
+            formDataObj.append('formData', JSON.stringify(formData));
 
-        const result = await response.json();
-        return result;
+            const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: formDataObj
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+            }
+
+            const responseText = await response.text();
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (parseError) {
+                throw new Error('Invalid JSON response: ' + responseText);
+            }
+
+            if (result.success) {
+                console.log('✅ Create ThoaThuan successful (FormData):', result);
+            }
+            return result;
+        } catch (formDataError) {
+            console.warn('⚠️ FormData method failed, trying text/plain...', formDataError);
+            
+            // Method 2: Try text/plain
+            try {
+                console.log('🔹 Trying text/plain method for createThoaThuan...');
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    },
+                    body: JSON.stringify({
+                        action: 'create_thoa_thuan',
+                        formData: formData
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                }
+
+                const responseText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    throw new Error('Invalid JSON response: ' + responseText);
+                }
+
+                if (result.success) {
+                    console.log('✅ Create ThoaThuan successful (text/plain):', result);
+                }
+                return result;
+            } catch (textPlainError) {
+                console.warn('⚠️ text/plain method failed, trying JSON...', textPlainError);
+                
+                // Method 3: Try standard JSON
+                try {
+                    console.log('🔹 Trying standard JSON method for createThoaThuan...');
+                    const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            action: 'create_thoa_thuan',
+                            formData: formData
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        console.log('✅ Create ThoaThuan successful (JSON):', result);
+                    }
+                    return result;
+                } catch (jsonError) {
+                    console.error('❌ All methods failed for createThoaThuan:', jsonError);
+                    
+                    // Check if it's a CORS error
+                    if (jsonError.message && (jsonError.message.includes('CORS') || jsonError.message.includes('Failed to fetch'))) {
+                        return {
+                            success: false,
+                            message: 'Lỗi CORS: Không thể kết nối đến Google Apps Script. Vui lòng kiểm tra lại cấu hình deploy.',
+                            corsError: true,
+                            error: jsonError.message
+                        };
+                    }
+                    
+                    throw jsonError;
+                }
+            }
+        }
     } catch (error) {
         console.error('Create ThoaThuan error:', error);
         return {
             success: false,
-            message: 'Lỗi tạo Thỏa thuận: ' + error.message
+            message: 'Lỗi tạo Thỏa thuận: ' + error.message,
+            error: error.message
         };
     }
 }
@@ -290,24 +484,121 @@ async function createDeNghiGiaiNgan(formData) {
             };
         }
 
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                action: 'create_de_nghi_giai_ngan',
-                formData: formData
-            })
-        });
+        // Try multiple methods to avoid CORS issues
+        // Method 1: Try FormData
+        try {
+            console.log('🔹 Trying FormData method for createDeNghiGiaiNgan...');
+            const formDataObj = new FormData();
+            formDataObj.append('action', 'create_de_nghi_giai_ngan');
+            formDataObj.append('formData', JSON.stringify(formData));
 
-        const result = await response.json();
-        return result;
+            const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: formDataObj
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+            }
+
+            const responseText = await response.text();
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (parseError) {
+                throw new Error('Invalid JSON response: ' + responseText);
+            }
+
+            if (result.success) {
+                console.log('✅ Create DeNghiGiaiNgan successful (FormData):', result);
+            }
+            return result;
+        } catch (formDataError) {
+            console.warn('⚠️ FormData method failed, trying text/plain...', formDataError);
+            
+            // Method 2: Try text/plain
+            try {
+                console.log('🔹 Trying text/plain method for createDeNghiGiaiNgan...');
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    },
+                    body: JSON.stringify({
+                        action: 'create_de_nghi_giai_ngan',
+                        formData: formData
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                }
+
+                const responseText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    throw new Error('Invalid JSON response: ' + responseText);
+                }
+
+                if (result.success) {
+                    console.log('✅ Create DeNghiGiaiNgan successful (text/plain):', result);
+                }
+                return result;
+            } catch (textPlainError) {
+                console.warn('⚠️ text/plain method failed, trying JSON...', textPlainError);
+                
+                // Method 3: Try standard JSON
+                try {
+                    console.log('🔹 Trying standard JSON method for createDeNghiGiaiNgan...');
+                    const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            action: 'create_de_nghi_giai_ngan',
+                            formData: formData
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        console.log('✅ Create DeNghiGiaiNgan successful (JSON):', result);
+                    }
+                    return result;
+                } catch (jsonError) {
+                    console.error('❌ All methods failed for createDeNghiGiaiNgan:', jsonError);
+                    
+                    // Check if it's a CORS error
+                    if (jsonError.message && (jsonError.message.includes('CORS') || jsonError.message.includes('Failed to fetch'))) {
+                        return {
+                            success: false,
+                            message: 'Lỗi CORS: Không thể kết nối đến Google Apps Script. Vui lòng kiểm tra lại cấu hình deploy.',
+                            corsError: true,
+                            error: jsonError.message
+                        };
+                    }
+                    
+                    throw jsonError;
+                }
+            }
+        }
     } catch (error) {
         console.error('Create DeNghiGiaiNgan error:', error);
         return {
             success: false,
-            message: 'Lỗi tạo Đề nghị giải ngân: ' + error.message
+            message: 'Lỗi tạo Đề nghị giải ngân: ' + error.message,
+            error: error.message
         };
     }
 }
