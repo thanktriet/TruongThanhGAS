@@ -353,7 +353,16 @@ function createHDMB(formData) {
     
     Logger.log('Opening template: ' + CONFIG.TEMPLATE_ID_HDMB);
     const templateDoc = DocumentApp.openById(CONFIG.TEMPLATE_ID_HDMB);
-    const contractName = "HĐMB_" + (formData.khach_hang || formData.customer_name || 'KH').replace(/\s+/g, "_") + "_" + (formData.so_hop_dong || formData.contract_code || '');
+    
+    // Debug: Kiểm tra các giá trị để tạo tên file
+    Logger.log('formData.khach_hang: ' + formData.khach_hang);
+    Logger.log('formData.customer_name: ' + formData.customer_name);
+    Logger.log('formData.so_hop_dong: ' + formData.so_hop_dong);
+    Logger.log('formData.contract_code: ' + formData.contract_code);
+    
+    const khachHangName = (formData.khach_hang || formData.customer_name || 'KH').replace(/\s+/g, "_");
+    const soHopDong = (formData.so_hop_dong || formData.contract_code || '');
+    const contractName = "HĐMB_" + khachHangName + "_" + soHopDong;
     Logger.log('Contract name: ' + contractName);
     
     const newFile = DriveApp.getFileById(templateDoc.getId()).makeCopy(contractName);
