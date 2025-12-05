@@ -13,21 +13,21 @@ const CONFIG = {
   
   // Folder IDs trên Google Drive
   FOLDER_ID_DON_HANG: "1lmJ-rnhK6J-EQvFHKtem7XDfbjvGEaRg",      // Folder lưu file đơn hàng (CCCD, đơn hàng)
-  FOLDER_ID_HOP_DONG: "REPLACE_WITH_FOLDER_ID",      // Folder lưu hợp đồng
-  FOLDER_ID_THOA_THUAN: "REPLACE_WITH_FOLDER_ID",    // Folder lưu thỏa thuận
-  FOLDER_ID_DE_NGHI: "REPLACE_WITH_FOLDER_ID",       // Folder lưu đề nghị giải ngân
+  FOLDER_ID_HOP_DONG: "1zQRxBRnH5PNJ0mrU7loBpCDCziOJXwv6",      // Folder lưu hợp đồng
+  FOLDER_ID_THOA_THUAN: "1SdP-6aZZCi_tmmrjNszt4v6fItOKdeEU",    // Folder lưu thỏa thuận
+  FOLDER_ID_DE_NGHI: "1SdP-6aZZCi_tmmrjNszt4v6fItOKdeEU",       // Folder lưu đề nghị giải ngân
   
   // Template IDs (Google Docs templates)
-  TEMPLATE_ID_HDMB: "REPLACE_WITH_TEMPLATE_ID",      // Template Hợp đồng Mua Bán
-  TEMPLATE_ID_DNGN: "REPLACE_WITH_TEMPLATE_ID",      // Template Đề nghị Giải ngân
+  TEMPLATE_ID_HDMB: "1LtX6VQDHMg3-AThj9HKr5MIN5phL5x526O2mUOzKwRE",      // Template Hợp đồng Mua Bán
+  TEMPLATE_ID_DNGN: "1P0WUCjH60w93pD-O_nJy8twZfJMLWWvWx0mLltZhv_c",      // Template Đề nghị Giải ngân
   
   // Template IDs cho Thỏa thuận lãi suất (theo ngân hàng)
   TEMPLATE_IDS_THOA_THUAN: {
-    "techcom": "REPLACE_WITH_TEMPLATE_ID",
-    "vpbank": "REPLACE_WITH_TEMPLATE_ID",
-    "tpbank": "REPLACE_WITH_TEMPLATE_ID",
-    "bidv": "REPLACE_WITH_TEMPLATE_ID",
-    "sacombank": "REPLACE_WITH_TEMPLATE_ID"
+    "techcom": "1HtH6RiGrad2sUCLyK7Ere0Za6rT4GlbGlo0R5stDHVU",
+    "vpbank": "1jWq25YMTsxTfNGjzYEnMdN0B4Y2NfiUTN07_nnHUQ7A",
+    "tpbank": "1NMG_RnIyQ7KgeS_4oGfwLN2G6MykBGFZTGXl2BQf1DU",
+    "bidv": "REPLACE_WITH_BIDV_DOC_ID",        // ⚠️ Cần cập nhật Template ID cho BIDV
+    "sacombank": "1TePgLhNa0FWfbkj7ek4gi3pmTZTIstPz7Toxw8kNBL8"
   }
 };
 
