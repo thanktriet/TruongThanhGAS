@@ -266,64 +266,94 @@ function applyDefaultPermissions() {
 }
 
 async function saveUserPermissions() {
-    // Get username từ nhiều nguồn để đảm bảo không bị mất
-    let targetUsername = null;
-    
-    // Ưu tiên 1: Từ currentPermissionUser
-    if (currentPermissionUser && currentPermissionUser.username) {
-        targetUsername = currentPermissionUser.username;
-    }
-    // Ưu tiên 2: Từ savedTargetUsername
-    else if (savedTargetUsername) {
-        targetUsername = savedTargetUsername;
-    }
-    // Ưu tiên 3: Từ data attribute của modal
-    else {
-        const modal = document.getElementById('modal-user-permissions');
-        if (modal) {
-            const usernameFromAttr = modal.getAttribute('data-target-username');
-            if (usernameFromAttr) {
-                targetUsername = usernameFromAttr;
+    try {
+        // Get username từ nhiều nguồn để đảm bảo không bị mất
+        let targetUsername = null;
+        
+        // Ưu tiên 1: Từ currentPermissionUser
+        if (currentPermissionUser && typeof currentPermissionUser === 'object' && currentPermissionUser.username) {
+            targetUsername = String(currentPermissionUser.username).trim();
+        }
+        // Ưu tiên 2: Từ savedTargetUsername
+        else if (savedTargetUsername && typeof savedTargetUsername === 'string') {
+            targetUsername = String(savedTargetUsername).trim();
+        }
+        // Ưu tiên 3: Từ data attribute của modal
+        else {
+            try {
+                const modal = document.getElementById('modal-user-permissions');
+                if (modal) {
+                    const usernameFromAttr = modal.getAttribute('data-target-username');
+                    if (usernameFromAttr && typeof usernameFromAttr === 'string') {
+                        targetUsername = String(usernameFromAttr).trim();
+                    }
+                }
+            } catch (e) {
+                console.error('Error getting username from modal attribute:', e);
             }
         }
-    }
-    
-    // Nếu vẫn không có username, báo lỗi
-    if (!targetUsername) {
-        console.error('Cannot get target username. currentPermissionUser:', currentPermissionUser, 'savedTargetUsername:', savedTargetUsername);
-        if (typeof window.showToast === 'function') {
-            window.showToast('Lỗi: Không có thông tin user để lưu. Vui lòng đóng và mở lại modal.', 'danger');
+        
+        // Nếu vẫn không có username, báo lỗi
+        if (!targetUsername || targetUsername.length === 0) {
+            console.error('Cannot get target username. currentPermissionUser:', currentPermissionUser, 'savedTargetUsername:', savedTargetUsername);
+            if (typeof window.showToast === 'function') {
+                window.showToast('Lỗi: Không có thông tin user để lưu. Vui lòng đóng và mở lại modal.', 'danger');
+            }
+            return;
         }
-        return;
-    }
 
-    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
-    if (!session || session.role !== 'ADMIN') {
-        if (typeof window.showToast === 'function') {
-            window.showToast('Chỉ ADMIN mới có quyền lưu permissions', 'danger');
+        // Get session với validation
+        let session = null;
+        try {
+            const sessionStr = localStorage.getItem('user_session');
+            if (sessionStr) {
+                session = JSON.parse(sessionStr);
+            }
+        } catch (e) {
+            console.error('Error parsing session:', e);
         }
-        return;
-    }
+        
+        if (!session || typeof session !== 'object' || session.role !== 'ADMIN') {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Chỉ ADMIN mới có quyền lưu permissions', 'danger');
+            }
+            return;
+        }
 
-    // Normalize username
-    targetUsername = targetUsername.toLowerCase();
-    const isCurrentUser = session.username && session.username.toLowerCase() === targetUsername;
+        // Validate session.username
+        if (!session.username || typeof session.username !== 'string') {
+            console.error('Invalid session.username:', session.username);
+            if (typeof window.showToast === 'function') {
+                window.showToast('Lỗi: Session không hợp lệ. Vui lòng đăng nhập lại.', 'danger');
+            }
+            return;
+        }
 
-    // Show loading - Get button from DOM by ID
-    const saveBtn = document.getElementById('btn-save-permissions');
-    const originalText = saveBtn ? saveBtn.innerHTML : '';
-    if (saveBtn) {
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang lưu...';
-    }
+        // Normalize username
+        targetUsername = targetUsername.toLowerCase();
+        const sessionUsername = String(session.username).toLowerCase();
+        const isCurrentUser = sessionUsername === targetUsername;
 
-    try {
+        // Show loading - Get button from DOM by ID
+        const saveBtn = document.getElementById('btn-save-permissions');
+        let originalText = '';
+        if (saveBtn) {
+            originalText = saveBtn.innerHTML;
+            saveBtn.setAttribute('data-original-text', originalText); // Lưu original text
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang lưu...';
+        }
+
+        // Validate currentPermissions
+        const permissionsToSave = currentPermissions && typeof currentPermissions === 'object' ? currentPermissions : {};
+        
+        // Call API
         const result = await window.callAPI({
             action: 'update_user_permissions',
-            username: session.username,
+            username: sessionUsername,
             role: session.role,
             target_username: targetUsername,
-            permissions: currentPermissions
+            permissions: permissionsToSave
         });
 
         if (saveBtn) {
@@ -352,23 +382,32 @@ async function saveUserPermissions() {
                     }, 500);
                 } else if (typeof window.updateMenuVisibility === 'function') {
                     // Update menu với user mới (cần reload session trước)
-                    const updatedSession = JSON.parse(localStorage.getItem('user_session') || '{}');
-                    if (updatedSession) {
-                        // Reload lại user info để lấy permissions mới
-                        const reloadResult = await window.callAPI({
-                            action: 'list_users',
-                            username: session.username,
-                            role: session.role
-                        });
-                        if (reloadResult.success && reloadResult.users) {
-                            const updatedUser = reloadResult.users.find(u => u.username.toLowerCase() === targetUsername.toLowerCase());
-                            if (updatedUser) {
-                                // Update session với permissions mới
-                                updatedSession.permissions = updatedUser.permissions || {};
-                                localStorage.setItem('user_session', JSON.stringify(updatedSession));
-                                window.updateMenuVisibility(updatedSession);
+                    try {
+                        const updatedSessionStr = localStorage.getItem('user_session');
+                        if (updatedSessionStr) {
+                            const updatedSession = JSON.parse(updatedSessionStr);
+                            if (updatedSession && typeof updatedSession === 'object') {
+                                // Reload lại user info để lấy permissions mới
+                                const reloadResult = await window.callAPI({
+                                    action: 'list_users',
+                                    username: sessionUsername,
+                                    role: session.role
+                                });
+                                if (reloadResult && reloadResult.success && reloadResult.users && Array.isArray(reloadResult.users)) {
+                                    const updatedUser = reloadResult.users.find(u => u && u.username && String(u.username).toLowerCase() === targetUsername);
+                                    if (updatedUser) {
+                                        // Update session với permissions mới
+                                        updatedSession.permissions = updatedUser.permissions || {};
+                                        localStorage.setItem('user_session', JSON.stringify(updatedSession));
+                                        if (typeof window.updateMenuVisibility === 'function') {
+                                            window.updateMenuVisibility(updatedSession);
+                                        }
+                                    }
+                                }
                             }
                         }
+                    } catch (reloadError) {
+                        console.error('Error reloading user session:', reloadError);
                     }
                 } else {
                     // Fallback: reload page để cập nhật menu
@@ -386,13 +425,30 @@ async function saveUserPermissions() {
             }
         }
     } catch (error) {
+        // Reset button state
+        const saveBtn = document.getElementById('btn-save-permissions');
         if (saveBtn) {
+            const originalText = saveBtn.getAttribute('data-original-text');
             saveBtn.disabled = false;
-            saveBtn.innerHTML = originalText;
+            if (originalText) {
+                saveBtn.innerHTML = originalText;
+            } else {
+                saveBtn.innerHTML = '<i class="fa-solid fa-save mr-2"></i>Lưu Quyền';
+            }
         }
+        
         console.error('Error saving permissions:', error);
+        console.error('Error stack:', error.stack);
+        console.error('Error details:', {
+            message: error.message,
+            name: error.name,
+            currentPermissionUser: currentPermissionUser,
+            savedTargetUsername: savedTargetUsername,
+            currentPermissions: currentPermissions
+        });
+        
         if (typeof window.showToast === 'function') {
-            window.showToast('Lỗi: ' + (error.message || 'Không thể lưu permissions'), 'danger');
+            window.showToast('Lỗi: ' + (error.message || 'Không thể lưu permissions. Vui lòng thử lại.'), 'danger');
         }
     }
 }
