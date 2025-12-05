@@ -84,7 +84,29 @@ function updateMenuItemsByPermissions(user) {
     // ĐƠN HÀNG MENUS
     // =====================================================
     toggleMenuByPermission('nav-order-create', 'create_order', ['TVBH', 'SALE']);
-    toggleMenuByPermission('nav-my-orders', 'view_my_orders', ['TVBH', 'SALE']);
+    
+    // nav-my-orders: Hiển thị nếu có view_my_orders HOẶC view_all_orders
+    const navMyOrders = $('nav-my-orders');
+    if (navMyOrders) {
+        let shouldShow = false;
+        
+        // Check view_my_orders permission
+        if (typeof hasPermission === 'function') {
+            shouldShow = hasPermission(user, 'view_my_orders') || hasPermission(user, 'view_all_orders');
+        }
+        
+        // Fallback to role check
+        if (!shouldShow) {
+            shouldShow = ['TVBH', 'SALE', 'ADMIN', 'SALEADMIN'].includes(user.role);
+        }
+        
+        if (shouldShow) {
+            navMyOrders.classList.remove('hidden');
+        } else {
+            navMyOrders.classList.add('hidden');
+        }
+    }
+    
     toggleMenuByPermission('nav-orders-admin', 'view_all_orders', ['ADMIN', 'SALEADMIN']);
     
     // =====================================================

@@ -88,9 +88,15 @@ function checkSession() {
                 $('nav-order-create')?.classList.add('hidden');
             }
             
-            if (typeof hasPermission === 'function' && hasPermission(user, 'view_my_orders')) {
-                $('nav-my-orders')?.classList.remove('hidden');
-            } else if (user.role === 'TVBH' || user.role === 'SALE') {
+            // nav-my-orders: Hiển thị nếu có view_my_orders HOẶC view_all_orders
+            let shouldShowMyOrders = false;
+            if (typeof hasPermission === 'function') {
+                shouldShowMyOrders = hasPermission(user, 'view_my_orders') || hasPermission(user, 'view_all_orders');
+            }
+            if (!shouldShowMyOrders) {
+                shouldShowMyOrders = ['TVBH', 'SALE', 'ADMIN', 'SALEADMIN'].includes(user.role);
+            }
+            if (shouldShowMyOrders) {
                 $('nav-my-orders')?.classList.remove('hidden');
             } else {
                 $('nav-my-orders')?.classList.add('hidden');
