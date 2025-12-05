@@ -72,6 +72,7 @@
                 Hủy
             </button>
             <button 
+                id="btn-save-permissions"
                 onclick="saveUserPermissions()" 
                 class="px-6 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition"
             >
@@ -255,7 +256,12 @@ function applyDefaultPermissions() {
 }
 
 async function saveUserPermissions() {
-    if (!currentPermissionUser) {
+    // Validate currentPermissionUser
+    if (!currentPermissionUser || !currentPermissionUser.username) {
+        console.error('currentPermissionUser is null or missing username:', currentPermissionUser);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: Không có thông tin user để lưu', 'danger');
+        }
         return;
     }
 
@@ -267,29 +273,36 @@ async function saveUserPermissions() {
         return;
     }
 
-    // Show loading
-    const saveBtn = event.target;
-    const originalText = saveBtn.innerHTML;
-    saveBtn.disabled = true;
-    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang lưu...';
+    // Save username và target info trước khi có thể bị mất
+    const targetUsername = currentPermissionUser.username;
+    const isCurrentUser = session.username && session.username.toLowerCase() === targetUsername.toLowerCase();
+
+    // Show loading - Get button from DOM by ID
+    const saveBtn = document.getElementById('btn-save-permissions');
+    const originalText = saveBtn ? saveBtn.innerHTML : '';
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang lưu...';
+    }
 
     try {
         const result = await window.callAPI({
             action: 'update_user_permissions',
             username: session.username,
             role: session.role,
-            target_username: currentPermissionUser.username,
+            target_username: targetUsername,
             permissions: currentPermissions
         });
 
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = originalText;
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalText;
+        }
 
         if (result.success) {
             if (typeof window.showToast === 'function') {
                 window.showToast('Đã lưu quyền thành công!', 'success');
             }
-            closeUserPermissionsModal();
             
             // Reload user list if on users page
             if (typeof loadUserManagement === 'function') {
@@ -299,13 +312,32 @@ async function saveUserPermissions() {
             }
             
             // Nếu đang quản lý quyền của chính user đang đăng nhập, refresh menu items
-            const session = JSON.parse(localStorage.getItem('user_session') || '{}');
-            if (session.username && session.username.toLowerCase() === currentPermissionUser.username.toLowerCase()) {
+            if (isCurrentUser) {
                 // Refresh session và menu items
                 if (typeof window.refreshUserSessionAndMenu === 'function') {
                     setTimeout(() => {
                         window.refreshUserSessionAndMenu();
                     }, 500);
+                } else if (typeof window.updateMenuVisibility === 'function') {
+                    // Update menu với user mới (cần reload session trước)
+                    const updatedSession = JSON.parse(localStorage.getItem('user_session') || '{}');
+                    if (updatedSession) {
+                        // Reload lại user info để lấy permissions mới
+                        const reloadResult = await window.callAPI({
+                            action: 'list_users',
+                            username: session.username,
+                            role: session.role
+                        });
+                        if (reloadResult.success && reloadResult.users) {
+                            const updatedUser = reloadResult.users.find(u => u.username.toLowerCase() === targetUsername.toLowerCase());
+                            if (updatedUser) {
+                                // Update session với permissions mới
+                                updatedSession.permissions = updatedUser.permissions || {};
+                                localStorage.setItem('user_session', JSON.stringify(updatedSession));
+                                window.updateMenuVisibility(updatedSession);
+                            }
+                        }
+                    }
                 } else {
                     // Fallback: reload page để cập nhật menu
                     setTimeout(() => {
@@ -313,17 +345,22 @@ async function saveUserPermissions() {
                     }, 1000);
                 }
             }
+            
+            // Đóng modal sau khi đã xử lý xong
+            closeUserPermissionsModal();
         } else {
             if (typeof window.showToast === 'function') {
-                window.showToast('Lỗi: ' + result.message, 'danger');
+                window.showToast('Lỗi: ' + (result.message || 'Không thể lưu permissions'), 'danger');
             }
         }
     } catch (error) {
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = originalText;
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalText;
+        }
         console.error('Error saving permissions:', error);
         if (typeof window.showToast === 'function') {
-            window.showToast('Lỗi: ' + error.message, 'danger');
+            window.showToast('Lỗi: ' + (error.message || 'Không thể lưu permissions'), 'danger');
         }
     }
 }
