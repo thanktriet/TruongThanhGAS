@@ -253,8 +253,17 @@ function handleFileSelect(input, previewId) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const preview = document.getElementById(previewId);
-            preview.querySelector('img').src = e.target.result;
-            preview.classList.remove('hidden');
+            if (preview) {
+                const img = preview.querySelector('img');
+                if (img) {
+                    img.src = e.target.result;
+                }
+                preview.classList.remove('hidden');
+            }
+        };
+        reader.onerror = function(error) {
+            console.error('Error reading file:', error);
+            showToast('Lỗi đọc file. Vui lòng thử lại.', 'danger');
         };
         reader.readAsDataURL(file);
     }
@@ -262,8 +271,14 @@ function handleFileSelect(input, previewId) {
 
 // Remove file
 function removeFile(inputId, previewId) {
-    document.getElementById(inputId).value = '';
-    document.getElementById(previewId).classList.add('hidden');
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    if (input) {
+        input.value = '';
+    }
+    if (preview) {
+        preview.classList.add('hidden');
+    }
 }
 
 // Handle create order
@@ -442,6 +457,18 @@ function resetOrderForm() {
     document.getElementById('cccd_front_preview').classList.add('hidden');
     document.getElementById('cccd_back_preview').classList.add('hidden');
     document.getElementById('search-cccd').value = '';
+}
+
+// Expose functions to window for inline event handlers
+// This must be at the end of the script, after all functions are defined
+if (typeof window !== 'undefined') {
+    window.handleFileSelect = handleFileSelect;
+    window.removeFile = removeFile;
+    window.searchCustomerByCCCD = searchCustomerByCCCD;
+    window.handleCreateOrder = handleCreateOrder;
+    window.resetOrderForm = resetOrderForm;
+    
+    console.log('✅ Order create functions exposed to window');
 }
 </script>
 

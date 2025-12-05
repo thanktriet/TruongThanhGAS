@@ -14,6 +14,21 @@ async function loadComponent(componentName, targetElementId) {
         const target = document.getElementById(targetElementId);
         if (target) {
             target.innerHTML = html;
+            
+            // Extract and execute script tags from the inserted HTML
+            // Scripts in inserted HTML are not executed automatically
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const scripts = tempDiv.querySelectorAll('script');
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement('script');
+                Array.from(oldScript.attributes).forEach(attr => {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                document.body.appendChild(newScript);
+                document.body.removeChild(newScript);
+            });
         } else {
             console.error(`Target element not found: ${targetElementId}`);
         }
@@ -33,6 +48,21 @@ async function loadComponentAppend(componentName, targetElementId) {
         const target = document.getElementById(targetElementId);
         if (target) {
             target.insertAdjacentHTML('beforeend', html);
+            
+            // Extract and execute script tags from the inserted HTML
+            // Scripts in inserted HTML are not executed automatically
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const scripts = tempDiv.querySelectorAll('script');
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement('script');
+                Array.from(oldScript.attributes).forEach(attr => {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                document.body.appendChild(newScript);
+                document.body.removeChild(newScript);
+            });
         } else {
             console.error(`Target element not found: ${targetElementId}`);
         }
