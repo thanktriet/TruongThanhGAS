@@ -12,7 +12,7 @@ const CONFIG = {
   // !!! QUAN TRỌNG: CẬP NHẬT CÁC ID SAU KHI TẠO TRÊN GOOGLE DRIVE !!!
   
   // Folder IDs trên Google Drive
-  FOLDER_ID_DON_HANG: "REPLACE_WITH_FOLDER_ID",      // Folder lưu file đơn hàng
+  FOLDER_ID_DON_HANG: "1lmJ-rnhK6J-EQvFHKtem7XDfbjvGEaRg",      // Folder lưu file đơn hàng (CCCD, đơn hàng)
   FOLDER_ID_HOP_DONG: "REPLACE_WITH_FOLDER_ID",      // Folder lưu hợp đồng
   FOLDER_ID_THOA_THUAN: "REPLACE_WITH_FOLDER_ID",    // Folder lưu thỏa thuận
   FOLDER_ID_DE_NGHI: "REPLACE_WITH_FOLDER_ID",       // Folder lưu đề nghị giải ngân
