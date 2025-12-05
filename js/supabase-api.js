@@ -1156,7 +1156,8 @@ async function supabaseListUsers(d) {
             phone: user.phone || '',
             email: user.email || '',
             group: user.group || '',
-            active: user.active
+            active: user.active,
+            permissions: user.permissions || {}
         }));
 
         return { success: true, users };
@@ -1286,6 +1287,104 @@ async function supabaseUpdateUser(d) {
         return { success: true, message: 'Đã cập nhật người dùng', user };
     } catch (e) {
         console.error('Update user error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * P.1. UPDATE USER PERMISSIONS (Admin only)
+ */
+async function supabaseUpdateUserPermissions(d) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // Chỉ ADMIN mới có quyền update permissions
+        if (d.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ ADMIN mới có quyền quản lý permissions' };
+        }
+
+        if (!d.target_username) {
+            return { success: false, message: 'Thiếu username' };
+        }
+
+        // Validate permissions structure
+        if (!d.permissions || typeof d.permissions !== 'object') {
+            return { success: false, message: 'Permissions không hợp lệ' };
+        }
+
+        // Ensure permissions is a valid JSONB object (only boolean values)
+        const permissionsToSave = {};
+        Object.keys(d.permissions).forEach(key => {
+            permissionsToSave[key] = d.permissions[key] === true;
+        });
+
+        const { error } = await supabase
+            .from('users')
+            .update({ 
+                permissions: permissionsToSave,
+                updated_at: new Date().toISOString()
+            })
+            .eq('username', d.target_username.toLowerCase());
+
+        if (error) {
+            return { success: false, message: 'Lỗi cập nhật: ' + error.message };
+        }
+
+        return { success: true, message: 'Đã cập nhật permissions thành công' };
+    } catch (e) {
+        console.error('Update user permissions error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * P.1. UPDATE USER PERMISSIONS (Admin only)
+ */
+async function supabaseUpdateUserPermissions(d) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // Chỉ ADMIN mới có quyền update permissions
+        if (d.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ ADMIN mới có quyền quản lý permissions' };
+        }
+
+        if (!d.target_username) {
+            return { success: false, message: 'Thiếu username' };
+        }
+
+        // Validate permissions structure
+        if (!d.permissions || typeof d.permissions !== 'object') {
+            return { success: false, message: 'Permissions không hợp lệ' };
+        }
+
+        // Ensure permissions is a valid JSONB object (only boolean values)
+        const permissionsToSave = {};
+        Object.keys(d.permissions).forEach(key => {
+            permissionsToSave[key] = d.permissions[key] === true;
+        });
+
+        const { error } = await supabase
+            .from('users')
+            .update({ 
+                permissions: permissionsToSave,
+                updated_at: new Date().toISOString()
+            })
+            .eq('username', d.target_username.toLowerCase());
+
+        if (error) {
+            return { success: false, message: 'Lỗi cập nhật: ' + error.message };
+        }
+
+        return { success: true, message: 'Đã cập nhật permissions thành công' };
+    } catch (e) {
+        console.error('Update user permissions error:', e);
         return { success: false, message: 'Lỗi: ' + e.message };
     }
 }
@@ -2048,6 +2147,9 @@ async function callSupabaseAPI(data) {
             
             case 'reset_user_password':
                 return await supabaseResetUserPassword(data);
+            
+            case 'update_user_permissions':
+                return await supabaseUpdateUserPermissions(data);
             
             case 'get_users_by_role':
                 return await supabaseGetUsersByRole(data.role);

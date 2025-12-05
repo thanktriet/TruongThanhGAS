@@ -139,6 +139,7 @@ async function loadAllComponents() {
     await loadComponentAppend('modals-thoa-thuan', 'modals-container');
     await loadComponentAppend('modals-de-nghi', 'modals-container');
     await loadComponentAppend('modals-order-detail', 'modals-container');
+    await loadComponentAppend('modals-user-permissions', 'modals-container');
     await loadComponent('templates', 'templates-container');
     
     // Wait a bit for DOM to update after loading components

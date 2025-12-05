@@ -1800,6 +1800,9 @@ function renderUserTable(users) {
                 </td>
                 <td class="py-2 px-3 space-x-2">
                     <button onclick="openEditUserModal('${encoded}')" class="text-blue-600 hover:text-blue-800 text-xs font-semibold">Sửa</button>
+                    <button onclick="openUserPermissionsModal('${user.username}')" class="text-purple-600 hover:text-purple-800 text-xs font-semibold">
+                        <i class="fa-solid fa-key mr-1"></i>Quyền
+                    </button>
                     <button onclick="resetUserPasswordPrompt('${encoded}')" class="text-red-600 hover:text-red-800 text-xs font-semibold">Reset MK</button>
                 </td>
             </tr>

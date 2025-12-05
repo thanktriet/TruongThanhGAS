@@ -1,0 +1,330 @@
+<!-- Modal Quản Lý Quyền User -->
+<div id="modal-user-permissions" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="bg-purple-600 px-6 py-4 flex justify-between items-center flex-shrink-0">
+            <h2 class="text-xl font-bold text-white">
+                <i class="fa-solid fa-key mr-2"></i>Quản Lý Quyền - <span id="perm-username-display"></span>
+            </h2>
+            <button 
+                onclick="closeUserPermissionsModal()" 
+                class="text-white hover:text-gray-200 transition"
+            >
+                <i class="fa-solid fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-6">
+            <!-- Loading -->
+            <div id="permissions-loading" class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600"></div>
+                <p class="mt-4 text-gray-600">Đang tải...</p>
+            </div>
+
+            <!-- Permissions Content -->
+            <div id="permissions-content" class="hidden">
+                <!-- User Info -->
+                <div class="mb-6 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Username:</label>
+                            <p class="text-gray-800 font-semibold" id="perm-user-username">-</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Họ tên:</label>
+                            <p class="text-gray-800" id="perm-user-fullname">-</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Vai trò:</label>
+                            <p class="text-gray-800 font-bold" id="perm-user-role">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Permissions by Group -->
+                <div id="permissions-groups" class="space-y-6">
+                    <!-- Permissions will be loaded here -->
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-6 flex gap-3 justify-between items-center bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <button 
+                        onclick="applyDefaultPermissions()" 
+                        class="px-4 py-2 bg-yellow-600 text-white font-bold rounded-lg hover:bg-yellow-700 transition"
+                    >
+                        <i class="fa-solid fa-rotate-left mr-2"></i>Áp dụng quyền mặc định theo role
+                    </button>
+                    <div class="text-xs text-gray-600">
+                        <i class="fa-solid fa-info-circle mr-1"></i>
+                        Quyền mặc định sẽ được khôi phục theo role của user
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3 flex-shrink-0">
+            <button 
+                onclick="closeUserPermissionsModal()" 
+                class="px-6 py-2 bg-gray-500 text-white font-bold rounded-lg hover:bg-gray-600 transition"
+            >
+                Hủy
+            </button>
+            <button 
+                onclick="saveUserPermissions()" 
+                class="px-6 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition"
+            >
+                <i class="fa-solid fa-save mr-2"></i>Lưu Quyền
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPermissionUser = null;
+let currentPermissions = {};
+
+async function openUserPermissionsModal(username) {
+    if (!username) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Không có username', 'danger');
+        }
+        return;
+    }
+
+    currentPermissionUser = null;
+    currentPermissions = {};
+
+    // Show modal
+    const modal = document.getElementById('modal-user-permissions');
+    modal.classList.remove('hidden');
+
+    // Show loading
+    document.getElementById('permissions-loading').classList.remove('hidden');
+    document.getElementById('permissions-content').classList.add('hidden');
+
+    try {
+        // Get user info
+        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+        if (!session || session.role !== 'ADMIN') {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Chỉ ADMIN mới có quyền quản lý permissions', 'danger');
+            }
+            closeUserPermissionsModal();
+            return;
+        }
+
+        // Load users list to get user info
+        const result = await window.callAPI({
+            action: 'list_users',
+            username: session.username,
+            role: session.role
+        });
+
+        if (!result.success || !result.users) {
+            throw new Error(result.message || 'Không thể tải thông tin user');
+        }
+
+        const user = result.users.find(u => u.username.toLowerCase() === username.toLowerCase());
+        if (!user) {
+            throw new Error('Không tìm thấy user');
+        }
+
+        currentPermissionUser = user;
+
+        // Display user info
+        document.getElementById('perm-username-display').textContent = user.username;
+        document.getElementById('perm-user-username').textContent = user.username;
+        document.getElementById('perm-user-fullname').textContent = user.fullname || '-';
+        document.getElementById('perm-user-role').textContent = user.role || '-';
+
+        // Load permissions
+        await loadUserPermissions(user);
+
+        // Hide loading, show content
+        document.getElementById('permissions-loading').classList.add('hidden');
+        document.getElementById('permissions-content').classList.remove('hidden');
+
+    } catch (error) {
+        console.error('Error loading user permissions:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + error.message, 'danger');
+        }
+        closeUserPermissionsModal();
+    }
+}
+
+async function loadUserPermissions(user) {
+    // Get permissions từ user (nếu có) hoặc default theo role
+    let permissions = {};
+    
+    if (user.permissions) {
+        if (typeof user.permissions === 'string') {
+            try {
+                const parsed = JSON.parse(user.permissions);
+                if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+                    permissions = parsed;
+                } else {
+                    // Empty object, use defaults
+                    permissions = window.Permissions ? window.Permissions.getDefaultPermissionsByRole(user.role) : {};
+                }
+            } catch (e) {
+                console.error('Error parsing permissions:', e);
+                permissions = window.Permissions ? window.Permissions.getDefaultPermissionsByRole(user.role) : {};
+            }
+        } else if (typeof user.permissions === 'object') {
+            if (Object.keys(user.permissions).length > 0) {
+                permissions = user.permissions;
+            } else {
+                permissions = window.Permissions ? window.Permissions.getDefaultPermissionsByRole(user.role) : {};
+            }
+        }
+    } else {
+        // No permissions, use defaults
+        permissions = window.Permissions ? window.Permissions.getDefaultPermissionsByRole(user.role) : {};
+    }
+
+    currentPermissions = { ...permissions };
+
+    // Render permissions by group
+    renderPermissionsByGroup(permissions);
+}
+
+function renderPermissionsByGroup(permissions) {
+    if (!window.Permissions) {
+        console.error('Permissions helper not loaded');
+        return;
+    }
+
+    const groups = window.Permissions.getPermissionsByGroup();
+    const groupOrder = ['approval', 'orders', 'documents', 'reports', 'system'];
+    const container = document.getElementById('permissions-groups');
+    container.innerHTML = '';
+
+    groupOrder.forEach(groupKey => {
+        if (!groups[groupKey]) return;
+
+        const groupInfo = window.Permissions.PERMISSION_GROUPS[groupKey];
+        if (!groupInfo) return;
+
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'bg-gray-50 rounded-lg p-5 border border-gray-200';
+        groupDiv.innerHTML = `
+            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fa-solid ${groupInfo.icon} mr-2 text-purple-600"></i>${groupInfo.label}
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                ${groups[groupKey].map(perm => {
+                    const isChecked = permissions[perm.key] === true;
+                    return `
+                        <label class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition">
+                            <input 
+                                type="checkbox" 
+                                class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500 focus:ring-2"
+                                data-permission="${perm.key}"
+                                ${isChecked ? 'checked' : ''}
+                                onchange="togglePermission('${perm.key}', this.checked)"
+                            >
+                            <span class="ml-3 text-sm text-gray-700 font-medium">${perm.label}</span>
+                        </label>
+                    `;
+                }).join('')}
+            </div>
+        `;
+        container.appendChild(groupDiv);
+    });
+}
+
+function togglePermission(permissionKey, enabled) {
+    currentPermissions[permissionKey] = enabled;
+}
+
+function applyDefaultPermissions() {
+    if (!currentPermissionUser || !window.Permissions) {
+        return;
+    }
+
+    const defaultPerms = window.Permissions.getDefaultPermissionsByRole(currentPermissionUser.role);
+    currentPermissions = { ...defaultPerms };
+    renderPermissionsByGroup(currentPermissions);
+
+    if (typeof window.showToast === 'function') {
+        window.showToast('Đã áp dụng quyền mặc định theo role', 'success');
+    }
+}
+
+async function saveUserPermissions() {
+    if (!currentPermissionUser) {
+        return;
+    }
+
+    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+    if (!session || session.role !== 'ADMIN') {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Chỉ ADMIN mới có quyền lưu permissions', 'danger');
+        }
+        return;
+    }
+
+    // Show loading
+    const saveBtn = event.target;
+    const originalText = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang lưu...';
+
+    try {
+        const result = await window.callAPI({
+            action: 'update_user_permissions',
+            username: session.username,
+            role: session.role,
+            target_username: currentPermissionUser.username,
+            permissions: currentPermissions
+        });
+
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+
+        if (result.success) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Đã lưu quyền thành công!', 'success');
+            }
+            closeUserPermissionsModal();
+            
+            // Reload user list if on users page
+            if (typeof loadUserManagement === 'function') {
+                setTimeout(() => {
+                    loadUserManagement();
+                }, 500);
+            }
+        } else {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Lỗi: ' + result.message, 'danger');
+            }
+        }
+    } catch (error) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+        console.error('Error saving permissions:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + error.message, 'danger');
+        }
+    }
+}
+
+function closeUserPermissionsModal() {
+    document.getElementById('modal-user-permissions').classList.add('hidden');
+    currentPermissionUser = null;
+    currentPermissions = {};
+}
+
+// Expose to window
+if (typeof window !== 'undefined') {
+    window.openUserPermissionsModal = openUserPermissionsModal;
+    window.closeUserPermissionsModal = closeUserPermissionsModal;
+    window.togglePermission = togglePermission;
+    window.applyDefaultPermissions = applyDefaultPermissions;
+    window.saveUserPermissions = saveUserPermissions;
+}
+</script>
+
