@@ -13,21 +13,41 @@ async function loadComponent(componentName, targetElementId) {
         const html = await response.text();
         const target = document.getElementById(targetElementId);
         if (target) {
-            target.innerHTML = html;
-            
-            // Extract and execute script tags from the inserted HTML
-            // Scripts in inserted HTML are not executed automatically
+            // Extract scripts from HTML before inserting (scripts won't execute in inserted HTML)
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
             const scripts = tempDiv.querySelectorAll('script');
-            scripts.forEach(oldScript => {
-                const newScript = document.createElement('script');
-                Array.from(oldScript.attributes).forEach(attr => {
-                    newScript.setAttribute(attr.name, attr.value);
+            const scriptsToExecute = [];
+            
+            // Remove scripts from HTML and save them
+            scripts.forEach(script => {
+                scriptsToExecute.push({
+                    content: script.innerHTML,
+                    type: script.type || 'text/javascript',
+                    src: script.src || null
                 });
-                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                document.body.appendChild(newScript);
-                document.body.removeChild(newScript);
+                script.remove();
+            });
+            
+            // Insert HTML without scripts
+            target.innerHTML = tempDiv.innerHTML;
+            
+            // Execute scripts after HTML is inserted
+            scriptsToExecute.forEach(scriptData => {
+                if (scriptData.src) {
+                    // External script - create and append
+                    const newScript = document.createElement('script');
+                    newScript.src = scriptData.src;
+                    newScript.type = scriptData.type;
+                    document.body.appendChild(newScript);
+                } else {
+                    // Inline script - execute directly
+                    const newScript = document.createElement('script');
+                    newScript.type = scriptData.type;
+                    newScript.textContent = scriptData.content;
+                    document.body.appendChild(newScript);
+                    document.body.removeChild(newScript);
+                }
             });
         } else {
             console.error(`Target element not found: ${targetElementId}`);
@@ -47,21 +67,41 @@ async function loadComponentAppend(componentName, targetElementId) {
         const html = await response.text();
         const target = document.getElementById(targetElementId);
         if (target) {
-            target.insertAdjacentHTML('beforeend', html);
-            
-            // Extract and execute script tags from the inserted HTML
-            // Scripts in inserted HTML are not executed automatically
+            // Extract scripts from HTML before inserting (scripts won't execute in inserted HTML)
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
             const scripts = tempDiv.querySelectorAll('script');
-            scripts.forEach(oldScript => {
-                const newScript = document.createElement('script');
-                Array.from(oldScript.attributes).forEach(attr => {
-                    newScript.setAttribute(attr.name, attr.value);
+            const scriptsToExecute = [];
+            
+            // Remove scripts from HTML and save them
+            scripts.forEach(script => {
+                scriptsToExecute.push({
+                    content: script.innerHTML,
+                    type: script.type || 'text/javascript',
+                    src: script.src || null
                 });
-                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                document.body.appendChild(newScript);
-                document.body.removeChild(newScript);
+                script.remove();
+            });
+            
+            // Insert HTML without scripts
+            target.insertAdjacentHTML('beforeend', tempDiv.innerHTML);
+            
+            // Execute scripts after HTML is inserted
+            scriptsToExecute.forEach(scriptData => {
+                if (scriptData.src) {
+                    // External script - create and append
+                    const newScript = document.createElement('script');
+                    newScript.src = scriptData.src;
+                    newScript.type = scriptData.type;
+                    document.body.appendChild(newScript);
+                } else {
+                    // Inline script - execute directly
+                    const newScript = document.createElement('script');
+                    newScript.type = scriptData.type;
+                    newScript.textContent = scriptData.content;
+                    document.body.appendChild(newScript);
+                    document.body.removeChild(newScript);
+                }
             });
         } else {
             console.error(`Target element not found: ${targetElementId}`);
