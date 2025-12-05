@@ -71,12 +71,38 @@ if (typeof window !== 'undefined') {
 // Check if user has permission to view all orders
 function hasViewAllOrdersPermission() {
     const session = JSON.parse(localStorage.getItem('user_session') || '{}');
-    if (!session) return false;
+    if (!session || !session.role) {
+        return false;
+    }
     
-    // Check permission
-    if (typeof hasPermission === 'function') {
-        if (hasPermission(session, 'view_all_orders')) {
+    // ADMIN luôn có quyền xem tất cả
+    if (session.role === 'ADMIN') {
+        return true;
+    }
+    
+    // Check permission từ session
+    if (session.permissions && typeof session.permissions === 'object') {
+        // Nếu có custom permissions và view_all_orders = true
+        if (session.permissions.view_all_orders === true) {
             return true;
+        }
+        // Nếu permissions là empty object {}, dùng default theo role
+        if (Object.keys(session.permissions).length === 0) {
+            // Dùng default permissions theo role
+            return ['ADMIN', 'SALEADMIN'].includes(session.role);
+        }
+    }
+    
+    // Check permission function nếu có
+    const hasPermissionFunc = window.hasPermission || (typeof hasPermission !== 'undefined' ? hasPermission : null);
+    if (hasPermissionFunc && typeof hasPermissionFunc === 'function') {
+        try {
+            const hasViewAll = hasPermissionFunc(session, 'view_all_orders');
+            if (hasViewAll) {
+                return true;
+            }
+        } catch (e) {
+            console.error('Error checking permission:', e);
         }
     }
     
@@ -98,8 +124,10 @@ async function loadMyOrders() {
     document.getElementById('orders-list').innerHTML = '';
     document.getElementById('orders-empty').classList.add('hidden');
 
-    const filterStatus = document.getElementById('filter-status').value;
+    const filterStatus = document.getElementById('filter-status')?.value || '';
     const canViewAll = hasViewAllOrdersPermission();
+    
+    console.log('loadMyOrders: canViewAll =', canViewAll, 'session.role =', session.role);
     
     // Update title based on permission
     const titleElement = document.querySelector('#tab-my-orders h2');
@@ -113,6 +141,7 @@ async function loadMyOrders() {
 
     let result;
     if (canViewAll) {
+        console.log('loadMyOrders: Loading ALL orders (admin mode)');
         // Load all orders
         const filters = {};
         if (filterStatus === 'pending') {
@@ -126,6 +155,7 @@ async function loadMyOrders() {
             filters: filters
         });
     } else {
+        console.log('loadMyOrders: Loading MY orders only');
         // Load my orders only
         const filters = {};
         if (filterStatus === 'pending') {
@@ -140,6 +170,8 @@ async function loadMyOrders() {
             filters: filters
         });
     }
+    
+    console.log('loadMyOrders: API result =', result);
 
     document.getElementById('orders-loading').classList.add('hidden');
 
