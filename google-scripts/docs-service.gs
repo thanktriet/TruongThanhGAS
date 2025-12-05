@@ -254,9 +254,24 @@ function createHDMB(formData) {
       '{{tien_dot_3_bangchu}}': numberToWords(parseFloat(formData.tien_dot_3 || 0))
     };
     
-    // Thực hiện replace
+    // Thực hiện replace - escape regex characters trong placeholder
     for (var key in replacements) {
-      body.replaceText(key, replacements[key] || '');
+      try {
+        // Escape regex special characters trong placeholder
+        var escapedKey = key.replace(/[{}]/g, '\\$&');
+        var value = replacements[key] || '';
+        // Log để debug
+        Logger.log('Replacing: ' + key + ' with: ' + value);
+        body.replaceText(escapedKey, value);
+      } catch (replaceError) {
+        Logger.log('Error replacing ' + key + ': ' + replaceError.toString());
+        // Thử lại không escape nếu có lỗi
+        try {
+          body.replaceText(key, replacements[key] || '');
+        } catch (e) {
+          Logger.log('Second attempt also failed for ' + key);
+        }
+      }
     }
     
     doc.saveAndClose();
@@ -336,8 +351,21 @@ function createThoaThuan(formData) {
       '{{THOI_HAN_VAY}}': formData.THOI_HAN_VAY || ''
     };
     
+    // Thực hiện replace - escape regex characters
     for (var key in replacements) {
-      body.replaceText(key, replacements[key] || '');
+      try {
+        var escapedKey = key.replace(/[{}]/g, '\\$&');
+        var value = replacements[key] || '';
+        Logger.log('Replacing: ' + key + ' with: ' + value);
+        body.replaceText(escapedKey, value);
+      } catch (replaceError) {
+        Logger.log('Error replacing ' + key + ': ' + replaceError.toString());
+        try {
+          body.replaceText(key, replacements[key] || '');
+        } catch (e) {
+          Logger.log('Second attempt also failed for ' + key);
+        }
+      }
     }
     
     doc.saveAndClose();
