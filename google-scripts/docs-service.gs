@@ -361,19 +361,43 @@ function createHDMB(formData) {
     // Thực hiện replace - escape regex characters trong placeholder
     for (var key in replacements) {
       try {
-        // Escape regex special characters trong placeholder
-        var escapedKey = key.replace(/[{}]/g, '\\$&');
         var value = replacements[key] || '';
         // Log để debug
-        Logger.log('Replacing: ' + key + ' with: ' + value);
-        body.replaceText(escapedKey, value);
+        Logger.log('Replacing placeholder: ' + key);
+        Logger.log('With value: ' + value);
+        
+        // replaceText sử dụng regex, cần escape tất cả ký tự đặc biệt
+        // Escape regex special characters: { } [ ] ( ) + * ? . ^ $ | \
+        // Nhưng giữ nguyên dấu gạch dưới _ vì không phải ký tự đặc biệt
+        var escapedKey = key.replace(/[{}[\]()+\-*?.^$|\\]/g, '\\$&');
+        
+        Logger.log('Escaped key: ' + escapedKey);
+        
+        // Thử replace với escaped key
+        var found = body.findText(escapedKey);
+        if (found) {
+          Logger.log('Found placeholder in document, replacing...');
+          body.replaceText(escapedKey, value);
+          Logger.log('✅ Successfully replaced: ' + key);
+        } else {
+          // Nếu không tìm thấy với escaped key, thử với key gốc
+          Logger.log('⚠️ Not found with escaped key, trying original key...');
+          var found2 = body.findText(key);
+          if (found2) {
+            body.replaceText(key, value);
+            Logger.log('✅ Successfully replaced with original key: ' + key);
+          } else {
+            Logger.log('❌ Placeholder not found in document: ' + key);
+          }
+        }
       } catch (replaceError) {
         Logger.log('Error replacing ' + key + ': ' + replaceError.toString());
         // Thử lại không escape nếu có lỗi
         try {
           body.replaceText(key, replacements[key] || '');
+          Logger.log('✅ Successfully replaced without escape: ' + key);
         } catch (e) {
-          Logger.log('Second attempt also failed for ' + key);
+          Logger.log('❌ Second attempt also failed for ' + key + ': ' + e.toString());
         }
       }
     }
@@ -458,16 +482,38 @@ function createThoaThuan(formData) {
     // Thực hiện replace - escape regex characters
     for (var key in replacements) {
       try {
-        var escapedKey = key.replace(/[{}]/g, '\\$&');
         var value = replacements[key] || '';
-        Logger.log('Replacing: ' + key + ' with: ' + value);
-        body.replaceText(escapedKey, value);
+        Logger.log('Replacing placeholder: ' + key);
+        Logger.log('With value: ' + value);
+        
+        // Escape regex special characters
+        var escapedKey = key.replace(/[{}[\]()+\-*?.^$|\\]/g, '\\$&');
+        Logger.log('Escaped key: ' + escapedKey);
+        
+        // Thử replace với escaped key
+        var found = body.findText(escapedKey);
+        if (found) {
+          Logger.log('Found placeholder in document, replacing...');
+          body.replaceText(escapedKey, value);
+          Logger.log('✅ Successfully replaced: ' + key);
+        } else {
+          // Thử với key gốc
+          Logger.log('⚠️ Not found with escaped key, trying original key...');
+          var found2 = body.findText(key);
+          if (found2) {
+            body.replaceText(key, value);
+            Logger.log('✅ Successfully replaced with original key: ' + key);
+          } else {
+            Logger.log('❌ Placeholder not found in document: ' + key);
+          }
+        }
       } catch (replaceError) {
         Logger.log('Error replacing ' + key + ': ' + replaceError.toString());
         try {
           body.replaceText(key, replacements[key] || '');
+          Logger.log('✅ Successfully replaced without escape: ' + key);
         } catch (e) {
-          Logger.log('Second attempt also failed for ' + key);
+          Logger.log('❌ Second attempt also failed for ' + key + ': ' + e.toString());
         }
       }
     }
