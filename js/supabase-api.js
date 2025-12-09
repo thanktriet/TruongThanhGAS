@@ -2309,10 +2309,10 @@ async function supabaseGetDashboardData(filterMonth = null) {
         // Note: Column name là 'fullname' (không phải 'full_name')
         const { data: tvbhUsers, error: tvbhError } = await supabase
             .from('users')
-            .select('username, fullname, group')
+            .select('username, fullname, "group"')
             .eq('role', 'TVBH')
             .eq('active', true)
-            .order('group', { ascending: true, nullsFirst: false })
+            .order('"group"', { ascending: true, nullsFirst: false })
             .order('username', { ascending: true });
 
         if (tvbhError) {
