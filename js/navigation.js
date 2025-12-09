@@ -21,6 +21,7 @@ function switchTab(id) {
     if (id === 'daily-report' && typeof loadTodayReport === 'function') loadTodayReport();
     if (id === 'reports-dashboard' && typeof loadReportsDashboard === 'function') loadReportsDashboard();
     if (id === 'reports-mtd-detail' && typeof loadMtdDetailReport === 'function') loadMtdDetailReport();
+    if (id === 'car-models' && typeof loadCarModelsList === 'function') loadCarModelsList();
 }
 
 

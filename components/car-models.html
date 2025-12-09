@@ -77,23 +77,36 @@
 // Load danh sách car models
 async function loadCarModelsList() {
     const container = document.getElementById('car-models-list');
-    if (!container) return;
+    if (!container) {
+        console.error('car-models-list container not found');
+        return;
+    }
 
+    console.log('Loading car models list...');
     container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><p>Đang tải danh sách...</p></div>';
 
     try {
+        if (typeof window.callAPI !== 'function') {
+            throw new Error('callAPI function not found');
+        }
+
+        console.log('Calling API: list_car_models');
         const result = await window.callAPI({
             action: 'list_car_models'
         });
 
-        if (result.success && result.data && Array.isArray(result.data)) {
+        console.log('API result:', result);
+
+        if (result && result.success && result.data && Array.isArray(result.data)) {
+            console.log('Rendering car models:', result.data.length, 'items');
             renderCarModelsList(result.data);
         } else {
-            container.innerHTML = '<div class="text-center py-8 text-red-500"><i class="fa-solid fa-exclamation-circle text-2xl mb-2"></i><p>Lỗi: ' + (result.message || 'Không thể tải danh sách') + '</p></div>';
+            console.error('API returned error or invalid data:', result);
+            container.innerHTML = '<div class="text-center py-8 text-red-500"><i class="fa-solid fa-exclamation-circle text-2xl mb-2"></i><p>Lỗi: ' + (result?.message || 'Không thể tải danh sách') + '</p></div>';
         }
     } catch (error) {
         console.error('Error loading car models:', error);
-        container.innerHTML = '<div class="text-center py-8 text-red-500"><i class="fa-solid fa-exclamation-circle text-2xl mb-2"></i><p>Lỗi: ' + error.message + '</p></div>';
+        container.innerHTML = '<div class="text-center py-8 text-red-500"><i class="fa-solid fa-exclamation-circle text-2xl mb-2"></i><p>Lỗi: ' + (error.message || 'Không thể tải danh sách') + '</p><p class="text-xs mt-2">Vui lòng mở Console (F12) để xem chi tiết</p></div>';
     }
 }
 
@@ -321,24 +334,50 @@ async function handleDeleteCarModel(id, name) {
 
 // Initialize when tab is shown
 if (typeof window !== 'undefined') {
+    // Load immediately if tab is already active
+    const checkAndLoad = () => {
+        const carModelsTab = document.getElementById('tab-car-models');
+        if (carModelsTab && carModelsTab.classList.contains('active')) {
+            console.log('Car models tab is active, loading data...');
+            loadCarModelsList();
+        }
+    };
+
+    // Try to load on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(checkAndLoad, 500); // Wait a bit for components to load
+        });
+    } else {
+        setTimeout(checkAndLoad, 500);
+    }
+
+    // Also listen for tab switches
     window.addEventListener('load', () => {
         // Auto load when tab is shown
         const observer = new MutationObserver((mutations) => {
             const carModelsTab = document.getElementById('tab-car-models');
             if (carModelsTab && carModelsTab.classList.contains('active')) {
+                console.log('Car models tab became active, loading data...');
                 loadCarModelsList();
             }
         });
         
         const container = document.querySelector('.tab-content');
-        if (container) {
+        if (container && container.parentElement) {
             observer.observe(container.parentElement, { 
                 attributes: true, 
                 attributeFilter: ['class'],
                 subtree: true 
             });
         }
+
+        // Also check immediately
+        setTimeout(checkAndLoad, 1000);
     });
+
+    // Expose function globally for manual call
+    window.loadCarModelsList = loadCarModelsList;
 }
 </script>
 
