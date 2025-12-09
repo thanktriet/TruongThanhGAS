@@ -360,65 +360,82 @@ if (typeof window !== 'undefined') {
 // Auto load when tab is shown
 if (typeof window !== 'undefined') {
     let hasLoaded = false;
+    let observer = null;
     
     // Check and load when tab becomes active
     const checkAndLoad = () => {
         const tab = document.getElementById('tab-car-models');
+        if (!tab) {
+            console.log('[Car Models] Tab not found yet');
+            return;
+        }
+        
         console.log('[Car Models] Checking tab...', {
             tabExists: !!tab,
-            isActive: tab?.classList.contains('active'),
+            isActive: tab.classList.contains('active'),
             hasLoaded: hasLoaded
         });
         
-        if (tab && tab.classList.contains('active') && !hasLoaded) {
+        if (tab.classList.contains('active') && !hasLoaded) {
             console.log('[Car Models] Tab is active, loading...');
             hasLoaded = true;
             loadCarModelsList();
-        } else if (tab && !tab.classList.contains('active')) {
+        } else if (!tab.classList.contains('active')) {
             hasLoaded = false; // Reset khi tab không active
         }
     };
 
-    // Try immediately after a delay
-    setTimeout(() => {
-        console.log('[Car Models] Initial check...');
-        checkAndLoad();
-    }, 1000);
-
-    // Also listen for tab switches
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                const target = mutation.target;
-                if (target.id === 'tab-car-models' || target.querySelector('#tab-car-models')) {
-                    console.log('[Car Models] Tab class changed, checking...');
-                    setTimeout(checkAndLoad, 100);
-                }
-            }
-        });
-    });
-
     // Setup observer
     const setupObserver = () => {
-        const container = document.querySelector('.tab-content');
-        if (container && container.parentElement) {
-            console.log('[Car Models] Setting up MutationObserver...');
-            observer.observe(container.parentElement, {
+        // Tìm container chứa tabs
+        const tabsContainer = document.getElementById('tabs-container');
+        if (tabsContainer) {
+            console.log('[Car Models] Setting up MutationObserver on tabs-container...');
+            observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        const target = mutation.target;
+                        if (target.id === 'tab-car-models') {
+                            console.log('[Car Models] Tab class changed, checking...');
+                            setTimeout(checkAndLoad, 100);
+                        }
+                    }
+                });
+            });
+            
+            observer.observe(tabsContainer, {
                 attributes: true,
                 attributeFilter: ['class'],
                 subtree: true
             });
+            console.log('[Car Models] Observer set up successfully');
         } else {
-            console.warn('[Car Models] Container not found, retrying...');
-            setTimeout(setupObserver, 500);
+            console.log('[Car Models] tabs-container not found, will retry...');
+            // Retry sau 1 giây
+            setTimeout(setupObserver, 1000);
         }
     };
 
-    // Setup observer after DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupObserver);
-    } else {
+    // Initialize after components are loaded
+    const initialize = () => {
+        console.log('[Car Models] Initializing...');
+        
+        // Setup observer
         setupObserver();
+        
+        // Try to check and load after delay
+        setTimeout(() => {
+            checkAndLoad();
+        }, 2000);
+    };
+
+    // Wait for components to load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(initialize, 1000);
+        });
+    } else {
+        setTimeout(initialize, 1000);
     }
 
     console.log('[Car Models] Initialization complete');
