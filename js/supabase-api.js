@@ -2268,7 +2268,7 @@ async function supabaseDeleteCarModel(id) {
 
 /**
  * Lấy dữ liệu Dashboard (Báo cáo Ngày + MTD Tổng)
- * Note: Logic này sẽ được cải thiện sau khi có đầy đủ dữ liệu
+ * @param {string} filterMonth - "yyyy-MM" (Nếu null thì lấy tháng hiện tại)
  */
 async function supabaseGetDashboardData(filterMonth = null) {
     try {
@@ -2277,15 +2277,221 @@ async function supabaseGetDashboardData(filterMonth = null) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
-        // TODO: Implement full logic từ app2
-        // Tạm thời trả về structure cơ bản
-        return { 
-            success: true, 
+        // Xác định tháng cần lấy dữ liệu
+        let startDate, endDate, today;
+        if (filterMonth) {
+            const [year, month] = filterMonth.split('-').map(Number);
+            startDate = new Date(year, month - 1, 1);
+            endDate = new Date(year, month, 0, 23, 59, 59);
+            today = new Date();
+            // Nếu tháng được chọn là tháng hiện tại, dùng ngày hôm nay
+            if (today.getFullYear() === year && today.getMonth() === month - 1) {
+                today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            } else {
+                // Nếu tháng cũ, dùng ngày cuối tháng
+                today = new Date(year, month - 1, endDate.getDate());
+            }
+        } else {
+            // Mặc định tháng hiện tại
+            today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1;
+            startDate = new Date(year, month - 1, 1);
+            endDate = new Date(year, month, 0, 23, 59, 59);
+            today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        }
+
+        const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+        const startDateStr = startDate.toISOString().split('T')[0];
+        const endDateStr = endDate.toISOString().split('T')[0];
+
+        // 1. Lấy danh sách TVBH (role = 'TVBH')
+        const { data: tvbhUsers, error: tvbhError } = await supabase
+            .from('users')
+            .select('username, full_name, "group"')
+            .eq('role', 'TVBH')
+            .order('"group"', { ascending: true })
+            .order('username', { ascending: true });
+
+        if (tvbhError) {
+            console.error('Error fetching TVBH users:', tvbhError);
+            return { success: false, message: 'Lỗi lấy danh sách TVBH: ' + tvbhError.message };
+        }
+
+        if (!tvbhUsers || tvbhUsers.length === 0) {
+            return { 
+                success: true, 
+                data: {
+                    daily: [['Nhóm', 'TVBH', 'KHTN (Hôm nay)', 'Số Ký HĐ (Hôm nay)', 'Số XHĐ (Hôm nay)', 'Doanh Thu (Hôm nay)'], ['TỔNG CỘNG', '', 0, 0, 0, '0']],
+                    mtdTotal: [['Hạng', 'Nhóm', 'TVBH', 'KHTN (TĐ)', 'KHTN (CT)', 'KHTN (%)', 'HĐ (TĐ)', 'HĐ (CT)', 'HĐ (%)', 'XHĐ (TĐ)', 'XHĐ (CT)', 'XHĐ (%)', 'Doanh Thu (TĐ)', 'Doanh Thu (CT)', 'Doanh Thu (%)'], ['', 'TỔNG CỘNG', '', 0, 0, '0%', 0, 0, '0%', 0, 0, '0%', '0', '0', '0%']]
+                }
+            };
+        }
+
+        // Tạo map TVBH -> Group
+        const tvbhMap = {};
+        tvbhUsers.forEach(user => {
+            tvbhMap[user.username] = user.group || '';
+        });
+
+        // 2. Lấy dữ liệu báo cáo ngày (hôm nay)
+        const { data: dailyReports, error: dailyError } = await supabase
+            .from('daily_reports')
+            .select('tvbh, khtn, hop_dong, xhd, doanh_thu')
+            .eq('date', todayStr);
+
+        if (dailyError) {
+            console.error('Error fetching daily reports:', dailyError);
+            return { success: false, message: 'Lỗi lấy báo cáo ngày: ' + dailyError.message };
+        }
+
+        // Tính tổng theo TVBH cho báo cáo ngày
+        const dailyStats = {};
+        (dailyReports || []).forEach(report => {
+            if (!dailyStats[report.tvbh]) {
+                dailyStats[report.tvbh] = { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
+            }
+            dailyStats[report.tvbh].khtn += parseFloat(report.khtn) || 0;
+            dailyStats[report.tvbh].hopDong += parseFloat(report.hop_dong) || 0;
+            dailyStats[report.tvbh].xhd += parseFloat(report.xhd) || 0;
+            dailyStats[report.tvbh].doanhThu += parseFloat(report.doanh_thu) || 0;
+        });
+
+        // 3. Lấy dữ liệu MTD (từ đầu tháng đến hôm nay)
+        const { data: mtdReports, error: mtdError } = await supabase
+            .from('daily_reports')
+            .select('tvbh, khtn, hop_dong, xhd, doanh_thu')
+            .gte('date', startDateStr)
+            .lte('date', todayStr);
+
+        if (mtdError) {
+            console.error('Error fetching MTD reports:', mtdError);
+            return { success: false, message: 'Lỗi lấy báo cáo MTD: ' + mtdError.message };
+        }
+
+        // Tính tổng MTD theo TVBH
+        const mtdStats = {};
+        (mtdReports || []).forEach(report => {
+            if (!mtdStats[report.tvbh]) {
+                mtdStats[report.tvbh] = { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
+            }
+            mtdStats[report.tvbh].khtn += parseFloat(report.khtn) || 0;
+            mtdStats[report.tvbh].hopDong += parseFloat(report.hop_dong) || 0;
+            mtdStats[report.tvbh].xhd += parseFloat(report.xhd) || 0;
+            mtdStats[report.tvbh].doanhThu += parseFloat(report.doanh_thu) || 0;
+        });
+
+        // 4. Tạo bảng Báo cáo Ngày
+        const dailyHeaders = ['Nhóm', 'TVBH', 'KHTN (Hôm nay)', 'Số Ký HĐ (Hôm nay)', 'Số XHĐ (Hôm nay)', 'Doanh Thu (Hôm nay)'];
+        const dailyData = [dailyHeaders];
+        let dailyTotalKHTN = 0, dailyTotalHopDong = 0, dailyTotalXHD = 0, dailyTotalDoanhThu = 0;
+
+        tvbhUsers.forEach(user => {
+            const stats = dailyStats[user.username] || { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
+            dailyData.push([
+                user.group || '',
+                user.username,
+                stats.khtn,
+                stats.hopDong,
+                stats.xhd,
+                stats.doanhThu.toLocaleString('vi-VN')
+            ]);
+            dailyTotalKHTN += stats.khtn;
+            dailyTotalHopDong += stats.hopDong;
+            dailyTotalXHD += stats.xhd;
+            dailyTotalDoanhThu += stats.doanhThu;
+        });
+
+        dailyData.push(['TỔNG CỘNG', '', dailyTotalKHTN, dailyTotalHopDong, dailyTotalXHD, dailyTotalDoanhThu.toLocaleString('vi-VN')]);
+
+        // 5. Tạo bảng MTD Tổng (có chỉ tiêu và xếp hạng)
+        const calcPercent = (actual, target) => (!target || target === 0) ? 0 : (actual / target);
+
+        const mtdTotalHeaders = [
+            'Hạng', 'Nhóm', 'TVBH',
+            'KHTN (TĐ)', 'KHTN (CT)', 'KHTN (%)',
+            'HĐ (TĐ)', 'HĐ (CT)', 'HĐ (%)',
+            'XHĐ (TĐ)', 'XHĐ (CT)', 'XHĐ (%)',
+            'Doanh Thu (TĐ)', 'Doanh Thu (CT)', 'Doanh Thu (%)'
+        ];
+        const mtdTotalData = [mtdTotalHeaders];
+
+        const mtdStatsArray = [];
+        let totalTargets = { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
+        let totalActuals = { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
+
+        tvbhUsers.forEach(user => {
+            const stats = mtdStats[user.username] || { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
+            // Tạm thời chỉ tiêu = 0 (sẽ thêm bảng targets sau)
+            const targets = { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
+
+            mtdStatsArray.push({
+                nhom: user.group || '',
+                tvbh: user.username,
+                khtn: { actual: stats.khtn, target: targets.khtn, percent: calcPercent(stats.khtn, targets.khtn) },
+                hopDong: { actual: stats.hopDong, target: targets.hopDong, percent: calcPercent(stats.hopDong, targets.hopDong) },
+                xhd: { actual: stats.xhd, target: targets.xhd, percent: calcPercent(stats.xhd, targets.xhd) },
+                doanhThu: { actual: stats.doanhThu, target: targets.doanhThu, percent: calcPercent(stats.doanhThu, targets.doanhThu) }
+            });
+
+            totalActuals.khtn += stats.khtn;
+            totalActuals.hopDong += stats.hopDong;
+            totalActuals.xhd += stats.xhd;
+            totalActuals.doanhThu += stats.doanhThu;
+            totalTargets.khtn += targets.khtn;
+            totalTargets.hopDong += targets.hopDong;
+            totalTargets.xhd += targets.xhd;
+            totalTargets.doanhThu += targets.doanhThu;
+        });
+
+        // Sắp xếp theo doanh thu giảm dần
+        mtdStatsArray.sort((a, b) => b.doanhThu.actual - a.doanhThu.actual);
+
+        mtdStatsArray.forEach((stats, index) => {
+            const rank = index + 1;
+            mtdTotalData.push([
+                rank,
+                stats.nhom,
+                stats.tvbh,
+                stats.khtn.actual,
+                stats.khtn.target,
+                (stats.khtn.percent * 100).toFixed(1) + '%',
+                stats.hopDong.actual,
+                stats.hopDong.target,
+                (stats.hopDong.percent * 100).toFixed(1) + '%',
+                stats.xhd.actual,
+                stats.xhd.target,
+                (stats.xhd.percent * 100).toFixed(1) + '%',
+                stats.doanhThu.actual.toLocaleString('vi-VN'),
+                stats.doanhThu.target.toLocaleString('vi-VN'),
+                (stats.doanhThu.percent * 100).toFixed(1) + '%'
+            ]);
+        });
+
+        mtdTotalData.push([
+            '',
+            'TỔNG CỘNG',
+            '',
+            totalActuals.khtn,
+            totalTargets.khtn,
+            (calcPercent(totalActuals.khtn, totalTargets.khtn) * 100).toFixed(1) + '%',
+            totalActuals.hopDong,
+            totalTargets.hopDong,
+            (calcPercent(totalActuals.hopDong, totalTargets.hopDong) * 100).toFixed(1) + '%',
+            totalActuals.xhd,
+            totalTargets.xhd,
+            (calcPercent(totalActuals.xhd, totalTargets.xhd) * 100).toFixed(1) + '%',
+            totalActuals.doanhThu.toLocaleString('vi-VN'),
+            totalTargets.doanhThu.toLocaleString('vi-VN'),
+            (calcPercent(totalActuals.doanhThu, totalTargets.doanhThu) * 100).toFixed(1) + '%'
+        ]);
+
+        return {
+            success: true,
             data: {
-                daily: [],
-                mtdTotal: []
-            },
-            message: 'Tính năng Dashboard đang được phát triển'
+                daily: dailyData,
+                mtdTotal: mtdTotalData
+            }
         };
     } catch (e) {
         console.error('Get dashboard data error:', e);

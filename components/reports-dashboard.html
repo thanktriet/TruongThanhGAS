@@ -44,38 +44,204 @@
 </div>
 
 <script>
+/**
+ * Render bảng Báo cáo Ngày
+ */
+function createDailyTable(dataArray) {
+    if (!dataArray || dataArray.length === 0) {
+        return '<p class="text-center text-gray-500 py-8">Không có dữ liệu</p>';
+    }
+
+    let html = '<div class="overflow-x-auto border border-gray-200 rounded-lg">';
+    html += '<table class="min-w-full divide-y divide-gray-200">';
+    
+    // Header
+    html += '<thead class="bg-indigo-50">';
+    html += '<tr>';
+    dataArray[0].forEach((header, idx) => {
+        const isNumeric = idx >= 2; // Các cột từ cột 3 trở đi là số
+        html += `<th class="px-4 py-3 text-left text-xs font-bold text-indigo-800 uppercase ${isNumeric ? 'text-right' : ''}">${header}</th>`;
+    });
+    html += '</tr>';
+    html += '</thead>';
+    
+    // Body
+    html += '<tbody class="bg-white divide-y divide-gray-200">';
+    for (let i = 1; i < dataArray.length; i++) {
+        const row = dataArray[i];
+        const isTotal = row[0] === 'TỔNG CỘNG';
+        html += `<tr class="${isTotal ? 'bg-indigo-100 font-bold' : 'hover:bg-gray-50'}">`;
+        row.forEach((cell, idx) => {
+            const isNumeric = idx >= 2;
+            const cellValue = typeof cell === 'number' ? cell.toLocaleString('vi-VN') : cell;
+            html += `<td class="px-4 py-3 text-sm ${isNumeric ? 'text-right' : ''} ${isTotal ? 'font-bold text-indigo-900' : 'text-gray-700'}">${cellValue}</td>`;
+        });
+        html += '</tr>';
+    }
+    html += '</tbody>';
+    html += '</table>';
+    html += '</div>';
+    
+    return html;
+}
+
+/**
+ * Render bảng MTD Tổng
+ */
+function createMtdTotalTable(dataArray) {
+    if (!dataArray || dataArray.length === 0) {
+        return '<p class="text-center text-gray-500 py-8">Không có dữ liệu</p>';
+    }
+
+    let html = '<div class="overflow-x-auto border border-gray-200 rounded-lg">';
+    html += '<table class="min-w-full divide-y divide-gray-200">';
+    
+    // Header
+    html += '<thead class="bg-indigo-50">';
+    html += '<tr>';
+    dataArray[0].forEach((header, idx) => {
+        const isNumeric = idx >= 3; // Các cột từ cột 4 trở đi là số
+        html += `<th class="px-3 py-3 text-left text-xs font-bold text-indigo-800 uppercase ${isNumeric ? 'text-right' : ''}">${header}</th>`;
+    });
+    html += '</tr>';
+    html += '</thead>';
+    
+    // Body
+    html += '<tbody class="bg-white divide-y divide-gray-200">';
+    for (let i = 1; i < dataArray.length; i++) {
+        const row = dataArray[i];
+        const isTotal = row[1] === 'TỔNG CỘNG';
+        html += `<tr class="${isTotal ? 'bg-indigo-100 font-bold' : 'hover:bg-gray-50'}">`;
+        row.forEach((cell, idx) => {
+            const isNumeric = idx >= 3;
+            let cellValue = cell;
+            if (typeof cell === 'number') {
+                cellValue = cell.toLocaleString('vi-VN');
+            }
+            // Highlight phần trăm >= 100%
+            if (typeof cell === 'string' && cell.includes('%')) {
+                const percent = parseFloat(cell);
+                const highlightClass = percent >= 100 ? 'text-green-600 font-bold' : percent >= 80 ? 'text-yellow-600' : 'text-gray-700';
+                html += `<td class="px-3 py-3 text-sm text-right ${highlightClass} ${isTotal ? 'font-bold' : ''}">${cellValue}</td>`;
+            } else {
+                html += `<td class="px-3 py-3 text-sm ${isNumeric ? 'text-right' : ''} ${isTotal ? 'font-bold text-indigo-900' : 'text-gray-700'}">${cellValue}</td>`;
+            }
+        });
+        html += '</tr>';
+    }
+    html += '</tbody>';
+    html += '</table>';
+    html += '</div>';
+    
+    return html;
+}
+
 async function loadReportsDashboard() {
     const filterMonth = document.getElementById('dashboard-month-filter').value || null;
     
-    document.getElementById('dashboard-loading').classList.remove('hidden');
-    document.getElementById('dashboard-content').innerHTML = '';
+    const loadingEl = document.getElementById('dashboard-loading');
+    const contentEl = document.getElementById('dashboard-content');
+    
+    if (!loadingEl || !contentEl) {
+        console.error('[Dashboard] Elements not found');
+        return;
+    }
+    
+    loadingEl.classList.remove('hidden');
+    contentEl.innerHTML = '';
 
-    const result = await window.callAPI({
-        action: 'get_dashboard_data',
-        filterMonth: filterMonth
-    });
+    try {
+        const result = await window.callAPI({
+            action: 'get_dashboard_data',
+            filterMonth: filterMonth
+        });
 
-    document.getElementById('dashboard-loading').classList.add('hidden');
+        loadingEl.classList.add('hidden');
 
-    if (result.success) {
-        // TODO: Render dashboard data
-        document.getElementById('dashboard-content').innerHTML = `
-            <p class="text-center text-gray-500 py-12">
-                Tính năng Dashboard đang được phát triển. Dữ liệu sẽ được hiển thị tại đây.
-            </p>
+        if (result.success && result.data) {
+            const { daily, mtdTotal } = result.data;
+            
+            let html = '';
+            
+            // Bảng 1: Báo cáo Ngày
+            html += '<div class="mb-8">';
+            html += '<h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">';
+            html += '<i class="fa-solid fa-calendar-day text-indigo-600"></i>';
+            html += 'Báo Cáo Ngày (Hôm Nay)';
+            html += '</h3>';
+            html += createDailyTable(daily);
+            html += '</div>';
+            
+            // Bảng 2: MTD Tổng
+            html += '<div>';
+            html += '<h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">';
+            html += '<i class="fa-solid fa-chart-line text-indigo-600"></i>';
+            html += 'Báo Cáo MTD Tổng Hợp (Từ Đầu Tháng)';
+            html += '</h3>';
+            html += createMtdTotalTable(mtdTotal);
+            html += '</div>';
+            
+            contentEl.innerHTML = html;
+        } else {
+            contentEl.innerHTML = `
+                <div class="text-center py-12 text-red-500">
+                    <i class="fa-solid fa-exclamation-circle text-2xl mb-2"></i>
+                    <p class="font-bold">Lỗi: ${result.message || 'Không thể tải dữ liệu'}</p>
+                </div>
+            `;
+            if (typeof window.showToast === 'function') {
+                window.showToast('Lỗi: ' + (result.message || 'Không thể tải dữ liệu'), 'danger');
+            }
+        }
+    } catch (error) {
+        console.error('[Dashboard] Error loading dashboard:', error);
+        loadingEl.classList.add('hidden');
+        contentEl.innerHTML = `
+            <div class="text-center py-12 text-red-500">
+                <i class="fa-solid fa-exclamation-circle text-2xl mb-2"></i>
+                <p class="font-bold">Lỗi: ${error.message || 'Không thể tải dữ liệu'}</p>
+            </div>
         `;
-    } else {
-        showToast('Lỗi: ' + result.message, 'danger');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + error.message, 'danger');
+        }
     }
 }
 
-// Set default month to current month
+// Expose functions globally
+if (typeof window !== 'undefined') {
+    window.loadReportsDashboard = loadReportsDashboard;
+    window.createDailyTable = createDailyTable;
+    window.createMtdTotalTable = createMtdTotalTable;
+}
+
+// Set default month to current month and load on tab active
 if (typeof window !== 'undefined') {
     window.addEventListener('load', () => {
         const monthInput = document.getElementById('dashboard-month-filter');
         if (monthInput && !monthInput.value) {
             const now = new Date();
             monthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        }
+        
+        // Load dashboard when tab becomes active
+        const observer = new MutationObserver((mutations) => {
+            const tab = document.getElementById('tab-reports-dashboard');
+            if (tab && tab.classList.contains('active')) {
+                const contentEl = document.getElementById('dashboard-content');
+                if (contentEl && contentEl.innerHTML.includes('đang được phát triển')) {
+                    loadReportsDashboard();
+                }
+            }
+        });
+        
+        const container = document.querySelector('.tab-content');
+        if (container && container.parentElement) {
+            observer.observe(container.parentElement, {
+                attributes: true,
+                attributeFilter: ['class'],
+                subtree: true
+            });
         }
     });
 }
