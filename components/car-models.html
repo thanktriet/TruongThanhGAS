@@ -455,52 +455,88 @@ async function handleDeleteCarModel(id, name) {
     }
 }
 
+// Expose function globally for manual call
+if (typeof window !== 'undefined') {
+    window.loadCarModelsList = loadCarModelsList;
+    window.renderCarModelsList = renderCarModelsList;
+    window.handleCreateCarModel = handleCreateCarModel;
+    window.handleUpdateCarModel = handleUpdateCarModel;
+    window.handleDeleteCarModel = handleDeleteCarModel;
+    
+    console.log('✅ Car models functions exposed to window');
+}
+
 // Initialize when tab is shown
 if (typeof window !== 'undefined') {
+    console.log('🚀 Initializing car models component...');
+    
     // Load immediately if tab is already active
     const checkAndLoad = () => {
+        console.log('🔍 Checking if car models tab is active...');
         const carModelsTab = document.getElementById('tab-car-models');
-        if (carModelsTab && carModelsTab.classList.contains('active')) {
-            console.log('Car models tab is active, loading data...');
-            loadCarModelsList();
+        console.log('Tab element:', carModelsTab);
+        if (carModelsTab) {
+            console.log('Tab classes:', carModelsTab.classList.toString());
+            if (carModelsTab.classList.contains('active')) {
+                console.log('✅ Car models tab is active, loading data...');
+                loadCarModelsList();
+            } else {
+                console.log('⏳ Car models tab is not active yet');
+            }
+        } else {
+            console.warn('⚠️ tab-car-models element not found');
         }
     };
 
     // Try to load on page load
     if (document.readyState === 'loading') {
+        console.log('📄 Document is loading, waiting for DOMContentLoaded...');
         document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(checkAndLoad, 500); // Wait a bit for components to load
+            console.log('✅ DOMContentLoaded fired');
+            setTimeout(() => {
+                checkAndLoad();
+            }, 1000); // Wait a bit for components to load
         });
     } else {
-        setTimeout(checkAndLoad, 500);
+        console.log('📄 Document already loaded');
+        setTimeout(() => {
+            checkAndLoad();
+        }, 1000);
     }
 
     // Also listen for tab switches
     window.addEventListener('load', () => {
+        console.log('🌐 Window load event fired');
+        
         // Auto load when tab is shown
         const observer = new MutationObserver((mutations) => {
             const carModelsTab = document.getElementById('tab-car-models');
             if (carModelsTab && carModelsTab.classList.contains('active')) {
-                console.log('Car models tab became active, loading data...');
+                console.log('🔄 Car models tab became active (via observer), loading data...');
                 loadCarModelsList();
             }
         });
         
         const container = document.querySelector('.tab-content');
         if (container && container.parentElement) {
+            console.log('👀 Setting up MutationObserver...');
             observer.observe(container.parentElement, { 
                 attributes: true, 
                 attributeFilter: ['class'],
                 subtree: true 
             });
+        } else {
+            console.warn('⚠️ Container not found for observer');
         }
 
         // Also check immediately
-        setTimeout(checkAndLoad, 1000);
+        setTimeout(() => {
+            console.log('⏰ Delayed check after window load...');
+            checkAndLoad();
+        }, 2000);
     });
 
-    // Expose function globally for manual call
-    window.loadCarModelsList = loadCarModelsList;
+    console.log('✅ Car models initialization complete');
 }
 </script>
 
