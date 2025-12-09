@@ -264,7 +264,30 @@ function renderCarModelsList(carModels) {
                 ${model.created_at ? ` • ${formatDate(model.created_at)}` : ''}
             </div>
         </div>
-    `).join('');
+    `;
+            } catch (modelError) {
+                console.error('Error rendering model:', model, modelError);
+                return `<div class="border border-red-200 rounded-lg p-4 bg-red-50 text-red-600">Lỗi render model: ${model?.name || 'Unknown'}</div>`;
+            }
+        }).filter(html => html).join('');
+
+        console.log('HTML generated, length:', html.length);
+        if (html.length === 0) {
+            container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fa-solid fa-inbox text-2xl mb-2"></i><p>Không có dữ liệu để hiển thị</p></div>';
+            return;
+        }
+        container.innerHTML = html;
+        console.log('Container innerHTML updated successfully');
+    } catch (renderError) {
+        console.error('Error rendering car models list:', renderError);
+        container.innerHTML = `
+            <div class="text-center py-8 text-red-500">
+                <i class="fa-solid fa-exclamation-circle text-2xl mb-2"></i>
+                <p class="font-bold">Lỗi render: ${escapeHtml(renderError.message)}</p>
+                <p class="text-sm mt-2">Vui lòng mở Console (F12) để xem chi tiết</p>
+            </div>
+        `;
+    }
 }
 
 // Escape HTML để tránh XSS
