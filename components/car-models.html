@@ -125,16 +125,31 @@ async function loadCarModelsList() {
             throw new Error('API không trả về kết quả');
         }
 
+        console.log('Checking result:', {
+            success: result.success,
+            hasData: !!result.data,
+            isArray: Array.isArray(result.data),
+            dataLength: result.data?.length,
+            fullResult: result
+        });
+
         if (result.success && result.data && Array.isArray(result.data)) {
             console.log('Rendering car models:', result.data.length, 'items');
+            console.log('Data:', result.data);
             renderCarModelsList(result.data);
         } else {
             const errorMsg = result?.message || 'Không thể tải danh sách';
             console.error('API returned error or invalid data:', result);
+            console.error('Result details:', {
+                success: result?.success,
+                data: result?.data,
+                message: result?.message
+            });
             container.innerHTML = `
                 <div class="text-center py-8 text-red-500">
                     <i class="fa-solid fa-exclamation-circle text-2xl mb-2"></i>
                     <p class="font-bold">Lỗi: ${escapeHtml(errorMsg)}</p>
+                    <p class="text-sm mt-2 text-gray-600">Result: ${JSON.stringify(result)}</p>
                     <p class="text-sm mt-2">Vui lòng mở Console (F12) để xem chi tiết</p>
                     <button 
                         onclick="loadCarModelsList()" 
@@ -166,16 +181,39 @@ async function loadCarModelsList() {
 
 // Render danh sách car models
 function renderCarModelsList(carModels) {
+    console.log('renderCarModelsList called with:', carModels);
     const container = document.getElementById('car-models-list');
-    if (!container) return;
-
-    if (carModels.length === 0) {
-        container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fa-solid fa-inbox text-2xl mb-2"></i><p>Chưa có dòng xe nào</p></div>';
+    if (!container) {
+        console.error('car-models-list container not found in renderCarModelsList');
         return;
     }
 
-    container.innerHTML = carModels.map(model => `
-        <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition" data-id="${model.id}">
+    console.log('Container found, carModels length:', carModels?.length);
+
+    if (!carModels || !Array.isArray(carModels)) {
+        console.error('carModels is not an array:', carModels);
+        container.innerHTML = '<div class="text-center py-8 text-red-500"><i class="fa-solid fa-exclamation-circle text-2xl mb-2"></i><p>Dữ liệu không hợp lệ</p></div>';
+        return;
+    }
+
+    if (carModels.length === 0) {
+        console.log('No car models to display');
+        container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fa-solid fa-inbox text-2xl mb-2"></i><p>Chưa có dòng xe nào</p><p class="text-xs mt-2">Vui lòng thêm dòng xe mới</p></div>';
+        return;
+    }
+
+    console.log('Rendering', carModels.length, 'car models');
+
+    try {
+        const html = carModels.map(model => {
+            try {
+                console.log('Rendering model:', model);
+                if (!model.id) {
+                    console.error('Model missing id:', model);
+                    return '';
+                }
+                return `
+        <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition" data-id="${model.id || ''}">
             <div class="flex items-center justify-between">
                 <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
