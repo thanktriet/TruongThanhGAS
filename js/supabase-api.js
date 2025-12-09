@@ -2006,6 +2006,70 @@ async function supabaseGetTodayReport(tvbhName) {
     }
 }
 
+/**
+ * Lấy danh sách dòng xe từ database
+ * Lấy từ orders và approvals để có danh sách đầy đủ
+ */
+async function supabaseGetCarModels() {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // Lấy từ orders
+        const { data: ordersData, error: ordersError } = await supabase
+            .from('orders')
+            .select('car_model')
+            .not('car_model', 'is', null);
+
+        // Lấy từ approvals
+        const { data: approvalsData, error: approvalsError } = await supabase
+            .from('approvals')
+            .select('car_model')
+            .not('car_model', 'is', null);
+
+        if (ordersError && approvalsError) {
+            console.warn('Không thể lấy danh sách xe từ database, dùng danh sách mặc định');
+        }
+
+        // Gom tất cả car_model vào Set để loại bỏ trùng
+        const carModelsSet = new Set();
+        
+        if (ordersData && Array.isArray(ordersData)) {
+            ordersData.forEach(row => {
+                if (row.car_model && row.car_model.trim()) {
+                    carModelsSet.add(row.car_model.trim());
+                }
+            });
+        }
+        
+        if (approvalsData && Array.isArray(approvalsData)) {
+            approvalsData.forEach(row => {
+                if (row.car_model && row.car_model.trim()) {
+                    carModelsSet.add(row.car_model.trim());
+                }
+            });
+        }
+
+        // Nếu không có dữ liệu, trả về danh sách mặc định
+        if (carModelsSet.size === 0) {
+            const defaultModels = ['VF 5 Plus', 'VF 6', 'VF 7', 'VF 8', 'VF 9', 'VF e34'];
+            return { success: true, data: defaultModels };
+        }
+
+        // Sắp xếp và trả về
+        const carModels = Array.from(carModelsSet).sort();
+        
+        return { success: true, data: carModels };
+    } catch (e) {
+        console.error('Get car models error:', e);
+        // Fallback về danh sách mặc định nếu có lỗi
+        const defaultModels = ['VF 5 Plus', 'VF 6', 'VF 7', 'VF 8', 'VF 9', 'VF e34'];
+        return { success: true, data: defaultModels };
+    }
+}
+
 // ======================================================
 // DASHBOARD & MTD REPORTS API - Báo cáo tổng hợp
 // ======================================================
@@ -2184,6 +2248,9 @@ async function callSupabaseAPI(data) {
             
             case 'get_today_report':
                 return await supabaseGetTodayReport(data.tvbhName);
+            
+            case 'get_car_models':
+                return await supabaseGetCarModels();
             
             // Dashboard & Reports API
             case 'get_dashboard_data':

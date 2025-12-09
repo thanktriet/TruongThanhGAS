@@ -66,14 +66,45 @@
 </div>
 
 <script>
-// Car models list (sẽ được load từ database hoặc config)
-let carModelsList = ['VF 5 Plus', 'VF 6', 'VF 7', 'VF 8', 'VF 9', 'VF e34']; // Tạm thời hardcode
+// Car models list (sẽ được load từ database)
+let carModelsList = [];
+
+// Load car models from database
+async function loadCarModels() {
+    try {
+        const container = document.getElementById('car-models-container');
+        if (!container) return;
+        
+        container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải danh sách dòng xe...</p>';
+
+        const result = await window.callAPI({
+            action: 'get_car_models'
+        });
+
+        if (result.success && result.data && Array.isArray(result.data)) {
+            carModelsList = result.data;
+            renderCarModels();
+        } else {
+            // Fallback về danh sách mặc định
+            carModelsList = ['VF 5 Plus', 'VF 6', 'VF 7', 'VF 8', 'VF 9', 'VF e34'];
+            renderCarModels();
+            console.warn('Không thể load danh sách xe từ database, dùng danh sách mặc định');
+        }
+    } catch (error) {
+        console.error('Error loading car models:', error);
+        // Fallback về danh sách mặc định
+        carModelsList = ['VF 5 Plus', 'VF 6', 'VF 7', 'VF 8', 'VF 9', 'VF e34'];
+        renderCarModels();
+    }
+}
 
 // Load today's report
 async function loadTodayReport() {
     const session = JSON.parse(localStorage.getItem('user_session') || '{}');
     if (!session || !session.username) {
-        showToast('Vui lòng đăng nhập lại', 'danger');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng đăng nhập lại', 'danger');
+        }
         return;
     }
 
@@ -129,7 +160,14 @@ async function loadTodayReport() {
 // Render car models inputs
 function renderCarModels() {
     const container = document.getElementById('car-models-container');
+    if (!container) return;
+    
     container.innerHTML = '';
+
+    if (carModelsList.length === 0) {
+        container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Không có dòng xe nào</p>';
+        return;
+    }
 
     carModelsList.forEach(modelName => {
         const modelId = modelName.replace(/\s+/g, '-').toLowerCase();
@@ -183,7 +221,8 @@ function renderCarModels() {
 
 // Clear form
 function clearReportForm() {
-    document.getElementById('khtn').value = 0;
+    const khtnInput = document.getElementById('khtn');
+    if (khtnInput) khtnInput.value = 0;
     document.querySelectorAll('[data-field]').forEach(input => {
         input.value = 0;
     });
@@ -195,11 +234,15 @@ async function handleSubmitDailyReport(event) {
     
     const session = JSON.parse(localStorage.getItem('user_session') || '{}');
     if (!session || !session.username) {
-        showToast('Vui lòng đăng nhập lại', 'danger');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng đăng nhập lại', 'danger');
+        }
         return;
     }
 
     const submitBtn = document.getElementById('submit-report-btn');
+    if (!submitBtn) return;
+    
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang lưu...';
 
@@ -207,9 +250,15 @@ async function handleSubmitDailyReport(event) {
     const carModels = [];
     carModelsList.forEach(modelName => {
         const modelId = modelName.replace(/\s+/g, '-').toLowerCase();
-        const hopDong = parseFloat(document.getElementById(`hopDong-${modelId}`).value) || 0;
-        const xhd = parseFloat(document.getElementById(`xhd-${modelId}`).value) || 0;
-        const doanhThu = parseFloat(document.getElementById(`doanhThu-${modelId}`).value) || 0;
+        const hopDongInput = document.getElementById(`hopDong-${modelId}`);
+        const xhdInput = document.getElementById(`xhd-${modelId}`);
+        const doanhThuInput = document.getElementById(`doanhThu-${modelId}`);
+        
+        if (!hopDongInput || !xhdInput || !doanhThuInput) return;
+        
+        const hopDong = parseFloat(hopDongInput.value) || 0;
+        const xhd = parseFloat(xhdInput.value) || 0;
+        const doanhThu = parseFloat(doanhThuInput.value) || 0;
 
         if (hopDong > 0 || xhd > 0 || doanhThu > 0) {
             carModels.push({
@@ -267,13 +316,17 @@ function formatMoneyInput(input) {
 // Initialize when tab is shown
 if (typeof window !== 'undefined') {
     window.addEventListener('load', () => {
-        // Render car models first
-        renderCarModels();
+        // Load car models first
+        loadCarModels();
         
         // Auto load when tab is shown
         const observer = new MutationObserver((mutations) => {
             const dailyReportTab = document.getElementById('tab-daily-report');
             if (dailyReportTab && dailyReportTab.classList.contains('active')) {
+                // Load car models if not loaded yet
+                if (carModelsList.length === 0) {
+                    loadCarModels();
+                }
                 loadTodayReport();
             }
         });
