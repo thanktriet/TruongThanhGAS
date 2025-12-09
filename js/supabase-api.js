@@ -2306,6 +2306,7 @@ async function supabaseGetDashboardData(filterMonth = null) {
         const endDateStr = endDate.toISOString().split('T')[0];
 
         // 1. Lấy danh sách TVBH (role = 'TVBH')
+        // Note: Column name là 'fullname' (không phải 'full_name')
         const { data: tvbhUsers, error: tvbhError } = await supabase
             .from('users')
             .select('username, fullname, group')
