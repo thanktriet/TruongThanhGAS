@@ -359,30 +359,66 @@ if (typeof window !== 'undefined') {
 
 // Auto load when tab is shown
 if (typeof window !== 'undefined') {
+    let hasLoaded = false;
+    
     // Check and load when tab becomes active
     const checkAndLoad = () => {
         const tab = document.getElementById('tab-car-models');
-        if (tab && tab.classList.contains('active')) {
+        console.log('[Car Models] Checking tab...', {
+            tabExists: !!tab,
+            isActive: tab?.classList.contains('active'),
+            hasLoaded: hasLoaded
+        });
+        
+        if (tab && tab.classList.contains('active') && !hasLoaded) {
             console.log('[Car Models] Tab is active, loading...');
+            hasLoaded = true;
             loadCarModelsList();
+        } else if (tab && !tab.classList.contains('active')) {
+            hasLoaded = false; // Reset khi tab không active
         }
     };
 
-    // Try immediately
-    setTimeout(checkAndLoad, 500);
+    // Try immediately after a delay
+    setTimeout(() => {
+        console.log('[Car Models] Initial check...');
+        checkAndLoad();
+    }, 1000);
 
     // Also listen for tab switches
-    const observer = new MutationObserver(() => {
-        checkAndLoad();
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const target = mutation.target;
+                if (target.id === 'tab-car-models' || target.querySelector('#tab-car-models')) {
+                    console.log('[Car Models] Tab class changed, checking...');
+                    setTimeout(checkAndLoad, 100);
+                }
+            }
+        });
     });
 
-    const container = document.querySelector('.tab-content');
-    if (container && container.parentElement) {
-        observer.observe(container.parentElement, {
-            attributes: true,
-            attributeFilter: ['class'],
-            subtree: true
-        });
+    // Setup observer
+    const setupObserver = () => {
+        const container = document.querySelector('.tab-content');
+        if (container && container.parentElement) {
+            console.log('[Car Models] Setting up MutationObserver...');
+            observer.observe(container.parentElement, {
+                attributes: true,
+                attributeFilter: ['class'],
+                subtree: true
+            });
+        } else {
+            console.warn('[Car Models] Container not found, retrying...');
+            setTimeout(setupObserver, 500);
+        }
+    };
+
+    // Setup observer after DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupObserver);
+    } else {
+        setupObserver();
     }
 
     console.log('[Car Models] Initialization complete');

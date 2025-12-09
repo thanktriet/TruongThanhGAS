@@ -22,22 +22,16 @@ function switchTab(id) {
     if (id === 'reports-dashboard' && typeof loadReportsDashboard === 'function') loadReportsDashboard();
     if (id === 'reports-mtd-detail' && typeof loadMtdDetailReport === 'function') loadMtdDetailReport();
     if (id === 'car-models') {
-        console.log('🔄 Switching to car-models tab');
-        if (typeof window.loadCarModelsList === 'function') {
-            console.log('✅ loadCarModelsList function found, calling...');
-            window.loadCarModelsList();
-        } else {
-            console.error('❌ loadCarModelsList function not found');
-            // Try to find and call it
-            setTimeout(() => {
-                if (typeof window.loadCarModelsList === 'function') {
-                    console.log('✅ loadCarModelsList found after delay, calling...');
-                    window.loadCarModelsList();
-                } else {
-                    console.error('❌ loadCarModelsList still not found after delay');
-                }
-            }, 500);
-        }
+        console.log('[Navigation] Switching to car-models tab');
+        // Force load after a short delay to ensure tab is active
+        setTimeout(() => {
+            if (typeof window.loadCarModelsList === 'function') {
+                console.log('[Navigation] Calling loadCarModelsList...');
+                window.loadCarModelsList();
+            } else {
+                console.error('[Navigation] loadCarModelsList function not found');
+            }
+        }, 300);
     }
 }
 
