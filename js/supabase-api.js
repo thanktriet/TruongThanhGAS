@@ -2308,9 +2308,10 @@ async function supabaseGetDashboardData(filterMonth = null) {
         // 1. Lấy danh sách TVBH (role = 'TVBH')
         const { data: tvbhUsers, error: tvbhError } = await supabase
             .from('users')
-            .select('username, full_name, "group"')
+            .select('username, fullname, group')
             .eq('role', 'TVBH')
-            .order('"group"', { ascending: true })
+            .eq('active', true)
+            .order('group', { ascending: true, nullsFirst: false })
             .order('username', { ascending: true });
 
         if (tvbhError) {
