@@ -37,7 +37,8 @@ const ALL_PERMISSIONS = {
     
     // Quản lý hệ thống
     'manage_users': { label: 'Quản lý users', group: 'system' },
-    'manage_permissions': { label: 'Quản lý permissions', group: 'system' }
+    'manage_permissions': { label: 'Quản lý permissions', group: 'system' },
+    'manage_car_models': { label: 'Quản lý dòng xe', group: 'system' }
 };
 
 // Permission groups
@@ -76,6 +77,8 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
         view_reports: true,
         view_dashboard: true,
         manage_users: true,
+        manage_permissions: true,
+        manage_car_models: true,
         manage_permissions: true
     },
     'TVBH': {

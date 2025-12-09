@@ -2008,7 +2008,7 @@ async function supabaseGetTodayReport(tvbhName) {
 
 /**
  * Lấy danh sách dòng xe từ database
- * Lấy từ orders và approvals để có danh sách đầy đủ
+ * Lấy từ bảng car_models (chỉ lấy các dòng xe đang active)
  */
 async function supabaseGetCarModels() {
     try {
@@ -2017,21 +2017,58 @@ async function supabaseGetCarModels() {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
+        // Lấy từ bảng car_models (chỉ lấy is_active = true)
+        const { data, error } = await supabase
+            .from('car_models')
+            .select('name')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true })
+            .order('name', { ascending: true });
+
+        if (error) {
+            console.warn('Không thể lấy danh sách xe từ car_models, thử fallback:', error);
+            // Fallback: Lấy từ orders và approvals
+            return await supabaseGetCarModelsFallback();
+        }
+
+        if (!data || data.length === 0) {
+            // Nếu không có dữ liệu, thử fallback
+            return await supabaseGetCarModelsFallback();
+        }
+
+        // Trả về danh sách tên xe
+        const carModels = data.map(row => row.name).filter(name => name && name.trim());
+        
+        return { success: true, data: carModels };
+    } catch (e) {
+        console.error('Get car models error:', e);
+        // Fallback về danh sách mặc định nếu có lỗi
+        return await supabaseGetCarModelsFallback();
+    }
+}
+
+/**
+ * Fallback: Lấy danh sách xe từ orders và approvals (nếu bảng car_models chưa có dữ liệu)
+ */
+async function supabaseGetCarModelsFallback() {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            const defaultModels = ['VF 5 Plus', 'VF 6', 'VF 7', 'VF 8', 'VF 9', 'VF e34'];
+            return { success: true, data: defaultModels };
+        }
+
         // Lấy từ orders
-        const { data: ordersData, error: ordersError } = await supabase
+        const { data: ordersData } = await supabase
             .from('orders')
             .select('car_model')
             .not('car_model', 'is', null);
 
         // Lấy từ approvals
-        const { data: approvalsData, error: approvalsError } = await supabase
+        const { data: approvalsData } = await supabase
             .from('approvals')
             .select('car_model')
             .not('car_model', 'is', null);
-
-        if (ordersError && approvalsError) {
-            console.warn('Không thể lấy danh sách xe từ database, dùng danh sách mặc định');
-        }
 
         // Gom tất cả car_model vào Set để loại bỏ trùng
         const carModelsSet = new Set();
@@ -2063,10 +2100,165 @@ async function supabaseGetCarModels() {
         
         return { success: true, data: carModels };
     } catch (e) {
-        console.error('Get car models error:', e);
-        // Fallback về danh sách mặc định nếu có lỗi
+        console.error('Get car models fallback error:', e);
         const defaultModels = ['VF 5 Plus', 'VF 6', 'VF 7', 'VF 8', 'VF 9', 'VF e34'];
         return { success: true, data: defaultModels };
+    }
+}
+
+// ======================================================
+// CAR MODELS MANAGEMENT API - Quản lý dòng xe (ADMIN only)
+// ======================================================
+
+/**
+ * Lấy danh sách tất cả dòng xe (cho admin quản lý)
+ */
+async function supabaseListCarModels() {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        const { data, error } = await supabase
+            .from('car_models')
+            .select('*')
+            .order('display_order', { ascending: true })
+            .order('name', { ascending: true });
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data || [] };
+    } catch (e) {
+        console.error('List car models error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Tạo dòng xe mới
+ */
+async function supabaseCreateCarModel(carModelData) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        if (!carModelData.name || !carModelData.name.trim()) {
+            return { success: false, message: 'Tên dòng xe không được để trống' };
+        }
+
+        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+        const username = session?.username || 'admin';
+
+        const { data, error } = await supabase
+            .from('car_models')
+            .insert({
+                name: carModelData.name.trim(),
+                display_order: carModelData.display_order || 0,
+                is_active: carModelData.is_active !== undefined ? carModelData.is_active : true,
+                created_by: username,
+                updated_by: username
+            })
+            .select()
+            .single();
+
+        if (error) {
+            if (error.code === '23505') { // Unique violation
+                return { success: false, message: 'Dòng xe này đã tồn tại' };
+            }
+            throw error;
+        }
+
+        return { success: true, data: data, message: 'Đã tạo dòng xe thành công' };
+    } catch (e) {
+        console.error('Create car model error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Cập nhật dòng xe
+ */
+async function supabaseUpdateCarModel(id, carModelData) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        if (!id) {
+            return { success: false, message: 'ID không hợp lệ' };
+        }
+
+        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+        const username = session?.username || 'admin';
+
+        const updateData = {
+            updated_by: username
+        };
+
+        if (carModelData.name !== undefined) {
+            updateData.name = carModelData.name.trim();
+        }
+        if (carModelData.display_order !== undefined) {
+            updateData.display_order = carModelData.display_order;
+        }
+        if (carModelData.is_active !== undefined) {
+            updateData.is_active = carModelData.is_active;
+        }
+
+        const { data, error } = await supabase
+            .from('car_models')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            if (error.code === '23505') { // Unique violation
+                return { success: false, message: 'Tên dòng xe này đã tồn tại' };
+            }
+            throw error;
+        }
+
+        return { success: true, data: data, message: 'Đã cập nhật dòng xe thành công' };
+    } catch (e) {
+        console.error('Update car model error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Xóa dòng xe
+ */
+async function supabaseDeleteCarModel(id) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        if (!id) {
+            return { success: false, message: 'ID không hợp lệ' };
+        }
+
+        const { error } = await supabase
+            .from('car_models')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, message: 'Đã xóa dòng xe thành công' };
+    } catch (e) {
+        console.error('Delete car model error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
     }
 }
 
@@ -2251,6 +2443,19 @@ async function callSupabaseAPI(data) {
             
             case 'get_car_models':
                 return await supabaseGetCarModels();
+            
+            // Car Models Management API (ADMIN only)
+            case 'list_car_models':
+                return await supabaseListCarModels();
+            
+            case 'create_car_model':
+                return await supabaseCreateCarModel(data);
+            
+            case 'update_car_model':
+                return await supabaseUpdateCarModel(data.id, data);
+            
+            case 'delete_car_model':
+                return await supabaseDeleteCarModel(data.id);
             
             // Dashboard & Reports API
             case 'get_dashboard_data':

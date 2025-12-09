@@ -132,6 +132,7 @@ async function loadAllComponents() {
     await loadComponentAppend('reports-mtd-detail', 'tabs-container');
     await loadComponentAppend('profile', 'tabs-container');
     await loadComponentAppend('users', 'tabs-container');
+    await loadComponentAppend('car-models', 'tabs-container');
     
     // Load modals and templates
     await loadComponent('modals', 'modals-container');
