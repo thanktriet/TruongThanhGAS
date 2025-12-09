@@ -223,7 +223,7 @@ function renderCarModelsList(carModels) {
                             class="input mt-1 car-model-name" 
                             value="${escapeHtml(model.name)}" 
                             data-id="${model.id}"
-                            onchange="handleUpdateCarModel('${model.id}', 'name', this.value)"
+                            onchange="handleUpdateCarModel(\`${model.id}\`, 'name', this.value)"
                         >
                     </div>
                     <div>
@@ -234,7 +234,7 @@ function renderCarModelsList(carModels) {
                             value="${model.display_order || 0}" 
                             min="0"
                             data-id="${model.id}"
-                            onchange="handleUpdateCarModel('${model.id}', 'display_order', parseInt(this.value))"
+                            onchange="handleUpdateCarModel(\`${model.id}\`, 'display_order', parseInt(this.value))"
                         >
                     </div>
                     <div class="flex items-end">
@@ -244,7 +244,7 @@ function renderCarModelsList(carModels) {
                                 class="car-model-active w-4 h-4 text-purple-600 rounded" 
                                 ${model.is_active ? 'checked' : ''}
                                 data-id="${model.id}"
-                                onchange="handleUpdateCarModel('${model.id}', 'is_active', this.checked)"
+                                onchange="handleUpdateCarModel(\`${model.id}\`, 'is_active', this.checked)"
                             >
                             <span class="text-sm font-medium">${model.is_active ? 'Đang sử dụng' : 'Tạm ngưng'}</span>
                         </label>
@@ -252,7 +252,7 @@ function renderCarModelsList(carModels) {
                 </div>
                 <div class="ml-4">
                     <button 
-                        onclick="handleDeleteCarModel('${model.id}', '${escapeHtml(model.name)}')" 
+                        onclick="handleDeleteCarModel(\`${model.id}\`, \`${escapeHtml(model.name)}\`)" 
                         class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
                     >
                         <i class="fa-solid fa-trash mr-2"></i>Xóa
