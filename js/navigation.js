@@ -18,7 +18,19 @@ function switchTab(id) {
     // New tab handlers
     if (id === 'my-orders' && typeof loadMyOrders === 'function') loadMyOrders();
     if (id === 'orders-admin' && typeof loadOrdersForAdmin === 'function') loadOrdersForAdmin();
-    if (id === 'daily-report' && typeof loadTodayReport === 'function') loadTodayReport();
+    if (id === 'daily-report') {
+        console.log('[Navigation] Switching to daily-report tab');
+        setTimeout(() => {
+            if (typeof window.loadCarModels === 'function') {
+                console.log('[Navigation] Loading car models...');
+                window.loadCarModels();
+            }
+            if (typeof window.loadTodayReport === 'function') {
+                console.log('[Navigation] Loading today report...');
+                window.loadTodayReport();
+            }
+        }, 300);
+    }
     if (id === 'reports-dashboard' && typeof loadReportsDashboard === 'function') loadReportsDashboard();
     if (id === 'reports-mtd-detail' && typeof loadMtdDetailReport === 'function') loadMtdDetailReport();
     if (id === 'car-models') {

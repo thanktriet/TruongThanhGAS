@@ -73,28 +73,57 @@ let carModelsList = [];
 async function loadCarModels() {
     try {
         const container = document.getElementById('car-models-container');
-        if (!container) return;
+        if (!container) {
+            console.error('[Daily Report] car-models-container not found');
+            return;
+        }
         
+        console.log('[Daily Report] Loading car models...');
         container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải danh sách dòng xe...</p>';
+
+        if (typeof window.callAPI !== 'function') {
+            throw new Error('callAPI function not found');
+        }
 
         const result = await window.callAPI({
             action: 'get_car_models'
         });
 
-        if (result.success && result.data && Array.isArray(result.data)) {
+        console.log('[Daily Report] Car models API result:', result);
+
+        if (result && result.success && result.data && Array.isArray(result.data) && result.data.length > 0) {
             carModelsList = result.data;
+            console.log('[Daily Report] Loaded', carModelsList.length, 'car models:', carModelsList);
             renderCarModels();
         } else {
+            console.warn('[Daily Report] No car models from API, using default list');
             // Fallback về danh sách mặc định
             carModelsList = ['VF 5 Plus', 'VF 6', 'VF 7', 'VF 8', 'VF 9', 'VF e34'];
             renderCarModels();
-            console.warn('Không thể load danh sách xe từ database, dùng danh sách mặc định');
         }
     } catch (error) {
-        console.error('Error loading car models:', error);
+        console.error('[Daily Report] Error loading car models:', error);
+        const container = document.getElementById('car-models-container');
+        if (container) {
+            container.innerHTML = `
+                <div class="text-center py-4 text-red-500">
+                    <i class="fa-solid fa-exclamation-circle mr-2"></i>
+                    <p>Lỗi tải danh sách xe: ${error.message}</p>
+                    <button 
+                        type="button"
+                        onclick="loadCarModels()" 
+                        class="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
+                    >
+                        <i class="fa-solid fa-rotate mr-2"></i>Thử lại
+                    </button>
+                </div>
+            `;
+        }
         // Fallback về danh sách mặc định
         carModelsList = ['VF 5 Plus', 'VF 6', 'VF 7', 'VF 8', 'VF 9', 'VF e34'];
-        renderCarModels();
+        if (container) {
+            renderCarModels();
+        }
     }
 }
 
@@ -313,18 +342,37 @@ function formatMoneyInput(input) {
     }
 }
 
+// Expose functions globally
+if (typeof window !== 'undefined') {
+    window.loadCarModels = loadCarModels;
+    window.renderCarModels = renderCarModels;
+    window.loadTodayReport = loadTodayReport;
+    window.handleSubmitDailyReport = handleSubmitDailyReport;
+    
+    console.log('[Daily Report] Functions exposed to window');
+}
+
 // Initialize when tab is shown
 if (typeof window !== 'undefined') {
-    window.addEventListener('load', () => {
-        // Load car models first
+    console.log('[Daily Report] Initializing...');
+    
+    // Load car models immediately
+    setTimeout(() => {
+        console.log('[Daily Report] Initial load...');
         loadCarModels();
+    }, 500);
+    
+    // Auto load when tab is shown
+    window.addEventListener('load', () => {
+        console.log('[Daily Report] Window loaded, setting up observer...');
         
-        // Auto load when tab is shown
         const observer = new MutationObserver((mutations) => {
             const dailyReportTab = document.getElementById('tab-daily-report');
             if (dailyReportTab && dailyReportTab.classList.contains('active')) {
+                console.log('[Daily Report] Tab is active, loading...');
                 // Load car models if not loaded yet
-                if (carModelsList.length === 0) {
+                if (!carModelsList || carModelsList.length === 0) {
+                    console.log('[Daily Report] Car models list is empty, loading...');
                     loadCarModels();
                 }
                 loadTodayReport();
@@ -332,14 +380,19 @@ if (typeof window !== 'undefined') {
         });
         
         const container = document.querySelector('.tab-content');
-        if (container) {
+        if (container && container.parentElement) {
             observer.observe(container.parentElement, { 
                 attributes: true, 
                 attributeFilter: ['class'],
                 subtree: true 
             });
+            console.log('[Daily Report] Observer set up');
+        } else {
+            console.warn('[Daily Report] Container not found for observer');
         }
     });
+    
+    console.log('[Daily Report] Initialization complete');
 }
 </script>
 
