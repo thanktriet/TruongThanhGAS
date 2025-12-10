@@ -36,8 +36,8 @@ function withTimeout(promise, timeoutMs, errorMsg) {
 
 let hasLoadedPolicies = false;
 
-async function loadSalesPoliciesList() {
-    console.log('[Sales Policies] loadSalesPoliciesList called, hasLoadedPolicies:', hasLoadedPolicies);
+async function loadSalesPoliciesList(forceReload = false) {
+    console.log('[Sales Policies] loadSalesPoliciesList called, hasLoadedPolicies:', hasLoadedPolicies, 'forceReload:', forceReload);
     
     const container = document.getElementById('sales-policies-list');
     if (!container) {
@@ -45,9 +45,14 @@ async function loadSalesPoliciesList() {
         return;
     }
 
-    if (hasLoadedPolicies) {
+    if (hasLoadedPolicies && !forceReload) {
         console.log('[Sales Policies] Already loaded, skipping');
         return;
+    }
+    
+    // Reset flag if force reload
+    if (forceReload) {
+        hasLoadedPolicies = false;
     }
 
     console.log('[Sales Policies] Loading list...');
