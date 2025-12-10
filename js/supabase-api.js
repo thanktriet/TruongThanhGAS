@@ -2301,12 +2301,13 @@ async function supabaseGetActiveSalesPolicies() {
 
         const today = new Date().toISOString().split('T')[0];
 
+        // Query: lấy tất cả policies active
+        // Nếu có valid_from và valid_to: kiểm tra today nằm trong khoảng
+        // Nếu không có valid dates (NULL): luôn hiển thị (không giới hạn thời gian)
         const { data, error } = await supabase
             .from('sales_policies')
             .select('*')
             .eq('is_active', true)
-            .lte('valid_from', today)
-            .gte('valid_to', today)
             .order('display_order', { ascending: true })
             .order('name', { ascending: true });
 
@@ -2314,7 +2315,25 @@ async function supabaseGetActiveSalesPolicies() {
             throw error;
         }
 
-        return { success: true, data: data || [] };
+        // Filter theo valid dates ở client side để xử lý NULL
+        const filteredData = (data || []).filter(policy => {
+            // Nếu không có valid_from và valid_to: luôn hiển thị
+            if (!policy.valid_from && !policy.valid_to) {
+                return true;
+            }
+            
+            // Nếu có valid_from: today >= valid_from (hoặc valid_from là NULL)
+            const validFromCheck = !policy.valid_from || policy.valid_from <= today;
+            
+            // Nếu có valid_to: today <= valid_to (hoặc valid_to là NULL)
+            const validToCheck = !policy.valid_to || policy.valid_to >= today;
+            
+            return validFromCheck && validToCheck;
+        });
+
+        console.log('[Sales Policies] Found', filteredData.length, 'active policies for today', today);
+        
+        return { success: true, data: filteredData };
     } catch (e) {
         console.error('Get active sales policies error:', e);
         return { success: false, message: 'Lỗi: ' + e.message };
