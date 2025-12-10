@@ -181,8 +181,12 @@ async function handleLogin(e) {
                 // Hiển thị modal yêu cầu đổi mật khẩu
                 await showChangePasswordModal(res.user, true);
             } else {
-                // Đăng nhập bình thường
-                localStorage.setItem('user_session', JSON.stringify(res.user));
+                // Đăng nhập bình thường - thêm login_time để track session timeout
+                const userWithTime = {
+                    ...res.user,
+                    login_time: new Date().toISOString()
+                };
+                localStorage.setItem('user_session', JSON.stringify(userWithTime));
                 location.reload();
             }
         } else {
