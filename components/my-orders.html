@@ -385,10 +385,23 @@ function autoFillApprovalFormFromOrder(order) {
 
 // Create contract from order
 function createContractFromOrder(orderId) {
-    if (typeof openHDMBModal === 'function') {
+    console.log('[My Orders] createContractFromOrder called with orderId:', orderId);
+    console.log('[My Orders] typeof openHDMBModal:', typeof openHDMBModal);
+    console.log('[My Orders] typeof window.openHDMBModal:', typeof window.openHDMBModal);
+    
+    if (typeof window.openHDMBModal === 'function') {
+        console.log('[My Orders] Calling window.openHDMBModal...');
+        window.openHDMBModal(orderId);
+    } else if (typeof openHDMBModal === 'function') {
+        console.log('[My Orders] Calling openHDMBModal (local)...');
         openHDMBModal(orderId);
     } else {
-        showToast('Modal chưa được load. Vui lòng reload trang.', 'warning');
+        console.error('[My Orders] openHDMBModal not found!');
+        if (typeof showToast === 'function') {
+            showToast('Modal chưa được load. Vui lòng reload trang.', 'warning');
+        } else {
+            alert('Modal chưa được load. Vui lòng reload trang.');
+        }
     }
 }
 

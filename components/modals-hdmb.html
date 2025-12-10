@@ -290,10 +290,13 @@ function updateHDMBSalesPoliciesText() {
 }
 
 async function openHDMBModal(orderId) {
+    console.log('[HDMB] openHDMBModal called with orderId:', orderId);
+    
     // Try to find order from window.allOrders or fetch it
     let order = null;
     if (typeof window !== 'undefined' && window.allOrders && Array.isArray(window.allOrders)) {
         order = window.allOrders.find(o => o.id === orderId);
+        console.log('[HDMB] Order found in window.allOrders:', !!order);
     }
     
     // If not found, try to fetch order
@@ -356,26 +359,43 @@ async function openHDMBModal(orderId) {
         return;
     }
     
+    console.log('[HDMB] Modal element found, showing modal...');
     modal.classList.remove('hidden');
     console.log('[HDMB] Modal opened, preparing to load policies...');
+    
+    // Verify container exists
+    const container = document.getElementById('hdmb-policies-container');
+    console.log('[HDMB] Policies container found:', !!container);
+    if (container) {
+        console.log('[HDMB] Container current content:', container.innerHTML.substring(0, 100));
+    }
     
     // Load sales policies after modal is visible (delay để đảm bảo DOM ready)
     // Thử nhiều lần với delay tăng dần
     setTimeout(() => {
         console.log('[HDMB] Attempt 1: Loading policies after 300ms...');
-        if (typeof loadSalesPoliciesForHDMB === 'function') {
+        console.log('[HDMB] typeof loadSalesPoliciesForHDMB:', typeof loadSalesPoliciesForHDMB);
+        console.log('[HDMB] typeof window.loadSalesPoliciesForHDMB:', typeof window.loadSalesPoliciesForHDMB);
+        
+        if (typeof window.loadSalesPoliciesForHDMB === 'function') {
+            console.log('[HDMB] Calling window.loadSalesPoliciesForHDMB()...');
+            window.loadSalesPoliciesForHDMB();
+        } else if (typeof loadSalesPoliciesForHDMB === 'function') {
+            console.log('[HDMB] Calling loadSalesPoliciesForHDMB() (local)...');
             loadSalesPoliciesForHDMB();
         } else {
-            console.error('[HDMB] loadSalesPoliciesForHDMB function not found!');
+            console.error('[HDMB] loadSalesPoliciesForHDMB function not found! Available functions:', Object.keys(window).filter(k => k.includes('Policy')));
         }
     }, 300);
     
     // Backup: thử lại sau 1 giây
     setTimeout(() => {
-        const container = document.getElementById('hdmb-policies-container');
-        if (container && container.innerHTML.includes('Đang tải chính sách')) {
+        const containerCheck = document.getElementById('hdmb-policies-container');
+        if (containerCheck && containerCheck.innerHTML.includes('Đang tải chính sách')) {
             console.log('[HDMB] Attempt 2: Retrying after 1s (still loading...)');
-            if (typeof loadSalesPoliciesForHDMB === 'function') {
+            if (typeof window.loadSalesPoliciesForHDMB === 'function') {
+                window.loadSalesPoliciesForHDMB();
+            } else if (typeof loadSalesPoliciesForHDMB === 'function') {
                 loadSalesPoliciesForHDMB();
             }
         }
