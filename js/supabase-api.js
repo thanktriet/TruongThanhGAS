@@ -2773,6 +2773,10 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
 /**
  * Lấy báo cáo MTD chi tiết
  */
+/**
+ * Lấy báo cáo MTD chi tiết theo TVBH và dòng xe
+ * @param {Object} filters - { filterMonth: "yyyy-MM", group: "Nhóm 1", tvbh: "tvbh1", carModel: "VF8" }
+ */
 async function supabaseGetMtdDetailReport(filters = {}) {
     try {
         const supabase = initSupabase();
@@ -2780,17 +2784,221 @@ async function supabaseGetMtdDetailReport(filters = {}) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
-        // TODO: Implement full logic từ app2
-        // Tạm thời trả về structure cơ bản
-        return { 
-            success: true, 
+        // 1. Xác định tháng (mặc định tháng hiện tại)
+        let startDateStr, endDateStr;
+        if (filters.filterMonth) {
+            // filterMonth format: "yyyy-MM"
+            const [year, month] = filters.filterMonth.split('-');
+            startDateStr = `${year}-${month}-01`;
+            const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+            endDateStr = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+        } else {
+            // Mặc định tháng hiện tại
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            startDateStr = `${year}-${String(month).padStart(2, '0')}-01`;
+            const lastDay = new Date(year, month, 0).getDate();
+            endDateStr = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+        }
+
+        console.log('[MTD Detail] Querying from', startDateStr, 'to', endDateStr);
+
+        // 2. Lấy danh sách TVBH users
+        let tvbhQuery = supabase
+            .from('users')
+            .select('username, fullname, "group"')
+            .eq('role', 'TVBH')
+            .eq('active', true);
+
+        // Filter theo group nếu có
+        if (filters.group) {
+            tvbhQuery = tvbhQuery.eq('group', filters.group);
+        }
+
+        // Filter theo TVBH nếu có
+        if (filters.tvbh) {
+            tvbhQuery = tvbhQuery.eq('username', filters.tvbh);
+        }
+
+        const { data: tvbhUsers, error: tvbhError } = await tvbhQuery
+            .order('group', { ascending: true })
+            .order('username', { ascending: true });
+
+        if (tvbhError) {
+            console.error('[MTD Detail] Error fetching TVBH users:', tvbhError);
+            return { success: false, message: 'Lỗi lấy danh sách TVBH: ' + tvbhError.message };
+        }
+
+        if (!tvbhUsers || tvbhUsers.length === 0) {
+            return {
+                success: true,
+                data: {
+                    mtdDetail: [],
+                    groups: [],
+                    tvbhs: [],
+                    carModels: []
+                }
+            };
+        }
+
+        // 3. Lấy dữ liệu daily_reports trong tháng
+        let reportsQuery = supabase
+            .from('daily_reports')
+            .select('tvbh, "group", car_model, hop_dong, xhd, doanh_thu')
+            .gte('date', startDateStr)
+            .lte('date', endDateStr);
+
+        // Filter theo TVBH nếu có
+        if (filters.tvbh) {
+            reportsQuery = reportsQuery.eq('tvbh', filters.tvbh);
+        }
+
+        // Filter theo group nếu có
+        if (filters.group) {
+            reportsQuery = reportsQuery.eq('group', filters.group);
+        }
+
+        // Filter theo car_model nếu có
+        if (filters.carModel) {
+            reportsQuery = reportsQuery.eq('car_model', filters.carModel);
+        }
+
+        const { data: reports, error: reportsError } = await reportsQuery;
+
+        if (reportsError) {
+            console.error('[MTD Detail] Error fetching reports:', reportsError);
+            return { success: false, message: 'Lỗi lấy báo cáo: ' + reportsError.message };
+        }
+
+        console.log('[MTD Detail] Found', reports?.length || 0, 'reports');
+
+        // 4. Tạo map TVBH -> Group
+        const tvbhMap = {};
+        const tvbhSet = new Set();
+        tvbhUsers.forEach(user => {
+            tvbhMap[user.username] = user.group || '';
+            tvbhSet.add(user.username);
+        });
+
+        // 5. Aggregate dữ liệu theo TVBH và car_model
+        // Structure: mtdDetailStats[tvbh][carModel] = { hopDong, xhd, doanhThu }
+        const mtdDetailStats = {};
+        const allCarModelsSet = new Set();
+
+        // Khởi tạo stats cho tất cả TVBH
+        tvbhUsers.forEach(user => {
+            if (!mtdDetailStats[user.username]) {
+                mtdDetailStats[user.username] = {};
+            }
+        });
+
+        // Aggregate từ reports (chỉ lấy reports có car_model, bỏ qua KHTN)
+        (reports || []).forEach(report => {
+            // Chỉ xử lý reports có car_model (bỏ qua KHTN reports)
+            if (!report.car_model || !tvbhSet.has(report.tvbh)) {
+                return;
+            }
+
+            const tvbh = report.tvbh;
+            const carModel = report.car_model;
+
+            allCarModelsSet.add(carModel);
+
+            if (!mtdDetailStats[tvbh]) {
+                mtdDetailStats[tvbh] = {};
+            }
+            if (!mtdDetailStats[tvbh][carModel]) {
+                mtdDetailStats[tvbh][carModel] = { hopDong: 0, xhd: 0, doanhThu: 0 };
+            }
+
+            mtdDetailStats[tvbh][carModel].hopDong += Number(report.hop_dong || 0);
+            mtdDetailStats[tvbh][carModel].xhd += Number(report.xhd || 0);
+            mtdDetailStats[tvbh][carModel].doanhThu += Number(report.doanh_thu || 0);
+        });
+
+        // 6. Lấy danh sách car models (từ reports hoặc fallback)
+        let allCarModels = Array.from(allCarModelsSet).sort();
+        
+        // Nếu không có car_model nào trong reports, lấy từ car_models table hoặc orders
+        if (allCarModels.length === 0) {
+            const carModelsResult = await supabaseGetCarModels();
+            if (carModelsResult.success && carModelsResult.data && carModelsResult.data.length > 0) {
+                allCarModels = carModelsResult.data.map(c => c.name).filter(Boolean).sort();
+            }
+        }
+
+        // Filter car models nếu có filter
+        let filteredCarModels = allCarModels;
+        if (filters.carModel) {
+            filteredCarModels = allCarModels.filter(m => m === filters.carModel);
+        }
+
+        // 7. Tạo headers: ["Nhóm", "TVBH", "Ký HĐ (model1)", "XHĐ (model1)", "Doanh Thu (model1)", ...]
+        const headers = ['Nhóm', 'TVBH'];
+        filteredCarModels.forEach(model => {
+            headers.push(`Ký HĐ (${model})`, `XHĐ (${model})`, `Doanh Thu (${model})`);
+        });
+
+        // 8. Tạo data rows
+        const mtdDetailData = [headers];
+        const totalStatsByCar = {};
+
+        // Khởi tạo tổng cho mỗi car model
+        filteredCarModels.forEach(model => {
+            totalStatsByCar[model] = { hopDong: 0, xhd: 0, doanhThu: 0 };
+        });
+
+        // Tạo rows cho mỗi TVBH
+        tvbhUsers.forEach(user => {
+            const tvbh = user.username;
+            const row = [tvbhMap[tvbh] || '', tvbh];
+
+            filteredCarModels.forEach(model => {
+                const stats = (mtdDetailStats[tvbh] && mtdDetailStats[tvbh][model])
+                    ? mtdDetailStats[tvbh][model]
+                    : { hopDong: 0, xhd: 0, doanhThu: 0 };
+
+                row.push(stats.hopDong, stats.xhd, stats.doanhThu.toLocaleString('vi-VN'));
+
+                // Cộng vào tổng
+                totalStatsByCar[model].hopDong += stats.hopDong;
+                totalStatsByCar[model].xhd += stats.xhd;
+                totalStatsByCar[model].doanhThu += stats.doanhThu;
+            });
+
+            mtdDetailData.push(row);
+        });
+
+        // 9. Thêm dòng tổng cộng nếu có nhiều hơn 1 TVBH
+        if (tvbhUsers.length > 1) {
+            const totalRow = ['TỔNG CỘNG', ''];
+            filteredCarModels.forEach(model => {
+                const totalStats = totalStatsByCar[model];
+                totalRow.push(
+                    totalStats.hopDong,
+                    totalStats.xhd,
+                    totalStats.doanhThu.toLocaleString('vi-VN')
+                );
+            });
+            mtdDetailData.push(totalRow);
+        }
+
+        // 10. Lấy danh sách groups và TVBHs để populate filters
+        const groups = [...new Set(tvbhUsers.map(u => u.group).filter(Boolean))].sort();
+        const tvbhs = tvbhUsers.map(u => ({ username: u.username, fullname: u.fullname, group: u.group }));
+
+        return {
+            success: true,
             data: {
-                mtdDetail: []
-            },
-            message: 'Tính năng MTD chi tiết đang được phát triển'
+                mtdDetail: mtdDetailData,
+                groups: groups,
+                tvbhs: tvbhs,
+                carModels: allCarModels
+            }
         };
     } catch (e) {
-        console.error('Get MTD detail report error:', e);
+        console.error('[MTD Detail] Get MTD detail report error:', e);
         return { success: false, message: 'Lỗi: ' + e.message };
     }
 }

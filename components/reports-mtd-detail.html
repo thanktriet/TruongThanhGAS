@@ -48,7 +48,7 @@
             <div id="mtd-content" class="space-y-6">
                 <p class="text-center text-gray-500 py-12">
                     <i class="fa-solid fa-info-circle mr-2"></i>
-                    Tính năng Báo cáo MTD chi tiết đang được phát triển. Vui lòng quay lại sau.
+                    Chọn tháng và nhấn tải dữ liệu để xem báo cáo MTD chi tiết.
                 </p>
             </div>
         </div>
@@ -67,34 +67,171 @@ async function loadMtdDetailReport() {
     document.getElementById('mtd-loading').classList.remove('hidden');
     document.getElementById('mtd-content').innerHTML = '';
 
-    const result = await window.callAPI({
-        action: 'get_mtd_detail_report',
-        filters: filters
-    });
+    try {
+        const result = await window.callAPI({
+            action: 'get_mtd_detail_report',
+            filters: filters
+        });
 
-    document.getElementById('mtd-loading').classList.add('hidden');
+        document.getElementById('mtd-loading').classList.add('hidden');
 
-    if (result.success) {
-        // TODO: Render MTD detail data
-        document.getElementById('mtd-content').innerHTML = `
-            <p class="text-center text-gray-500 py-12">
-                Tính năng MTD chi tiết đang được phát triển. Dữ liệu sẽ được hiển thị tại đây.
-            </p>
-        `;
-    } else {
-        showToast('Lỗi: ' + result.message, 'danger');
+        if (result.success && result.data) {
+            // Load filters
+            if (result.data.groups) {
+                populateSelect('mtd-group-filter', result.data.groups, filters.group);
+            }
+            if (result.data.tvbhs) {
+                populateSelect('mtd-tvbh-filter', result.data.tvbhs.map(t => ({ value: t.username, text: `${t.username} - ${t.fullname || ''} (${t.group || ''})` })), filters.tvbh);
+            }
+            if (result.data.carModels) {
+                populateSelect('mtd-car-filter', result.data.carModels, filters.carModel);
+            }
+
+            // Render table
+            if (result.data.mtdDetail && result.data.mtdDetail.length > 0) {
+                renderMtdDetailTable(result.data.mtdDetail);
+            } else {
+                document.getElementById('mtd-content').innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <i class="fa-solid fa-inbox text-4xl mb-3 text-gray-300"></i>
+                        <p class="text-sm md:text-base">Không có dữ liệu báo cáo cho tháng đã chọn.</p>
+                    </div>
+                `;
+            }
+        } else {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Lỗi: ' + (result.message || 'Không thể tải dữ liệu'), 'danger');
+            }
+            document.getElementById('mtd-content').innerHTML = `
+                <div class="text-center py-12 text-red-500">
+                    <i class="fa-solid fa-exclamation-circle text-4xl mb-3"></i>
+                    <p class="text-sm md:text-base">${result.message || 'Lỗi khi tải dữ liệu'}</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        document.getElementById('mtd-loading').classList.add('hidden');
+        console.error('[MTD Detail] Error:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + error.message, 'danger');
+        }
     }
 }
 
-// Set default month
+function populateSelect(selectId, options, selectedValue = null) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    // Giữ lại option đầu tiên (Tất cả...)
+    const firstOption = select.options[0] ? select.options[0].outerHTML : '';
+    
+    // Clear và thêm lại option đầu tiên
+    select.innerHTML = firstOption || '<option value="">Tất cả</option>';
+
+    // Thêm options
+    options.forEach(option => {
+        const opt = document.createElement('option');
+        if (typeof option === 'string') {
+            opt.value = option;
+            opt.textContent = option;
+        } else if (typeof option === 'object') {
+            opt.value = option.value || option;
+            opt.textContent = option.text || option.value || option;
+        }
+        
+        if (selectedValue && opt.value === selectedValue) {
+            opt.selected = true;
+        }
+        select.appendChild(opt);
+    });
+}
+
+function renderMtdDetailTable(data) {
+    if (!data || data.length === 0) return;
+
+    const container = document.getElementById('mtd-content');
+    if (!container) return;
+
+    // Tách headers và rows
+    const headers = data[0] || [];
+    const rows = data.slice(1) || [];
+
+    // Tính số cột (bao gồm Nhóm và TVBH)
+    const numCols = headers.length;
+
+    // Tạo table HTML
+    let html = '<div class="overflow-x-auto rounded-lg border border-gray-200">';
+    html += '<table class="min-w-full divide-y divide-gray-200 bg-white">';
+    
+    // Header row
+    html += '<thead class="bg-orange-50">';
+    html += '<tr>';
+    headers.forEach((header, index) => {
+        const isFirstTwo = index < 2; // Nhóm và TVBH
+        const isNumeric = !isFirstTwo; // Các cột còn lại là số
+        html += `<th class="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-bold text-gray-700 text-left ${isFirstTwo ? 'sticky left-0 z-10 bg-orange-50' : ''} ${isNumeric ? 'text-right' : ''}">`;
+        html += escapeHtml(header);
+        html += '</th>';
+    });
+    html += '</tr>';
+    html += '</thead>';
+
+    // Body rows
+    html += '<tbody class="bg-white divide-y divide-gray-200">';
+    rows.forEach((row, rowIndex) => {
+        const isTotalRow = row[0] === 'TỔNG CỘNG';
+        const rowClass = isTotalRow ? 'bg-orange-100 font-bold' : 'hover:bg-gray-50';
+        html += `<tr class="${rowClass}">`;
+        
+        row.forEach((cell, colIndex) => {
+            const isFirstTwo = colIndex < 2;
+            const isNumeric = !isFirstTwo && colIndex < numCols;
+            const cellClass = `${isFirstTwo ? 'sticky left-0 z-10 ' + (isTotalRow ? 'bg-orange-100' : 'bg-white') : ''} ${isNumeric ? 'text-right font-mono' : ''} px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm`;
+            html += `<td class="${cellClass}">`;
+            html += escapeHtml(cell || '');
+            html += '</td>';
+        });
+        html += '</tr>';
+    });
+    html += '</tbody>';
+    html += '</table>';
+    html += '</div>';
+
+    // Thêm summary info
+    html += `<div class="mt-4 text-xs md:text-sm text-gray-600">
+        <i class="fa-solid fa-info-circle mr-2"></i>
+        Tổng số TVBH: ${rows.filter(r => r[0] !== 'TỔNG CỘNG').length} | 
+        Tổng số dòng xe: ${Math.floor((headers.length - 2) / 3)}
+    </div>`;
+
+    container.innerHTML = html;
+}
+
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+}
+
+// Set default month on load
 if (typeof window !== 'undefined') {
+    window.loadMtdDetailReport = loadMtdDetailReport;
+    window.renderMtdDetailTable = renderMtdDetailTable;
+    window.populateSelect = populateSelect;
+
     window.addEventListener('load', () => {
         const monthInput = document.getElementById('mtd-month-filter');
         if (monthInput && !monthInput.value) {
             const now = new Date();
             monthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            // Auto load khi set month mặc định
+            setTimeout(() => {
+                if (typeof loadMtdDetailReport === 'function') {
+                    loadMtdDetailReport();
+                }
+            }, 500);
         }
     });
 }
 </script>
-
