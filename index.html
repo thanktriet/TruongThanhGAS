@@ -87,12 +87,43 @@
                 <div id="tabs-container"></div>
             </div>
 
-            <!-- Mobile Navigation -->
-            <div class="bg-white border-t flex justify-around p-2 md:hidden">
-                <button onclick="switchTab('create')" class="nav-mobile-item text-blue-600 flex flex-col items-center"><i class="fa-solid fa-plus-circle text-xl"></i><span class="text-[10px]">Tạo</span></button>
-                <button onclick="switchTab('approval')" class="nav-mobile-item text-gray-400 flex flex-col items-center"><i class="fa-solid fa-list-check text-xl"></i><span class="text-[10px]">Duyệt</span></button>
-                <button onclick="switchTab('profile')" id="nav-mobile-profile" class="nav-mobile-item text-gray-400 flex flex-col items-center hidden"><i class="fa-solid fa-id-badge text-xl"></i><span class="text-[10px]">Hồ sơ</span></button>
-                <button onclick="switchTab('users')" id="nav-mobile-users" class="nav-mobile-item text-gray-400 flex flex-col items-center hidden"><i class="fa-solid fa-users-gear text-xl"></i><span class="text-[10px]">User</span></button>
+            <!-- Mobile Bottom Navigation -->
+            <div class="bg-white border-t border-gray-200 flex justify-around items-center p-2 md:hidden z-20 sticky bottom-0">
+                <button 
+                    onclick="toggleMobileMenu()" 
+                    class="flex flex-col items-center justify-center p-2 text-gray-600 active:text-blue-600 touch-manipulation min-w-[60px]"
+                    aria-label="Menu"
+                >
+                    <i class="fa-solid fa-bars text-xl mb-1"></i>
+                    <span class="text-[9px] font-medium">Menu</span>
+                </button>
+                <button 
+                    onclick="switchTab('create');" 
+                    class="flex flex-col items-center justify-center p-2 text-gray-600 active:text-blue-600 touch-manipulation min-w-[60px]"
+                    id="mobile-nav-bottom-create"
+                    aria-label="Tạo mới"
+                >
+                    <i class="fa-solid fa-plus-circle text-xl mb-1"></i>
+                    <span class="text-[9px] font-medium">Tạo</span>
+                </button>
+                <button 
+                    onclick="switchTab('approval');" 
+                    class="flex flex-col items-center justify-center p-2 text-gray-600 active:text-blue-600 touch-manipulation min-w-[60px]"
+                    id="mobile-nav-bottom-approval"
+                    aria-label="Duyệt"
+                >
+                    <i class="fa-solid fa-list-check text-xl mb-1"></i>
+                    <span class="text-[9px] font-medium">Duyệt</span>
+                </button>
+                <button 
+                    onclick="switchTab('profile');" 
+                    class="flex flex-col items-center justify-center p-2 text-gray-600 active:text-blue-600 touch-manipulation min-w-[60px] hidden"
+                    id="mobile-nav-bottom-profile"
+                    aria-label="Hồ sơ"
+                >
+                    <i class="fa-solid fa-user text-xl mb-1"></i>
+                    <span class="text-[9px] font-medium">Hồ sơ</span>
+                </button>
             </div>
         </main>
     </div>
@@ -117,6 +148,7 @@
     <script src="js/menu-permissions.js"></script>
     <script src="js/gifts.js"></script>
     <script src="js/navigation.js"></script>
+    <script src="js/mobile-menu.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/init.js"></script>
     <script src="js/components.js"></script>
