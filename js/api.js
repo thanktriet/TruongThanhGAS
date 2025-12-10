@@ -81,4 +81,7 @@ async function callAPI(data) {
 // Export callAPI ra window để có thể dùng từ bất kỳ đâu
 if (typeof window !== 'undefined') {
     window.callAPI = callAPI;
+    console.log('✅ window.callAPI đã được expose');
+} else {
+    console.error('❌ window is undefined, không thể expose callAPI');
 }
