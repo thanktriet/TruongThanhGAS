@@ -1,35 +1,35 @@
 <div id="tab-reports-dashboard" class="tab-content">
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="bg-indigo-50 px-6 py-4 border-b border-indigo-100">
-            <h2 class="text-lg font-bold text-indigo-800">
+        <div class="bg-indigo-50 px-4 py-3 md:px-6 md:py-4 border-b border-indigo-100">
+            <h2 class="text-base md:text-lg font-bold text-indigo-800">
                 <i class="fa-solid fa-chart-line mr-2"></i>Dashboard Báo Cáo
             </h2>
-            <p class="text-sm text-gray-600 mt-1">Báo cáo ngày và MTD tổng hợp theo tháng</p>
+            <p class="text-xs md:text-sm text-gray-600 mt-1">Báo cáo ngày và MTD tổng hợp theo tháng</p>
         </div>
-        <div class="p-6">
+        <div class="p-3 md:p-6">
             <!-- Filter -->
-            <div class="mb-4 flex gap-3 items-end flex-wrap">
-                <div class="flex-1 max-w-xs">
-                    <label class="label text-xs">Chọn ngày báo cáo:</label>
+            <div class="mb-4 space-y-3 md:space-y-0 md:flex md:gap-3 md:items-end md:flex-wrap">
+                <div class="flex-1 w-full md:max-w-xs">
+                    <label class="label text-xs mb-1 block">Chọn ngày báo cáo:</label>
                     <input 
                         type="date" 
                         id="dashboard-date-filter" 
-                        class="input bg-white" 
+                        class="input bg-white w-full text-sm md:text-base" 
                         onchange="loadReportsDashboard()"
                     >
                 </div>
-                <div class="flex-1 max-w-xs">
-                    <label class="label text-xs">Chọn tháng (cho MTD):</label>
+                <div class="flex-1 w-full md:max-w-xs">
+                    <label class="label text-xs mb-1 block">Chọn tháng (cho MTD):</label>
                     <input 
                         type="month" 
                         id="dashboard-month-filter" 
-                        class="input bg-white" 
+                        class="input bg-white w-full text-sm md:text-base" 
                         onchange="loadReportsDashboard()"
                     >
                 </div>
                 <button 
                     onclick="loadReportsDashboard()" 
-                    class="bg-indigo-600 text-white font-bold px-6 py-2 rounded-lg hover:bg-indigo-700 transition"
+                    class="w-full md:w-auto bg-indigo-600 text-white font-bold px-6 py-2.5 md:py-2 rounded-lg hover:bg-indigo-700 transition touch-manipulation text-sm md:text-base"
                 >
                     <i class="fa-solid fa-filter mr-2"></i>Lọc
                 </button>
@@ -60,18 +60,19 @@
  */
 function createDailyTable(dataArray, reportedTvbhSet = null) {
     if (!dataArray || dataArray.length === 0) {
-        return '<p class="text-center text-gray-500 py-8">Không có dữ liệu</p>';
+        return '<p class="text-center text-gray-500 py-8 text-sm md:text-base">Không có dữ liệu</p>';
     }
 
-    let html = '<div class="overflow-x-auto border border-gray-200 rounded-lg">';
-    html += '<table class="min-w-full divide-y divide-gray-200">';
+    let html = '<div class="overflow-x-auto border border-gray-200 rounded-lg -mx-1 md:mx-0" style="-webkit-overflow-scrolling: touch;">';
+    html += '<table class="min-w-full divide-y divide-gray-200 text-xs md:text-sm">';
     
     // Header
-    html += '<thead class="bg-indigo-50">';
+    html += '<thead class="bg-indigo-50 sticky top-0 z-10">';
     html += '<tr>';
     dataArray[0].forEach((header, idx) => {
         const isNumeric = idx >= 2; // Các cột từ cột 3 trở đi là số
-        html += `<th class="px-4 py-3 text-left text-xs font-bold text-indigo-800 uppercase ${isNumeric ? 'text-right' : ''}">${header}</th>`;
+        // Mobile: smaller padding, Desktop: normal padding
+        html += `<th class="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-xs font-bold text-indigo-800 uppercase whitespace-nowrap ${isNumeric ? 'text-right' : ''}">${header}</th>`;
     });
     html += '</tr>';
     html += '</thead>';
@@ -100,19 +101,23 @@ function createDailyTable(dataArray, reportedTvbhSet = null) {
         const rowClass = isTotal 
             ? 'bg-indigo-100 font-bold' 
             : isNotReported 
-                ? 'bg-red-50 hover:bg-red-100' 
-                : 'hover:bg-gray-50';
+                ? 'bg-red-50 active:bg-red-100' 
+                : 'active:bg-gray-50';
         
         html += `<tr class="${rowClass}">`;
         row.forEach((cell, idx) => {
             const isNumeric = idx >= 2;
-            const cellValue = typeof cell === 'number' ? cell.toLocaleString('vi-VN') : cell;
+            let cellValue = typeof cell === 'number' ? cell.toLocaleString('vi-VN') : cell;
+            // Truncate long text on mobile
+            if (idx === 1 && typeof cellValue === 'string' && cellValue.length > 15) {
+                cellValue = `<span title="${cellValue}">${cellValue.substring(0, 12)}...</span>`;
+            }
             const cellClass = isTotal 
                 ? 'font-bold text-indigo-900' 
                 : isNotReported 
                     ? 'text-red-600 font-medium' 
                     : 'text-gray-700';
-            html += `<td class="px-4 py-3 text-sm ${isNumeric ? 'text-right' : ''} ${cellClass}">${cellValue}</td>`;
+            html += `<td class="px-2 py-2 md:px-4 md:py-3 text-[11px] md:text-sm whitespace-nowrap ${isNumeric ? 'text-right' : ''} ${cellClass}">${cellValue}</td>`;
         });
         html += '</tr>';
     }
@@ -128,18 +133,18 @@ function createDailyTable(dataArray, reportedTvbhSet = null) {
  */
 function createMtdTotalTable(dataArray) {
     if (!dataArray || dataArray.length === 0) {
-        return '<p class="text-center text-gray-500 py-8">Không có dữ liệu</p>';
+        return '<p class="text-center text-gray-500 py-8 text-sm md:text-base">Không có dữ liệu</p>';
     }
 
-    let html = '<div class="overflow-x-auto border border-gray-200 rounded-lg">';
-    html += '<table class="min-w-full divide-y divide-gray-200">';
+    let html = '<div class="overflow-x-auto border border-gray-200 rounded-lg -mx-1 md:mx-0" style="-webkit-overflow-scrolling: touch;">';
+    html += '<table class="min-w-full divide-y divide-gray-200 text-xs md:text-sm">';
     
     // Header
-    html += '<thead class="bg-indigo-50">';
+    html += '<thead class="bg-indigo-50 sticky top-0 z-10">';
     html += '<tr>';
     dataArray[0].forEach((header, idx) => {
         const isNumeric = idx >= 3; // Các cột từ cột 4 trở đi là số
-        html += `<th class="px-3 py-3 text-left text-xs font-bold text-indigo-800 uppercase ${isNumeric ? 'text-right' : ''}">${header}</th>`;
+        html += `<th class="px-1.5 py-2 md:px-3 md:py-3 text-left text-[9px] md:text-xs font-bold text-indigo-800 uppercase whitespace-nowrap ${isNumeric ? 'text-right' : ''}">${header}</th>`;
     });
     html += '</tr>';
     html += '</thead>';
@@ -149,20 +154,24 @@ function createMtdTotalTable(dataArray) {
     for (let i = 1; i < dataArray.length; i++) {
         const row = dataArray[i];
         const isTotal = row[1] === 'TỔNG CỘNG';
-        html += `<tr class="${isTotal ? 'bg-indigo-100 font-bold' : 'hover:bg-gray-50'}">`;
+        html += `<tr class="${isTotal ? 'bg-indigo-100 font-bold' : 'active:bg-gray-50'}">`;
         row.forEach((cell, idx) => {
             const isNumeric = idx >= 3;
             let cellValue = cell;
             if (typeof cell === 'number') {
                 cellValue = cell.toLocaleString('vi-VN');
             }
+            // Truncate long text on mobile
+            if (idx === 2 && typeof cellValue === 'string' && cellValue.length > 10) {
+                cellValue = `<span title="${cellValue}">${cellValue.substring(0, 8)}...</span>`;
+            }
             // Highlight phần trăm >= 100%
             if (typeof cell === 'string' && cell.includes('%')) {
                 const percent = parseFloat(cell);
                 const highlightClass = percent >= 100 ? 'text-green-600 font-bold' : percent >= 80 ? 'text-yellow-600' : 'text-gray-700';
-                html += `<td class="px-3 py-3 text-sm text-right ${highlightClass} ${isTotal ? 'font-bold' : ''}">${cellValue}</td>`;
+                html += `<td class="px-1.5 py-2 md:px-3 md:py-3 text-[10px] md:text-sm text-right whitespace-nowrap ${highlightClass} ${isTotal ? 'font-bold' : ''}">${cellValue}</td>`;
             } else {
-                html += `<td class="px-3 py-3 text-sm ${isNumeric ? 'text-right' : ''} ${isTotal ? 'font-bold text-indigo-900' : 'text-gray-700'}">${cellValue}</td>`;
+                html += `<td class="px-1.5 py-2 md:px-3 md:py-3 text-[10px] md:text-sm ${isNumeric ? 'text-right' : ''} whitespace-nowrap ${isTotal ? 'font-bold text-indigo-900' : 'text-gray-700'}">${cellValue}</td>`;
             }
         });
         html += '</tr>';
@@ -211,10 +220,10 @@ async function loadReportsDashboard() {
             let html = '';
             
             // Bảng 1: Báo cáo Ngày
-            html += '<div class="mb-8">';
-            html += '<h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">';
+            html += '<div class="mb-6 md:mb-8">';
+            html += '<h3 class="text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2 flex-wrap">';
             html += '<i class="fa-solid fa-calendar-day text-indigo-600"></i>';
-            html += `Báo Cáo Ngày (${dateDisplay})`;
+            html += `<span class="break-words">Báo Cáo Ngày (${dateDisplay})</span>`;
             html += '</h3>';
             
             // Convert reportedTvbhSet to Set if it's an array
@@ -223,14 +232,14 @@ async function loadReportsDashboard() {
                 : null;
             
             html += createDailyTable(daily, reportedSet);
-            html += '<p class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-info-circle mr-1"></i>TVBH được tô đỏ là những người chưa thực hiện báo cáo trong ngày này</p>';
+            html += '<p class="text-[10px] md:text-xs text-gray-500 mt-2 px-1"><i class="fa-solid fa-info-circle mr-1"></i>TVBH được tô đỏ là những người chưa thực hiện báo cáo trong ngày này</p>';
             html += '</div>';
             
             // Bảng 2: MTD Tổng
             html += '<div>';
-            html += '<h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">';
+            html += '<h3 class="text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2 flex-wrap">';
             html += '<i class="fa-solid fa-chart-line text-indigo-600"></i>';
-            html += 'Báo Cáo MTD Tổng Hợp (Từ Đầu Tháng)';
+            html += '<span class="break-words">Báo Cáo MTD Tổng Hợp (Từ Đầu Tháng)</span>';
             html += '</h3>';
             html += createMtdTotalTable(mtdTotal);
             html += '</div>';
