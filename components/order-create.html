@@ -1,15 +1,15 @@
 <div id="tab-order-create" class="tab-content">
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden max-w-5xl mx-auto">
-        <div class="bg-blue-50 px-6 py-4 border-b border-blue-100">
-            <h2 class="text-lg font-bold text-blue-800">
+        <div class="bg-blue-50 px-4 py-3 md:px-6 md:py-4 border-b border-blue-100">
+            <h2 class="text-base md:text-lg font-bold text-blue-800">
                 <i class="fa-solid fa-file-circle-plus mr-2"></i>Nhập Liệu Đơn Hàng
             </h2>
         </div>
-        <div class="p-6">
+        <div class="p-3 md:p-6">
             <form id="form-create-order" onsubmit="handleCreateOrder(event)">
                 <!-- Tìm kiếm khách hàng theo CCCD -->
-                <div class="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                <div class="mb-4 md:mb-6 bg-gray-50 p-3 md:p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-xs md:text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
                         <i class="fa-solid fa-magnifying-glass text-blue-600"></i>
                         Tìm kiếm khách hàng (theo CCCD)
                     </h3>
@@ -18,7 +18,7 @@
                             <input 
                                 type="text" 
                                 id="search-cccd" 
-                                class="input" 
+                                class="input text-sm md:text-base w-full" 
                                 placeholder="Nhập số CCCD để tìm kiếm khách hàng..."
                                 onkeypress="if(event.key === 'Enter') searchCustomerByCCCD(event)"
                             >
@@ -27,7 +27,7 @@
                             <button 
                                 type="button" 
                                 onclick="searchCustomerByCCCD(event)" 
-                                class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition"
+                                class="w-full bg-blue-600 text-white font-bold py-2.5 md:py-2 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition touch-manipulation text-sm md:text-base"
                             >
                                 <i class="fa-solid fa-search mr-2"></i>Tìm kiếm
                             </button>
@@ -37,38 +37,38 @@
                 </div>
 
                 <!-- Thông tin Khách hàng -->
-                <div class="mb-6">
+                <div class="mb-4 md:mb-6">
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">
                         1. Thông tin Khách hàng
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                         <div>
-                            <label class="label">Họ tên Khách hàng *</label>
-                            <input name="customer_name" id="customer_name" class="input" required>
+                            <label class="label text-xs md:text-sm mb-1 block">Họ tên Khách hàng *</label>
+                            <input name="customer_name" id="customer_name" class="input text-sm md:text-base w-full" required>
                         </div>
                         <div>
-                            <label class="label">Số CCCD / CMND *</label>
-                            <input name="cccd" id="cccd" class="input" required>
+                            <label class="label text-xs md:text-sm mb-1 block">Số CCCD / CMND *</label>
+                            <input name="cccd" id="cccd" class="input text-sm md:text-base w-full" required>
                         </div>
                         <div>
-                            <label class="label">Số điện thoại</label>
-                            <input name="phone" id="phone" class="input">
+                            <label class="label text-xs md:text-sm mb-1 block">Số điện thoại</label>
+                            <input name="phone" id="phone" type="tel" class="input text-sm md:text-base w-full">
                         </div>
                         <div>
-                            <label class="label">Email</label>
-                            <input name="email" id="email" type="email" class="input">
+                            <label class="label text-xs md:text-sm mb-1 block">Email</label>
+                            <input name="email" id="email" type="email" class="input text-sm md:text-base w-full">
                         </div>
                         <div>
-                            <label class="label">Ngày cấp CCCD</label>
-                            <input name="issue_date" id="issue_date" type="date" class="input">
+                            <label class="label text-xs md:text-sm mb-1 block">Ngày cấp CCCD</label>
+                            <input name="issue_date" id="issue_date" type="date" class="input text-sm md:text-base w-full">
                         </div>
                         <div>
-                            <label class="label">Nơi cấp CCCD</label>
-                            <input name="issue_place" id="issue_place" class="input">
+                            <label class="label text-xs md:text-sm mb-1 block">Nơi cấp CCCD</label>
+                            <input name="issue_place" id="issue_place" class="input text-sm md:text-base w-full">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="label">Địa chỉ</label>
-                            <textarea name="address" id="address" rows="2" class="input"></textarea>
+                            <label class="label text-xs md:text-sm mb-1 block">Địa chỉ</label>
+                            <textarea name="address" id="address" rows="2" class="input text-sm md:text-base w-full"></textarea>
                         </div>
                     </div>
 

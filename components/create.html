@@ -1,33 +1,33 @@
                 <div id="tab-create" class="tab-content active max-w-5xl mx-auto">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="bg-blue-50 px-6 py-4 border-b border-blue-100">
-                            <h2 class="text-lg font-bold text-blue-800"><i class="fa-solid fa-pen-to-square mr-2"></i>Tạo Yêu Cầu Mới</h2>
+                        <div class="bg-blue-50 px-4 py-3 md:px-6 md:py-4 border-b border-blue-100">
+                            <h2 class="text-base md:text-lg font-bold text-blue-800"><i class="fa-solid fa-pen-to-square mr-2"></i>Tạo Yêu Cầu Mới</h2>
                             </div>
-                        <div class="p-6">
+                        <div class="p-3 md:p-6">
                             <div id="mode-manual-container">
                                 <form id="form-manual-create" onsubmit="handleSubmitRequest(event, 'manual')">
                                     
-                                    <div class="mb-6">
+                                    <div class="mb-4 md:mb-6">
                                         <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">1. Thông tin Khách hàng</h3>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div><label class="label">Mã Hợp Đồng *</label><input name="contract_code" class="input uppercase font-mono" required placeholder="S10601..."></div>
-                                            <div><label class="label">Họ tên Khách hàng *</label><input name="customer_name" class="input" required></div>
-                                            <div><label class="label">Số điện thoại</label><input name="phone" class="input"></div>
-                                            <div><label class="label">CCCD / CMND</label><input name="cccd" class="input"></div>
-                                            <div><label class="label">Email</label><input name="email" class="input"></div>
-                                            <div><label class="label">Địa chỉ</label><input name="address" class="input"></div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                                            <div><label class="label text-xs md:text-sm mb-1 block">Mã Hợp Đồng *</label><input name="contract_code" class="input uppercase font-mono text-sm md:text-base w-full" required placeholder="S10601..."></div>
+                                            <div><label class="label text-xs md:text-sm mb-1 block">Họ tên Khách hàng *</label><input name="customer_name" class="input text-sm md:text-base w-full" required></div>
+                                            <div><label class="label text-xs md:text-sm mb-1 block">Số điện thoại</label><input name="phone" type="tel" class="input text-sm md:text-base w-full"></div>
+                                            <div><label class="label text-xs md:text-sm mb-1 block">CCCD / CMND</label><input name="cccd" class="input text-sm md:text-base w-full"></div>
+                                            <div><label class="label text-xs md:text-sm mb-1 block">Email</label><input name="email" type="email" class="input text-sm md:text-base w-full"></div>
+                                            <div><label class="label text-xs md:text-sm mb-1 block">Địa chỉ</label><input name="address" class="input text-sm md:text-base w-full"></div>
                                         </div>
                                     </div>
 
-                                    <div class="mb-6">
+                                    <div class="mb-4 md:mb-6">
                                         <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">2. Thông tin Xe</h3>
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div><label class="label">Dòng Xe</label><input name="car_model" class="input" placeholder="VD: VF 5 Plus"></div>
-                                            <div><label class="label">Phiên bản</label><input name="car_version" class="input" placeholder="Eco / Plus"></div>
-                                            <div><label class="label">Màu sắc</label><input name="car_color" class="input"></div>
-                                            <div><label class="label">Số Khung (VIN)</label><input name="vin_no" class="input uppercase"></div>
-                                            <div class="md:col-span-2"><label class="label">Hình thức thanh toán</label>
-                                                <select name="payment_method" class="input bg-white">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                                            <div><label class="label text-xs md:text-sm mb-1 block">Dòng Xe</label><input name="car_model" class="input text-sm md:text-base w-full" placeholder="VD: VF 5 Plus"></div>
+                                            <div><label class="label text-xs md:text-sm mb-1 block">Phiên bản</label><input name="car_version" class="input text-sm md:text-base w-full" placeholder="Eco / Plus"></div>
+                                            <div><label class="label text-xs md:text-sm mb-1 block">Màu sắc</label><input name="car_color" class="input text-sm md:text-base w-full"></div>
+                                            <div><label class="label text-xs md:text-sm mb-1 block">Số Khung (VIN)</label><input name="vin_no" class="input uppercase text-sm md:text-base w-full"></div>
+                                            <div class="md:col-span-2"><label class="label text-xs md:text-sm mb-1 block">Hình thức thanh toán</label>
+                                                <select name="payment_method" class="input bg-white text-sm md:text-base w-full">
                                                     <option value="Tiền mặt">Tiền mặt</option>
                                                     <option value="Trả góp">Trả góp ngân hàng</option>
                                                 </select>
@@ -100,7 +100,7 @@
                                         </select>
                                     </div>
 
-                                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg transition transform active:scale-95">Gửi Duyệt</button>
+                                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 md:py-3 rounded-lg hover:bg-blue-700 active:bg-blue-800 shadow-lg transition transform active:scale-95 touch-manipulation text-sm md:text-base">Gửi Duyệt</button>
                                 </form>
                             </div>
                         </div>

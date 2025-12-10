@@ -1,42 +1,42 @@
                 <div id="tab-profile" class="tab-content max-w-3xl mx-auto">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                        <div class="flex items-center justify-between mb-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 md:mb-6">
                             <div>
-                                <h2 class="text-xl font-bold text-gray-800">Hồ sơ tư vấn bán hàng</h2>
-                                <p class="text-sm text-gray-500">Cập nhật thông tin liên hệ của bạn</p>
+                                <h2 class="text-base md:text-xl font-bold text-gray-800">Hồ sơ tư vấn bán hàng</h2>
+                                <p class="text-xs md:text-sm text-gray-500">Cập nhật thông tin liên hệ của bạn</p>
                             </div>
-                            <button onclick="loadProfile()" class="text-sm text-blue-600 hover:text-blue-800"><i class="fa-solid fa-rotate mr-1"></i>Làm mới</button>
+                            <button onclick="loadProfile()" class="w-full sm:w-auto text-xs md:text-sm text-blue-600 hover:text-blue-800 active:text-blue-900 touch-manipulation"><i class="fa-solid fa-rotate mr-1"></i>Làm mới</button>
                         </div>
-                        <form id="form-profile" class="space-y-4" onsubmit="handleProfileUpdate(event)">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <form id="form-profile" class="space-y-3 md:space-y-4" onsubmit="handleProfileUpdate(event)">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                                 <div>
-                                    <label class="label">Tên đăng nhập</label>
-                                    <input type="text" name="profile_username" id="profile_username" class="input bg-gray-100" readonly>
+                                    <label class="label text-xs md:text-sm mb-1 block">Tên đăng nhập</label>
+                                    <input type="text" name="profile_username" id="profile_username" class="input bg-gray-100 text-sm md:text-base w-full" readonly>
                                 </div>
                                 <div>
-                                    <label class="label">Vai trò</label>
-                                    <input type="text" name="profile_role" id="profile_role" class="input bg-gray-100" readonly>
+                                    <label class="label text-xs md:text-sm mb-1 block">Vai trò</label>
+                                    <input type="text" name="profile_role" id="profile_role" class="input bg-gray-100 text-sm md:text-base w-full" readonly>
                                 </div>
                                 <div>
-                                    <label class="label">Họ và tên</label>
-                                    <input type="text" name="profile_fullname" id="profile_fullname" class="input" required>
+                                    <label class="label text-xs md:text-sm mb-1 block">Họ và tên</label>
+                                    <input type="text" name="profile_fullname" id="profile_fullname" class="input text-sm md:text-base w-full" required>
                                 </div>
                                 <div>
-                                    <label class="label">Nhóm/Bộ phận</label>
-                                    <input type="text" name="profile_group" id="profile_group" class="input">
+                                    <label class="label text-xs md:text-sm mb-1 block">Nhóm/Bộ phận</label>
+                                    <input type="text" name="profile_group" id="profile_group" class="input text-sm md:text-base w-full">
                                 </div>
                                 <div>
-                                    <label class="label">Email</label>
-                                    <input type="email" name="profile_email" id="profile_email" class="input">
+                                    <label class="label text-xs md:text-sm mb-1 block">Email</label>
+                                    <input type="email" name="profile_email" id="profile_email" class="input text-sm md:text-base w-full">
                                 </div>
                                 <div>
-                                    <label class="label">Số điện thoại</label>
-                                    <input type="text" name="profile_phone" id="profile_phone" class="input">
+                                    <label class="label text-xs md:text-sm mb-1 block">Số điện thoại</label>
+                                    <input type="tel" name="profile_phone" id="profile_phone" class="input text-sm md:text-base w-full">
                                 </div>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <span id="profile-status" class="text-sm text-gray-500"></span>
-                                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Lưu thay đổi</button>
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
+                                <span id="profile-status" class="text-xs md:text-sm text-gray-500"></span>
+                                <button type="submit" class="w-full sm:w-auto bg-blue-600 text-white px-4 py-2.5 md:py-2 rounded-lg font-semibold hover:bg-blue-700 active:bg-blue-800 transition touch-manipulation text-sm md:text-base">Lưu thay đổi</button>
                             </div>
                         </form>
                     </div>

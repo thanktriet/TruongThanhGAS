@@ -1,19 +1,19 @@
                 <div id="tab-users" class="tab-content max-w-6xl mx-auto">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                            <h2 class="text-lg font-bold text-gray-800 mb-4">Thêm người dùng</h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
+                            <h2 class="text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4">Thêm người dùng</h2>
                             <form id="form-create-user" class="space-y-3" onsubmit="handleCreateUser(event)">
                                 <div>
-                                    <label class="label">Tên đăng nhập *</label>
-                                    <input type="text" name="new_username" class="input" required>
+                                    <label class="label text-xs md:text-sm mb-1 block">Tên đăng nhập *</label>
+                                    <input type="text" name="new_username" class="input text-sm md:text-base w-full" required>
                                 </div>
                                 <div>
-                                    <label class="label">Họ tên *</label>
-                                    <input type="text" name="new_fullname" class="input" required>
+                                    <label class="label text-xs md:text-sm mb-1 block">Họ tên *</label>
+                                    <input type="text" name="new_fullname" class="input text-sm md:text-base w-full" required>
                                 </div>
                                 <div>
-                                    <label class="label">Vai trò *</label>
-                                    <select name="new_role" class="input bg-white" required>
+                                    <label class="label text-xs md:text-sm mb-1 block">Vai trò *</label>
+                                    <select name="new_role" class="input bg-white text-sm md:text-base w-full" required>
                                         <option value="">-- Chọn vai trò --</option>
                                         <option value="TVBH">TVBH</option>
                                         <option value="TPKD">TPKD</option>
@@ -25,35 +25,35 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="label">Nhóm/Bộ phận</label>
-                                    <input type="text" name="new_group" class="input">
+                                    <label class="label text-xs md:text-sm mb-1 block">Nhóm/Bộ phận</label>
+                                    <input type="text" name="new_group" class="input text-sm md:text-base w-full">
                                 </div>
                                 <div>
-                                    <label class="label">Email</label>
-                                    <input type="email" name="new_email" class="input">
+                                    <label class="label text-xs md:text-sm mb-1 block">Email</label>
+                                    <input type="email" name="new_email" class="input text-sm md:text-base w-full">
                                 </div>
                                 <div>
-                                    <label class="label">Số điện thoại</label>
-                                    <input type="text" name="new_phone" class="input">
+                                    <label class="label text-xs md:text-sm mb-1 block">Số điện thoại</label>
+                                    <input type="tel" name="new_phone" class="input text-sm md:text-base w-full">
                                 </div>
                                 <div>
-                                    <label class="label">Mật khẩu tạm</label>
-                                    <input type="text" name="new_password" class="input" placeholder="Mặc định: 123456">
+                                    <label class="label text-xs md:text-sm mb-1 block">Mật khẩu tạm</label>
+                                    <input type="text" name="new_password" class="input text-sm md:text-base w-full" placeholder="Mặc định: 123456">
                                 </div>
                                 <div class="text-right">
-                                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition">Thêm người dùng</button>
+                                    <button type="submit" class="w-full sm:w-auto bg-green-600 text-white px-4 py-2.5 md:py-2 rounded-lg font-semibold hover:bg-green-700 active:bg-green-800 transition touch-manipulation text-sm md:text-base">Thêm người dùng</button>
                                 </div>
-                                <p id="create-user-status" class="text-sm text-gray-500"></p>
+                                <p id="create-user-status" class="text-xs md:text-sm text-gray-500"></p>
                             </form>
                         </div>
 
-                        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-lg font-bold text-gray-800">Danh sách người dùng</h2>
-                                <button onclick="loadUserManagement()" class="text-sm text-blue-600 hover:text-blue-800"><i class="fa-solid fa-rotate mr-1"></i>Làm mới</button>
+                        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                                <h2 class="text-base md:text-lg font-bold text-gray-800">Danh sách người dùng</h2>
+                                <button onclick="loadUserManagement()" class="w-full sm:w-auto text-xs md:text-sm text-blue-600 hover:text-blue-800 active:text-blue-900 touch-manipulation"><i class="fa-solid fa-rotate mr-1"></i>Làm mới</button>
                             </div>
-                            <div id="user-list-container" class="overflow-x-auto">
-                                <div class="text-center text-gray-500 py-6">Chọn tab để tải dữ liệu...</div>
+                            <div id="user-list-container" class="overflow-x-auto -mx-1 md:mx-0" style="-webkit-overflow-scrolling: touch;">
+                                <div class="text-center text-gray-500 py-6 text-sm md:text-base">Chọn tab để tải dữ liệu...</div>
                             </div>
                         </div>
                     </div>

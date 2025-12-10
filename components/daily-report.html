@@ -1,51 +1,51 @@
 <div id="tab-daily-report" class="tab-content">
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden max-w-4xl mx-auto">
-        <div class="bg-green-50 px-6 py-4 border-b border-green-100">
-            <h2 class="text-lg font-bold text-green-800">
+        <div class="bg-green-50 px-4 py-3 md:px-6 md:py-4 border-b border-green-100">
+            <h2 class="text-base md:text-lg font-bold text-green-800">
                 <i class="fa-solid fa-calendar-day mr-2"></i>Báo Cáo Ngày
             </h2>
-            <p class="text-sm text-gray-600 mt-1">Nhập báo cáo hôm nay: KHTN, Hợp đồng, Xuất HĐ, Doanh thu</p>
+            <p class="text-xs md:text-sm text-gray-600 mt-1">Nhập báo cáo hôm nay: KHTN, Hợp đồng, Xuất HĐ, Doanh thu</p>
         </div>
-        <div class="p-6">
+        <div class="p-3 md:p-6">
             <form id="form-daily-report" onsubmit="handleSubmitDailyReport(event)">
                 <!-- Today's Report Status -->
                 <div id="today-report-status" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg hidden">
-                    <p class="text-sm text-blue-700">
+                    <p class="text-xs md:text-sm text-blue-700">
                         <i class="fa-solid fa-info-circle mr-2"></i>
                         <span id="status-text"></span>
                     </p>
                 </div>
 
                 <!-- KHTN -->
-                <div class="mb-6">
-                    <label class="label text-base font-bold">Tổng Khách Hàng Tiềm Năng (KHTN) *</label>
+                <div class="mb-4 md:mb-6">
+                    <label class="label text-sm md:text-base font-bold mb-1 block">Tổng Khách Hàng Tiềm Năng (KHTN) *</label>
                     <input 
                         type="number" 
                         id="khtn" 
                         name="khtn" 
-                        class="input text-lg" 
+                        class="input text-base md:text-lg w-full" 
                         min="0" 
                         value="0" 
                         required
                     >
                 </div>
 
-                <hr class="my-6 border-gray-200">
+                <hr class="my-4 md:my-6 border-gray-200">
 
                 <!-- Car Models Reports -->
-                <div class="mb-6">
-                    <label class="label text-base font-bold mb-3">Báo cáo theo Dòng Xe</label>
-                    <div id="car-models-container" class="space-y-4">
-                        <p class="text-sm text-gray-500 text-center py-4">
+                <div class="mb-4 md:mb-6">
+                    <label class="label text-sm md:text-base font-bold mb-3 block">Báo cáo theo Dòng Xe</label>
+                    <div id="car-models-container" class="space-y-3 md:space-y-4">
+                        <p class="text-xs md:text-sm text-gray-500 text-center py-4">
                             <i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải danh sách dòng xe...
                         </p>
                     </div>
                 </div>
 
-                <div class="flex gap-3">
+                <div class="flex flex-col sm:flex-row gap-3">
                     <button 
                         type="submit" 
-                        class="flex-1 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 shadow-lg transition"
+                        class="flex-1 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 active:bg-green-800 shadow-lg transition touch-manipulation text-sm md:text-base"
                         id="submit-report-btn"
                     >
                         <i class="fa-solid fa-floppy-disk mr-2"></i>Lưu Báo Cáo
@@ -53,7 +53,7 @@
                     <button 
                         type="button" 
                         onclick="loadTodayReport()" 
-                        class="px-6 bg-blue-50 border border-blue-200 text-blue-600 font-bold py-3 rounded-lg hover:bg-blue-100 transition"
+                        class="w-full sm:w-auto px-6 bg-blue-50 border border-blue-200 text-blue-600 font-bold py-3 rounded-lg hover:bg-blue-100 active:bg-blue-200 transition touch-manipulation text-sm md:text-base"
                     >
                         <i class="fa-solid fa-rotate mr-2"></i>Tải lại
                     </button>

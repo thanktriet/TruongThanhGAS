@@ -1,38 +1,38 @@
 <div id="tab-reports-mtd-detail" class="tab-content">
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="bg-orange-50 px-6 py-4 border-b border-orange-100">
-            <h2 class="text-lg font-bold text-orange-800">
+        <div class="bg-orange-50 px-4 py-3 md:px-6 md:py-4 border-b border-orange-100">
+            <h2 class="text-base md:text-lg font-bold text-orange-800">
                 <i class="fa-solid fa-table-list mr-2"></i>Báo Cáo MTD Chi Tiết
             </h2>
-            <p class="text-sm text-gray-600 mt-1">Báo cáo chi tiết theo TVBH và dòng xe</p>
+            <p class="text-xs md:text-sm text-gray-600 mt-1">Báo cáo chi tiết theo TVBH và dòng xe</p>
         </div>
-        <div class="p-6">
+        <div class="p-3 md:p-6">
             <!-- Filters -->
-            <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div class="mb-4 space-y-3 md:space-y-0 md:grid md:grid-cols-4 md:gap-3">
                 <div>
-                    <label class="label text-xs">Chọn tháng:</label>
+                    <label class="label text-xs mb-1 block">Chọn tháng:</label>
                     <input 
                         type="month" 
                         id="mtd-month-filter" 
-                        class="input bg-white" 
+                        class="input bg-white text-sm md:text-base w-full" 
                         onchange="loadMtdDetailReport()"
                     >
                 </div>
                 <div>
-                    <label class="label text-xs">Nhóm:</label>
-                    <select id="mtd-group-filter" class="input bg-white" onchange="loadMtdDetailReport()">
+                    <label class="label text-xs mb-1 block">Nhóm:</label>
+                    <select id="mtd-group-filter" class="input bg-white text-sm md:text-base w-full" onchange="loadMtdDetailReport()">
                         <option value="">Tất cả nhóm</option>
                     </select>
                 </div>
                 <div>
-                    <label class="label text-xs">TVBH:</label>
-                    <select id="mtd-tvbh-filter" class="input bg-white" onchange="loadMtdDetailReport()">
+                    <label class="label text-xs mb-1 block">TVBH:</label>
+                    <select id="mtd-tvbh-filter" class="input bg-white text-sm md:text-base w-full" onchange="loadMtdDetailReport()">
                         <option value="">Tất cả TVBH</option>
                     </select>
                 </div>
                 <div>
-                    <label class="label text-xs">Dòng xe:</label>
-                    <select id="mtd-car-filter" class="input bg-white" onchange="loadMtdDetailReport()">
+                    <label class="label text-xs mb-1 block">Dòng xe:</label>
+                    <select id="mtd-car-filter" class="input bg-white text-sm md:text-base w-full" onchange="loadMtdDetailReport()">
                         <option value="">Tất cả dòng xe</option>
                     </select>
                 </div>
