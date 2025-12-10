@@ -124,114 +124,70 @@ function renderSalesPoliciesList(policies) {
     try {
         policies.forEach((policy, index) => {
             try {
-        const policyId = policy.id || '';
-        const policyName = escapeHtml(policy.name || '');
-        const policyDesc = escapeHtml(policy.description || '');
-        const displayOrder = policy.display_order || 0;
-        const isActive = policy.is_active !== false;
-        const validFrom = policy.valid_from || '';
-        const validTo = policy.valid_to || '';
-        const createdBy = escapeHtml(policy.created_by || '');
-        const createdAt = formatDate(policy.created_at);
+                if (!policy || !policy.id) {
+                    console.warn('[Sales Policies] Invalid policy at index', index, policy);
+                    return;
+                }
+                
+                const policyId = policy.id;
+                const policyName = escapeHtml(policy.name || '');
+                const policyDesc = escapeHtml(policy.description || '');
+                const displayOrder = policy.display_order || 0;
+                const isActive = policy.is_active !== false;
+                const validFrom = policy.valid_from || '';
+                const validTo = policy.valid_to || '';
+                const createdBy = escapeHtml(policy.created_by || '');
+                const createdAt = formatDate(policy.created_at);
 
-        html += `
-            <div class="border border-gray-200 rounded-lg p-3 md:p-4 bg-white hover:shadow-md transition" data-id="${policyId}">
-                <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
-                    <div class="flex-1 space-y-3">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase mb-1 block">Tên chính sách</label>
-                                <input 
-                                    type="text" 
-                                    class="input text-sm md:text-base w-full policy-name" 
-                                    value="${policyName}" 
-                                    data-id="${policyId}"
-                                    data-field="name"
-                                    onchange="handleUpdateSalesPolicyField(this)"
-                                >
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase mb-1 block">Thứ tự hiển thị</label>
-                                <input 
-                                    type="number" 
-                                    class="input text-sm md:text-base w-full policy-order" 
-                                    value="${displayOrder}" 
-                                    min="0"
-                                    data-id="${policyId}"
-                                    data-field="display_order"
-                                    onchange="handleUpdateSalesPolicyField(this)"
-                                >
-                            </div>
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-500 uppercase mb-1 block">Mô tả đầy đủ</label>
-                            <textarea 
-                                class="input text-sm md:text-base w-full policy-description" 
-                                rows="2"
-                                data-id="${policyId}"
-                                data-field="description"
-                                onchange="handleUpdateSalesPolicyField(this)"
-                            >${policyDesc}</textarea>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase mb-1 block">Ngày bắt đầu</label>
-                                <input 
-                                    type="date" 
-                                    class="input text-sm md:text-base w-full policy-valid-from" 
-                                    value="${validFrom}"
-                                    data-id="${policyId}"
-                                    data-field="valid_from"
-                                    onchange="handleUpdateSalesPolicyField(this)"
-                                >
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase mb-1 block">Ngày kết thúc</label>
-                                <input 
-                                    type="date" 
-                                    class="input text-sm md:text-base w-full policy-valid-to" 
-                                    value="${validTo}"
-                                    data-id="${policyId}"
-                                    data-field="valid_to"
-                                    onchange="handleUpdateSalesPolicyField(this)"
-                                >
-                            </div>
-                            <div class="flex items-end">
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
-                                        class="policy-active w-4 h-4 text-orange-600 rounded" 
-                                        ${isActive ? 'checked' : ''}
-                                        data-id="${policyId}"
-                                        data-field="is_active"
-                                        onchange="handleUpdateSalesPolicyField(this)"
-                                    >
-                                    <span class="text-xs md:text-sm font-medium">${isActive ? 'Đang áp dụng' : 'Tạm ngưng'}</span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="text-xs text-gray-400">
-                            ${createdBy ? `Tạo bởi: ${createdBy}` : ''}
-                            ${createdAt ? ` • ${createdAt}` : ''}
-                        </div>
-                    </div>
-                    <div class="md:ml-4">
-                        <button 
-                            type="button"
-                            class="w-full md:w-auto px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 transition font-semibold touch-manipulation text-sm md:text-base"
-                            data-id="${policyId}"
-                            data-name="${policyName}"
-                            onclick="handleDeleteSalesPolicyClick(this)"
-                        >
-                            <i class="fa-solid fa-trash mr-2"></i>Xóa
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
+                // Dùng string concatenation thay template literal để tránh conflicts
+                html += '<div class="border border-gray-200 rounded-lg p-3 md:p-4 bg-white hover:shadow-md transition" data-id="' + policyId + '">';
+                html += '<div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">';
+                html += '<div class="flex-1 space-y-3">';
+                html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
+                html += '<div><label class="text-xs text-gray-500 uppercase mb-1 block">Tên chính sách</label>';
+                html += '<input type="text" class="input text-sm md:text-base w-full policy-name" value="' + policyName + '" data-id="' + policyId + '" data-field="name" onchange="if(typeof window.handleUpdateSalesPolicyField === \'function\') window.handleUpdateSalesPolicyField(this);">';
+                html += '</div>';
+                html += '<div><label class="text-xs text-gray-500 uppercase mb-1 block">Thứ tự hiển thị</label>';
+                html += '<input type="number" class="input text-sm md:text-base w-full policy-order" value="' + displayOrder + '" min="0" data-id="' + policyId + '" data-field="display_order" onchange="if(typeof window.handleUpdateSalesPolicyField === \'function\') window.handleUpdateSalesPolicyField(this);">';
+                html += '</div></div>';
+                html += '<div><label class="text-xs text-gray-500 uppercase mb-1 block">Mô tả đầy đủ</label>';
+                html += '<textarea class="input text-sm md:text-base w-full policy-description" rows="2" data-id="' + policyId + '" data-field="description" onchange="if(typeof window.handleUpdateSalesPolicyField === \'function\') window.handleUpdateSalesPolicyField(this);">' + policyDesc + '</textarea>';
+                html += '</div>';
+                html += '<div class="grid grid-cols-1 md:grid-cols-3 gap-3">';
+                html += '<div><label class="text-xs text-gray-500 uppercase mb-1 block">Ngày bắt đầu</label>';
+                html += '<input type="date" class="input text-sm md:text-base w-full policy-valid-from" value="' + validFrom + '" data-id="' + policyId + '" data-field="valid_from" onchange="if(typeof window.handleUpdateSalesPolicyField === \'function\') window.handleUpdateSalesPolicyField(this);">';
+                html += '</div>';
+                html += '<div><label class="text-xs text-gray-500 uppercase mb-1 block">Ngày kết thúc</label>';
+                html += '<input type="date" class="input text-sm md:text-base w-full policy-valid-to" value="' + validTo + '" data-id="' + policyId + '" data-field="valid_to" onchange="if(typeof window.handleUpdateSalesPolicyField === \'function\') window.handleUpdateSalesPolicyField(this);">';
+                html += '</div>';
+                html += '<div class="flex items-end"><label class="flex items-center gap-2 cursor-pointer">';
+                html += '<input type="checkbox" class="policy-active w-4 h-4 text-orange-600 rounded" ' + (isActive ? 'checked' : '') + ' data-id="' + policyId + '" data-field="is_active" onchange="if(typeof window.handleUpdateSalesPolicyField === \'function\') window.handleUpdateSalesPolicyField(this);">';
+                html += '<span class="text-xs md:text-sm font-medium">' + (isActive ? 'Đang áp dụng' : 'Tạm ngưng') + '</span>';
+                html += '</label></div></div>';
+                html += '<div class="text-xs text-gray-400">';
+                html += createdBy ? 'Tạo bởi: ' + createdBy : '';
+                html += createdAt ? ' • ' + createdAt : '';
+                html += '</div></div>';
+                html += '<div class="md:ml-4">';
+                html += '<button type="button" class="w-full md:w-auto px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 transition font-semibold touch-manipulation text-sm md:text-base" data-id="' + policyId + '" data-name="' + policyName + '" onclick="if(typeof window.handleDeleteSalesPolicyClick === \'function\') window.handleDeleteSalesPolicyClick(this);">';
+                html += '<i class="fa-solid fa-trash mr-2"></i>Xóa</button>';
+                html += '</div></div></div>';
+            } catch (policyError) {
+                console.error('[Sales Policies] Error rendering policy at index', index, policyError, policy);
+            }
+        });
 
-    container.innerHTML = html;
+        console.log('[Sales Policies] Generated HTML length:', html.length);
+        container.innerHTML = html;
+        console.log('[Sales Policies] Rendered', policies.length, 'policies successfully');
+        
+        // Verify DOM
+        const renderedItems = container.querySelectorAll('[data-id]');
+        console.log('[Sales Policies] Found', renderedItems.length, 'policies in DOM after render');
+    } catch (renderError) {
+        console.error('[Sales Policies] Error in render function:', renderError);
+        container.innerHTML = '<div class="text-center py-8 text-red-500"><i class="fa-solid fa-exclamation-circle text-2xl mb-2"></i><p class="font-bold">Lỗi render: ' + escapeHtml(renderError.message) + '</p></div>';
+    }
 }
 
 // ======================================================
