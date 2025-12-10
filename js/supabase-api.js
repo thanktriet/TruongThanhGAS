@@ -2279,22 +2279,32 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
         }
 
         // Xác định ngày báo cáo
-        let selectedDate;
+        let selectedDateStr;
         if (filterDate) {
             // filterDate đã là format YYYY-MM-DD từ input type="date"
-            selectedDate = new Date(filterDate + 'T00:00:00');
+            // Sử dụng trực tiếp không cần convert để tránh timezone issues
+            selectedDateStr = filterDate;
         } else {
-            selectedDate = new Date();
-            selectedDate.setHours(0, 0, 0, 0);
+            // Mặc định hôm nay - format YYYY-MM-DD
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            selectedDateStr = `${year}-${month}-${day}`;
         }
-        const selectedDateStr = selectedDate.toISOString().split('T')[0]; // YYYY-MM-DD
+        
+        // Tạo Date object từ selectedDateStr để format display (chỉ để hiển thị)
+        const [year, month, day] = selectedDateStr.split('-').map(Number);
+        const selectedDate = new Date(year, month - 1, day);
         
         // Debug logging
         console.log('[Dashboard] Date filter:', {
             filterDate: filterDate,
-            selectedDate: selectedDate,
             selectedDateStr: selectedDateStr,
-            selectedDateISO: selectedDate.toISOString()
+            selectedDate: selectedDate,
+            year: year,
+            month: month,
+            day: day
         });
 
         // Xác định tháng cần lấy dữ liệu cho MTD
