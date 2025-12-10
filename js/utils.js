@@ -10,11 +10,34 @@ let approvalFilters = { search: '', status: 'all' };
 let myRequestsData = [];
 let myRequestsFilters = { search: '', status: 'all' };
 
+// Session timeout: 8 giờ (8 * 60 * 60 * 1000 ms)
+const SESSION_TIMEOUT_MS = 8 * 60 * 60 * 1000; // 8 giờ
+
 function getSession() {
     const sessionStr = localStorage.getItem('user_session');
     if (!sessionStr) return null;
     try {
-        return JSON.parse(sessionStr);
+        const user = JSON.parse(sessionStr);
+        
+        // Kiểm tra session timeout
+        if (user.login_time) {
+            const loginTime = new Date(user.login_time).getTime();
+            const now = Date.now();
+            const elapsed = now - loginTime;
+            
+            if (elapsed > SESSION_TIMEOUT_MS) {
+                // Session đã hết hạn
+                console.log('Session expired. Elapsed:', Math.floor(elapsed / 1000 / 60), 'minutes');
+                localStorage.removeItem('user_session');
+                return null;
+            }
+        } else {
+            // Nếu không có login_time, thêm vào để tương thích với session cũ
+            user.login_time = new Date().toISOString();
+            localStorage.setItem('user_session', JSON.stringify(user));
+        }
+        
+        return user;
     } catch (e) {
         console.error('Invalid session data', e);
         localStorage.removeItem('user_session');
