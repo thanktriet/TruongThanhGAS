@@ -2281,12 +2281,21 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
         // Xác định ngày báo cáo
         let selectedDate;
         if (filterDate) {
+            // filterDate đã là format YYYY-MM-DD từ input type="date"
             selectedDate = new Date(filterDate + 'T00:00:00');
         } else {
             selectedDate = new Date();
             selectedDate.setHours(0, 0, 0, 0);
         }
         const selectedDateStr = selectedDate.toISOString().split('T')[0]; // YYYY-MM-DD
+        
+        // Debug logging
+        console.log('[Dashboard] Date filter:', {
+            filterDate: filterDate,
+            selectedDate: selectedDate,
+            selectedDateStr: selectedDateStr,
+            selectedDateISO: selectedDate.toISOString()
+        });
 
         // Xác định tháng cần lấy dữ liệu cho MTD
         let startDate, endDate, mtdEndDate;
@@ -2340,15 +2349,22 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
         });
 
         // 2. Lấy dữ liệu báo cáo ngày (ngày được chọn)
+        console.log('[Dashboard] Querying daily_reports with date:', selectedDateStr);
         const { data: dailyReports, error: dailyError } = await supabase
             .from('daily_reports')
-            .select('tvbh, khtn, hop_dong, xhd, doanh_thu')
+            .select('tvbh, khtn, hop_dong, xhd, doanh_thu, date')
             .eq('date', selectedDateStr);
 
         if (dailyError) {
-            console.error('Error fetching daily reports:', dailyError);
+            console.error('[Dashboard] Error fetching daily reports:', dailyError);
             return { success: false, message: 'Lỗi lấy báo cáo ngày: ' + dailyError.message };
         }
+
+        console.log('[Dashboard] Daily reports found:', {
+            count: dailyReports?.length || 0,
+            reports: dailyReports?.slice(0, 5) || [], // Log first 5 for debugging
+            allDates: dailyReports?.map(r => r.date) || []
+        });
 
         // Tính tổng theo TVBH cho báo cáo ngày và lưu danh sách TVBH đã báo cáo
         const dailyStats = {};
