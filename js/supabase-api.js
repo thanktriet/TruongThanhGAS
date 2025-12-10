@@ -2242,6 +2242,226 @@ async function supabaseDeleteCarModel(id) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
+        const { error } = await supabase
+            .from('car_models')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, message: 'Đã xóa dòng xe thành công' };
+    } catch (e) {
+        console.error('Delete car model error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+// ======================================================
+// SALES POLICIES API - Quản lý chính sách bán hàng
+// ======================================================
+
+/**
+ * Lấy danh sách tất cả chính sách bán hàng (ADMIN only)
+ */
+async function supabaseListSalesPolicies() {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        const { data, error } = await supabase
+            .from('sales_policies')
+            .select('*')
+            .order('display_order', { ascending: true })
+            .order('name', { ascending: true });
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data || [] };
+    } catch (e) {
+        console.error('List sales policies error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Lấy danh sách chính sách đang active (cho form HĐMB)
+ */
+async function supabaseGetActiveSalesPolicies() {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+
+        const { data, error } = await supabase
+            .from('sales_policies')
+            .select('*')
+            .eq('is_active', true)
+            .lte('valid_from', today)
+            .gte('valid_to', today)
+            .order('display_order', { ascending: true })
+            .order('name', { ascending: true });
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data || [] };
+    } catch (e) {
+        console.error('Get active sales policies error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Tạo chính sách bán hàng mới
+ */
+async function supabaseCreateSalesPolicy(policyData) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        if (!policyData.name || !policyData.name.trim()) {
+            return { success: false, message: 'Tên chính sách không được để trống' };
+        }
+
+        if (!policyData.description || !policyData.description.trim()) {
+            return { success: false, message: 'Mô tả chính sách không được để trống' };
+        }
+
+        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+        const username = session?.username || 'admin';
+
+        const { data, error } = await supabase
+            .from('sales_policies')
+            .insert({
+                name: policyData.name.trim(),
+                description: policyData.description.trim(),
+                display_order: policyData.display_order || 0,
+                is_active: policyData.is_active !== undefined ? policyData.is_active : true,
+                valid_from: policyData.valid_from || null,
+                valid_to: policyData.valid_to || null,
+                created_by: username,
+                updated_by: username
+            })
+            .select()
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data, message: 'Đã tạo chính sách thành công' };
+    } catch (e) {
+        console.error('Create sales policy error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Cập nhật chính sách bán hàng
+ */
+async function supabaseUpdateSalesPolicy(id, policyData) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+        const username = session?.username || 'admin';
+
+        const updateData = {
+            updated_by: username,
+            updated_at: new Date().toISOString()
+        };
+
+        if (policyData.name !== undefined) {
+            updateData.name = policyData.name.trim();
+        }
+        if (policyData.description !== undefined) {
+            updateData.description = policyData.description.trim();
+        }
+        if (policyData.display_order !== undefined) {
+            updateData.display_order = policyData.display_order;
+        }
+        if (policyData.is_active !== undefined) {
+            updateData.is_active = policyData.is_active;
+        }
+        if (policyData.valid_from !== undefined) {
+            updateData.valid_from = policyData.valid_from || null;
+        }
+        if (policyData.valid_to !== undefined) {
+            updateData.valid_to = policyData.valid_to || null;
+        }
+
+        const { data, error } = await supabase
+            .from('sales_policies')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data, message: 'Đã cập nhật chính sách thành công' };
+    } catch (e) {
+        console.error('Update sales policy error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Xóa chính sách bán hàng
+ */
+async function supabaseDeleteSalesPolicy(id) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        if (!id) {
+            return { success: false, message: 'ID không hợp lệ' };
+        }
+
+        const { error } = await supabase
+            .from('sales_policies')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, message: 'Đã xóa chính sách thành công' };
+    } catch (e) {
+        console.error('Delete sales policy error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+// ======================================================
+// DASHBOARD & MTD REPORTS API - Báo cáo tổng hợp
+// ======================================================
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
         if (!id) {
             return { success: false, message: 'ID không hợp lệ' };
         }
@@ -2723,6 +2943,22 @@ async function callSupabaseAPI(data) {
             
             case 'delete_car_model':
                 return await supabaseDeleteCarModel(data.id);
+            
+            // Sales Policies Management API (ADMIN only)
+            case 'list_sales_policies':
+                return await supabaseListSalesPolicies();
+            
+            case 'create_sales_policy':
+                return await supabaseCreateSalesPolicy(data);
+            
+            case 'update_sales_policy':
+                return await supabaseUpdateSalesPolicy(data.id, data);
+            
+            case 'delete_sales_policy':
+                return await supabaseDeleteSalesPolicy(data.id);
+            
+            case 'get_active_sales_policies':
+                return await supabaseGetActiveSalesPolicies();
             
             // Dashboard & Reports API
             case 'get_dashboard_data':

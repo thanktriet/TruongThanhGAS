@@ -98,8 +98,13 @@
                             <input type="text" id="hdmb-chuc_vu" class="input">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="label">Chính sách bán hàng</label>
-                            <textarea id="hdmb-chinh_sach_ban_hang" class="input" rows="3" placeholder="Nhập chính sách bán hàng..."></textarea>
+                            <label class="label mb-2 block">Chính sách bán hàng (chọn một hoặc nhiều)</label>
+                            <div id="hdmb-policies-container" class="border border-gray-200 rounded-lg p-3 md:p-4 bg-gray-50 max-h-60 overflow-y-auto">
+                                <div class="text-center py-4 text-gray-500 text-sm">
+                                    <i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải chính sách...
+                                </div>
+                            </div>
+                            <textarea id="hdmb-chinh_sach_ban_hang" class="input mt-3 hidden" rows="2" placeholder="Chính sách đã chọn sẽ hiển thị ở đây..."></textarea>
                         </div>
                         <div>
                             <label class="label">Tiền đợt 2 (Trả thẳng) - VNĐ</label>
@@ -198,6 +203,10 @@ async function openHDMBModal(orderId) {
 function closeHDMBModal() {
     document.getElementById('modal-create-hdmb').classList.add('hidden');
     document.getElementById('form-hdmb').reset();
+    // Clear checkboxes
+    const checkboxes = document.querySelectorAll('#hdmb-policies-container input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+    updateHDMBSalesPoliciesText();
     currentOrderForHDMB = null;
 }
 
@@ -236,7 +245,7 @@ async function submitHDMBForm(event) {
         loai_xe: document.getElementById('hdmb-loai_xe').value.trim(),
         phien_ban: document.getElementById('hdmb-phien_ban').value.trim(),
         mau_xe: document.getElementById('hdmb-mau_xe').value.trim(),
-        chinh_sach_ban_hang: document.getElementById('hdmb-chinh_sach_ban_hang').value.trim(),
+        chinh_sach_ban_hang: document.getElementById('hdmb-chinh_sach_ban_hang').value.trim() || '',
         so_luong: parseInt(document.getElementById('hdmb-so_luong').value) || 1,
         don_gia: parseFloat(document.getElementById('hdmb-don_gia').value) || 0,
         tien_coc: parseFloat(document.getElementById('hdmb-tien_coc').value) || 0,
