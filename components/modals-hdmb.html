@@ -137,6 +137,86 @@
 <script>
 let currentOrderForHDMB = null;
 
+// Load sales policies for HĐMB form
+async function loadSalesPoliciesForHDMB() {
+    const container = document.getElementById('hdmb-policies-container');
+    if (!container) return;
+
+    try {
+        const result = await window.callAPI({
+            action: 'get_active_sales_policies'
+        });
+
+        if (result && result.success && Array.isArray(result.data)) {
+            renderSalesPoliciesCheckboxes(result.data);
+        } else {
+            container.innerHTML = `
+                <div class="text-center py-4 text-red-500 text-sm">
+                    <i class="fa-solid fa-exclamation-circle mr-2"></i>
+                    ${result?.message || 'Không thể tải chính sách'}
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('[HDMB] Error loading policies:', error);
+        container.innerHTML = `
+            <div class="text-center py-4 text-red-500 text-sm">
+                <i class="fa-solid fa-exclamation-circle mr-2"></i>
+                Lỗi tải chính sách: ${error.message}
+            </div>
+        `;
+    }
+}
+
+// Render sales policies as checkboxes
+function renderSalesPoliciesCheckboxes(policies) {
+    const container = document.getElementById('hdmb-policies-container');
+    if (!container) return;
+
+    if (!policies || policies.length === 0) {
+        container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">Chưa có chính sách nào</div>';
+        return;
+    }
+
+    let html = '<div class="space-y-2">';
+    policies.forEach((policy, index) => {
+        const policyId = `hdmb-policy-${policy.id || index}`;
+        const policyName = (policy.name || '').replace(/"/g, '&quot;');
+        const policyDesc = (policy.description || '').replace(/"/g, '&quot;');
+        
+        html += `
+            <div class="policy-item flex items-start gap-2 p-2 rounded hover:bg-blue-50 active:bg-blue-100 transition">
+                <input 
+                    type="checkbox" 
+                    id="${policyId}"
+                    name="hdmb_policy" 
+                    value="${policyDesc}"
+                    class="mt-1 w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500 touch-manipulation"
+                    onchange="updateHDMBSalesPoliciesText()"
+                    data-policy-name="${policyName}"
+                >
+                <label for="${policyId}" class="flex-1 text-xs md:text-sm cursor-pointer">
+                    <span class="font-medium">${policyName}</span>
+                </label>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// Update textarea with selected policies
+function updateHDMBSalesPoliciesText() {
+    const textarea = document.getElementById('hdmb-chinh_sach_ban_hang');
+    if (!textarea) return;
+
+    const checkboxes = document.querySelectorAll('#hdmb-policies-container input[type="checkbox"]:checked');
+    const selectedPolicies = Array.from(checkboxes).map(cb => cb.value);
+    
+    textarea.value = selectedPolicies.join('\n');
+}
+
 async function openHDMBModal(orderId) {
     // Try to find order from window.allOrders or fetch it
     let order = null;
@@ -196,6 +276,9 @@ async function openHDMBModal(orderId) {
     // Set customer data vào form fields
     document.getElementById('hdmb-ngay_cap').value = customer.issue_date ? new Date(customer.issue_date).toISOString().split('T')[0] : '';
     document.getElementById('hdmb-noi_cap').value = customer.issue_place || '';
+
+    // Load sales policies
+    await loadSalesPoliciesForHDMB();
 
     document.getElementById('modal-create-hdmb').classList.remove('hidden');
 }

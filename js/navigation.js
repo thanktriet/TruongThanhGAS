@@ -35,13 +35,24 @@ function switchTab(id) {
     if (id === 'reports-mtd-detail' && typeof loadMtdDetailReport === 'function') loadMtdDetailReport();
     if (id === 'car-models') {
         console.log('[Navigation] Switching to car-models tab');
-        // Force load after a short delay to ensure tab is active
         setTimeout(() => {
             if (typeof window.loadCarModelsList === 'function') {
                 console.log('[Navigation] Calling loadCarModelsList...');
                 window.loadCarModelsList();
             } else {
                 console.error('[Navigation] loadCarModelsList function not found');
+            }
+        }, 300);
+    }
+    
+    if (id === 'sales-policies') {
+        console.log('[Navigation] Switching to sales-policies tab');
+        setTimeout(() => {
+            if (typeof window.loadSalesPoliciesList === 'function') {
+                console.log('[Navigation] Calling loadSalesPoliciesList...');
+                window.loadSalesPoliciesList();
+            } else {
+                console.error('[Navigation] loadSalesPoliciesList function not found');
             }
         }, 300);
     }
