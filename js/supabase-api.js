@@ -2402,23 +2402,47 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
         const dailyData = [dailyHeaders];
         let dailyTotalKHTN = 0, dailyTotalHopDong = 0, dailyTotalXHD = 0, dailyTotalDoanhThu = 0;
 
-        tvbhUsers.forEach(user => {
-            const stats = dailyStats[user.username] || { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
-            dailyData.push([
-                user.group || '',
-                user.username,
-                stats.khtn,
-                stats.hopDong,
-                stats.xhd,
-                stats.doanhThu.toLocaleString('vi-VN')
-            ]);
-            dailyTotalKHTN += stats.khtn;
-            dailyTotalHopDong += stats.hopDong;
-            dailyTotalXHD += stats.xhd;
-            dailyTotalDoanhThu += stats.doanhThu;
-        });
+        // Chỉ hiển thị những TVBH có dữ liệu thực sự (có trong dailyStats)
+        // Sắp xếp theo group và username để hiển thị đẹp
+        const tvbhWithData = tvbhUsers
+            .filter(user => dailyStats[user.username] && (
+                dailyStats[user.username].khtn > 0 ||
+                dailyStats[user.username].hopDong > 0 ||
+                dailyStats[user.username].xhd > 0 ||
+                dailyStats[user.username].doanhThu > 0
+            ))
+            .sort((a, b) => {
+                // Sort by group first, then by username
+                const groupA = (a.group || '').toLowerCase();
+                const groupB = (b.group || '').toLowerCase();
+                if (groupA !== groupB) {
+                    return groupA.localeCompare(groupB);
+                }
+                return a.username.localeCompare(b.username);
+            });
 
-        dailyData.push(['TỔNG CỘNG', '', dailyTotalKHTN, dailyTotalHopDong, dailyTotalXHD, dailyTotalDoanhThu.toLocaleString('vi-VN')]);
+        // Nếu không có dữ liệu nào, trả về bảng trống với message
+        if (tvbhWithData.length === 0) {
+            dailyData.push(['', 'Không có dữ liệu báo cáo cho ngày này', '', '', '', '']);
+        } else {
+            tvbhWithData.forEach(user => {
+                const stats = dailyStats[user.username];
+                dailyData.push([
+                    user.group || '',
+                    user.username,
+                    stats.khtn,
+                    stats.hopDong,
+                    stats.xhd,
+                    stats.doanhThu.toLocaleString('vi-VN')
+                ]);
+                dailyTotalKHTN += stats.khtn;
+                dailyTotalHopDong += stats.hopDong;
+                dailyTotalXHD += stats.xhd;
+                dailyTotalDoanhThu += stats.doanhThu;
+            });
+
+            dailyData.push(['TỔNG CỘNG', '', dailyTotalKHTN, dailyTotalHopDong, dailyTotalXHD, dailyTotalDoanhThu.toLocaleString('vi-VN')]);
+        }
 
         // 5. Tạo bảng MTD Tổng (có chỉ tiêu và xếp hạng)
         const calcPercent = (actual, target) => (!target || target === 0) ? 0 : (actual / target);
