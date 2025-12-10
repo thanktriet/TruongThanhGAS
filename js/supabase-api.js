@@ -2456,35 +2456,6 @@ async function supabaseDeleteSalesPolicy(id) {
 // ======================================================
 // DASHBOARD & MTD REPORTS API - Báo cáo tổng hợp
 // ======================================================
-    try {
-        const supabase = initSupabase();
-        if (!supabase) {
-            return { success: false, message: 'Supabase chưa được khởi tạo' };
-        }
-
-        if (!id) {
-            return { success: false, message: 'ID không hợp lệ' };
-        }
-
-        const { error } = await supabase
-            .from('car_models')
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            throw error;
-        }
-
-        return { success: true, message: 'Đã xóa dòng xe thành công' };
-    } catch (e) {
-        console.error('Delete car model error:', e);
-        return { success: false, message: 'Lỗi: ' + e.message };
-    }
-}
-
-// ======================================================
-// DASHBOARD & MTD REPORTS API - Báo cáo tổng hợp
-// ======================================================
 
 /**
  * Lấy dữ liệu Dashboard (Báo cáo Ngày + MTD Tổng)
