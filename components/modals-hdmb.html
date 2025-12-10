@@ -558,11 +558,19 @@ async function submitHDMBForm(event) {
 
 // Expose functions globally
 if (typeof window !== 'undefined') {
+    console.log('[HDMB] Exposing functions to window...');
     window.openHDMBModal = openHDMBModal;
     window.closeHDMBModal = closeHDMBModal;
     window.loadSalesPoliciesForHDMB = loadSalesPoliciesForHDMB;
     window.renderSalesPoliciesCheckboxes = renderSalesPoliciesCheckboxes;
     window.updateHDMBSalesPoliciesText = updateHDMBSalesPoliciesText;
+    console.log('[HDMB] Functions exposed:', {
+        openHDMBModal: typeof window.openHDMBModal,
+        loadSalesPoliciesForHDMB: typeof window.loadSalesPoliciesForHDMB,
+        renderSalesPoliciesCheckboxes: typeof window.renderSalesPoliciesCheckboxes
+    });
+} else {
+    console.error('[HDMB] window is undefined!');
 }
 </script>
 
