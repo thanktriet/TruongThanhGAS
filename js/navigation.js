@@ -56,6 +56,18 @@ function switchTab(id) {
             }
         }, 300);
     }
+    
+    if (id === 'sales-policies') {
+        console.log('[Navigation] Switching to sales-policies tab');
+        setTimeout(() => {
+            if (typeof window.loadSalesPoliciesList === 'function') {
+                console.log('[Navigation] Calling loadSalesPoliciesList...');
+                window.loadSalesPoliciesList();
+            } else {
+                console.error('[Navigation] loadSalesPoliciesList function not found');
+            }
+        }, 300);
+    }
 }
 
 
