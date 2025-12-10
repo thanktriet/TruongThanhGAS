@@ -147,13 +147,22 @@ function escapeHtml(text) {
 
 // Load sales policies for HĐMB form
 async function loadSalesPoliciesForHDMB(retryCount = 0) {
+    console.log('[HDMB Policies] loadSalesPoliciesForHDMB called, retryCount:', retryCount);
+    
     const maxRetries = 5;
     const container = document.getElementById('hdmb-policies-container');
     
     if (!container) {
+        console.warn('[HDMB Policies] Container not found, current retry:', retryCount);
         if (retryCount < maxRetries) {
             console.log(`[HDMB Policies] Container not found, retrying... (${retryCount + 1}/${maxRetries})`);
-            setTimeout(() => loadSalesPoliciesForHDMB(retryCount + 1), 500);
+            setTimeout(() => {
+                if (typeof loadSalesPoliciesForHDMB === 'function') {
+                    loadSalesPoliciesForHDMB(retryCount + 1);
+                } else {
+                    console.error('[HDMB Policies] Function not available for retry!');
+                }
+            }, 500);
             return;
         } else {
             console.error('[HDMB Policies] Container not found after', maxRetries, 'retries');
@@ -161,13 +170,16 @@ async function loadSalesPoliciesForHDMB(retryCount = 0) {
         }
     }
 
-    console.log('[HDMB Policies] Loading sales policies...');
+    console.log('[HDMB Policies] Container found! Loading sales policies...');
+    console.log('[HDMB Policies] Container innerHTML before load:', container.innerHTML.substring(0, 100));
     
     try {
         if (typeof window.callAPI !== 'function') {
+            console.error('[HDMB Policies] window.callAPI is not a function!', typeof window.callAPI);
             throw new Error('callAPI function not found');
         }
 
+        console.log('[HDMB Policies] Calling API with action: get_active_sales_policies');
         const result = await window.callAPI({
             action: 'get_active_sales_policies'
         });
@@ -338,13 +350,36 @@ async function openHDMBModal(orderId) {
     document.getElementById('hdmb-noi_cap').value = customer.issue_place || '';
 
     // Show modal first
-    document.getElementById('modal-create-hdmb').classList.remove('hidden');
+    const modal = document.getElementById('modal-create-hdmb');
+    if (!modal) {
+        console.error('[HDMB] Modal element not found!');
+        return;
+    }
+    
+    modal.classList.remove('hidden');
+    console.log('[HDMB] Modal opened, preparing to load policies...');
     
     // Load sales policies after modal is visible (delay để đảm bảo DOM ready)
+    // Thử nhiều lần với delay tăng dần
     setTimeout(() => {
-        console.log('[HDMB] Modal opened, loading policies...');
-        loadSalesPoliciesForHDMB();
+        console.log('[HDMB] Attempt 1: Loading policies after 300ms...');
+        if (typeof loadSalesPoliciesForHDMB === 'function') {
+            loadSalesPoliciesForHDMB();
+        } else {
+            console.error('[HDMB] loadSalesPoliciesForHDMB function not found!');
+        }
     }, 300);
+    
+    // Backup: thử lại sau 1 giây
+    setTimeout(() => {
+        const container = document.getElementById('hdmb-policies-container');
+        if (container && container.innerHTML.includes('Đang tải chính sách')) {
+            console.log('[HDMB] Attempt 2: Retrying after 1s (still loading...)');
+            if (typeof loadSalesPoliciesForHDMB === 'function') {
+                loadSalesPoliciesForHDMB();
+            }
+        }
+    }, 1000);
 }
 
 function closeHDMBModal() {
