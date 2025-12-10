@@ -286,6 +286,7 @@ if (typeof window !== 'undefined') {
             originalSwitchTab(id);
             setTimeout(() => {
                 updateMobileMenuActiveState();
+                updateMobileBottomNav();
             }, 100);
         };
     }
@@ -316,6 +317,26 @@ if (typeof window !== 'undefined') {
             syncMobileUserInfo();
         }, 500);
     });
+}
+
+// Update bottom navigation active state
+function updateMobileBottomNav() {
+    const activeTab = document.querySelector('.tab-content.active');
+    if (!activeTab) return;
+    
+    const tabId = activeTab.id.replace('tab-', '');
+    
+    // Update all bottom nav buttons
+    document.querySelectorAll('[id^="mobile-nav-bottom-"]').forEach(btn => {
+        btn.classList.remove('text-blue-600');
+        btn.classList.add('text-gray-600');
+    });
+    
+    const activeBtn = document.getElementById(`mobile-nav-bottom-${tabId}`);
+    if (activeBtn) {
+        activeBtn.classList.remove('text-gray-600');
+        activeBtn.classList.add('text-blue-600');
+    }
 }
 
 // Show/hide bottom nav items based on permissions
