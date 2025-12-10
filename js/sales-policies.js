@@ -37,6 +37,8 @@ function withTimeout(promise, timeoutMs, errorMsg) {
 let hasLoadedPolicies = false;
 
 async function loadSalesPoliciesList() {
+    console.log('[Sales Policies] loadSalesPoliciesList called, hasLoadedPolicies:', hasLoadedPolicies);
+    
     const container = document.getElementById('sales-policies-list');
     if (!container) {
         console.error('[Sales Policies] Container not found');
@@ -52,34 +54,49 @@ async function loadSalesPoliciesList() {
     container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><p class="text-sm md:text-base">Đang tải danh sách...</p></div>';
 
     try {
+        if (typeof window.callAPI !== 'function') {
+            throw new Error('callAPI function not found');
+        }
+
+        console.log('[Sales Policies] Calling API with action: list_sales_policies');
         const result = await withTimeout(
             window.callAPI({ action: 'list_sales_policies' }),
             10000,
             'API call timeout sau 10 giây'
         );
 
+        console.log('[Sales Policies] API result:', result);
+
         if (result && result.success && Array.isArray(result.data)) {
+            console.log('[Sales Policies] Loaded', result.data.length, 'policies');
             renderSalesPoliciesList(result.data);
             hasLoadedPolicies = true;
         } else {
+            console.error('[Sales Policies] API error:', result?.message || 'Không thể tải danh sách');
             container.innerHTML = `
                 <div class="text-center py-8 text-red-500">
                     <i class="fa-solid fa-exclamation-circle text-2xl mb-2"></i>
-                    <p class="font-bold">${result?.message || 'Không thể tải danh sách'}</p>
+                    <p class="font-bold">${escapeHtml(result?.message || 'Không thể tải danh sách')}</p>
+                    <button onclick="if(typeof window.loadSalesPoliciesList === 'function') window.loadSalesPoliciesList();" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                        Thử lại
+                    </button>
                 </div>
             `;
         }
     } catch (error) {
         console.error('[Sales Policies] Error:', error);
-        container.innerHTML = `
-            <div class="text-center py-8 text-red-500">
-                <i class="fa-solid fa-exclamation-circle text-2xl mb-2"></i>
-                <p class="font-bold">Lỗi: ${escapeHtml(error.message)}</p>
-                <button onclick="loadSalesPoliciesList()" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-                    Thử lại
-                </button>
-            </div>
-        `;
+        const containerCheck = document.getElementById('sales-policies-list');
+        if (containerCheck) {
+            containerCheck.innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <i class="fa-solid fa-exclamation-circle text-2xl mb-2"></i>
+                    <p class="font-bold">Lỗi: ${escapeHtml(error.message)}</p>
+                    <button onclick="if(typeof window.loadSalesPoliciesList === 'function') window.loadSalesPoliciesList();" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                        Thử lại
+                    </button>
+                </div>
+            `;
+        }
     }
 }
 
@@ -88,16 +105,25 @@ async function loadSalesPoliciesList() {
 // ======================================================
 
 function renderSalesPoliciesList(policies) {
+    console.log('[Sales Policies] renderSalesPoliciesList called with', policies ? policies.length : 0, 'policies');
+    
     const container = document.getElementById('sales-policies-list');
-    if (!container) return;
+    if (!container) {
+        console.error('[Sales Policies] Container not found in renderSalesPoliciesList');
+        return;
+    }
 
     if (!Array.isArray(policies) || policies.length === 0) {
+        console.warn('[Sales Policies] No policies to render');
         container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fa-solid fa-inbox text-2xl mb-2"></i><p class="text-sm md:text-base">Chưa có chính sách nào</p><p class="text-xs mt-2">Vui lòng thêm chính sách mới</p></div>';
         return;
     }
 
     let html = '';
-    policies.forEach(policy => {
+    
+    try {
+        policies.forEach((policy, index) => {
+            try {
         const policyId = policy.id || '';
         const policyName = escapeHtml(policy.name || '');
         const policyDesc = escapeHtml(policy.description || '');
@@ -417,29 +443,87 @@ if (typeof window !== 'undefined') {
 
 // Initialize
 if (typeof window !== 'undefined') {
+    console.log('[Sales Policies] Initializing...');
+    
     // Check and load when tab becomes active
     const checkAndLoadPolicies = () => {
         const tab = document.getElementById('tab-sales-policies');
-        if (tab && tab.classList.contains('active')) {
+        console.log('[Sales Policies] Checking tab...', {
+            tabExists: !!tab,
+            isActive: tab?.classList.contains('active'),
+            hasLoadedPolicies: hasLoadedPolicies
+        });
+        
+        if (tab && tab.classList.contains('active') && !hasLoadedPolicies) {
+            console.log('[Sales Policies] Tab is active, loading...');
+            hasLoadedPolicies = true;
             loadSalesPoliciesList();
-        } else {
+        } else if (tab && !tab.classList.contains('active')) {
             hasLoadedPolicies = false; // Reset when tab is not active
         }
     };
 
-    setTimeout(checkAndLoadPolicies, 500);
+    // Try immediately after a delay
+    setTimeout(() => {
+        console.log('[Sales Policies] Initial check...');
+        checkAndLoadPolicies();
+    }, 1000);
 
-    // Listen for tab switches
-    const container = document.querySelector('.tab-content');
-    if (container && container.parentElement) {
-        const observer = new MutationObserver(() => {
-            checkAndLoadPolicies();
+    // Also listen for tab switches
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const target = mutation.target;
+                if (target.id === 'tab-sales-policies' || target.querySelector('#tab-sales-policies')) {
+                    console.log('[Sales Policies] Tab class changed, checking...');
+                    setTimeout(checkAndLoadPolicies, 100);
+                }
+            }
         });
-        observer.observe(container.parentElement, {
-            attributes: true,
-            attributeFilter: ['class'],
-            subtree: true
+    });
+
+    // Setup observer
+    const setupObserver = () => {
+        const container = document.querySelector('.tab-content');
+        const tabsContainer = document.getElementById('tabs-container');
+        
+        let targetElement = null;
+        if (container && container.parentElement) {
+            targetElement = container.parentElement;
+        } else if (tabsContainer && tabsContainer.parentElement) {
+            targetElement = tabsContainer.parentElement;
+        } else if (tabsContainer) {
+            targetElement = tabsContainer;
+        }
+        
+        if (targetElement) {
+            console.log('[Sales Policies] Setting up MutationObserver');
+            observer.observe(targetElement, {
+                attributes: true,
+                attributeFilter: ['class'],
+                subtree: true
+            });
+        } else {
+            if (!window._salesPoliciesObserverRetries) {
+                window._salesPoliciesObserverRetries = 0;
+            }
+            if (window._salesPoliciesObserverRetries < 5) {
+                window._salesPoliciesObserverRetries++;
+                console.warn(`[Sales Policies] Container not found, retrying... (${window._salesPoliciesObserverRetries}/5)`);
+                setTimeout(setupObserver, 1000);
+            }
+        }
+    };
+
+    // Setup observer after DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(setupObserver, 1000);
         });
+    } else {
+        setTimeout(setupObserver, 1000);
     }
+
+    console.log('[Sales Policies] Initialization complete');
 }
 
