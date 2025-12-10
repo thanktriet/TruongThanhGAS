@@ -436,5 +436,28 @@ async function submitHDMBForm(event) {
         }
     }
 }
+
+// Expose functions globally
+if (typeof window !== 'undefined') {
+    window.openHDMBModal = openHDMBModal;
+    window.closeHDMBModal = closeHDMBModal;
+    window.loadSalesPoliciesForHDMB = loadSalesPoliciesForHDMB;
+    window.renderSalesPoliciesCheckboxes = renderSalesPoliciesCheckboxes;
+    window.updateHDMBSalesPoliciesText = updateHDMBSalesPoliciesText;
+}
 </script>
+
+<style>
+/* Policy items styling */
+.policy-item {
+    transition: background-color 0.2s ease;
+}
+.policy-item:hover {
+    background-color: #e0e7ff;
+}
+.policy-item input[type="checkbox"]:checked + label {
+    color: #6366f1;
+    font-weight: 600;
+}
+</style>
 
