@@ -8,13 +8,15 @@
 UPDATE sales_policies
 SET 
     valid_from = CASE 
-        WHEN valid_from LIKE '2025-%' THEN REPLACE(valid_from, '2025-', '2024-')
+        WHEN EXTRACT(YEAR FROM valid_from) = 2025 THEN 
+            (valid_from - INTERVAL '1 year')::DATE
         ELSE valid_from
     END,
     valid_to = CASE 
-        WHEN valid_to LIKE '2025-%' THEN REPLACE(valid_to, '2025-', '2024-')
+        WHEN EXTRACT(YEAR FROM valid_to) = 2025 THEN 
+            (valid_to - INTERVAL '1 year')::DATE
         ELSE valid_to
     END,
     updated_at = NOW()
-WHERE valid_from LIKE '2025-%' OR valid_to LIKE '2025-%';
+WHERE EXTRACT(YEAR FROM valid_from) = 2025 OR EXTRACT(YEAR FROM valid_to) = 2025;
 
