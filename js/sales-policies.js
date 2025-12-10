@@ -417,8 +417,9 @@ if (typeof window !== 'undefined') {
         
         if (tab && tab.classList.contains('active') && !hasLoadedPolicies) {
             console.log('[Sales Policies] Tab is active, loading...');
-            hasLoadedPolicies = true;
-            loadSalesPoliciesList();
+            // KHÔNG set hasLoadedPolicies = true ở đây
+            // Để loadSalesPoliciesList() tự set sau khi load thành công
+            loadSalesPoliciesList(true); // Force reload để đảm bảo load
         } else if (tab && !tab.classList.contains('active')) {
             hasLoadedPolicies = false; // Reset when tab is not active
         }
