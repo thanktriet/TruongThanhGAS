@@ -8,9 +8,18 @@
         </div>
         <div class="p-6">
             <!-- Filter -->
-            <div class="mb-4 flex gap-3 items-end">
+            <div class="mb-4 flex gap-3 items-end flex-wrap">
                 <div class="flex-1 max-w-xs">
-                    <label class="label text-xs">Chọn tháng:</label>
+                    <label class="label text-xs">Chọn ngày báo cáo:</label>
+                    <input 
+                        type="date" 
+                        id="dashboard-date-filter" 
+                        class="input bg-white" 
+                        onchange="loadReportsDashboard()"
+                    >
+                </div>
+                <div class="flex-1 max-w-xs">
+                    <label class="label text-xs">Chọn tháng (cho MTD):</label>
                     <input 
                         type="month" 
                         id="dashboard-month-filter" 
@@ -46,8 +55,10 @@
 <script>
 /**
  * Render bảng Báo cáo Ngày
+ * @param {Array} dataArray - Mảng chứa headers và data rows
+ * @param {Set} reportedTvbhSet - Set chứa các TVBH đã báo cáo (để tô đỏ những TVBH chưa báo cáo)
  */
-function createDailyTable(dataArray) {
+function createDailyTable(dataArray, reportedTvbhSet = null) {
     if (!dataArray || dataArray.length === 0) {
         return '<p class="text-center text-gray-500 py-8">Không có dữ liệu</p>';
     }
@@ -70,11 +81,38 @@ function createDailyTable(dataArray) {
     for (let i = 1; i < dataArray.length; i++) {
         const row = dataArray[i];
         const isTotal = row[0] === 'TỔNG CỘNG';
-        html += `<tr class="${isTotal ? 'bg-indigo-100 font-bold' : 'hover:bg-gray-50'}">`;
+        const tvbhName = row[1]; // TVBH name ở cột thứ 2
+        
+        // Kiểm tra nếu TVBH chưa báo cáo (tất cả giá trị = 0 và không phải dòng tổng cộng)
+        let isNotReported = false;
+        if (!isTotal && reportedTvbhSet && tvbhName) {
+            const hasData = row.slice(2).some(val => {
+                if (typeof val === 'number') return val > 0;
+                if (typeof val === 'string') {
+                    const numVal = parseFloat(val.replace(/[^0-9.-]/g, ''));
+                    return !isNaN(numVal) && numVal > 0;
+                }
+                return false;
+            });
+            isNotReported = !reportedTvbhSet.has(tvbhName) && !hasData;
+        }
+        
+        const rowClass = isTotal 
+            ? 'bg-indigo-100 font-bold' 
+            : isNotReported 
+                ? 'bg-red-50 hover:bg-red-100' 
+                : 'hover:bg-gray-50';
+        
+        html += `<tr class="${rowClass}">`;
         row.forEach((cell, idx) => {
             const isNumeric = idx >= 2;
             const cellValue = typeof cell === 'number' ? cell.toLocaleString('vi-VN') : cell;
-            html += `<td class="px-4 py-3 text-sm ${isNumeric ? 'text-right' : ''} ${isTotal ? 'font-bold text-indigo-900' : 'text-gray-700'}">${cellValue}</td>`;
+            const cellClass = isTotal 
+                ? 'font-bold text-indigo-900' 
+                : isNotReported 
+                    ? 'text-red-600 font-medium' 
+                    : 'text-gray-700';
+            html += `<td class="px-4 py-3 text-sm ${isNumeric ? 'text-right' : ''} ${cellClass}">${cellValue}</td>`;
         });
         html += '</tr>';
     }
@@ -137,6 +175,7 @@ function createMtdTotalTable(dataArray) {
 }
 
 async function loadReportsDashboard() {
+    const filterDate = document.getElementById('dashboard-date-filter').value || null;
     const filterMonth = document.getElementById('dashboard-month-filter').value || null;
     
     const loadingEl = document.getElementById('dashboard-loading');
@@ -153,13 +192,21 @@ async function loadReportsDashboard() {
     try {
         const result = await window.callAPI({
             action: 'get_dashboard_data',
+            filterDate: filterDate,
             filterMonth: filterMonth
         });
 
         loadingEl.classList.add('hidden');
 
         if (result.success && result.data) {
-            const { daily, mtdTotal } = result.data;
+            const { daily, mtdTotal, reportedTvbhSet } = result.data;
+            
+            // Format date string for display
+            let dateDisplay = 'Hôm Nay';
+            if (filterDate) {
+                const date = new Date(filterDate);
+                dateDisplay = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
             
             let html = '';
             
@@ -167,9 +214,16 @@ async function loadReportsDashboard() {
             html += '<div class="mb-8">';
             html += '<h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">';
             html += '<i class="fa-solid fa-calendar-day text-indigo-600"></i>';
-            html += 'Báo Cáo Ngày (Hôm Nay)';
+            html += `Báo Cáo Ngày (${dateDisplay})`;
             html += '</h3>';
-            html += createDailyTable(daily);
+            
+            // Convert reportedTvbhSet to Set if it's an array
+            const reportedSet = reportedTvbhSet 
+                ? (reportedTvbhSet instanceof Set ? reportedTvbhSet : new Set(reportedTvbhSet))
+                : null;
+            
+            html += createDailyTable(daily, reportedSet);
+            html += '<p class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-info-circle mr-1"></i>TVBH được tô đỏ là những người chưa thực hiện báo cáo trong ngày này</p>';
             html += '</div>';
             
             // Bảng 2: MTD Tổng
@@ -215,10 +269,19 @@ if (typeof window !== 'undefined') {
     window.createMtdTotalTable = createMtdTotalTable;
 }
 
-// Set default month to current month and load on tab active
+// Set default date and month to current and load on tab active
 if (typeof window !== 'undefined') {
     window.addEventListener('load', () => {
+        const dateInput = document.getElementById('dashboard-date-filter');
         const monthInput = document.getElementById('dashboard-month-filter');
+        
+        // Set default date to today
+        if (dateInput && !dateInput.value) {
+            const now = new Date();
+            dateInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
+        
+        // Set default month to current month
         if (monthInput && !monthInput.value) {
             const now = new Date();
             monthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;

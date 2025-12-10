@@ -2268,42 +2268,45 @@ async function supabaseDeleteCarModel(id) {
 
 /**
  * Lấy dữ liệu Dashboard (Báo cáo Ngày + MTD Tổng)
- * @param {string} filterMonth - "yyyy-MM" (Nếu null thì lấy tháng hiện tại)
+ * @param {string} filterDate - "yyyy-MM-dd" (Ngày báo cáo, nếu null thì lấy hôm nay)
+ * @param {string} filterMonth - "yyyy-MM" (Tháng cho MTD, nếu null thì lấy tháng hiện tại)
  */
-async function supabaseGetDashboardData(filterMonth = null) {
+async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
     try {
         const supabase = initSupabase();
         if (!supabase) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
-        // Xác định tháng cần lấy dữ liệu
-        let startDate, endDate, today;
+        // Xác định ngày báo cáo
+        let selectedDate;
+        if (filterDate) {
+            selectedDate = new Date(filterDate + 'T00:00:00');
+        } else {
+            selectedDate = new Date();
+            selectedDate.setHours(0, 0, 0, 0);
+        }
+        const selectedDateStr = selectedDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
+        // Xác định tháng cần lấy dữ liệu cho MTD
+        let startDate, endDate, mtdEndDate;
         if (filterMonth) {
             const [year, month] = filterMonth.split('-').map(Number);
             startDate = new Date(year, month - 1, 1);
             endDate = new Date(year, month, 0, 23, 59, 59);
-            today = new Date();
-            // Nếu tháng được chọn là tháng hiện tại, dùng ngày hôm nay
-            if (today.getFullYear() === year && today.getMonth() === month - 1) {
-                today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-            } else {
-                // Nếu tháng cũ, dùng ngày cuối tháng
-                today = new Date(year, month - 1, endDate.getDate());
-            }
+            // MTD kết thúc ở ngày được chọn hoặc cuối tháng (tùy vào ngày nào nhỏ hơn)
+            mtdEndDate = selectedDate <= endDate ? selectedDate : endDate;
         } else {
             // Mặc định tháng hiện tại
-            today = new Date();
-            const year = today.getFullYear();
-            const month = today.getMonth() + 1;
-            startDate = new Date(year, month - 1, 1);
-            endDate = new Date(year, month, 0, 23, 59, 59);
-            today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const year = selectedDate.getFullYear();
+            const month = selectedDate.getMonth();
+            startDate = new Date(year, month, 1);
+            endDate = new Date(year, month + 1, 0, 23, 59, 59);
+            mtdEndDate = selectedDate <= endDate ? selectedDate : endDate;
         }
 
-        const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
         const startDateStr = startDate.toISOString().split('T')[0];
-        const endDateStr = endDate.toISOString().split('T')[0];
+        const mtdEndDateStr = mtdEndDate.toISOString().split('T')[0];
 
         // 1. Lấy danh sách TVBH (role = 'TVBH')
         // Note: Column name là 'fullname' (không phải 'full_name')
@@ -2336,19 +2339,20 @@ async function supabaseGetDashboardData(filterMonth = null) {
             tvbhMap[user.username] = user.group || '';
         });
 
-        // 2. Lấy dữ liệu báo cáo ngày (hôm nay)
+        // 2. Lấy dữ liệu báo cáo ngày (ngày được chọn)
         const { data: dailyReports, error: dailyError } = await supabase
             .from('daily_reports')
             .select('tvbh, khtn, hop_dong, xhd, doanh_thu')
-            .eq('date', todayStr);
+            .eq('date', selectedDateStr);
 
         if (dailyError) {
             console.error('Error fetching daily reports:', dailyError);
             return { success: false, message: 'Lỗi lấy báo cáo ngày: ' + dailyError.message };
         }
 
-        // Tính tổng theo TVBH cho báo cáo ngày
+        // Tính tổng theo TVBH cho báo cáo ngày và lưu danh sách TVBH đã báo cáo
         const dailyStats = {};
+        const reportedTvbhSet = new Set();
         (dailyReports || []).forEach(report => {
             if (!dailyStats[report.tvbh]) {
                 dailyStats[report.tvbh] = { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
@@ -2357,14 +2361,22 @@ async function supabaseGetDashboardData(filterMonth = null) {
             dailyStats[report.tvbh].hopDong += parseFloat(report.hop_dong) || 0;
             dailyStats[report.tvbh].xhd += parseFloat(report.xhd) || 0;
             dailyStats[report.tvbh].doanhThu += parseFloat(report.doanh_thu) || 0;
+            
+            // Nếu có ít nhất 1 giá trị > 0, thì TVBH đã báo cáo
+            if ((parseFloat(report.khtn) || 0) > 0 || 
+                (parseFloat(report.hop_dong) || 0) > 0 || 
+                (parseFloat(report.xhd) || 0) > 0 || 
+                (parseFloat(report.doanh_thu) || 0) > 0) {
+                reportedTvbhSet.add(report.tvbh);
+            }
         });
 
-        // 3. Lấy dữ liệu MTD (từ đầu tháng đến hôm nay)
+        // 3. Lấy dữ liệu MTD (từ đầu tháng đến ngày được chọn)
         const { data: mtdReports, error: mtdError } = await supabase
             .from('daily_reports')
             .select('tvbh, khtn, hop_dong, xhd, doanh_thu')
             .gte('date', startDateStr)
-            .lte('date', todayStr);
+            .lte('date', mtdEndDateStr);
 
         if (mtdError) {
             console.error('Error fetching MTD reports:', mtdError);
@@ -2384,7 +2396,9 @@ async function supabaseGetDashboardData(filterMonth = null) {
         });
 
         // 4. Tạo bảng Báo cáo Ngày
-        const dailyHeaders = ['Nhóm', 'TVBH', 'KHTN (Hôm nay)', 'Số Ký HĐ (Hôm nay)', 'Số XHĐ (Hôm nay)', 'Doanh Thu (Hôm nay)'];
+        // Format date string for header
+        const dateDisplay = selectedDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const dailyHeaders = ['Nhóm', 'TVBH', `KHTN (${dateDisplay})`, `Số Ký HĐ (${dateDisplay})`, `Số XHĐ (${dateDisplay})`, `Doanh Thu (${dateDisplay})`];
         const dailyData = [dailyHeaders];
         let dailyTotalKHTN = 0, dailyTotalHopDong = 0, dailyTotalXHD = 0, dailyTotalDoanhThu = 0;
 
@@ -2492,7 +2506,8 @@ async function supabaseGetDashboardData(filterMonth = null) {
             success: true,
             data: {
                 daily: dailyData,
-                mtdTotal: mtdTotalData
+                mtdTotal: mtdTotalData,
+                reportedTvbhSet: Array.from(reportedTvbhSet) // Convert Set to Array để có thể serialize
             }
         };
     } catch (e) {
@@ -2667,7 +2682,7 @@ async function callSupabaseAPI(data) {
             
             // Dashboard & Reports API
             case 'get_dashboard_data':
-                return await supabaseGetDashboardData(data.filterMonth);
+                return await supabaseGetDashboardData(data.filterDate, data.filterMonth);
             
             case 'get_mtd_detail_report':
                 return await supabaseGetMtdDetailReport(data.filters || {});
