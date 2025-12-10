@@ -239,12 +239,12 @@ function renderSalesPoliciesCheckboxes(policies) {
                     return;
                 }
                 
-                const policyId = `hdmb-policy-${policy.id}`;
+                const policyId = 'hdmb-policy-' + policy.id;
                 const policyName = escapeHtml(policy.name || '');
                 const policyDesc = escapeHtml(policy.description || '');
                 
                 html += '<div class="policy-item flex items-start gap-2 p-2 rounded hover:bg-blue-50 active:bg-blue-100 transition">';
-                html += '<input type="checkbox" id="' + policyId + '" name="hdmb_policy" value="' + policyDesc + '" class="mt-1 w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500 touch-manipulation" data-policy-name="' + policyName + '">';
+                html += '<input type="checkbox" id="' + policyId + '" name="hdmb_policy" value="' + policyDesc + '" class="mt-1 w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500 touch-manipulation" data-policy-name="' + policyName + '" onchange="if(typeof window.updateHDMBSalesPoliciesText === \'function\') window.updateHDMBSalesPoliciesText();">';
                 html += '<label for="' + policyId + '" class="flex-1 text-xs md:text-sm cursor-pointer"><span class="font-medium">' + policyName + '</span></label>';
                 html += '</div>';
             } catch (policyError) {
