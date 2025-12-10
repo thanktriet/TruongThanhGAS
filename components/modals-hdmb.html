@@ -137,6 +137,14 @@
 <script>
 let currentOrderForHDMB = null;
 
+// Helper: Escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Load sales policies for HĐMB form
 async function loadSalesPoliciesForHDMB(retryCount = 0) {
     const maxRetries = 5;
@@ -168,6 +176,7 @@ async function loadSalesPoliciesForHDMB(retryCount = 0) {
 
         if (result && result.success && Array.isArray(result.data)) {
             console.log('[HDMB Policies] Loaded', result.data.length, 'policies');
+            console.log('[HDMB Policies] First policy sample:', result.data[0]);
             renderSalesPoliciesCheckboxes(result.data);
         } else {
             console.error('[HDMB Policies] API error:', result?.message || 'Không thể tải chính sách');
@@ -221,32 +230,40 @@ function renderSalesPoliciesCheckboxes(policies) {
     }
 
     let html = '<div class="space-y-2">';
-    policies.forEach((policy, index) => {
-        const policyId = `hdmb-policy-${policy.id || index}`;
-        const policyName = (policy.name || '').replace(/"/g, '&quot;');
-        const policyDesc = (policy.description || '').replace(/"/g, '&quot;');
-        
-        html += `
-            <div class="policy-item flex items-start gap-2 p-2 rounded hover:bg-blue-50 active:bg-blue-100 transition">
-                <input 
-                    type="checkbox" 
-                    id="${policyId}"
-                    name="hdmb_policy" 
-                    value="${policyDesc}"
-                    class="mt-1 w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500 touch-manipulation"
-                    onchange="updateHDMBSalesPoliciesText()"
-                    data-policy-name="${policyName}"
-                >
-                <label for="${policyId}" class="flex-1 text-xs md:text-sm cursor-pointer">
-                    <span class="font-medium">${policyName}</span>
-                </label>
-            </div>
-        `;
-    });
-    html += '</div>';
     
-    container.innerHTML = html;
-    console.log('[HDMB Policies] Rendered', policies.length, 'policies successfully');
+    try {
+        policies.forEach((policy, index) => {
+            try {
+                if (!policy || !policy.id) {
+                    console.warn('[HDMB Policies] Invalid policy at index', index, policy);
+                    return;
+                }
+                
+                const policyId = `hdmb-policy-${policy.id}`;
+                const policyName = escapeHtml(policy.name || '');
+                const policyDesc = escapeHtml(policy.description || '');
+                
+                html += '<div class="policy-item flex items-start gap-2 p-2 rounded hover:bg-blue-50 active:bg-blue-100 transition">';
+                html += '<input type="checkbox" id="' + policyId + '" name="hdmb_policy" value="' + policyDesc + '" class="mt-1 w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500 touch-manipulation" data-policy-name="' + policyName + '">';
+                html += '<label for="' + policyId + '" class="flex-1 text-xs md:text-sm cursor-pointer"><span class="font-medium">' + policyName + '</span></label>';
+                html += '</div>';
+            } catch (policyError) {
+                console.error('[HDMB Policies] Error rendering policy at index', index, policyError, policy);
+            }
+        });
+        html += '</div>';
+        
+        console.log('[HDMB Policies] Generated HTML length:', html.length);
+        container.innerHTML = html;
+        console.log('[HDMB Policies] Rendered', policies.length, 'policies successfully');
+        
+        // Verify DOM was updated
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        console.log('[HDMB Policies] Found', checkboxes.length, 'checkboxes in DOM after render');
+    } catch (renderError) {
+        console.error('[HDMB Policies] Error in render function:', renderError);
+        container.innerHTML = '<div class="text-center py-4 text-red-500 text-sm">Lỗi render: ' + escapeHtml(renderError.message) + '</div>';
+    }
 }
 
 // Update textarea with selected policies
