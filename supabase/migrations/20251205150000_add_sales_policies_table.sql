@@ -56,3 +56,6 @@ INSERT INTO sales_policies (name, description, display_order, is_active, valid_f
   ('CSBH giảm 3tr VF3 TC1', 'CSBH ưu đãi giảm giá 3.000.000 vnđ với các xe VF3 tiêu chuẩn 1 áp dụng xuất hoá đơn từ 04/12/2025 đến hết 31/12/2025.', 100, true, '2025-12-04', '2025-12-31', 'admin')
 ON CONFLICT DO NOTHING;
 
+
+
+

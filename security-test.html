@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔒 Security Test - API Vulnerability Scanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            color: #856404;
+        }
+        .warning strong {
+            color: #d9534f;
+        }
+        .test-section {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        .test-case {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+        .test-case.critical {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        .test-case.medium {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+        .test-case.safe {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+        .test-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .test-description {
+            color: #666;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        .test-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-test {
+            background: #007bff;
+            color: white;
+        }
+        .btn-test:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result.warning {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+        }
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status-vulnerable {
+            background: #dc3545;
+            color: white;
+        }
+        .status-safe {
+            background: #28a745;
+            color: white;
+        }
+        .status-unknown {
+            background: #6c757d;
+            color: white;
+        }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+        .loader {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .summary {
+            background: #e9ecef;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Security Test - API Vulnerability Scanner</h1>
+            <p>Kiểm tra các lỗ hổng bảo mật API</p>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ CẢNH BÁO:</strong> File này chỉ dùng để test bảo mật. KHÔNG chạy trên production hoặc với dữ liệu thật. 
+            Các test có thể gây ra thay đổi dữ liệu. Chỉ sử dụng trong môi trường development.
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Summary</h2>
+            <div class="summary" id="summary">
+                <div class="summary-item">
+                    <span>Total Tests:</span>
+                    <span id="total-tests">0</span>
+                </div>
+                <div class="summary-item">
+                    <span>🔴 Critical Vulnerabilities:</span>
+                    <span id="critical-count">0</span>
+                </div>
+                <div class="summary-item">
+                    <span>🟡 Medium Risks:</span>
+                    <span id="medium-count">0</span>
+                </div>
+                <div class="summary-item">
+                    <span>✅ Safe:</span>
+                    <span id="safe-count">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🚨 Critical Vulnerabilities</h2>
+            
+            <div class="test-case critical" id="test-delete-car-model">
+                <div class="test-title">
+                    Test 1: Unauthorized Delete Car Model
+                    <span class="status-badge status-unknown" id="status-1">NOT TESTED</span>
+                </div>
+                <div class="test-description">
+                    Kiểm tra xem user bất kỳ có thể xóa dòng xe không. 
+                    <strong>Expected:</strong> Should FAIL với authorization error.
+                </div>
+                <div class="code-block">
+await window.callAPI({
+    action: 'delete_car_model',
+    id: 999  // Test ID (không tồn tại)
+});
+                </div>
+                <div class="test-actions">
+                    <button class="btn-test" onclick="testDeleteCarModel()">Run Test</button>
+                    <button class="btn-danger" onclick="clearResult('result-1')">Clear</button>
+                </div>
+                <div class="result" id="result-1" style="display:none;"></div>
+            </div>
+
+            <div class="test-case critical" id="test-delete-sales-policy">
+                <div class="test-title">
+                    Test 2: Unauthorized Delete Sales Policy
+                    <span class="status-badge status-unknown" id="status-2">NOT TESTED</span>
+                </div>
+                <div class="test-description">
+                    Kiểm tra xem user bất kỳ có thể xóa chính sách bán hàng không.
+                    <strong>Expected:</strong> Should FAIL với authorization error.
+                </div>
+                <div class="code-block">
+await window.callAPI({
+    action: 'delete_sales_policy',
+    id: 999
+});
+                </div>
+                <div class="test-actions">
+                    <button class="btn-test" onclick="testDeleteSalesPolicy()">Run Test</button>
+                    <button class="btn-danger" onclick="clearResult('result-2')">Clear</button>
+                </div>
+                <div class="result" id="result-2" style="display:none;"></div>
+            </div>
+
+            <div class="test-case critical" id="test-create-car-model">
+                <div class="test-title">
+                    Test 3: Unauthorized Create Car Model
+                    <span class="status-badge status-unknown" id="status-3">NOT TESTED</span>
+                </div>
+                <div class="test-description">
+                    Kiểm tra xem user bất kỳ có thể tạo dòng xe mới không.
+                    <strong>Expected:</strong> Should FAIL với authorization error.
+                </div>
+                <div class="code-block">
+await window.callAPI({
+    action: 'create_car_model',
+    name: 'TEST_XE_' + Date.now(),
+    display_order: 999,
+    is_active: true
+});
+                </div>
+                <div class="test-actions">
+                    <button class="btn-test" onclick="testCreateCarModel()">Run Test</button>
+                    <button class="btn-danger" onclick="clearResult('result-3')">Clear</button>
+                </div>
+                <div class="result" id="result-3" style="display:none;"></div>
+            </div>
+
+            <div class="test-case critical" id="test-update-car-model">
+                <div class="test-title">
+                    Test 4: Unauthorized Update Car Model
+                    <span class="status-badge status-unknown" id="status-4">NOT TESTED</span>
+                </div>
+                <div class="test-description">
+                    Kiểm tra xem user bất kỳ có thể sửa dòng xe không.
+                    <strong>Expected:</strong> Should FAIL với authorization error.
+                </div>
+                <div class="code-block">
+await window.callAPI({
+    action: 'update_car_model',
+    id: 1,
+    name: 'HACKED_NAME',
+    is_active: false
+});
+                </div>
+                <div class="test-actions">
+                    <button class="btn-test" onclick="testUpdateCarModel()">Run Test</button>
+                    <button class="btn-danger" onclick="clearResult('result-4')">Clear</button>
+                </div>
+                <div class="result" id="result-4" style="display:none;"></div>
+            </div>
+
+            <div class="test-case critical" id="test-create-sales-policy">
+                <div class="test-title">
+                    Test 5: Unauthorized Create Sales Policy
+                    <span class="status-badge status-unknown" id="status-5">NOT TESTED</span>
+                </div>
+                <div class="test-description">
+                    Kiểm tra xem user bất kỳ có thể tạo chính sách mới không.
+                    <strong>Expected:</strong> Should FAIL với authorization error.
+                </div>
+                <div class="code-block">
+await window.callAPI({
+    action: 'create_sales_policy',
+    name: 'TEST_POLICY_' + Date.now(),
+    description: 'Mô tả test',
+    is_active: true
+});
+                </div>
+                <div class="test-actions">
+                    <button class="btn-test" onclick="testCreateSalesPolicy()">Run Test</button>
+                    <button class="btn-danger" onclick="clearResult('result-5')">Clear</button>
+                </div>
+                <div class="result" id="result-5" style="display:none;"></div>
+            </div>
+
+            <div class="test-case critical" id="test-update-sales-policy">
+                <div class="test-title">
+                    Test 6: Unauthorized Update Sales Policy
+                    <span class="status-badge status-unknown" id="status-6">NOT TESTED</span>
+                </div>
+                <div class="test-description">
+                    Kiểm tra xem user bất kỳ có thể sửa chính sách không.
+                    <strong>Expected:</strong> Should FAIL với authorization error.
+                </div>
+                <div class="code-block">
+await window.callAPI({
+    action: 'update_sales_policy',
+    id: 1,
+    name: 'HACKED_POLICY',
+    description: 'Mô tả độc hại'
+});
+                </div>
+                <div class="test-actions">
+                    <button class="btn-test" onclick="testUpdateSalesPolicy()">Run Test</button>
+                    <button class="btn-danger" onclick="clearResult('result-6')">Clear</button>
+                </div>
+                <div class="result" id="result-6" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🟡 Medium Risks</h2>
+
+            <div class="test-case medium" id="test-api-key-exposure">
+                <div class="test-title">
+                    Test 7: API Key Exposure
+                    <span class="status-badge status-unknown" id="status-7">NOT TESTED</span>
+                </div>
+                <div class="test-description">
+                    Kiểm tra xem API key có bị lộ trong source code không.
+                    <strong>Expected:</strong> Key should NOT be hardcoded.
+                </div>
+                <div class="test-actions">
+                    <button class="btn-test" onclick="testApiKeyExposure()">Run Test</button>
+                    <button class="btn-danger" onclick="clearResult('result-7')">Clear</button>
+                </div>
+                <div class="result" id="result-7" style="display:none;"></div>
+            </div>
+
+            <div class="test-case medium" id="test-session-hijack">
+                <div class="test-title">
+                    Test 8: Session Hijacking
+                    <span class="status-badge status-unknown" id="status-8">NOT TESTED</span>
+                </div>
+                <div class="test-description">
+                    Kiểm tra xem session có thể bị đánh cắp từ localStorage không.
+                </div>
+                <div class="test-actions">
+                    <button class="btn-test" onclick="testSessionHijack()">Run Test</button>
+                    <button class="btn-danger" onclick="clearResult('result-8')">Clear</button>
+                </div>
+                <div class="result" id="result-8" style="display:none;"></div>
+            </div>
+
+            <div class="test-case medium" id="test-direct-supabase">
+                <div class="test-title">
+                    Test 9: Direct Supabase API Call
+                    <span class="status-badge status-unknown" id="status-9">NOT TESTED</span>
+                </div>
+                <div class="test-description">
+                    Kiểm tra xem có thể gọi Supabase API trực tiếp với exposed key không.
+                    <strong>Expected:</strong> Should FAIL (RLS block).
+                </div>
+                <div class="test-actions">
+                    <button class="btn-test" onclick="testDirectSupabase()">Run Test</button>
+                    <button class="btn-danger" onclick="clearResult('result-9')">Clear</button>
+                </div>
+                <div class="result" id="result-9" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>✅ Safe APIs (Reference)</h2>
+
+            <div class="test-case safe" id="test-safe-create-user">
+                <div class="test-title">
+                    Test 10: Safe API - Create User (Should Fail for Non-Admin)
+                    <span class="status-badge status-unknown" id="status-10">NOT TESTED</span>
+                </div>
+                <div class="test-description">
+                    Kiểm tra API create_user có authorization check không.
+                    <strong>Expected:</strong> Should FAIL với authorization error (nếu không phải admin).
+                </div>
+                <div class="test-actions">
+                    <button class="btn-test" onclick="testSafeCreateUser()">Run Test</button>
+                    <button class="btn-danger" onclick="clearResult('result-10')">Clear</button>
+                </div>
+                <div class="result" id="result-10" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper functions
+        function showResult(id, message, type = 'info') {
+            const resultEl = document.getElementById(id);
+            resultEl.style.display = 'block';
+            resultEl.className = 'result ' + type;
+            resultEl.textContent = message;
+        }
+
+        function clearResult(id) {
+            const resultEl = document.getElementById(id);
+            resultEl.style.display = 'none';
+            resultEl.textContent = '';
+        }
+
+        function updateStatus(testNum, status) {
+            const statusEl = document.getElementById('status-' + testNum);
+            statusEl.textContent = status;
+            if (status === 'VULNERABLE') {
+                statusEl.className = 'status-badge status-vulnerable';
+            } else if (status === 'SAFE') {
+                statusEl.className = 'status-badge status-safe';
+            } else {
+                statusEl.className = 'status-badge status-unknown';
+            }
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const statuses = [];
+            for (let i = 1; i <= 10; i++) {
+                const statusEl = document.getElementById('status-' + i);
+                if (statusEl) {
+                    statuses.push(statusEl.textContent);
+                }
+            }
+            const vulnerable = statuses.filter(s => s === 'VULNERABLE').length;
+            const safe = statuses.filter(s => s === 'SAFE').length;
+            const unknown = statuses.filter(s => s === 'NOT TESTED').length;
+            
+            document.getElementById('total-tests').textContent = statuses.length;
+            document.getElementById('critical-count').textContent = vulnerable;
+            document.getElementById('safe-count').textContent = safe;
+        }
+
+        function getCurrentUser() {
+            try {
+                const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+                return {
+                    username: session.username || 'unknown',
+                    role: session.role || 'unknown',
+                    hasSession: !!session.username
+                };
+            } catch (e) {
+                return { username: 'unknown', role: 'unknown', hasSession: false };
+            }
+        }
+
+        // Test functions
+        async function testDeleteCarModel() {
+            const user = getCurrentUser();
+            showResult('result-1', `Testing as: ${user.username} (${user.role})\nRunning test...`, 'info');
+            
+            try {
+                if (!window.callAPI) {
+                    throw new Error('window.callAPI not found. Make sure you are on the main page.');
+                }
+
+                const result = await window.callAPI({
+                    action: 'delete_car_model',
+                    id: 999  // Test ID (should not exist)
+                });
+
+                let isVulnerable = false;
+                if (result.success) {
+                    isVulnerable = true;
+                    updateStatus(1, 'VULNERABLE');
+                    showResult('result-1', 
+                        `❌ VULNERABLE: API cho phép xóa dòng xe!\n\n` +
+                        `User: ${user.username} (${user.role})\n` +
+                        `Result: ${JSON.stringify(result, null, 2)}\n\n` +
+                        `⚠️ API không có authorization check. Bất kỳ user nào cũng có thể xóa dòng xe!`,
+                        'error'
+                    );
+                } else {
+                    // Check if error is authorization-related
+                    const errorMsg = (result.message || '').toLowerCase();
+                    if (errorMsg.includes('admin') || errorMsg.includes('quyền') || errorMsg.includes('permission')) {
+                        updateStatus(1, 'SAFE');
+                        showResult('result-1', 
+                            `✅ SAFE: API đã có authorization check\n\n` +
+                            `User: ${user.username} (${user.role})\n` +
+                            `Result: ${JSON.stringify(result, null, 2)}`,
+                            'success'
+                        );
+                    } else {
+                        // Might be "not found" error, still vulnerable if non-admin can call
+                        if (user.role !== 'ADMIN') {
+                            updateStatus(1, 'VULNERABLE');
+                            showResult('result-1', 
+                                `⚠️ POTENTIALLY VULNERABLE: Error không phải authorization\n\n` +
+                                `User: ${user.username} (${user.role})\n` +
+                                `Result: ${JSON.stringify(result, null, 2)}\n\n` +
+                                `Cần kiểm tra xem có authorization check không.`,
+                                'warning'
+                            );
+                        } else {
+                            updateStatus(1, 'SAFE');
+                            showResult('result-1', 
+                                `✅ Tested as ADMIN (expected behavior)\n\n` +
+                                `Result: ${JSON.stringify(result, null, 2)}`,
+                                'info'
+                            );
+                        }
+                    }
+                }
+            } catch (error) {
+                updateStatus(1, 'UNKNOWN');
+                showResult('result-1', 
+                    `❌ Error: ${error.message}\n\n` +
+                    `Stack: ${error.stack}`,
+                    'error'
+                );
+            }
+        }
+
+        async function testDeleteSalesPolicy() {
+            const user = getCurrentUser();
+            showResult('result-2', `Testing as: ${user.username} (${user.role})\nRunning test...`, 'info');
+            
+            try {
+                const result = await window.callAPI({
+                    action: 'delete_sales_policy',
+                    id: 999
+                });
+
+                const errorMsg = (result.message || '').toLowerCase();
+                if (result.success) {
+                    updateStatus(2, 'VULNERABLE');
+                    showResult('result-2', 
+                        `❌ VULNERABLE: API cho phép xóa chính sách!\n\n` +
+                        `User: ${user.username} (${user.role})\n` +
+                        `Result: ${JSON.stringify(result, null, 2)}`,
+                        'error'
+                    );
+                } else if (errorMsg.includes('admin') || errorMsg.includes('quyền')) {
+                    updateStatus(2, 'SAFE');
+                    showResult('result-2', `✅ SAFE: Có authorization check\n\n${JSON.stringify(result, null, 2)}`, 'success');
+                } else {
+                    updateStatus(2, user.role !== 'ADMIN' ? 'VULNERABLE' : 'SAFE');
+                    showResult('result-2', `⚠️ Cần kiểm tra\n\n${JSON.stringify(result, null, 2)}`, 'warning');
+                }
+            } catch (error) {
+                showResult('result-2', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCreateCarModel() {
+            const user = getCurrentUser();
+            showResult('result-3', `Testing as: ${user.username} (${user.role})\nRunning test...`, 'info');
+            
+            try {
+                const testName = 'TEST_XE_' + Date.now();
+                const result = await window.callAPI({
+                    action: 'create_car_model',
+                    name: testName,
+                    display_order: 999,
+                    is_active: true
+                });
+
+                const errorMsg = (result.message || '').toLowerCase();
+                if (result.success && user.role !== 'ADMIN') {
+                    updateStatus(3, 'VULNERABLE');
+                    showResult('result-3', 
+                        `❌ VULNERABLE: Non-admin có thể tạo dòng xe!\n\n` +
+                        `Created: ${testName}\n` +
+                        `User: ${user.username} (${user.role})\n` +
+                        `Result: ${JSON.stringify(result, null, 2)}`,
+                        'error'
+                    );
+                } else if (errorMsg.includes('admin') || errorMsg.includes('quyền')) {
+                    updateStatus(3, 'SAFE');
+                    showResult('result-3', `✅ SAFE: Có authorization check\n\n${JSON.stringify(result, null, 2)}`, 'success');
+                } else {
+                    updateStatus(3, user.role !== 'ADMIN' ? 'VULNERABLE' : 'SAFE');
+                    showResult('result-3', `⚠️ Cần kiểm tra\n\n${JSON.stringify(result, null, 2)}`, 'warning');
+                }
+            } catch (error) {
+                showResult('result-3', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testUpdateCarModel() {
+            const user = getCurrentUser();
+            showResult('result-4', `Testing as: ${user.username} (${user.role})\nRunning test...`, 'info');
+            
+            try {
+                const result = await window.callAPI({
+                    action: 'update_car_model',
+                    id: 1,
+                    name: 'HACKED_NAME_' + Date.now(),
+                    is_active: false
+                });
+
+                const errorMsg = (result.message || '').toLowerCase();
+                if (result.success && user.role !== 'ADMIN') {
+                    updateStatus(4, 'VULNERABLE');
+                    showResult('result-4', 
+                        `❌ VULNERABLE: Non-admin có thể sửa dòng xe!\n\n` +
+                        `User: ${user.username} (${user.role})\n` +
+                        `Result: ${JSON.stringify(result, null, 2)}`,
+                        'error'
+                    );
+                } else if (errorMsg.includes('admin') || errorMsg.includes('quyền')) {
+                    updateStatus(4, 'SAFE');
+                    showResult('result-4', `✅ SAFE: Có authorization check\n\n${JSON.stringify(result, null, 2)}`, 'success');
+                } else {
+                    updateStatus(4, user.role !== 'ADMIN' ? 'VULNERABLE' : 'SAFE');
+                    showResult('result-4', `⚠️ Cần kiểm tra\n\n${JSON.stringify(result, null, 2)}`, 'warning');
+                }
+            } catch (error) {
+                showResult('result-4', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCreateSalesPolicy() {
+            const user = getCurrentUser();
+            showResult('result-5', `Testing as: ${user.username} (${user.role})\nRunning test...`, 'info');
+            
+            try {
+                const testName = 'TEST_POLICY_' + Date.now();
+                const result = await window.callAPI({
+                    action: 'create_sales_policy',
+                    name: testName,
+                    description: 'Mô tả test',
+                    is_active: true
+                });
+
+                const errorMsg = (result.message || '').toLowerCase();
+                if (result.success && user.role !== 'ADMIN') {
+                    updateStatus(5, 'VULNERABLE');
+                    showResult('result-5', 
+                        `❌ VULNERABLE: Non-admin có thể tạo chính sách!\n\n` +
+                        `User: ${user.username} (${user.role})\n` +
+                        `Result: ${JSON.stringify(result, null, 2)}`,
+                        'error'
+                    );
+                } else if (errorMsg.includes('admin') || errorMsg.includes('quyền')) {
+                    updateStatus(5, 'SAFE');
+                    showResult('result-5', `✅ SAFE: Có authorization check\n\n${JSON.stringify(result, null, 2)}`, 'success');
+                } else {
+                    updateStatus(5, user.role !== 'ADMIN' ? 'VULNERABLE' : 'SAFE');
+                    showResult('result-5', `⚠️ Cần kiểm tra\n\n${JSON.stringify(result, null, 2)}`, 'warning');
+                }
+            } catch (error) {
+                showResult('result-5', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testUpdateSalesPolicy() {
+            const user = getCurrentUser();
+            showResult('result-6', `Testing as: ${user.username} (${user.role})\nRunning test...`, 'info');
+            
+            try {
+                const result = await window.callAPI({
+                    action: 'update_sales_policy',
+                    id: 1,
+                    name: 'HACKED_POLICY_' + Date.now(),
+                    description: 'Mô tả độc hại'
+                });
+
+                const errorMsg = (result.message || '').toLowerCase();
+                if (result.success && user.role !== 'ADMIN') {
+                    updateStatus(6, 'VULNERABLE');
+                    showResult('result-6', 
+                        `❌ VULNERABLE: Non-admin có thể sửa chính sách!\n\n` +
+                        `User: ${user.username} (${user.role})\n` +
+                        `Result: ${JSON.stringify(result, null, 2)}`,
+                        'error'
+                    );
+                } else if (errorMsg.includes('admin') || errorMsg.includes('quyền')) {
+                    updateStatus(6, 'SAFE');
+                    showResult('result-6', `✅ SAFE: Có authorization check\n\n${JSON.stringify(result, null, 2)}`, 'success');
+                } else {
+                    updateStatus(6, user.role !== 'ADMIN' ? 'VULNERABLE' : 'SAFE');
+                    showResult('result-6', `⚠️ Cần kiểm tra\n\n${JSON.stringify(result, null, 2)}`, 'warning');
+                }
+            } catch (error) {
+                showResult('result-6', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function testApiKeyExposure() {
+            let message = 'Checking for API key exposure...\n\n';
+            
+            if (window.SUPABASE_CONFIG) {
+                message += '❌ API KEY EXPOSED:\n';
+                message += `URL: ${window.SUPABASE_CONFIG.url}\n`;
+                message += `Key: ${window.SUPABASE_CONFIG.anonKey ? window.SUPABASE_CONFIG.anonKey.substring(0, 50) + '...' : 'NOT FOUND'}\n\n`;
+                message += '⚠️ API key bị hardcode trong client-side code!\n';
+                message += '✅ Recommendation: Move to environment variables or server-side proxy.';
+                updateStatus(7, 'VULNERABLE');
+                showResult('result-7', message, 'error');
+            } else {
+                message += '✅ API key không tìm thấy trong window object.\n';
+                message += '(Có thể đã được bảo vệ hoặc chưa load)';
+                updateStatus(7, 'SAFE');
+                showResult('result-7', message, 'success');
+            }
+        }
+
+        function testSessionHijack() {
+            const user = getCurrentUser();
+            let message = 'Checking session security...\n\n';
+            
+            const sessionStr = localStorage.getItem('user_session');
+            if (sessionStr) {
+                try {
+                    const session = JSON.parse(sessionStr);
+                    message += '❌ SESSION STORED IN LOCALSTORAGE:\n';
+                    message += `Username: ${session.username || 'N/A'}\n`;
+                    message += `Role: ${session.role || 'N/A'}\n`;
+                    message += `Has login_time: ${session.login_time ? 'YES' : 'NO'}\n\n`;
+                    message += '⚠️ Session có thể bị đánh cắp qua XSS!\n';
+                    message += '✅ Recommendation: Use httpOnly cookies or session tokens.';
+                    
+                    // Show if session can be stolen
+                    message += `\n\n📋 Stolen Session Data:\n${JSON.stringify(session, null, 2)}`;
+                    
+                    updateStatus(8, 'VULNERABLE');
+                    showResult('result-8', message, 'error');
+                } catch (e) {
+                    showResult('result-8', `Error parsing session: ${e.message}`, 'error');
+                }
+            } else {
+                message += '✅ No session found in localStorage.\n';
+                message += '(User not logged in or session stored elsewhere)';
+                updateStatus(8, 'SAFE');
+                showResult('result-8', message, 'info');
+            }
+        }
+
+        async function testDirectSupabase() {
+            showResult('result-9', 'Testing direct Supabase API call...', 'info');
+            
+            try {
+                if (!window.SUPABASE_CONFIG || !window.supabase) {
+                    throw new Error('Supabase not initialized. Please run this test on the main page.');
+                }
+
+                const supabase = window.supabase.createClient(
+                    window.SUPABASE_CONFIG.url,
+                    window.SUPABASE_CONFIG.anonKey
+                );
+
+                // Try to query users table directly
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('username, role')
+                    .limit(5);
+
+                if (error) {
+                    if (error.message.includes('permission') || error.message.includes('RLS')) {
+                        updateStatus(9, 'SAFE');
+                        showResult('result-9', 
+                            `✅ SAFE: RLS blocks direct access\n\n` +
+                            `Error: ${error.message}\n\n` +
+                            `✅ Supabase Row Level Security đang hoạt động.`,
+                            'success'
+                        );
+                    } else {
+                        updateStatus(9, 'UNKNOWN');
+                        showResult('result-9', 
+                            `⚠️ Unknown error\n\nError: ${error.message}`,
+                            'warning'
+                        );
+                    }
+                } else {
+                    updateStatus(9, 'VULNERABLE');
+                    showResult('result-9', 
+                        `❌ VULNERABLE: Có thể query trực tiếp!\n\n` +
+                        `Data: ${JSON.stringify(data, null, 2)}\n\n` +
+                        `⚠️ RLS không được enable hoặc config sai!`,
+                        'error'
+                    );
+                }
+            } catch (error) {
+                updateStatus(9, 'UNKNOWN');
+                showResult('result-9', 
+                    `Error: ${error.message}\n\n` +
+                    `Make sure you are on the main page with Supabase loaded.`,
+                    'error'
+                );
+            }
+        }
+
+        async function testSafeCreateUser() {
+            const user = getCurrentUser();
+            showResult('result-10', `Testing safe API (should have auth check)...`, 'info');
+            
+            try {
+                const result = await window.callAPI({
+                    action: 'create_user',
+                    username: 'test_user',
+                    role: 'TVBH'
+                });
+
+                const errorMsg = (result.message || '').toLowerCase();
+                if (!result.success && (errorMsg.includes('admin') || errorMsg.includes('quyền'))) {
+                    updateStatus(10, 'SAFE');
+                    showResult('result-10', 
+                        `✅ SAFE: API có authorization check\n\n` +
+                        `User: ${user.username} (${user.role})\n` +
+                        `Result: ${JSON.stringify(result, null, 2)}\n\n` +
+                        `✅ API này đã được bảo vệ đúng cách.`,
+                        'success'
+                    );
+                } else {
+                    updateStatus(10, user.role === 'ADMIN' ? 'SAFE' : 'UNKNOWN');
+                    showResult('result-10', 
+                        `⚠️ Cần kiểm tra\n\n` +
+                        `User: ${user.username} (${user.role})\n` +
+                        `Result: ${JSON.stringify(result, null, 2)}`,
+                        'warning'
+                    );
+                }
+            } catch (error) {
+                showResult('result-10', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        updateSummary();
+    </script>
+</body>
+</html>
+
