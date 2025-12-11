@@ -2147,12 +2147,35 @@ async function supabaseCreateCarModel(carModelData) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
+        // ✅ SECURITY: Kiểm tra session
+        const session = typeof getSession === 'function' ? getSession() : (() => {
+            try {
+                const sessionStr = localStorage.getItem('user_session');
+                return sessionStr ? JSON.parse(sessionStr) : null;
+            } catch (e) {
+                return null;
+            }
+        })();
+        
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Chỉ ADMIN mới có quyền tạo dòng xe
+        if (session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ ADMIN mới có quyền tạo dòng xe' };
+        }
+
+        // ✅ SECURITY: Kiểm tra permission nếu có hàm hasPermission
+        if (typeof hasPermission === 'function' && !hasPermission(session, 'manage_car_models')) {
+            return { success: false, message: 'Bạn không có quyền quản lý dòng xe' };
+        }
+
         if (!carModelData.name || !carModelData.name.trim()) {
             return { success: false, message: 'Tên dòng xe không được để trống' };
         }
 
-        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
-        const username = session?.username || 'admin';
+        const username = session.username;
 
         const { data, error } = await supabase
             .from('car_models')
@@ -2190,12 +2213,35 @@ async function supabaseUpdateCarModel(id, carModelData) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
+        // ✅ SECURITY: Kiểm tra session
+        const session = typeof getSession === 'function' ? getSession() : (() => {
+            try {
+                const sessionStr = localStorage.getItem('user_session');
+                return sessionStr ? JSON.parse(sessionStr) : null;
+            } catch (e) {
+                return null;
+            }
+        })();
+        
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Chỉ ADMIN mới có quyền sửa dòng xe
+        if (session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ ADMIN mới có quyền cập nhật dòng xe' };
+        }
+
+        // ✅ SECURITY: Kiểm tra permission nếu có hàm hasPermission
+        if (typeof hasPermission === 'function' && !hasPermission(session, 'manage_car_models')) {
+            return { success: false, message: 'Bạn không có quyền quản lý dòng xe' };
+        }
+
         if (!id) {
             return { success: false, message: 'ID không hợp lệ' };
         }
 
-        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
-        const username = session?.username || 'admin';
+        const username = session.username;
 
         const updateData = {
             updated_by: username
@@ -2235,11 +2281,40 @@ async function supabaseUpdateCarModel(id, carModelData) {
 /**
  * Xóa dòng xe
  */
-async function supabaseDeleteCarModel(id) {
+async function supabaseDeleteCarModel(d) {
     try {
         const supabase = initSupabase();
         if (!supabase) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // ✅ SECURITY: Kiểm tra session
+        const session = typeof getSession === 'function' ? getSession() : (() => {
+            try {
+                const sessionStr = localStorage.getItem('user_session');
+                return sessionStr ? JSON.parse(sessionStr) : null;
+            } catch (e) {
+                return null;
+            }
+        })();
+        
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Chỉ ADMIN mới có quyền xóa dòng xe
+        if (session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ ADMIN mới có quyền xóa dòng xe' };
+        }
+
+        // ✅ SECURITY: Kiểm tra permission nếu có hàm hasPermission
+        if (typeof hasPermission === 'function' && !hasPermission(session, 'manage_car_models')) {
+            return { success: false, message: 'Bạn không có quyền quản lý dòng xe' };
+        }
+
+        const id = d.id || d;
+        if (!id) {
+            return { success: false, message: 'ID không hợp lệ' };
         }
 
         const { error } = await supabase
@@ -2350,6 +2425,30 @@ async function supabaseCreateSalesPolicy(policyData) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
+        // ✅ SECURITY: Kiểm tra session
+        const session = typeof getSession === 'function' ? getSession() : (() => {
+            try {
+                const sessionStr = localStorage.getItem('user_session');
+                return sessionStr ? JSON.parse(sessionStr) : null;
+            } catch (e) {
+                return null;
+            }
+        })();
+        
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Chỉ ADMIN mới có quyền tạo chính sách
+        if (session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ ADMIN mới có quyền tạo chính sách bán hàng' };
+        }
+
+        // ✅ SECURITY: Kiểm tra permission nếu có hàm hasPermission
+        if (typeof hasPermission === 'function' && !hasPermission(session, 'manage_sales_policies')) {
+            return { success: false, message: 'Bạn không có quyền quản lý chính sách bán hàng' };
+        }
+
         if (!policyData.name || !policyData.name.trim()) {
             return { success: false, message: 'Tên chính sách không được để trống' };
         }
@@ -2358,8 +2457,7 @@ async function supabaseCreateSalesPolicy(policyData) {
             return { success: false, message: 'Mô tả chính sách không được để trống' };
         }
 
-        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
-        const username = session?.username || 'admin';
+        const username = session.username;
 
         const { data, error } = await supabase
             .from('sales_policies')
@@ -2397,8 +2495,35 @@ async function supabaseUpdateSalesPolicy(id, policyData) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
-        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
-        const username = session?.username || 'admin';
+        // ✅ SECURITY: Kiểm tra session
+        const session = typeof getSession === 'function' ? getSession() : (() => {
+            try {
+                const sessionStr = localStorage.getItem('user_session');
+                return sessionStr ? JSON.parse(sessionStr) : null;
+            } catch (e) {
+                return null;
+            }
+        })();
+        
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Chỉ ADMIN mới có quyền sửa chính sách
+        if (session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ ADMIN mới có quyền cập nhật chính sách bán hàng' };
+        }
+
+        // ✅ SECURITY: Kiểm tra permission nếu có hàm hasPermission
+        if (typeof hasPermission === 'function' && !hasPermission(session, 'manage_sales_policies')) {
+            return { success: false, message: 'Bạn không có quyền quản lý chính sách bán hàng' };
+        }
+
+        if (!id) {
+            return { success: false, message: 'ID không hợp lệ' };
+        }
+
+        const username = session.username;
 
         const updateData = {
             updated_by: username,
@@ -2445,13 +2570,38 @@ async function supabaseUpdateSalesPolicy(id, policyData) {
 /**
  * Xóa chính sách bán hàng
  */
-async function supabaseDeleteSalesPolicy(id) {
+async function supabaseDeleteSalesPolicy(d) {
     try {
         const supabase = initSupabase();
         if (!supabase) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
+        // ✅ SECURITY: Kiểm tra session
+        const session = typeof getSession === 'function' ? getSession() : (() => {
+            try {
+                const sessionStr = localStorage.getItem('user_session');
+                return sessionStr ? JSON.parse(sessionStr) : null;
+            } catch (e) {
+                return null;
+            }
+        })();
+        
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Chỉ ADMIN mới có quyền xóa chính sách
+        if (session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ ADMIN mới có quyền xóa chính sách bán hàng' };
+        }
+
+        // ✅ SECURITY: Kiểm tra permission nếu có hàm hasPermission
+        if (typeof hasPermission === 'function' && !hasPermission(session, 'manage_sales_policies')) {
+            return { success: false, message: 'Bạn không có quyền quản lý chính sách bán hàng' };
+        }
+
+        const id = d.id || d;
         if (!id) {
             return { success: false, message: 'ID không hợp lệ' };
         }
@@ -3140,7 +3290,7 @@ async function callSupabaseAPI(data) {
                 return await supabaseUpdateCarModel(data.id, data);
             
             case 'delete_car_model':
-                return await supabaseDeleteCarModel(data.id);
+                return await supabaseDeleteCarModel(data);
             
             // Sales Policies Management API (ADMIN only)
             case 'list_sales_policies':
@@ -3153,7 +3303,7 @@ async function callSupabaseAPI(data) {
                 return await supabaseUpdateSalesPolicy(data.id, data);
             
             case 'delete_sales_policy':
-                return await supabaseDeleteSalesPolicy(data.id);
+                return await supabaseDeleteSalesPolicy(data);
             
             case 'get_active_sales_policies':
                 return await supabaseGetActiveSalesPolicies();
