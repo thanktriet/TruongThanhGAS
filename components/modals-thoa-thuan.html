@@ -246,15 +246,12 @@ function calculateThoaThuan() {
 async function submitThoaThuanForm(event) {
     event.preventDefault();
     
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'modals-thoa-thuan.html:246',message:'submitThoaThuanForm entry',data:{eventTarget:event.target?.tagName,eventTargetId:event.target?.id,hasCurrentOrder:!!currentOrderForThoaThuan},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
     if (!currentOrderForThoaThuan) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'modals-thoa-thuan.html:249',message:'No current order',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
-        showToast('Lỗi: Không tìm thấy đơn hàng', 'danger');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: Không tìm thấy đơn hàng', 'danger');
+        } else {
+            alert('Lỗi: Không tìm thấy đơn hàng');
+        }
         return;
     }
 
@@ -262,7 +259,11 @@ async function submitThoaThuanForm(event) {
     const bankRadio = document.querySelector('input[name="bank"]:checked');
     
     if (!bankRadio) {
-        showToast('Vui lòng chọn ngân hàng', 'warning');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng chọn ngân hàng', 'warning');
+        } else {
+            alert('Vui lòng chọn ngân hàng');
+        }
         return;
     }
 
@@ -302,46 +303,13 @@ async function submitThoaThuanForm(event) {
         return;
     }
 
-    // #region agent log
-    const eventTargetType = event.target?.tagName;
-    const eventTargetId = event.target?.id;
-    const closestBgGray = event.target?.closest('.bg-gray-50');
-    fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'modals-thoa-thuan.html:294',message:'Before closest query',data:{eventTargetType,eventTargetId,closestBgGrayIsNull:closestBgGray===null,closestBgGrayTagName:closestBgGray?.tagName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
-    // #region agent log
-    const modalExists = !!document.getElementById('modal-create-thoa-thuan');
-    const formExists = !!document.getElementById('form-thoa-thuan');
-    fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'modals-thoa-thuan.html:294',message:'DOM state check',data:{modalExists,formExists},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
-    
-    // Find button submit - multiple fallback approaches
+    // Tìm button submit - nhiều cách fallback
     let submitBtn = null;
     
-    // Method 1: Find by ID (most reliable)
+    // Method 1: Tìm bằng ID (ưu tiên nhất, an toàn nhất)
     submitBtn = document.getElementById('btn-submit-thoa-thuan');
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'modals-thoa-thuan.html:294',message:'Method 1: Find by ID',data:{submitBtnFound:!!submitBtn,submitBtnId:submitBtn?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     
-    // Method 2: Try the original approach (to see if it fails)
-    if (!submitBtn) {
-        try {
-            const closest = event.target.closest('.bg-gray-50');
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'modals-thoa-thuan.html:294',message:'Method 2: closest result',data:{closestIsNull:closest===null,closestTagName:closest?.tagName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
-            if (closest) {
-                submitBtn = closest.querySelector('button:last-child');
-            }
-        } catch (e) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'modals-thoa-thuan.html:294',message:'Method 2: Error in closest query',data:{error:e.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
-        }
-    }
-    
-    // Method 3: Fallback: Find button from modal
+    // Method 2: Fallback - tìm từ modal -> .bg-gray-50 -> button cuối cùng
     if (!submitBtn) {
         const modal = document.getElementById('modal-create-thoa-thuan');
         if (modal) {
@@ -350,15 +318,31 @@ async function submitThoaThuanForm(event) {
                 submitBtn = footerDiv.querySelector('button:last-child');
             }
         }
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'modals-thoa-thuan.html:294',message:'Method 3: Fallback from modal',data:{submitBtnFound:!!submitBtn,submitBtnId:submitBtn?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
+    }
+    
+    // Method 3: Fallback - tìm button có text "Tạo Thỏa Thuận"
+    if (!submitBtn) {
+        const modal = document.getElementById('modal-create-thoa-thuan');
+        if (modal) {
+            const buttons = modal.querySelectorAll('button');
+            for (let btn of buttons) {
+                if (btn && btn.textContent && btn.textContent.includes('Tạo Thỏa Thuận')) {
+                    submitBtn = btn;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Method 4: Fallback - tìm button có class chứa indigo
+    if (!submitBtn) {
+        const modal = document.getElementById('modal-create-thoa-thuan');
+        if (modal) {
+            submitBtn = modal.querySelector('button.bg-indigo-600, button[class*="indigo"]');
+        }
     }
     
     if (!submitBtn) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'modals-thoa-thuan.html:294',message:'Submit button not found after all attempts',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         if (typeof window.showToast === 'function') {
             window.showToast('Lỗi: Không tìm thấy nút submit. Vui lòng reload trang.', 'danger');
         } else {
@@ -378,9 +362,6 @@ async function submitThoaThuanForm(event) {
         submitBtn.innerHTML = originalText;
 
         if (result.success) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'modals-thoa-thuan.html:305',message:'Success',data:{hasDocUrl:!!result.docUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
             if (typeof window.showToast === 'function') {
                 window.showToast('Tạo Thỏa thuận thành công!', 'success');
             } else {
@@ -395,9 +376,6 @@ async function submitThoaThuanForm(event) {
                 }, 500);
             }
         } else {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'modals-thoa-thuan.html:316',message:'API error',data:{errorMsg:result.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
             const errorMsg = 'Lỗi: ' + (result.message || 'Không thể tạo Thỏa thuận');
             if (typeof window.showToast === 'function') {
                 window.showToast(errorMsg, 'danger');
@@ -406,9 +384,6 @@ async function submitThoaThuanForm(event) {
             }
         }
     } catch (error) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'modals-thoa-thuan.html:318',message:'Exception caught',data:{errorMessage:error.message,errorStack:error.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
         const errorMsg = 'Lỗi: ' + error.message;
