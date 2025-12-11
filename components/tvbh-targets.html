@@ -398,27 +398,43 @@ async function openEditTargetModal(id, tvbh, month, khtn, hopDong, xhd, doanhThu
         const monthInput = document.getElementById('target-month');
         
         if (tvbhSelect) {
-            // Set value TRƯỚC khi enable
-            tvbhSelect.value = tvbh;
-            // KHÔNG disable TVBH - cho phép thay đổi
-            tvbhSelect.disabled = false;
+            // Đảm bảo select đã có options trước khi set value
+            const availableOptions = Array.from(tvbhSelect.options).map(o => o.value);
+            console.log('[TVBH Targets] Available options:', availableOptions);
+            console.log('[TVBH Targets] Trying to set value:', tvbh);
             
-            // Verify value đã được set
-            if (tvbhSelect.value !== tvbh) {
-                console.warn('[TVBH Targets] Value not set correctly, retrying...', {
-                    expected: tvbh,
-                    actual: tvbhSelect.value,
-                    options: Array.from(tvbhSelect.options).map(o => o.value)
-                });
-                // Retry sau khi options đã được load
-                setTimeout(() => {
-                    tvbhSelect.value = tvbh;
-                    if (tvbhSelect.value !== tvbh) {
-                        console.error('[TVBH Targets] Failed to set TVBH value after retry');
-                    }
-                }, 200);
+            if (availableOptions.includes(tvbh)) {
+                tvbhSelect.value = tvbh;
+                // KHÔNG disable TVBH - cho phép thay đổi
+                tvbhSelect.disabled = false;
+                
+                // Verify value đã được set
+                if (tvbhSelect.value === tvbh) {
+                    console.log('[TVBH Targets] TVBH value set successfully:', tvbh);
+                } else {
+                    console.warn('[TVBH Targets] Value not set correctly:', {
+                        expected: tvbh,
+                        actual: tvbhSelect.value
+                    });
+                }
             } else {
-                console.log('[TVBH Targets] TVBH value set successfully:', tvbh);
+                console.warn('[TVBH Targets] TVBH value not found in options, retrying...', {
+                    expected: tvbh,
+                    availableOptions: availableOptions
+                });
+                // Retry sau khi options đã được load (nếu chưa có)
+                setTimeout(() => {
+                    const retryOptions = Array.from(tvbhSelect.options).map(o => o.value);
+                    if (retryOptions.includes(tvbh)) {
+                        tvbhSelect.value = tvbh;
+                        tvbhSelect.disabled = false;
+                        console.log('[TVBH Targets] TVBH value set successfully after retry:', tvbh);
+                    } else {
+                        console.error('[TVBH Targets] Failed to set TVBH value - option not found:', tvbh);
+                        // Vẫn enable select để user có thể chọn thủ công
+                        tvbhSelect.disabled = false;
+                    }
+                }, 300);
             }
         } else {
             console.error('[TVBH Targets] target-tvbh select not found');
