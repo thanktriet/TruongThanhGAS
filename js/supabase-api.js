@@ -2842,13 +2842,23 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
 
         // 4. Lấy chỉ tiêu từ database
         const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+        console.log('[Dashboard] Fetching targets for month:', monthStr);
         const targetsResult = await supabaseGetTvbhTargetsForMonth(monthStr);
         const targetMap = targetsResult.success ? (targetsResult.data || {}) : {};
+        console.log('[Dashboard] Targets loaded:', {
+            success: targetsResult.success,
+            targetCount: Object.keys(targetMap).length,
+            targetMap: targetMap
+        });
 
         tvbhUsers.forEach(user => {
             const stats = mtdStats[user.username] || { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
             // Lấy chỉ tiêu từ database, nếu không có thì = 0
             const targets = targetMap[user.username] || { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
+            console.log(`[Dashboard] TVBH ${user.username}:`, {
+                stats: stats,
+                targets: targets
+            });
 
             mtdStatsArray.push({
                 nhom: user.group || '',
@@ -2874,21 +2884,22 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
 
         mtdStatsArray.forEach((stats, index) => {
             const rank = index + 1;
+            // TĐ = Thực tế (actual), CT = Chỉ tiêu (target)
             mtdTotalData.push([
                 rank,
                 stats.nhom,
                 stats.tvbh,
-                stats.khtn.actual,
-                stats.khtn.target,
+                stats.khtn.actual,        // KHTN (TĐ) - Thực tế
+                stats.khtn.target,       // KHTN (CT) - Chỉ tiêu
                 (stats.khtn.percent * 100).toFixed(1) + '%',
-                stats.hopDong.actual,
-                stats.hopDong.target,
+                stats.hopDong.actual,    // HĐ (TĐ) - Thực tế
+                stats.hopDong.target,    // HĐ (CT) - Chỉ tiêu
                 (stats.hopDong.percent * 100).toFixed(1) + '%',
-                stats.xhd.actual,
-                stats.xhd.target,
+                stats.xhd.actual,         // XHĐ (TĐ) - Thực tế
+                stats.xhd.target,         // XHĐ (CT) - Chỉ tiêu
                 (stats.xhd.percent * 100).toFixed(1) + '%',
-                stats.doanhThu.actual.toLocaleString('vi-VN'),
-                stats.doanhThu.target.toLocaleString('vi-VN'),
+                stats.doanhThu.actual.toLocaleString('vi-VN'),  // Doanh Thu (TĐ) - Thực tế
+                stats.doanhThu.target.toLocaleString('vi-VN'),  // Doanh Thu (CT) - Chỉ tiêu
                 (stats.doanhThu.percent * 100).toFixed(1) + '%'
             ]);
         });
