@@ -86,7 +86,8 @@ BEGIN
             50, -- KHTN
             10, -- Hợp đồng
             8,  -- XHĐ
-            5000000000 -- Doanh thu: 5 tỷ VNĐ
+            5000000000, -- Doanh thu: 5 tỷ VNĐ
+            'system' -- created_by
         )
         ON CONFLICT (tvbh, month) DO NOTHING;
     END LOOP;
