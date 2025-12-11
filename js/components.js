@@ -5,7 +5,11 @@
 
 async function loadComponent(componentName, targetElementId) {
     try {
-        const response = await fetch(`components/${componentName}.html`);
+        // Add cache-busting query parameter to ensure fresh content
+        const cacheBuster = `?v=${Date.now()}`;
+        const response = await fetch(`components/${componentName}.html${cacheBuster}`, {
+            cache: 'no-store'
+        });
         if (!response.ok) {
             console.error(`Failed to load component: ${componentName}`);
             return;

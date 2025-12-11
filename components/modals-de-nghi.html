@@ -62,7 +62,7 @@
             <button onclick="closeDeNghiModal()" class="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition font-bold">
                 Hủy
             </button>
-            <button onclick="document.getElementById('form-de-nghi').dispatchEvent(new Event('submit'))" class="px-6 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition font-bold">
+            <button id="btn-submit-de-nghi" onclick="document.getElementById('form-de-nghi').dispatchEvent(new Event('submit'))" class="px-6 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition font-bold">
                 <i class="fa-solid fa-file-invoice-dollar mr-2"></i>Tạo Đề Nghị
             </button>
         </div>
@@ -134,11 +134,16 @@ function calculateDeNghi() {
     // Có thể thêm logic tính toán nếu cần
 }
 
-async function submitDeNghiForm(event) {
+// Override function to ensure latest version is always used (fixes cache issues)
+window.submitDeNghiForm = async function(event) {
     event.preventDefault();
     
     if (!currentOrderForDeNghi) {
-        showToast('Lỗi: Không tìm thấy đơn hàng', 'danger');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: Không tìm thấy đơn hàng', 'danger');
+        } else {
+            alert('Lỗi: Không tìm thấy đơn hàng');
+        }
         return;
     }
 
@@ -147,21 +152,74 @@ async function submitDeNghiForm(event) {
     const formData = {
         ten_khach_hang: customer.name || '',
         so_hop_dong: currentOrderForDeNghi.contract_code || '',
-        ten_ngan_hang_vay: document.getElementById('dngn-ten_ngan_hang_vay').value.trim(),
-        ngay_captbcv: document.getElementById('dngn-ngay_captbcv').value,
-        loai_xe: document.getElementById('dngn-loai_xe').value.trim(),
-        so_tai_khoan: document.getElementById('dngn-so_tai_khoan').value.trim(),
-        so_tien_doi_ung: parseFloat(document.getElementById('dngn-so_tien_doi_ung').value) || 0,
-        so_tien_giai_ngan: parseFloat(document.getElementById('dngn-so_tien_giai_ngan').value) || 0
+        ten_ngan_hang_vay: document.getElementById('dngn-ten_ngan_hang_vay')?.value.trim() || '',
+        ngay_captbcv: document.getElementById('dngn-ngay_captbcv')?.value || '',
+        loai_xe: document.getElementById('dngn-loai_xe')?.value.trim() || '',
+        so_tai_khoan: document.getElementById('dngn-so_tai_khoan')?.value.trim() || '',
+        so_tien_doi_ung: parseFloat(document.getElementById('dngn-so_tien_doi_ung')?.value) || 0,
+        so_tien_giai_ngan: parseFloat(document.getElementById('dngn-so_tien_giai_ngan')?.value) || 0
     };
 
     // Validate
     if (!formData.ten_ngan_hang_vay || !formData.so_tien_doi_ung || !formData.so_tien_giai_ngan) {
-        showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+        } else {
+            alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+        }
         return;
     }
 
-    const submitBtn = event.target.closest('.bg-gray-50').querySelector('button:last-child');
+    // Tìm button submit từ modal - SAFE với nhiều fallback
+    let submitBtn = null;
+    
+    // Method 1: Tìm bằng ID (ưu tiên nhất, an toàn nhất)
+    submitBtn = document.getElementById('btn-submit-de-nghi');
+    
+    // Method 2: Fallback - tìm từ modal -> .bg-gray-50 -> button cuối cùng
+    if (!submitBtn) {
+        const modal = document.getElementById('modal-create-de-nghi');
+        if (modal) {
+            const footerDiv = modal.querySelector('.bg-gray-50');
+            if (footerDiv) {
+                submitBtn = footerDiv.querySelector('button:last-child');
+            }
+        }
+    }
+    
+    // Method 3: Fallback - tìm button có text "Tạo Đề Nghị"
+    if (!submitBtn) {
+        const modal = document.getElementById('modal-create-de-nghi');
+        if (modal) {
+            const buttons = modal.querySelectorAll('button');
+            for (let btn of buttons) {
+                if (btn && btn.textContent && btn.textContent.includes('Tạo Đề Nghị')) {
+                    submitBtn = btn;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Method 4: Fallback - tìm button có class chứa orange
+    if (!submitBtn) {
+        const modal = document.getElementById('modal-create-de-nghi');
+        if (modal) {
+            submitBtn = modal.querySelector('button.bg-orange-600, button[class*="orange"]');
+        }
+    }
+    
+    // Safety check - nếu vẫn không tìm thấy
+    if (!submitBtn) {
+        console.error('Cannot find submit button in modal. Modal:', document.getElementById('modal-create-de-nghi'));
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: Không tìm thấy nút submit. Vui lòng reload trang.', 'danger');
+        } else {
+            alert('Lỗi: Không tìm thấy nút submit. Vui lòng reload trang.');
+        }
+        return;
+    }
+    
     const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tạo...';
@@ -173,7 +231,11 @@ async function submitDeNghiForm(event) {
         submitBtn.innerHTML = originalText;
 
         if (result.success) {
-            showToast('Tạo Đề nghị giải ngân thành công!', 'success');
+            if (typeof window.showToast === 'function') {
+                window.showToast('Tạo Đề nghị giải ngân thành công!', 'success');
+            } else {
+                alert('Tạo Đề nghị giải ngân thành công!');
+            }
             closeDeNghiModal();
             
             // Mở file trong tab mới
@@ -183,13 +245,28 @@ async function submitDeNghiForm(event) {
                 }, 500);
             }
         } else {
-            showToast('Lỗi: ' + (result.message || 'Không thể tạo Đề nghị giải ngân'), 'danger');
+            const errorMsg = 'Lỗi: ' + (result.message || 'Không thể tạo Đề nghị giải ngân');
+            if (typeof window.showToast === 'function') {
+                window.showToast(errorMsg, 'danger');
+            } else {
+                alert(errorMsg);
+            }
         }
     } catch (error) {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
-        showToast('Lỗi: ' + error.message, 'danger');
+        const errorMsg = 'Lỗi: ' + error.message;
+        if (typeof window.showToast === 'function') {
+            window.showToast(errorMsg, 'danger');
+        } else {
+            alert(errorMsg);
+        }
     }
+};
+
+// Also define as regular function for compatibility
+async function submitDeNghiForm(event) {
+    return window.submitDeNghiForm(event);
 }
 </script>
 
