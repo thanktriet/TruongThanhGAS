@@ -163,7 +163,7 @@ async function loadTvbhUsersForTarget() {
     try {
         const result = await window.callAPI({
             action: 'get_users_by_role',
-            targetRole: 'TVBH'
+            role: 'TVBH'  // Sửa từ targetRole thành role
         });
 
         const select = document.getElementById('target-tvbh');
@@ -175,9 +175,12 @@ async function loadTvbhUsersForTarget() {
         // Clear existing options (except first one)
         select.innerHTML = '<option value="">-- Chọn TVBH --</option>';
 
-        if (result.success && result.data && Array.isArray(result.data) && result.data.length > 0) {
-            console.log('[TVBH Targets] Loading', result.data.length, 'TVBH users into select');
-            result.data.forEach(user => {
+        // API trả về result.users, không phải result.data
+        const users = result.users || result.data || [];
+        
+        if (result.success && Array.isArray(users) && users.length > 0) {
+            console.log('[TVBH Targets] Loading', users.length, 'TVBH users into select');
+            users.forEach(user => {
                 const option = document.createElement('option');
                 option.value = user.username;
                 option.textContent = `${user.username}${user.fullname ? ' - ' + user.fullname : ''}`;
@@ -185,7 +188,13 @@ async function loadTvbhUsersForTarget() {
             });
             console.log('[TVBH Targets] TVBH users loaded successfully');
         } else {
-            console.warn('[TVBH Targets] No TVBH users found or invalid response:', result);
+            console.warn('[TVBH Targets] No TVBH users found or invalid response:', {
+                success: result.success,
+                hasUsers: !!result.users,
+                hasData: !!result.data,
+                usersCount: users.length,
+                result: result
+            });
         }
     } catch (error) {
         console.error('[TVBH Targets] Error loading TVBH users:', error);
