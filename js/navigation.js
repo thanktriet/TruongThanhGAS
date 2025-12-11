@@ -57,15 +57,10 @@ function switchTab(id) {
         }, 300);
     }
     
-    if (id === 'sales-policies') {
-        console.log('[Navigation] Switching to sales-policies tab');
+    if (id === 'tvbh-targets') {
+        console.log('[Navigation] Switching to tvbh-targets tab');
         setTimeout(() => {
-            if (typeof window.loadSalesPoliciesList === 'function') {
-                console.log('[Navigation] Calling loadSalesPoliciesList...');
-                window.loadSalesPoliciesList();
-            } else {
-                console.error('[Navigation] loadSalesPoliciesList function not found');
-            }
+            // Không auto-load, chờ user chọn tháng và click "Lọc"
         }, 300);
     }
 }

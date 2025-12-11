@@ -123,6 +123,7 @@ function updateMenuItemsByPermissions(user) {
     toggleMenuByPermission('nav-mobile-users', 'manage_users', ['ADMIN']);
     toggleMenuByPermission('nav-car-models', 'manage_car_models', ['ADMIN']);
     toggleMenuByPermission('nav-sales-policies', 'manage_sales_policies', ['ADMIN']);
+    toggleMenuByPermission('nav-tvbh-targets', 'manage_tvbh_targets', ['ADMIN']);
 }
 
 /**

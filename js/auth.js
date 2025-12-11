@@ -142,6 +142,15 @@ function checkSession() {
                 $('nav-users')?.classList.add('hidden');
                 $('nav-mobile-users')?.classList.add('hidden');
             }
+            
+            // Manage TVBH targets menu
+            if (typeof hasPermission === 'function' && hasPermission(user, 'manage_tvbh_targets')) {
+                $('nav-tvbh-targets')?.classList.remove('hidden');
+            } else if (user.role === 'ADMIN') {
+                $('nav-tvbh-targets')?.classList.remove('hidden');
+            } else {
+                $('nav-tvbh-targets')?.classList.add('hidden');
+            }
         }
         
         if (loginView) loginView.classList.add('hidden');

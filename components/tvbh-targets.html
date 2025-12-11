@@ -1,0 +1,530 @@
+<!-- Quản lý chỉ tiêu TVBH -->
+<div id="tab-tvbh-targets" class="tab-content">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-indigo-50 px-4 py-3 md:px-6 md:py-4 border-b border-indigo-100">
+            <h2 class="text-base md:text-lg font-bold text-indigo-800">
+                <i class="fa-solid fa-bullseye mr-2"></i>Quản Lý Chỉ Tiêu TVBH
+            </h2>
+            <p class="text-xs md:text-sm text-gray-600 mt-1">Thiết lập chỉ tiêu KHTN, Hợp đồng, XHĐ và Doanh thu cho từng TVBH theo tháng</p>
+        </div>
+        
+        <div class="p-3 md:p-6">
+            <!-- Filters -->
+            <div class="mb-4 space-y-3 md:space-y-0 md:flex md:gap-3 md:items-end">
+                <div class="flex-1 w-full md:max-w-xs">
+                    <label class="label text-xs mb-1 block">Chọn tháng:</label>
+                    <input 
+                        type="month" 
+                        id="targets-month-filter" 
+                        class="input bg-white w-full text-sm md:text-base"
+                        value=""
+                        onchange="loadTvbhTargetsList()"
+                    >
+                </div>
+                <button 
+                    onclick="loadTvbhTargetsList()" 
+                    class="w-full md:w-auto bg-indigo-600 text-white font-bold px-6 py-2.5 md:py-2 rounded-lg hover:bg-indigo-700 transition touch-manipulation text-sm md:text-base"
+                >
+                    <i class="fa-solid fa-filter mr-2"></i>Lọc
+                </button>
+                <button 
+                    onclick="openCreateTargetModal()" 
+                    class="w-full md:w-auto bg-green-600 text-white font-bold px-6 py-2.5 md:py-2 rounded-lg hover:bg-green-700 transition touch-manipulation text-sm md:text-base"
+                >
+                    <i class="fa-solid fa-plus mr-2"></i>Thêm Chỉ Tiêu
+                </button>
+            </div>
+
+            <!-- Loading -->
+            <div id="targets-loading" class="text-center py-8 hidden">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <p class="mt-2 text-gray-600">Đang tải...</p>
+            </div>
+
+            <!-- Targets List -->
+            <div id="targets-list-container" class="overflow-x-auto">
+                <p class="text-center text-gray-500 py-12">
+                    <i class="fa-solid fa-info-circle mr-2"></i>
+                    Chọn tháng và click "Lọc" để xem chỉ tiêu
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal tạo/sửa chỉ tiêu -->
+<div id="modal-create-target" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="bg-indigo-600 text-white px-6 py-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold">
+                <i class="fa-solid fa-bullseye mr-2"></i>
+                <span id="modal-target-title">Thêm Chỉ Tiêu TVBH</span>
+            </h2>
+            <button onclick="closeTargetModal()" class="text-2xl hover:text-red-200">&times;</button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-6">
+            <form id="form-target" onsubmit="handleSaveTarget(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="label">TVBH *</label>
+                        <select id="target-tvbh" class="input" required>
+                            <option value="">-- Chọn TVBH --</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="label">Tháng *</label>
+                        <input 
+                            type="month" 
+                            id="target-month" 
+                            class="input" 
+                            required
+                        >
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="label">Chỉ tiêu KHTN *</label>
+                            <input 
+                                type="number" 
+                                id="target-khtn" 
+                                class="input" 
+                                min="0" 
+                                step="1"
+                                placeholder="0"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label class="label">Chỉ tiêu Hợp đồng *</label>
+                            <input 
+                                type="number" 
+                                id="target-hop-dong" 
+                                class="input" 
+                                min="0" 
+                                step="1"
+                                placeholder="0"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label class="label">Chỉ tiêu XHĐ *</label>
+                            <input 
+                                type="number" 
+                                id="target-xhd" 
+                                class="input" 
+                                min="0" 
+                                step="1"
+                                placeholder="0"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label class="label">Chỉ tiêu Doanh thu (VNĐ) *</label>
+                            <input 
+                                type="text" 
+                                id="target-doanh-thu" 
+                                class="input" 
+                                placeholder="0"
+                                oninput="formatMoneyInput(this)"
+                                required
+                            >
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="border-t p-4 bg-gray-50 flex justify-end gap-3">
+            <button onclick="closeTargetModal()" class="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition font-bold">
+                Hủy
+            </button>
+            <button 
+                id="btn-submit-target"
+                onclick="document.getElementById('form-target').dispatchEvent(new Event('submit'))" 
+                class="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition font-bold"
+            >
+                <i class="fa-solid fa-save mr-2"></i>Lưu
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTargetId = null;
+let hasLoadedTargets = false;
+
+// Load danh sách TVBH vào select
+async function loadTvbhUsersForTarget() {
+    try {
+        const result = await window.callAPI({
+            action: 'get_users_by_role',
+            targetRole: 'TVBH'
+        });
+
+        const select = document.getElementById('target-tvbh');
+        if (!select) return;
+
+        // Clear existing options (except first one)
+        select.innerHTML = '<option value="">-- Chọn TVBH --</option>';
+
+        if (result.success && result.data && Array.isArray(result.data)) {
+            result.data.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.username;
+                option.textContent = `${user.username}${user.fullname ? ' - ' + user.fullname : ''}`;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading TVBH users:', error);
+    }
+}
+
+// Load danh sách chỉ tiêu
+async function loadTvbhTargetsList(forceReload = false) {
+    if (hasLoadedTargets && !forceReload) {
+        console.log('[TVBH Targets] Already loaded, skipping');
+        return;
+    }
+
+    const monthFilter = document.getElementById('targets-month-filter')?.value;
+    if (!monthFilter) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng chọn tháng', 'warning');
+        }
+        return;
+    }
+
+    const loadingEl = document.getElementById('targets-loading');
+    const containerEl = document.getElementById('targets-list-container');
+
+    if (loadingEl) loadingEl.classList.remove('hidden');
+    if (containerEl) containerEl.innerHTML = '';
+
+    try {
+        const result = await window.callAPI({
+            action: 'list_tvbh_targets',
+            month: monthFilter
+        });
+
+        if (loadingEl) loadingEl.classList.add('hidden');
+
+        if (result.success) {
+            hasLoadedTargets = true;
+            renderTvbhTargetsList(result.data || [], monthFilter);
+        } else {
+            if (containerEl) {
+                containerEl.innerHTML = `
+                    <div class="text-center py-8 text-red-500">
+                        <i class="fa-solid fa-exclamation-circle mr-2"></i>
+                        <p>Lỗi: ${result.message || 'Không thể tải danh sách chỉ tiêu'}</p>
+                    </div>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('[TVBH Targets] Error loading targets:', error);
+        if (loadingEl) loadingEl.classList.add('hidden');
+        if (containerEl) {
+            containerEl.innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <i class="fa-solid fa-exclamation-circle mr-2"></i>
+                    <p>Lỗi: ${error.message}</p>
+                </div>
+            `;
+        }
+    }
+}
+
+// Render danh sách chỉ tiêu
+function renderTvbhTargetsList(targets, month) {
+    const container = document.getElementById('targets-list-container');
+    if (!container) return;
+
+    if (!targets || targets.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-12 text-gray-500">
+                <i class="fa-solid fa-info-circle mr-2"></i>
+                <p>Chưa có chỉ tiêu cho tháng ${month}</p>
+                <button 
+                    onclick="openCreateTargetModal()" 
+                    class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+                >
+                    <i class="fa-solid fa-plus mr-2"></i>Thêm chỉ tiêu đầu tiên
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    let html = `
+        <div class="mb-4 text-sm text-gray-600">
+            <i class="fa-solid fa-calendar mr-2"></i>
+            <strong>Tháng:</strong> ${month} | <strong>Tổng số:</strong> ${targets.length} chỉ tiêu
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 border border-gray-300">
+                <thead class="bg-indigo-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase border-b">TVBH</th>
+                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase border-b">KHTN</th>
+                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase border-b">Hợp đồng</th>
+                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase border-b">XHĐ</th>
+                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase border-b">Doanh thu (VNĐ)</th>
+                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase border-b">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+    `;
+
+    targets.forEach(target => {
+        html += `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm font-medium text-gray-900 border-b">${escapeHtml(target.tvbh)}</td>
+                <td class="px-4 py-3 text-sm text-center text-gray-700 border-b">${parseInt(target.khtn) || 0}</td>
+                <td class="px-4 py-3 text-sm text-center text-gray-700 border-b">${parseInt(target.hop_dong) || 0}</td>
+                <td class="px-4 py-3 text-sm text-center text-gray-700 border-b">${parseInt(target.xhd) || 0}</td>
+                <td class="px-4 py-3 text-sm text-center text-gray-700 border-b">${formatCurrency(parseFloat(target.doanh_thu) || 0)}</td>
+                <td class="px-4 py-3 text-sm text-center border-b">
+                    <button 
+                        onclick="openEditTargetModal(${target.id}, '${escapeHtml(target.tvbh)}', '${escapeHtml(target.month)}', ${parseFloat(target.khtn) || 0}, ${parseFloat(target.hop_dong) || 0}, ${parseFloat(target.xhd) || 0}, ${parseFloat(target.doanh_thu) || 0})"
+                        class="text-blue-600 hover:text-blue-800 mr-3"
+                        title="Sửa"
+                    >
+                        <i class="fa-solid fa-edit"></i>
+                    </button>
+                    <button 
+                        onclick="handleDeleteTargetClick(${target.id}, '${escapeHtml(target.tvbh)}')"
+                        class="text-red-600 hover:text-red-800"
+                        title="Xóa"
+                    >
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
+
+// Helper function
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatCurrency(num) {
+    return new Intl.NumberFormat('vi-VN').format(num || 0);
+}
+
+// Mở modal tạo mới
+async function openCreateTargetModal() {
+    currentTargetId = null;
+    const modal = document.getElementById('modal-create-target');
+    const title = document.getElementById('modal-target-title');
+    
+    if (title) title.textContent = 'Thêm Chỉ Tiêu TVBH';
+    
+    // Set tháng mặc định từ filter
+    const monthFilter = document.getElementById('targets-month-filter')?.value;
+    const monthInput = document.getElementById('target-month');
+    if (monthInput && monthFilter) {
+        monthInput.value = monthFilter;
+    } else if (monthInput) {
+        // Mặc định tháng hiện tại
+        const now = new Date();
+        monthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    // Load TVBH users
+    await loadTvbhUsersForTarget();
+
+    // Reset form
+    const form = document.getElementById('form-target');
+    if (form) form.reset();
+    
+    // Set lại tháng sau khi reset
+    if (monthInput && monthFilter) {
+        monthInput.value = monthFilter;
+    }
+
+    if (modal) modal.classList.remove('hidden');
+}
+
+// Mở modal sửa
+async function openEditTargetModal(id, tvbh, month, khtn, hopDong, xhd, doanhThu) {
+    currentTargetId = id;
+    const modal = document.getElementById('modal-create-target');
+    const title = document.getElementById('modal-target-title');
+    
+    if (title) title.textContent = 'Sửa Chỉ Tiêu TVBH';
+
+    // Load TVBH users
+    await loadTvbhUsersForTarget();
+
+    // Fill form
+    document.getElementById('target-tvbh').value = tvbh;
+    document.getElementById('target-month').value = month;
+    document.getElementById('target-khtn').value = khtn || 0;
+    document.getElementById('target-hop-dong').value = hopDong || 0;
+    document.getElementById('target-xhd').value = xhd || 0;
+    document.getElementById('target-doanh-thu').value = formatCurrency(doanhThu || 0).replace(/\./g, '');
+
+    // Disable TVBH và month khi edit
+    document.getElementById('target-tvbh').disabled = true;
+    document.getElementById('target-month').disabled = true;
+
+    if (modal) modal.classList.remove('hidden');
+}
+
+// Đóng modal
+function closeTargetModal() {
+    const modal = document.getElementById('modal-create-target');
+    if (modal) modal.classList.add('hidden');
+    
+    // Reset
+    currentTargetId = null;
+    const form = document.getElementById('form-target');
+    if (form) form.reset();
+    
+    // Enable lại inputs
+    const tvbhInput = document.getElementById('target-tvbh');
+    const monthInput = document.getElementById('target-month');
+    if (tvbhInput) tvbhInput.disabled = false;
+    if (monthInput) monthInput.disabled = false;
+}
+
+// Lưu chỉ tiêu
+async function handleSaveTarget(event) {
+    event.preventDefault();
+
+    const submitBtn = document.getElementById('btn-submit-target');
+    if (!submitBtn) return;
+
+    const tvbh = document.getElementById('target-tvbh')?.value.trim();
+    const month = document.getElementById('target-month')?.value.trim();
+    const khtn = document.getElementById('target-khtn')?.value;
+    const hopDong = document.getElementById('target-hop-dong')?.value;
+    const xhd = document.getElementById('target-xhd')?.value;
+    const doanhThuStr = document.getElementById('target-doanh-thu')?.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+
+    if (!tvbh || !month) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng điền đầy đủ thông tin', 'warning');
+        }
+        return;
+    }
+
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang lưu...';
+
+    try {
+        const result = await window.callAPI({
+            action: 'upsert_tvbh_target',
+            targetData: {
+                tvbh: tvbh,
+                month: month,
+                khtn: parseFloat(khtn) || 0,
+                hop_dong: parseFloat(hopDong) || 0,
+                xhd: parseFloat(xhd) || 0,
+                doanh_thu: parseFloat(doanhThuStr) || 0
+            }
+        });
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+
+        if (result.success) {
+            if (typeof window.showToast === 'function') {
+                window.showToast(result.message || 'Đã lưu chỉ tiêu thành công', 'success');
+            }
+            closeTargetModal();
+            loadTvbhTargetsList(true);
+        } else {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Lỗi: ' + (result.message || 'Không thể lưu chỉ tiêu'), 'danger');
+            }
+        }
+    } catch (error) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + error.message, 'danger');
+        }
+    }
+}
+
+// Xóa chỉ tiêu
+async function handleDeleteTargetClick(id, tvbh) {
+    if (!confirm(`Bạn có chắc muốn xóa chỉ tiêu của TVBH "${tvbh}"?`)) {
+        return;
+    }
+
+    try {
+        const result = await window.callAPI({
+            action: 'delete_tvbh_target',
+            id: id
+        });
+
+        if (result.success) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Đã xóa chỉ tiêu thành công', 'success');
+            }
+            loadTvbhTargetsList(true);
+        } else {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Lỗi: ' + (result.message || 'Không thể xóa chỉ tiêu'), 'danger');
+            }
+        }
+    } catch (error) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + error.message, 'danger');
+        }
+    }
+}
+
+// Auto-load khi tab được kích hoạt
+const targetsObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === 1 && node.id === 'tab-tvbh-targets') {
+                const isActive = !node.classList.contains('hidden');
+                if (isActive && !hasLoadedTargets) {
+                    // Set tháng mặc định là tháng hiện tại
+                    const monthInput = document.getElementById('targets-month-filter');
+                    if (monthInput && !monthInput.value) {
+                        const now = new Date();
+                        monthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                    }
+                    // Không auto-load, chờ user click "Lọc"
+                }
+            }
+        });
+    });
+});
+
+// Bắt đầu observe khi script được load
+if (document.body) {
+    targetsObserver.observe(document.body, { childList: true, subtree: true });
+} else {
+    document.addEventListener('DOMContentLoaded', () => {
+        targetsObserver.observe(document.body, { childList: true, subtree: true });
+    });
+}
+</script>
+

@@ -2840,10 +2840,15 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
         let totalTargets = { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
         let totalActuals = { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
 
+        // 4. Lấy chỉ tiêu từ database
+        const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+        const targetsResult = await supabaseGetTvbhTargetsForMonth(monthStr);
+        const targetMap = targetsResult.success ? (targetsResult.data || {}) : {};
+
         tvbhUsers.forEach(user => {
             const stats = mtdStats[user.username] || { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
-            // Tạm thời chỉ tiêu = 0 (sẽ thêm bảng targets sau)
-            const targets = { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
+            // Lấy chỉ tiêu từ database, nếu không có thì = 0
+            const targets = targetMap[user.username] || { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
 
             mtdStatsArray.push({
                 nhom: user.group || '',
@@ -3178,6 +3183,244 @@ async function supabaseGetDailyReportForDate(dateString) {
 }
 
 // ======================================================
+// TVBH TARGETS API - Quản lý chỉ tiêu TVBH
+// ======================================================
+
+/**
+ * Lấy danh sách chỉ tiêu TVBH (có thể filter theo tháng)
+ */
+async function supabaseListTvbhTargets(month = null) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        let query = supabase
+            .from('tvbh_targets')
+            .select('*')
+            .order('month', { ascending: false })
+            .order('tvbh', { ascending: true });
+
+        if (month) {
+            query = query.eq('month', month);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data || [] };
+    } catch (e) {
+        console.error('List TVBH targets error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Lấy chỉ tiêu của một TVBH cho một tháng cụ thể
+ */
+async function supabaseGetTvbhTarget(tvbh, month) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        if (!tvbh || !month) {
+            return { success: false, message: 'Thiếu thông tin TVBH hoặc tháng' };
+        }
+
+        const { data, error } = await supabase
+            .from('tvbh_targets')
+            .select('*')
+            .eq('tvbh', tvbh.toLowerCase())
+            .eq('month', month)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // Không tìm thấy
+                return { success: true, data: null };
+            }
+            throw error;
+        }
+
+        return { success: true, data: data };
+    } catch (e) {
+        console.error('Get TVBH target error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Lấy chỉ tiêu của nhiều TVBH cho một tháng (dùng cho dashboard)
+ */
+async function supabaseGetTvbhTargetsForMonth(month) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        if (!month) {
+            return { success: false, message: 'Thiếu thông tin tháng' };
+        }
+
+        const { data, error } = await supabase
+            .from('tvbh_targets')
+            .select('*')
+            .eq('month', month);
+
+        if (error) {
+            throw error;
+        }
+
+        // Tạo map: tvbh -> targets
+        const targetMap = {};
+        (data || []).forEach(target => {
+            targetMap[target.tvbh] = {
+                khtn: parseFloat(target.khtn) || 0,
+                hopDong: parseFloat(target.hop_dong) || 0,
+                xhd: parseFloat(target.xhd) || 0,
+                doanhThu: parseFloat(target.doanh_thu) || 0
+            };
+        });
+
+        return { success: true, data: targetMap };
+    } catch (e) {
+        console.error('Get TVBH targets for month error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Tạo hoặc cập nhật chỉ tiêu TVBH
+ */
+async function supabaseUpsertTvbhTarget(targetData) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // ✅ SECURITY: Kiểm tra session
+        const session = typeof getSession === 'function' ? getSession() : (() => {
+            try {
+                const sessionStr = localStorage.getItem('user_session');
+                return sessionStr ? JSON.parse(sessionStr) : null;
+            } catch (e) {
+                return null;
+            }
+        })();
+        
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Chỉ ADMIN mới có quyền quản lý chỉ tiêu
+        if (session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ ADMIN mới có quyền quản lý chỉ tiêu TVBH' };
+        }
+
+        if (!targetData.tvbh || !targetData.month) {
+            return { success: false, message: 'Thiếu thông tin TVBH hoặc tháng' };
+        }
+
+        const username = session.username;
+
+        const targetRecord = {
+            tvbh: targetData.tvbh.toLowerCase().trim(),
+            month: targetData.month.trim(),
+            khtn: parseFloat(targetData.khtn) || 0,
+            hop_dong: parseFloat(targetData.hop_dong) || 0,
+            xhd: parseFloat(targetData.xhd) || 0,
+            doanh_thu: parseFloat(targetData.doanh_thu) || 0,
+            updated_by: username,
+            updated_at: new Date().toISOString()
+        };
+
+        // Nếu là tạo mới, thêm created_by
+        const { data: existing } = await supabase
+            .from('tvbh_targets')
+            .select('id')
+            .eq('tvbh', targetRecord.tvbh)
+            .eq('month', targetRecord.month)
+            .single();
+
+        if (!existing) {
+            targetRecord.created_by = username;
+        }
+
+        const { data, error } = await supabase
+            .from('tvbh_targets')
+            .upsert(targetRecord, { onConflict: 'tvbh,month' })
+            .select()
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data, message: 'Đã lưu chỉ tiêu thành công' };
+    } catch (e) {
+        console.error('Upsert TVBH target error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Xóa chỉ tiêu TVBH
+ */
+async function supabaseDeleteTvbhTarget(id) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // ✅ SECURITY: Kiểm tra session
+        const session = typeof getSession === 'function' ? getSession() : (() => {
+            try {
+                const sessionStr = localStorage.getItem('user_session');
+                return sessionStr ? JSON.parse(sessionStr) : null;
+            } catch (e) {
+                return null;
+            }
+        })();
+        
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Chỉ ADMIN mới có quyền xóa chỉ tiêu
+        if (session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ ADMIN mới có quyền xóa chỉ tiêu TVBH' };
+        }
+
+        if (!id) {
+            return { success: false, message: 'ID không hợp lệ' };
+        }
+
+        const { error } = await supabase
+            .from('tvbh_targets')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, message: 'Đã xóa chỉ tiêu thành công' };
+    } catch (e) {
+        console.error('Delete TVBH target error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+// ======================================================
 // WRAPPER FUNCTION - Tương thích với callAPI hiện tại
 // ======================================================
 
@@ -3317,6 +3560,22 @@ async function callSupabaseAPI(data) {
             
             case 'get_daily_report_for_date':
                 return await supabaseGetDailyReportForDate(data.dateString);
+            
+            // TVBH Targets API
+            case 'list_tvbh_targets':
+                return await supabaseListTvbhTargets(data.month || null);
+            
+            case 'get_tvbh_target':
+                return await supabaseGetTvbhTarget(data.tvbh, data.month);
+            
+            case 'get_tvbh_targets_for_month':
+                return await supabaseGetTvbhTargetsForMonth(data.month);
+            
+            case 'upsert_tvbh_target':
+                return await supabaseUpsertTvbhTarget(data.targetData || data);
+            
+            case 'delete_tvbh_target':
+                return await supabaseDeleteTvbhTarget(data.id);
             
             default:
                 return { success: false, message: 'Action không được hỗ trợ: ' + action };
