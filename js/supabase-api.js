@@ -2904,21 +2904,22 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
             ]);
         });
 
+        // TỔNG CỘNG: TĐ = Thực tế (totalActuals), CT = Chỉ tiêu (totalTargets)
         mtdTotalData.push([
             '',
             'TỔNG CỘNG',
             '',
-            totalActuals.khtn,
-            totalTargets.khtn,
+            totalActuals.khtn,        // KHTN (TĐ) - Tổng thực tế
+            totalTargets.khtn,      // KHTN (CT) - Tổng chỉ tiêu
             (calcPercent(totalActuals.khtn, totalTargets.khtn) * 100).toFixed(1) + '%',
-            totalActuals.hopDong,
-            totalTargets.hopDong,
+            totalActuals.hopDong,    // HĐ (TĐ) - Tổng thực tế
+            totalTargets.hopDong,    // HĐ (CT) - Tổng chỉ tiêu
             (calcPercent(totalActuals.hopDong, totalTargets.hopDong) * 100).toFixed(1) + '%',
-            totalActuals.xhd,
-            totalTargets.xhd,
+            totalActuals.xhd,         // XHĐ (TĐ) - Tổng thực tế
+            totalTargets.xhd,         // XHĐ (CT) - Tổng chỉ tiêu
             (calcPercent(totalActuals.xhd, totalTargets.xhd) * 100).toFixed(1) + '%',
-            totalActuals.doanhThu.toLocaleString('vi-VN'),
-            totalTargets.doanhThu.toLocaleString('vi-VN'),
+            totalActuals.doanhThu.toLocaleString('vi-VN'),  // Doanh Thu (TĐ) - Tổng thực tế
+            totalTargets.doanhThu.toLocaleString('vi-VN'),  // Doanh Thu (CT) - Tổng chỉ tiêu
             (calcPercent(totalActuals.doanhThu, totalTargets.doanhThu) * 100).toFixed(1) + '%'
         ]);
 
