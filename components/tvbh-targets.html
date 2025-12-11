@@ -167,21 +167,28 @@ async function loadTvbhUsersForTarget() {
         });
 
         const select = document.getElementById('target-tvbh');
-        if (!select) return;
+        if (!select) {
+            console.warn('[TVBH Targets] target-tvbh select not found');
+            return;
+        }
 
         // Clear existing options (except first one)
         select.innerHTML = '<option value="">-- Chọn TVBH --</option>';
 
-        if (result.success && result.data && Array.isArray(result.data)) {
+        if (result.success && result.data && Array.isArray(result.data) && result.data.length > 0) {
+            console.log('[TVBH Targets] Loading', result.data.length, 'TVBH users into select');
             result.data.forEach(user => {
                 const option = document.createElement('option');
                 option.value = user.username;
                 option.textContent = `${user.username}${user.fullname ? ' - ' + user.fullname : ''}`;
                 select.appendChild(option);
             });
+            console.log('[TVBH Targets] TVBH users loaded successfully');
+        } else {
+            console.warn('[TVBH Targets] No TVBH users found or invalid response:', result);
         }
     } catch (error) {
-        console.error('Error loading TVBH users:', error);
+        console.error('[TVBH Targets] Error loading TVBH users:', error);
     }
 }
 
@@ -373,20 +380,57 @@ async function openEditTargetModal(id, tvbh, month, khtn, hopDong, xhd, doanhThu
     
     if (title) title.textContent = 'Sửa Chỉ Tiêu TVBH';
 
-    // Load TVBH users
+    // Load TVBH users TRƯỚC khi set value
     await loadTvbhUsersForTarget();
 
-    // Fill form
-    document.getElementById('target-tvbh').value = tvbh;
-    document.getElementById('target-month').value = month;
-    document.getElementById('target-khtn').value = khtn || 0;
-    document.getElementById('target-hop-dong').value = hopDong || 0;
-    document.getElementById('target-xhd').value = xhd || 0;
-    document.getElementById('target-doanh-thu').value = formatCurrency(doanhThu || 0).replace(/\./g, '');
-
-    // Disable TVBH và month khi edit
-    document.getElementById('target-tvbh').disabled = true;
-    document.getElementById('target-month').disabled = true;
+    // Fill form - Đợi một chút để đảm bảo select đã được populate
+    setTimeout(() => {
+        const tvbhSelect = document.getElementById('target-tvbh');
+        const monthInput = document.getElementById('target-month');
+        
+        if (tvbhSelect) {
+            // Set value TRƯỚC khi enable
+            tvbhSelect.value = tvbh;
+            // KHÔNG disable TVBH - cho phép thay đổi
+            tvbhSelect.disabled = false;
+            
+            // Verify value đã được set
+            if (tvbhSelect.value !== tvbh) {
+                console.warn('[TVBH Targets] Value not set correctly, retrying...', {
+                    expected: tvbh,
+                    actual: tvbhSelect.value,
+                    options: Array.from(tvbhSelect.options).map(o => o.value)
+                });
+                // Retry sau khi options đã được load
+                setTimeout(() => {
+                    tvbhSelect.value = tvbh;
+                    if (tvbhSelect.value !== tvbh) {
+                        console.error('[TVBH Targets] Failed to set TVBH value after retry');
+                    }
+                }, 200);
+            } else {
+                console.log('[TVBH Targets] TVBH value set successfully:', tvbh);
+            }
+        } else {
+            console.error('[TVBH Targets] target-tvbh select not found');
+        }
+        
+        if (monthInput) {
+            monthInput.value = month;
+            // Disable month vì không nên thay đổi tháng khi edit (có thể tạo conflict)
+            monthInput.disabled = true;
+        }
+        
+        const khtnInput = document.getElementById('target-khtn');
+        const hopDongInput = document.getElementById('target-hop-dong');
+        const xhdInput = document.getElementById('target-xhd');
+        const doanhThuInput = document.getElementById('target-doanh-thu');
+        
+        if (khtnInput) khtnInput.value = khtn || 0;
+        if (hopDongInput) hopDongInput.value = hopDong || 0;
+        if (xhdInput) xhdInput.value = xhd || 0;
+        if (doanhThuInput) doanhThuInput.value = formatCurrency(doanhThu || 0).replace(/\./g, '');
+    }, 100);
 
     if (modal) modal.classList.remove('hidden');
 }
