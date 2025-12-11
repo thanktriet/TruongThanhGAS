@@ -3196,26 +3196,51 @@ async function supabaseListTvbhTargets(month = null) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
-        let query = supabase
-            .from('tvbh_targets')
-            .select('*')
-            .order('month', { ascending: false })
-            .order('tvbh', { ascending: true });
+        // Retry logic nếu bảng chưa có trong cache
+        let retries = 3;
+        let lastError = null;
+        
+        while (retries > 0) {
+            try {
+                let query = supabase
+                    .from('tvbh_targets')
+                    .select('*')
+                    .order('month', { ascending: false })
+                    .order('tvbh', { ascending: true });
 
-        if (month) {
-            query = query.eq('month', month);
+                if (month) {
+                    query = query.eq('month', month);
+                }
+
+                const { data, error } = await query;
+
+                if (error) {
+                    // Nếu lỗi là "table not found in schema cache", thử lại sau 500ms
+                    if (error.message && error.message.includes('schema cache') && retries > 1) {
+                        lastError = error;
+                        retries--;
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        continue;
+                    }
+                    throw error;
+                }
+
+                return { success: true, data: data || [] };
+            } catch (e) {
+                lastError = e;
+                if (e.message && e.message.includes('schema cache') && retries > 1) {
+                    retries--;
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    continue;
+                }
+                throw e;
+            }
         }
-
-        const { data, error } = await query;
-
-        if (error) {
-            throw error;
-        }
-
-        return { success: true, data: data || [] };
+        
+        throw lastError || new Error('Failed after retries');
     } catch (e) {
         console.error('List TVBH targets error:', e);
-        return { success: false, message: 'Lỗi: ' + e.message };
+        return { success: false, message: 'Lỗi: ' + (e.message || 'Không thể lấy danh sách chỉ tiêu') };
     }
 }
 
@@ -3269,30 +3294,62 @@ async function supabaseGetTvbhTargetsForMonth(month) {
             return { success: false, message: 'Thiếu thông tin tháng' };
         }
 
-        const { data, error } = await supabase
-            .from('tvbh_targets')
-            .select('*')
-            .eq('month', month);
+        // Retry logic nếu bảng chưa có trong cache
+        let retries = 3;
+        let lastError = null;
+        
+        while (retries > 0) {
+            try {
+                const { data, error } = await supabase
+                    .from('tvbh_targets')
+                    .select('*')
+                    .eq('month', month);
 
-        if (error) {
-            throw error;
+                if (error) {
+                    // Nếu lỗi là "table not found in schema cache", thử lại sau 500ms
+                    if (error.message && error.message.includes('schema cache') && retries > 1) {
+                        lastError = error;
+                        retries--;
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        continue;
+                    }
+                    throw error;
+                }
+
+                // Tạo map: tvbh -> targets
+                const targetMap = {};
+                (data || []).forEach(target => {
+                    targetMap[target.tvbh] = {
+                        khtn: parseFloat(target.khtn) || 0,
+                        hopDong: parseFloat(target.hop_dong) || 0,
+                        xhd: parseFloat(target.xhd) || 0,
+                        doanhThu: parseFloat(target.doanh_thu) || 0
+                    };
+                });
+
+                return { success: true, data: targetMap };
+            } catch (e) {
+                lastError = e;
+                if (e.message && e.message.includes('schema cache') && retries > 1) {
+                    retries--;
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    continue;
+                }
+                throw e;
+            }
         }
-
-        // Tạo map: tvbh -> targets
-        const targetMap = {};
-        (data || []).forEach(target => {
-            targetMap[target.tvbh] = {
-                khtn: parseFloat(target.khtn) || 0,
-                hopDong: parseFloat(target.hop_dong) || 0,
-                xhd: parseFloat(target.xhd) || 0,
-                doanhThu: parseFloat(target.doanh_thu) || 0
-            };
-        });
-
-        return { success: true, data: targetMap };
+        
+        // Nếu vẫn lỗi sau retries, trả về empty map thay vì lỗi (để dashboard vẫn chạy được)
+        console.warn('Schema cache issue after retries, returning empty targets map');
+        return { success: true, data: {} };
     } catch (e) {
         console.error('Get TVBH targets for month error:', e);
-        return { success: false, message: 'Lỗi: ' + e.message };
+        // Nếu lỗi là schema cache, trả về empty map thay vì lỗi
+        if (e.message && e.message.includes('schema cache')) {
+            console.warn('Schema cache issue, returning empty targets map');
+            return { success: true, data: {} };
+        }
+        return { success: false, message: 'Lỗi: ' + (e.message || 'Không thể lấy chỉ tiêu') };
     }
 }
 
