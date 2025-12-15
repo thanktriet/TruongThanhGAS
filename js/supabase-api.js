@@ -2844,8 +2844,10 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
         const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
         console.log('[Dashboard] Fetching targets for month:', monthStr);
         
-        // Log tất cả TVBH usernames để so sánh
-        const allTvbhUsernames = tvbhUsers.map(u => u.username);
+        // Log tất cả TVBH usernames để so sánh (kiểm tra null/undefined)
+        const allTvbhUsernames = (tvbhUsers && Array.isArray(tvbhUsers)) 
+            ? tvbhUsers.map(u => u && u.username ? u.username : null).filter(u => u !== null)
+            : [];
         console.log('[Dashboard] All TVBH usernames from users table:', allTvbhUsernames);
         
         const targetsResult = await supabaseGetTvbhTargetsForMonth(monthStr);
