@@ -2862,15 +2862,23 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
             allTvbhUsernames: allTvbhUsernames
         });
         
-        // So sánh mapping
-        const missingTargets = allTvbhUsernames.filter(username => !targetKeys.includes(username));
-        const extraTargets = targetKeys.filter(tvbh => !allTvbhUsernames.includes(tvbh));
-        if (missingTargets.length > 0 || extraTargets.length > 0) {
-            console.warn('[Dashboard] Mapping mismatch detected:', {
-                missingTargets: missingTargets,
-                extraTargets: extraTargets,
-                message: 'Some TVBH users do not have targets, or some targets do not match users'
-            });
+        // So sánh mapping (chỉ log nếu có usernames)
+        if (allTvbhUsernames.length > 0) {
+            const missingTargets = allTvbhUsernames.filter(username => !targetKeys.includes(username));
+            const extraTargets = targetKeys.filter(tvbh => !allTvbhUsernames.includes(tvbh));
+            if (missingTargets.length > 0 || extraTargets.length > 0) {
+                console.warn('[Dashboard] Mapping mismatch detected:', {
+                    missingTargets: missingTargets,
+                    extraTargets: extraTargets,
+                    message: 'Some TVBH users do not have targets, or some targets do not match users'
+                });
+            }
+        }
+
+        // Kiểm tra tvbhUsers trước khi forEach
+        if (!tvbhUsers || !Array.isArray(tvbhUsers)) {
+            console.error('[Dashboard] tvbhUsers is invalid:', tvbhUsers);
+            throw new Error('Invalid tvbhUsers data');
         }
 
         tvbhUsers.forEach(user => {
@@ -3353,9 +3361,16 @@ async function supabaseGetTvbhTargetsForMonth(month) {
 
                 // Tạo map: tvbh -> targets
                 const targetMap = {};
-                console.log('[TVBH Targets] Raw data from database:', data);
-                console.log('[TVBH Targets] Data count:', (data || []).length);
-                (data || []).forEach(target => {
+                const dataArray = data || [];
+                console.log('[TVBH Targets] Raw data from database:', dataArray);
+                console.log('[TVBH Targets] Data count:', dataArray.length);
+                console.log('[TVBH Targets] Query month:', month);
+                
+                if (dataArray.length === 0) {
+                    console.warn(`[TVBH Targets] No targets found for month ${month}. Please create targets using the "Quản Lý Chỉ Tiêu TVBH" feature.`);
+                }
+                
+                dataArray.forEach(target => {
                     console.log('[TVBH Targets] Processing target:', {
                         tvbh: target.tvbh,
                         month: target.month,
@@ -3372,6 +3387,7 @@ async function supabaseGetTvbhTargetsForMonth(month) {
                     };
                 });
                 console.log('[TVBH Targets] Final targetMap:', targetMap);
+                console.log('[TVBH Targets] Target keys:', Object.keys(targetMap));
 
                 return { success: true, data: targetMap };
             } catch (e) {
