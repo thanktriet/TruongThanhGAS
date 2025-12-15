@@ -3334,7 +3334,17 @@ async function supabaseGetTvbhTargetsForMonth(month) {
 
                 // Tạo map: tvbh -> targets
                 const targetMap = {};
+                console.log('[TVBH Targets] Raw data from database:', data);
+                console.log('[TVBH Targets] Data count:', (data || []).length);
                 (data || []).forEach(target => {
+                    console.log('[TVBH Targets] Processing target:', {
+                        tvbh: target.tvbh,
+                        month: target.month,
+                        khtn: target.khtn,
+                        hop_dong: target.hop_dong,
+                        xhd: target.xhd,
+                        doanh_thu: target.doanh_thu
+                    });
                     targetMap[target.tvbh] = {
                         khtn: parseFloat(target.khtn) || 0,
                         hopDong: parseFloat(target.hop_dong) || 0,
@@ -3342,6 +3352,7 @@ async function supabaseGetTvbhTargetsForMonth(month) {
                         doanhThu: parseFloat(target.doanh_thu) || 0
                     };
                 });
+                console.log('[TVBH Targets] Final targetMap:', targetMap);
 
                 return { success: true, data: targetMap };
             } catch (e) {
