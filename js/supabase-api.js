@@ -2844,11 +2844,13 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
         const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
         console.log('[Dashboard] Fetching targets for month:', monthStr);
         const targetsResult = await supabaseGetTvbhTargetsForMonth(monthStr);
+        console.log('[Dashboard] Targets result:', targetsResult);
         const targetMap = targetsResult.success ? (targetsResult.data || {}) : {};
         console.log('[Dashboard] Targets loaded:', {
             success: targetsResult.success,
             targetCount: Object.keys(targetMap).length,
-            targetMap: targetMap
+            targetMap: targetMap,
+            targetKeys: Object.keys(targetMap)
         });
 
         tvbhUsers.forEach(user => {
@@ -2857,7 +2859,9 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
             const targets = targetMap[user.username] || { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
             console.log(`[Dashboard] TVBH ${user.username}:`, {
                 stats: stats,
-                targets: targets
+                targets: targets,
+                hasTarget: !!targetMap[user.username],
+                targetMapKeys: Object.keys(targetMap)
             });
 
             mtdStatsArray.push({
