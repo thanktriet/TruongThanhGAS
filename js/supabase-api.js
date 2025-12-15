@@ -2841,8 +2841,25 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
         let totalActuals = { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
 
         // 4. Lấy chỉ tiêu từ database
-        const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
-        console.log('[Dashboard] Fetching targets for month:', monthStr);
+        // Xác định year và month để query targets (dùng từ filterMonth hoặc selectedDate)
+        let targetYear, targetMonth;
+        if (filterMonth) {
+            // Nếu có filterMonth, dùng nó
+            const [y, m] = filterMonth.split('-').map(Number);
+            targetYear = y;
+            targetMonth = m; // filterMonth đã là format yyyy-MM, nên m là 1-12
+        } else {
+            // Nếu không có filterMonth, dùng từ selectedDate
+            targetYear = selectedDate.getFullYear();
+            targetMonth = selectedDate.getMonth() + 1; // getMonth() trả về 0-11, cần +1 để thành 1-12
+        }
+        const monthStr = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
+        console.log('[Dashboard] Fetching targets for month:', monthStr, {
+            filterMonth: filterMonth,
+            selectedDate: selectedDate,
+            targetYear: targetYear,
+            targetMonth: targetMonth
+        });
         
         // Log tất cả TVBH usernames để so sánh (kiểm tra null/undefined)
         const allTvbhUsernames = (tvbhUsers && Array.isArray(tvbhUsers)) 
