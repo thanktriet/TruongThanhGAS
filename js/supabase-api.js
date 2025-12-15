@@ -2843,26 +2843,43 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
         // 4. Lấy chỉ tiêu từ database
         const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
         console.log('[Dashboard] Fetching targets for month:', monthStr);
+        
+        // Log tất cả TVBH usernames để so sánh
+        const allTvbhUsernames = tvbhUsers.map(u => u.username);
+        console.log('[Dashboard] All TVBH usernames from users table:', allTvbhUsernames);
+        
         const targetsResult = await supabaseGetTvbhTargetsForMonth(monthStr);
         console.log('[Dashboard] Targets result:', targetsResult);
         const targetMap = targetsResult.success ? (targetsResult.data || {}) : {};
+        const targetKeys = Object.keys(targetMap);
         console.log('[Dashboard] Targets loaded:', {
             success: targetsResult.success,
-            targetCount: Object.keys(targetMap).length,
+            targetCount: targetKeys.length,
             targetMap: targetMap,
-            targetKeys: Object.keys(targetMap)
+            targetKeys: targetKeys,
+            allTvbhUsernames: allTvbhUsernames
         });
+        
+        // So sánh mapping
+        const missingTargets = allTvbhUsernames.filter(username => !targetKeys.includes(username));
+        const extraTargets = targetKeys.filter(tvbh => !allTvbhUsernames.includes(tvbh));
+        if (missingTargets.length > 0 || extraTargets.length > 0) {
+            console.warn('[Dashboard] Mapping mismatch detected:', {
+                missingTargets: missingTargets,
+                extraTargets: extraTargets,
+                message: 'Some TVBH users do not have targets, or some targets do not match users'
+            });
+        }
 
         tvbhUsers.forEach(user => {
             const stats = mtdStats[user.username] || { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
             // Lấy chỉ tiêu từ database, nếu không có thì = 0
             const targets = targetMap[user.username] || { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
-            console.log(`[Dashboard] TVBH ${user.username}:`, {
-                stats: stats,
-                targets: targets,
-                hasTarget: !!targetMap[user.username],
-                targetMapKeys: Object.keys(targetMap)
-            });
+            const hasTarget = !!targetMap[user.username];
+            
+            if (!hasTarget) {
+                console.warn(`[Dashboard] TVBH ${user.username} has no target in targetMap. Available keys:`, targetKeys);
+            }
 
             mtdStatsArray.push({
                 nhom: user.group || '',
