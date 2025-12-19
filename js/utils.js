@@ -59,9 +59,20 @@ function formatMoneyInput(el) {
     try {
         // Lấy giá trị hiện tại, loại bỏ tất cả ký tự không phải số (bao gồm dấu chấm)
         let val = el.value.replace(/\D/g, '');
+        
         // Format lại với dấu chấm phân cách hàng nghìn
-        el.value = val ? Number(val).toLocaleString('vi-VN') : '';
-        console.log('[formatMoneyInput] Formatted value:', el.value, 'from raw:', val);
+        if (val) {
+            // Sử dụng Intl.NumberFormat để đảm bảo format đúng
+            const num = parseInt(val, 10);
+            if (!isNaN(num)) {
+                el.value = num.toLocaleString('vi-VN');
+                console.log('[formatMoneyInput] Formatted value:', el.value, 'from raw:', val);
+            } else {
+                el.value = '';
+            }
+        } else {
+            el.value = '';
+        }
         
         // Chỉ tính tổng quà tặng nếu đây là input giá quà tặng (có class gift-price)
         if (el.classList && el.classList.contains('gift-price')) {
