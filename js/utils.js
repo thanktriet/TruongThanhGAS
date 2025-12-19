@@ -52,7 +52,9 @@ function logout() {
 
 function formatMoneyInput(el) {
     if (!el) return;
+    // Lấy giá trị hiện tại, loại bỏ tất cả ký tự không phải số (bao gồm dấu chấm)
     let val = el.value.replace(/\D/g, '');
+    // Format lại với dấu chấm phân cách hàng nghìn
     el.value = val ? Number(val).toLocaleString('vi-VN') : '';
     
     // Chỉ tính tổng quà tặng nếu đây là input giá quà tặng (có class gift-price)
@@ -70,6 +72,12 @@ function formatMoneyInput(el) {
 // Export formatMoneyInput to window for use in components
 if (typeof window !== 'undefined') {
     window.formatMoneyInput = formatMoneyInput;
+    
+    // Đảm bảo function có thể được gọi từ inline event handlers
+    // Thêm vào global scope để đảm bảo tương thích
+    if (typeof globalThis !== 'undefined') {
+        globalThis.formatMoneyInput = formatMoneyInput;
+    }
 }
 
 /**
