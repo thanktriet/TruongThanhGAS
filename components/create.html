@@ -40,7 +40,7 @@
                                         <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
                                             <div class="mb-4">
                                                 <label class="block text-sm font-bold text-gray-800 mb-1">Giá trị Hợp đồng (VNĐ) *</label>
-                                                <input name="contract_price" type="text" class="w-full border-2 border-yellow-400 p-2 rounded text-lg font-bold text-gray-800 outline-none" oninput="formatMoneyInput(this)" required placeholder="0">
+                                                <input name="contract_price" type="text" class="w-full border-2 border-yellow-400 p-2 rounded text-lg font-bold text-gray-800 outline-none" required placeholder="0" data-money-input="true">
                                             </div>
                                             
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -50,7 +50,7 @@
                                                 </div>
                                                 <div>
                                                     <label class="label">Tiền giảm giá (VNĐ)</label>
-                                                    <input name="discount_amount" type="text" class="input" oninput="formatMoneyInput(this)" placeholder="0">
+                                                    <input name="discount_amount" type="text" class="input" placeholder="0" data-money-input="true">
                                                 </div>
                                             </div>
 
@@ -83,7 +83,7 @@
                                     <div class="mb-6">
                                         <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">4. Lương năng suất</h3>
                                         <label class="label">Lương năng suất (VNĐ) *</label>
-                                        <input name="productivity_bonus" type="text" class="input w-full" oninput="formatMoneyInput(this)" placeholder="0" required>
+                                        <input name="productivity_bonus" type="text" class="input w-full" placeholder="0" required data-money-input="true">
                                         <p class="text-xs text-gray-500 mt-1">TVBH tự đề xuất mức lương năng suất</p>
                                     </div>
 

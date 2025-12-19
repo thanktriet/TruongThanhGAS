@@ -175,25 +175,38 @@ function initFormatMoneyInputs() {
         console.log('[initFormatMoneyInputs] Created fallback formatMoneyInput function');
     }
     
-    // Thêm event listener cho các input tiền trong form create
+    // Thêm event listener cho các input tiền trong form create (dùng data attribute để tìm)
     const formManual = document.getElementById('form-manual-create');
     if (formManual) {
         console.log('[initFormatMoneyInputs] Found form-manual-create');
-        const moneyInputs = formManual.querySelectorAll('input[name="contract_price"], input[name="discount_amount"], input[name="productivity_bonus"]');
+        // Tìm bằng data attribute hoặc name attribute
+        const moneyInputs = formManual.querySelectorAll('input[data-money-input="true"], input[name="contract_price"], input[name="discount_amount"], input[name="productivity_bonus"]');
         console.log('[initFormatMoneyInputs] Found', moneyInputs.length, 'money inputs');
         
         moneyInputs.forEach((input, index) => {
-            console.log(`[initFormatMoneyInputs] Setting up input ${index}:`, input.name);
-            // Thay thế inline handler bằng event listener để đảm bảo function được gọi
+            console.log(`[initFormatMoneyInputs] Setting up input ${index}:`, input.name || input.getAttribute('name'), 'value:', input.value);
+            // Đảm bảo không có inline handler conflict
             input.removeAttribute('oninput');
-            input.addEventListener('input', function(e) {
-                console.log('[initFormatMoneyInputs] Input event fired for:', this.name, 'value:', this.value);
+            
+            // Xóa các event listener cũ nếu có (clone node)
+            const newInput = input.cloneNode(false);
+            newInput.value = input.value;
+            Array.from(input.attributes).forEach(attr => {
+                if (attr.name !== 'oninput') {
+                    newInput.setAttribute(attr.name, attr.value);
+                }
+            });
+            input.parentNode.replaceChild(newInput, input);
+            
+            // Thêm event listener mới
+            newInput.addEventListener('input', function(e) {
+                console.log('[initFormatMoneyInputs] Input event fired for:', this.name || this.getAttribute('name'), 'value:', this.value);
                 if (typeof window.formatMoneyInput === 'function') {
                     window.formatMoneyInput(this);
                 } else {
                     console.error('[initFormatMoneyInputs] formatMoneyInput is not a function');
                 }
-            }, true); // Use capture phase
+            });
         });
         
         // Thêm MutationObserver cho gift price inputs
