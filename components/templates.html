@@ -457,41 +457,48 @@
                 </div>
 
                 <!-- Lịch sử phê duyệt -->
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <h4 class="font-bold text-sm text-gray-600 uppercase mb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-history text-blue-600"></i>Lịch sử phê duyệt
+                <div class="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-lg p-5 shadow-sm">
+                    <h4 class="font-bold text-base text-gray-700 uppercase mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-history text-blue-600 text-lg"></i>
+                        <span>Lịch sử phê duyệt</span>
                     </h4>
-                    <div class="space-y-2 max-h-64 overflow-y-auto">
+                    <div class="space-y-3 max-h-80 overflow-y-auto pr-2">
                         {{#log_entries}}
                         {{#.}}
-                        <div class="border-l-4 pl-4 py-3 rounded-r-lg {{#is_approve}}border-green-500 bg-green-50{{/is_approve}}{{#is_reject}}border-red-500 bg-red-50{{/is_reject}}{{^is_approve}}{{^is_reject}}border-gray-400 bg-gray-50{{/is_reject}}{{/is_approve}}">
-                            <div class="flex items-start justify-between mb-1">
+                        <div class="relative border-l-4 pl-4 pb-4 pt-2 rounded-r-lg transition-all hover:shadow-md {{#is_approve}}border-green-500 bg-gradient-to-r from-green-50 to-green-50/50{{/is_approve}}{{#is_reject}}border-red-500 bg-gradient-to-r from-red-50 to-red-50/50{{/is_reject}}{{^is_approve}}{{^is_reject}}border-blue-400 bg-gradient-to-r from-blue-50 to-blue-50/50{{/is_reject}}{{/is_approve}}">
+                            <div class="flex items-start justify-between mb-2">
                                 <div class="flex items-center gap-2">
                                     {{#is_approve}}
-                                    <i class="fa-solid fa-check-circle text-green-600"></i>
+                                    <i class="fa-solid fa-check-circle text-green-600 text-lg"></i>
                                     {{/is_approve}}
                                     {{#is_reject}}
-                                    <i class="fa-solid fa-times-circle text-red-600"></i>
+                                    <i class="fa-solid fa-times-circle text-red-600 text-lg"></i>
                                     {{/is_reject}}
                                     {{^is_approve}}{{^is_reject}}
-                                    <i class="fa-solid fa-clock text-gray-500"></i>
+                                    <i class="fa-solid fa-clock text-blue-500 text-lg"></i>
                                     {{/is_reject}}{{/is_approve}}
-                                    <span class="font-bold text-xs text-gray-600">{{time}}</span>
-                </div>
+                                    <span class="font-bold text-sm text-gray-700">{{time}}</span>
+                                </div>
                                 {{#user}}
-                                <span class="text-xs text-gray-500 bg-white px-2 py-1 rounded border">
-                                    {{user}}{{#role}} <span class="text-gray-400">({{role}})</span>{{/role}}
+                                <span class="text-xs font-medium text-gray-600 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-gray-200 shadow-sm">
+                                    <i class="fa-solid fa-user mr-1.5 text-blue-500"></i>
+                                    <span class="font-semibold">{{user}}</span>{{#role}} <span class="text-gray-500 font-normal">({{role}})</span>{{/role}}
                                 </span>
                                 {{/user}}
                             </div>
                             <div class="mt-2">
-                                <span class="font-semibold text-sm {{#is_approve}}text-green-700{{/is_approve}}{{#is_reject}}text-red-700{{/is_reject}}{{^is_approve}}{{^is_reject}}text-gray-700{{/is_reject}}{{/is_approve}}">
+                                <span class="inline-flex items-center gap-2 font-semibold text-sm px-3 py-1.5 rounded-lg {{#is_approve}}text-green-800 bg-green-100{{/is_approve}}{{#is_reject}}text-red-800 bg-red-100{{/is_reject}}{{^is_approve}}{{^is_reject}}text-blue-800 bg-blue-100{{/is_reject}}{{/is_approve}}">
                                     {{action}}
                                 </span>
                                 {{#comment}}
-                                <div class="mt-2 p-2 bg-white rounded border border-gray-200 text-xs text-gray-700 flex items-start">
-                                    <i class="fa-solid fa-comment-dots mr-2 mt-0.5 text-blue-600"></i>
-                                    <span class="flex-1 italic">{{comment}}</span>
+                                <div class="mt-3 p-3 bg-white/90 backdrop-blur-sm rounded-lg border-l-4 border-blue-400 shadow-sm">
+                                    <div class="flex items-start gap-2">
+                                        <i class="fa-solid fa-comment-dots mt-0.5 text-blue-600"></i>
+                                        <div class="flex-1">
+                                            <span class="text-xs font-medium text-gray-500 block mb-1">Lý do:</span>
+                                            <span class="text-sm text-gray-700 leading-relaxed italic">{{comment}}</span>
+                                        </div>
+                                    </div>
                                 </div>
                                 {{/comment}}
                             </div>

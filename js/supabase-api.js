@@ -345,6 +345,15 @@ async function supabaseGetPendingList(username, role) {
             }
 
             if (show) {
+                // Kiểm tra xem tờ trình có THỰC SỰ bị từ chối không
+                // Tờ trình bị từ chối khi: current_step = 0 VÀ (status_text chứa "từ chối" HOẶC history_log chứa "TỪ CHỐI")
+                const statusText = (row.status_text || '').toLowerCase();
+                const historyLog = (row.history_log || '').toUpperCase();
+                const isActuallyRejected = row.current_step === 0 && 
+                                          (statusText.includes('từ chối') || 
+                                           statusText.includes('trả về') ||
+                                           historyLog.includes('TỪ CHỐI'));
+                
                 const item = {
                     id: row.id,
                     date: formatDate(row.date),
@@ -372,7 +381,7 @@ async function supabaseGetPendingList(username, role) {
                     other_requirements: row.other_requirements || '',
                     max_cost_rate: row.max_cost_rate ? formatCurrency(row.max_cost_rate) : '',
                     productivity_bonus: row.productivity_bonus ? formatCurrency(row.productivity_bonus) : '',
-                    can_resubmit: (row.current_step === 0 && isRequester),
+                    can_resubmit: (isActuallyRejected && isRequester),
                     is_completed: isCompleted, // Flag để template biết tờ trình đã hoàn tất
                     // Quyền in:
                     // - Admin, GĐKD, BKS, BGĐ, KT: có thể in tất cả tờ trình đã hoàn tất
@@ -610,6 +619,15 @@ async function supabaseGetMyRequests(username, role) {
         }
 
         const resultList = filteredData.map(row => {
+            // Kiểm tra xem tờ trình có THỰC SỰ bị từ chối không
+            // Tờ trình bị từ chối khi: current_step = 0 VÀ (status_text chứa "từ chối" HOẶC history_log chứa "TỪ CHỐI")
+            const statusText = (row.status_text || '').toLowerCase();
+            const historyLog = (row.history_log || '').toUpperCase();
+            const isActuallyRejected = row.current_step === 0 && 
+                                      (statusText.includes('từ chối') || 
+                                       statusText.includes('trả về') ||
+                                       historyLog.includes('TỪ CHỐI'));
+            
             const item = {
                 id: row.id,
                 date: formatDate(row.date),
@@ -637,7 +655,7 @@ async function supabaseGetMyRequests(username, role) {
                 other_requirements: row.other_requirements || '',
                 max_cost_rate: row.max_cost_rate ? formatCurrency(row.max_cost_rate) : '',
                 productivity_bonus: row.productivity_bonus ? formatCurrency(row.productivity_bonus) : '',
-                can_resubmit: (row.current_step === 0),
+                can_resubmit: isActuallyRejected,
                 is_completed: row.current_step >= 4, // Flag để template biết tờ trình đã hoàn tất
                 // Quyền in sẽ được tính ở đây
                 can_print: false
@@ -741,6 +759,39 @@ async function supabaseGetRequestDetail(id, username) {
             // can_print sẽ được set ở frontend dựa vào role
             can_print: false
         };
+
+        // Kiểm tra xem tờ trình có THỰC SỰ bị từ chối không
+        const statusText = (item.status_text || '').toLowerCase();
+        const historyLog = (item.logs || '').toUpperCase();
+        const isActuallyRejected = item.step === 0 && 
+                                  (statusText.includes('từ chối') || 
+                                   statusText.includes('trả về') ||
+                                   historyLog.includes('TỪ CHỐI'));
+        item.can_resubmit = isActuallyRejected;
+        item.is_completed = item.step >= 4;
+
+        // Parse log entries để hiển thị lịch sử phê duyệt
+        if (item.logs) {
+            const logLines = item.logs.split('\n');
+            const logEntries = [];
+            logLines.forEach(logLine => {
+                const trimmed = logLine.trim();
+                if (!trimmed) return;
+                const parts = trimmed.split(' | ');
+                if (parts.length >= 3) {
+                    logEntries.push({
+                        time: parts[0],
+                        user: parts[1].split(' (')[0],
+                        role: parts[1].split(' (')[1] ? parts[1].split(' (')[1].replace(')', '') : '',
+                        action: parts[2],
+                        comment: parts.length > 3 ? parts.slice(3).join(' | ').replace('Lý do: ', '') : '',
+                        is_approve: parts[2].indexOf('DUYỆT') !== -1,
+                        is_reject: parts[2].indexOf('TỪ CHỐI') !== -1
+                    });
+                }
+            });
+            item.log_entries = logEntries;
+        }
 
         // Parse gift_json
         try {
