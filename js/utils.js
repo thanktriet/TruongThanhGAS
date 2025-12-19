@@ -10,8 +10,8 @@ let approvalFilters = { search: '', status: 'all' };
 let myRequestsData = [];
 let myRequestsFilters = { search: '', status: 'all' };
 
-// Session timeout: 8 giờ (8 * 60 * 60 * 1000 ms)
-const SESSION_TIMEOUT_MS = 8 * 60 * 60 * 1000; // 8 giờ
+// Session timeout: 2 giờ (2 * 60 * 60 * 1000 ms)
+const SESSION_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 giờ
 
 function getSession() {
     const sessionStr = localStorage.getItem('user_session');
