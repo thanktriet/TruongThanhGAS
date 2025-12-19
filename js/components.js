@@ -160,24 +160,40 @@ async function loadAllComponents() {
  * Initialize formatMoneyInput for money input fields
  */
 function initFormatMoneyInputs() {
+    console.log('[initFormatMoneyInputs] Starting initialization...');
+    
     // Đảm bảo formatMoneyInput function tồn tại
     if (typeof window.formatMoneyInput !== 'function') {
-        console.warn('formatMoneyInput function not found');
-        return;
+        console.error('[initFormatMoneyInputs] formatMoneyInput function not found on window');
+        // Thử tạo một fallback function
+        window.formatMoneyInput = function(el) {
+            if (!el) return;
+            let val = el.value.replace(/\D/g, '');
+            el.value = val ? Number(val).toLocaleString('vi-VN') : '';
+            console.log('[formatMoneyInput] Formatted value:', el.value);
+        };
+        console.log('[initFormatMoneyInputs] Created fallback formatMoneyInput function');
     }
     
     // Thêm event listener cho các input tiền trong form create
     const formManual = document.getElementById('form-manual-create');
     if (formManual) {
+        console.log('[initFormatMoneyInputs] Found form-manual-create');
         const moneyInputs = formManual.querySelectorAll('input[name="contract_price"], input[name="discount_amount"], input[name="productivity_bonus"]');
-        moneyInputs.forEach(input => {
+        console.log('[initFormatMoneyInputs] Found', moneyInputs.length, 'money inputs');
+        
+        moneyInputs.forEach((input, index) => {
+            console.log(`[initFormatMoneyInputs] Setting up input ${index}:`, input.name);
             // Thay thế inline handler bằng event listener để đảm bảo function được gọi
             input.removeAttribute('oninput');
-            input.addEventListener('input', function() {
+            input.addEventListener('input', function(e) {
+                console.log('[initFormatMoneyInputs] Input event fired for:', this.name, 'value:', this.value);
                 if (typeof window.formatMoneyInput === 'function') {
                     window.formatMoneyInput(this);
+                } else {
+                    console.error('[initFormatMoneyInputs] formatMoneyInput is not a function');
                 }
-            });
+            }, true); // Use capture phase
         });
         
         // Thêm MutationObserver cho gift price inputs
@@ -191,7 +207,6 @@ function initFormatMoneyInputs() {
                             giftPriceInputs.forEach(input => {
                                 if (!input.hasAttribute('data-formatted')) {
                                     input.setAttribute('data-formatted', 'true');
-                                    // Xóa inline handler nếu có
                                     input.removeAttribute('oninput');
                                     input.addEventListener('input', function() {
                                         if (typeof window.formatMoneyInput === 'function') {
@@ -206,6 +221,8 @@ function initFormatMoneyInputs() {
             });
             observer.observe(giftContainer, { childList: true, subtree: true });
         }
+    } else {
+        console.warn('[initFormatMoneyInputs] form-manual-create not found');
     }
     
     // Cũng thêm cho form search (nếu có)
@@ -218,7 +235,7 @@ function initFormatMoneyInputs() {
                 if (typeof window.formatMoneyInput === 'function') {
                     window.formatMoneyInput(this);
                 }
-            });
+            }, true);
         });
         
         const giftContainerSearch = document.getElementById('gift-list-search');
@@ -246,6 +263,8 @@ function initFormatMoneyInputs() {
             observer.observe(giftContainerSearch, { childList: true, subtree: true });
         }
     }
+    
+    console.log('[initFormatMoneyInputs] Initialization complete');
 }
 
 // Load components when DOM is ready
