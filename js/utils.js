@@ -51,21 +51,32 @@ function logout() {
 }
 
 function formatMoneyInput(el) {
-    if (!el) return;
-    // Lấy giá trị hiện tại, loại bỏ tất cả ký tự không phải số (bao gồm dấu chấm)
-    let val = el.value.replace(/\D/g, '');
-    // Format lại với dấu chấm phân cách hàng nghìn
-    el.value = val ? Number(val).toLocaleString('vi-VN') : '';
+    if (!el) {
+        console.warn('[formatMoneyInput] Element is null or undefined');
+        return;
+    }
     
-    // Chỉ tính tổng quà tặng nếu đây là input giá quà tặng (có class gift-price)
-    if (el.classList.contains('gift-price')) {
-        const containerId = el.closest('#mode-search-container') 
-            ? 'gift-list-search' 
-            : 'gift-list-manual';
-        // Kiểm tra xem function calcGiftTotal có tồn tại không trước khi gọi
-        if (typeof calcGiftTotal === 'function') {
-            calcGiftTotal(containerId);
+    try {
+        // Lấy giá trị hiện tại, loại bỏ tất cả ký tự không phải số (bao gồm dấu chấm)
+        let val = el.value.replace(/\D/g, '');
+        // Format lại với dấu chấm phân cách hàng nghìn
+        el.value = val ? Number(val).toLocaleString('vi-VN') : '';
+        console.log('[formatMoneyInput] Formatted value:', el.value, 'from raw:', val);
+        
+        // Chỉ tính tổng quà tặng nếu đây là input giá quà tặng (có class gift-price)
+        if (el.classList && el.classList.contains('gift-price')) {
+            const containerId = el.closest('#mode-search-container') 
+                ? 'gift-list-search' 
+                : 'gift-list-manual';
+            // Kiểm tra xem function calcGiftTotal có tồn tại không trước khi gọi
+            if (typeof calcGiftTotal === 'function') {
+                calcGiftTotal(containerId);
+            } else if (typeof window.calcGiftTotal === 'function') {
+                window.calcGiftTotal(containerId);
+            }
         }
+    } catch (error) {
+        console.error('[formatMoneyInput] Error:', error);
     }
 }
 

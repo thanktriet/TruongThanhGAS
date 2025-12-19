@@ -188,23 +188,51 @@ function initFormatMoneyInputs() {
             // Đảm bảo không có inline handler conflict
             input.removeAttribute('oninput');
             
-            // Xóa các event listener cũ nếu có (clone node)
-            const newInput = input.cloneNode(false);
-            newInput.value = input.value;
+            // Lưu value và các attributes quan trọng
+            const currentValue = input.value;
+            const currentName = input.name;
+            const currentId = input.id;
+            const currentClass = input.className;
+            const currentRequired = input.required;
+            const currentPlaceholder = input.placeholder;
+            const currentType = input.type;
+            
+            // Tạo input mới
+            const newInput = document.createElement('input');
+            newInput.type = currentType || 'text';
+            newInput.name = currentName;
+            if (currentId) newInput.id = currentId;
+            if (currentClass) newInput.className = currentClass;
+            if (currentRequired) newInput.required = currentRequired;
+            if (currentPlaceholder) newInput.placeholder = currentPlaceholder;
+            newInput.value = currentValue;
+            
+            // Copy các data attributes
             Array.from(input.attributes).forEach(attr => {
-                if (attr.name !== 'oninput') {
+                if (attr.name.startsWith('data-')) {
                     newInput.setAttribute(attr.name, attr.value);
                 }
             });
+            
+            // Thay thế input cũ bằng input mới
             input.parentNode.replaceChild(newInput, input);
             
             // Thêm event listener mới
             newInput.addEventListener('input', function(e) {
                 console.log('[initFormatMoneyInputs] Input event fired for:', this.name || this.getAttribute('name'), 'value:', this.value);
                 if (typeof window.formatMoneyInput === 'function') {
-                    window.formatMoneyInput(this);
+                    try {
+                        window.formatMoneyInput(this);
+                        console.log('[initFormatMoneyInputs] After formatMoneyInput, value:', this.value);
+                    } catch (error) {
+                        console.error('[initFormatMoneyInputs] Error in formatMoneyInput:', error);
+                    }
                 } else {
-                    console.error('[initFormatMoneyInputs] formatMoneyInput is not a function');
+                    console.error('[initFormatMoneyInputs] formatMoneyInput is not a function, type:', typeof window.formatMoneyInput);
+                    // Fallback: format manually
+                    let val = this.value.replace(/\D/g, '');
+                    this.value = val ? Number(val).toLocaleString('vi-VN') : '';
+                    console.log('[initFormatMoneyInputs] Fallback format, value:', this.value);
                 }
             });
         });
