@@ -151,6 +151,101 @@ async function loadAllComponents() {
     
     // Wait a bit for DOM to update after loading components
     await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Initialize formatMoneyInput for create form
+    initFormatMoneyInputs();
+}
+
+/**
+ * Initialize formatMoneyInput for money input fields
+ */
+function initFormatMoneyInputs() {
+    // Đảm bảo formatMoneyInput function tồn tại
+    if (typeof window.formatMoneyInput !== 'function') {
+        console.warn('formatMoneyInput function not found');
+        return;
+    }
+    
+    // Thêm event listener cho các input tiền trong form create
+    const formManual = document.getElementById('form-manual-create');
+    if (formManual) {
+        const moneyInputs = formManual.querySelectorAll('input[name="contract_price"], input[name="discount_amount"], input[name="productivity_bonus"]');
+        moneyInputs.forEach(input => {
+            // Thay thế inline handler bằng event listener để đảm bảo function được gọi
+            input.removeAttribute('oninput');
+            input.addEventListener('input', function() {
+                if (typeof window.formatMoneyInput === 'function') {
+                    window.formatMoneyInput(this);
+                }
+            });
+        });
+        
+        // Thêm MutationObserver cho gift price inputs
+        const giftContainer = document.getElementById('gift-list-manual');
+        if (giftContainer) {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) { // Element node
+                            const giftPriceInputs = node.querySelectorAll ? node.querySelectorAll('.gift-price') : [];
+                            giftPriceInputs.forEach(input => {
+                                if (!input.hasAttribute('data-formatted')) {
+                                    input.setAttribute('data-formatted', 'true');
+                                    // Xóa inline handler nếu có
+                                    input.removeAttribute('oninput');
+                                    input.addEventListener('input', function() {
+                                        if (typeof window.formatMoneyInput === 'function') {
+                                            window.formatMoneyInput(this);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+            observer.observe(giftContainer, { childList: true, subtree: true });
+        }
+    }
+    
+    // Cũng thêm cho form search (nếu có)
+    const formSearch = document.getElementById('form-create-request');
+    if (formSearch) {
+        const moneyInputs = formSearch.querySelectorAll('input[name="contract_price"], input[name="discount_amount"], input[name="productivity_bonus"]');
+        moneyInputs.forEach(input => {
+            input.removeAttribute('oninput');
+            input.addEventListener('input', function() {
+                if (typeof window.formatMoneyInput === 'function') {
+                    window.formatMoneyInput(this);
+                }
+            });
+        });
+        
+        const giftContainerSearch = document.getElementById('gift-list-search');
+        if (giftContainerSearch) {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) {
+                            const giftPriceInputs = node.querySelectorAll ? node.querySelectorAll('.gift-price') : [];
+                            giftPriceInputs.forEach(input => {
+                                if (!input.hasAttribute('data-formatted')) {
+                                    input.setAttribute('data-formatted', 'true');
+                                    input.removeAttribute('oninput');
+                                    input.addEventListener('input', function() {
+                                        if (typeof window.formatMoneyInput === 'function') {
+                                            window.formatMoneyInput(this);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+            observer.observe(giftContainerSearch, { childList: true, subtree: true });
+        }
+    }
 }
 
 // Load components when DOM is ready
