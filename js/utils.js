@@ -55,10 +55,21 @@ function formatMoneyInput(el) {
     let val = el.value.replace(/\D/g, '');
     el.value = val ? Number(val).toLocaleString('vi-VN') : '';
     
-    const containerId = el.closest('#mode-search-container') 
-        ? 'gift-list-search' 
-        : 'gift-list-manual';
-    calcGiftTotal(containerId);
+    // Chỉ tính tổng quà tặng nếu đây là input giá quà tặng (có class gift-price)
+    if (el.classList.contains('gift-price')) {
+        const containerId = el.closest('#mode-search-container') 
+            ? 'gift-list-search' 
+            : 'gift-list-manual';
+        // Kiểm tra xem function calcGiftTotal có tồn tại không trước khi gọi
+        if (typeof calcGiftTotal === 'function') {
+            calcGiftTotal(containerId);
+        }
+    }
+}
+
+// Export formatMoneyInput to window for use in components
+if (typeof window !== 'undefined') {
+    window.formatMoneyInput = formatMoneyInput;
 }
 
 /**
