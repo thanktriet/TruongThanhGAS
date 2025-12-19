@@ -69,16 +69,8 @@ function initContractLookup() {
 // ===================================
 // MONEY & GIFT LOGIC
 // ===================================
-        function formatMoneyInput(el) {
-    if (!el) return;
-            let val = el.value.replace(/\D/g, '');
-    el.value = val ? Number(val).toLocaleString('vi-VN') : '';
-    
-    const containerId = el.closest('#mode-search-container') 
-        ? 'gift-list-search' 
-        : 'gift-list-manual';
-            calcGiftTotal(containerId);
-        }
+// formatMoneyInput is defined in utils.js and exported to window
+// Use that function instead of redefining here
 
         function addGiftRow(containerId) {
     const container = $(containerId);
