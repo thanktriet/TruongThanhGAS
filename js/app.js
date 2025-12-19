@@ -203,6 +203,8 @@ function initContractLookup() {
         action: "submit_request",
         requester: session.username,
         ...Object.fromEntries(formData.entries()),
+        contract_price: formData.get('contract_price')?.replace(/\./g, '') || '0',
+        discount_amount: formData.get('discount_amount')?.replace(/\./g, '') || '0',
         approver_step0: formData.get('approver_step0') || '',
         productivity_bonus: formData.get('productivity_bonus')?.replace(/\./g, '') || '0'
     };
