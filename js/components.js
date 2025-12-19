@@ -152,8 +152,8 @@ async function loadAllComponents() {
     // Wait a bit for DOM to update after loading components
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    // Initialize formatMoneyInput for create form
-    initFormatMoneyInputs();
+    // Không cần initFormatMoneyInputs nữa vì dùng inline handler trong HTML
+    // initFormatMoneyInputs();
 }
 
 /**
