@@ -47,11 +47,11 @@
                         </div>
                         <div>
                             <label class="label">Số tiền đối ứng (VNĐ) *</label>
-                            <input type="number" id="dngn-so_tien_doi_ung" class="input" min="0" required oninput="calculateDeNghi()">
+                            <input type="text" id="dngn-so_tien_doi_ung" class="input" placeholder="0" required oninput="formatMoneyInput(this); calculateDeNghi()">
                         </div>
                         <div>
                             <label class="label">Số tiền giải ngân (VNĐ) *</label>
-                            <input type="number" id="dngn-so_tien_giai_ngan" class="input" min="0" required oninput="calculateDeNghi()">
+                            <input type="text" id="dngn-so_tien_giai_ngan" class="input" placeholder="0" required oninput="formatMoneyInput(this); calculateDeNghi()">
                         </div>
                     </div>
                 </div>
@@ -156,8 +156,8 @@ window.submitDeNghiForm = async function(event) {
         ngay_captbcv: document.getElementById('dngn-ngay_captbcv')?.value || '',
         loai_xe: document.getElementById('dngn-loai_xe')?.value.trim() || '',
         so_tai_khoan: document.getElementById('dngn-so_tai_khoan')?.value.trim() || '',
-        so_tien_doi_ung: parseFloat(document.getElementById('dngn-so_tien_doi_ung')?.value) || 0,
-        so_tien_giai_ngan: parseFloat(document.getElementById('dngn-so_tien_giai_ngan')?.value) || 0
+        so_tien_doi_ung: parseFloat(String(document.getElementById('dngn-so_tien_doi_ung')?.value || '0').replace(/\./g, '').replace(/\D/g, '')) || 0,
+        so_tien_giai_ngan: parseFloat(String(document.getElementById('dngn-so_tien_giai_ngan')?.value || '0').replace(/\./g, '').replace(/\D/g, '')) || 0
     };
 
     // Validate
