@@ -177,24 +177,26 @@ function openCocDisburseModal(requestId) {
     currentCocDisburseRequestId = requestId;
     
     // Find request data
-    if (typeof allCocRequests !== 'undefined' && allCocRequests) {
-        const request = allCocRequests.find(r => r.id === requestId);
-        if (request) {
-            document.getElementById('disburse-contract-code').textContent = cocRequest.contract_code || '-';
-            document.getElementById('disburse-customer-name').textContent = cocRequest.customer_name || '-';
-            document.getElementById('disburse-issue-date').textContent = cocRequest.actual_issue_date 
-                ? new Date(cocRequest.actual_issue_date).toLocaleDateString('vi-VN')
-                : '-';
-            document.getElementById('disburse-interest-amount').textContent = cocRequest.interest_amount 
-                ? parseFloat(cocRequest.interest_amount).toLocaleString('vi-VN') + ' VNĐ'
-                : '0 VNĐ';
+    let cocRequest = null;
+    if (typeof window.allCocRequests !== 'undefined' && window.allCocRequests) {
+        cocRequest = window.allCocRequests.find(r => r.id === requestId);
+    }
+    
+    if (cocRequest) {
+        document.getElementById('disburse-contract-code').textContent = cocRequest.contract_code || '-';
+        document.getElementById('disburse-customer-name').textContent = cocRequest.customer_name || '-';
+        document.getElementById('disburse-issue-date').textContent = cocRequest.actual_issue_date 
+            ? new Date(cocRequest.actual_issue_date).toLocaleDateString('vi-VN')
+            : '-';
+        document.getElementById('disburse-interest-amount').textContent = cocRequest.interest_amount 
+            ? parseFloat(cocRequest.interest_amount).toLocaleString('vi-VN') + ' VNĐ'
+            : '0 VNĐ';
     } else {
-        console.error('COC request not found for disburse:', requestIdToUse);
+        console.error('COC request not found for disburse:', requestId);
         if (typeof window.showToast === 'function') {
             window.showToast('Không tìm thấy đề nghị COC', 'danger');
         }
-        return;
-    }
+        // Still show modal but with empty data
     }
     
     // Reset form
@@ -219,4 +221,3 @@ if (typeof window !== 'undefined') {
     window.submitCocDisburse = submitCocDisburse;
 }
 </script>
-
