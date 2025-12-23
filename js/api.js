@@ -47,16 +47,23 @@ async function callGoogleAppsScriptAPI(data) {
  */
 async function callAPI(data) {
     try {
-        console.log('Calling API:', data.action, data);
+        console.log('[callAPI] Calling API:', data.action, data);
+        console.log('[callAPI] window.supabaseAPI exists?', !!window.supabaseAPI);
+        console.log('[callAPI] window.supabaseAPI.callAPI exists?', !!(window.supabaseAPI && window.supabaseAPI.callAPI));
         
         // Sử dụng Supabase API - 100% migration
         if (window.supabaseAPI && window.supabaseAPI.callAPI) {
-            console.log('Using Supabase API');
+            console.log('[callAPI] Using Supabase API, calling window.supabaseAPI.callAPI...');
             const result = await window.supabaseAPI.callAPI(data);
+            console.log('[callAPI] Got result from supabaseAPI.callAPI:', { 
+                success: result.success, 
+                hasData: !!result.data,
+                message: result.message 
+            });
             
             // Nếu lookup_contract cần fallback về Google Apps Script
             if (data.action === 'lookup_contract' && result.fallback) {
-                console.log('lookup_contract: Falling back to Google Apps Script');
+                console.log('[callAPI] lookup_contract: Falling back to Google Apps Script');
                 return await callGoogleAppsScriptAPI(data);
             }
             
@@ -64,13 +71,15 @@ async function callAPI(data) {
         }
         
         // Nếu Supabase chưa sẵn sàng, báo lỗi
-        console.error('Supabase API chưa được khởi tạo');
+        console.error('[callAPI] Supabase API chưa được khởi tạo');
+        console.error('[callAPI] window.supabaseAPI:', window.supabaseAPI);
         return { 
             success: false, 
             message: 'Supabase chưa được khởi tạo. Vui lòng reload trang.' 
         };
     } catch (e) {
-        console.error('API call error:', e);
+        console.error('[callAPI] API call error:', e);
+        console.error('[callAPI] Error stack:', e.stack);
         return { 
             success: false, 
             message: e.message || 'Lỗi kết nối đến server. Vui lòng kiểm tra kết nối mạng.' 
