@@ -63,13 +63,11 @@ async function loadComponent(componentName, targetElementId) {
 
 async function loadComponentAppend(componentName, targetElementId) {
     try {
-        console.log(`[Components] Loading component: ${componentName} into ${targetElementId}`);
         const response = await fetch(`components/${componentName}.html`);
         if (!response.ok) {
             console.error(`[Components] Failed to load component ${componentName}: HTTP ${response.status} ${response.statusText}`);
             return;
         }
-        console.log(`[Components] Successfully fetched ${componentName}.html`);
         const html = await response.text();
         const target = document.getElementById(targetElementId);
         if (target) {
@@ -93,19 +91,16 @@ async function loadComponentAppend(componentName, targetElementId) {
             target.insertAdjacentHTML('beforeend', tempDiv.innerHTML);
             
             // Execute scripts after HTML is inserted
-            console.log(`[Components] Found ${scriptsToExecute.length} scripts in ${componentName}`);
             scriptsToExecute.forEach((scriptData, index) => {
                 try {
                     if (scriptData.src) {
                         // External script - create and append
-                        console.log(`[Components] Executing external script ${index + 1} for ${componentName}: ${scriptData.src}`);
                         const newScript = document.createElement('script');
                         newScript.src = scriptData.src;
                         newScript.type = scriptData.type;
                         document.body.appendChild(newScript);
                     } else {
                         // Inline script - execute directly
-                        console.log(`[Components] Executing inline script ${index + 1} for ${componentName} (length: ${scriptData.content ? scriptData.content.length : 0})`);
                         const newScript = document.createElement('script');
                         newScript.type = scriptData.type;
                         newScript.textContent = scriptData.content;
@@ -116,7 +111,6 @@ async function loadComponentAppend(componentName, targetElementId) {
                     console.error(`[Components] Error executing script ${index + 1} for ${componentName}:`, scriptError);
                 }
             });
-            console.log(`[Components] Component ${componentName} loaded successfully`);
         } else {
             console.error(`[Components] Target element not found: ${targetElementId}`);
         }

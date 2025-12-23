@@ -95,20 +95,10 @@ async function loadDocumentFiles() {
     if (emptyDiv) emptyDiv.classList.add('hidden');
 
     try {
-        console.log('[Document Files] Loading files for:', { username: session.username, role: session.role });
         const result = await window.callAPI({
             action: 'get_document_files',
             username: session.username,
             role: session.role
-        });
-
-        console.log('[Document Files] API result:', result);
-        console.log('[Document Files] Result details:', {
-            success: result.success,
-            hasData: !!result.data,
-            isArray: Array.isArray(result.data),
-            dataLength: result.data ? result.data.length : 0,
-            message: result.message
         });
 
         if (loadingDiv) loadingDiv.classList.add('hidden');
@@ -381,79 +371,48 @@ function escapeHtml(text) {
 }
 
 // Auto load when tab is shown
-try {
-    console.log('[Document Files] Script executing, typeof window:', typeof window);
-    if (typeof window !== 'undefined') {
-        console.log('[Document Files] Window is defined, setting up functions...');
-        window.loadDocumentFiles = loadDocumentFiles;
-        window.filterDocumentFiles = filterDocumentFiles;
-        window.goToPage = goToPage;
-        
-        console.log('[Document Files] Setting up auto-load...');
-        
-        // Load immediately if tab is already active (when component first loads)
-        setTimeout(() => {
-            console.log('[Document Files] Initial check timeout fired');
-            const documentFilesTab = document.getElementById('tab-document-files');
-            console.log('[Document Files] Initial check - tab exists?', !!documentFilesTab);
-            if (documentFilesTab && documentFilesTab.classList.contains('active')) {
-                console.log('[Document Files] Tab is already active, loading files...');
-                loadDocumentFiles();
-            }
-        }, 500);
-        
-        if (document.readyState === 'loading') {
-            console.log('[Document Files] Document still loading, adding load event listener...');
-            window.addEventListener('load', () => {
-                console.log('[Document Files] Window loaded event fired, setting up observer...');
-                setupDocumentFilesObserver();
-            });
-        } else {
-            console.log('[Document Files] Document already loaded, setting up observer immediately...');
-            setupDocumentFilesObserver();
+if (typeof window !== 'undefined') {
+    window.loadDocumentFiles = loadDocumentFiles;
+    window.filterDocumentFiles = filterDocumentFiles;
+    window.goToPage = goToPage;
+    
+    // Load files when tab is activated
+    let hasLoaded = false;
+    const observer = new MutationObserver((mutations) => {
+        const documentFilesTab = document.getElementById('tab-document-files');
+        if (documentFilesTab && documentFilesTab.classList.contains('active') && !hasLoaded) {
+            hasLoaded = true;
+            loadDocumentFiles();
+        } else if (documentFilesTab && !documentFilesTab.classList.contains('active')) {
+            hasLoaded = false;
         }
-    } else {
-        console.error('[Document Files] Window is undefined!');
-    }
-} catch (setupError) {
-    console.error('[Document Files] Error in setup:', setupError);
-    console.error('[Document Files] Error stack:', setupError.stack);
-}
-
-function setupDocumentFilesObserver() {
-    try {
-        console.log('[Document Files] Setting up observer...');
-        // Load files when tab is activated
-        const observer = new MutationObserver((mutations) => {
-            const documentFilesTab = document.getElementById('tab-document-files');
-            if (documentFilesTab && documentFilesTab.classList.contains('active')) {
-                console.log('[Document Files] Tab became active, loading files...');
-                loadDocumentFiles();
-            }
-        });
-        
+    });
+    
+    // Setup observer when DOM is ready
+    const setupObserver = () => {
         const container = document.querySelector('.tab-content');
         if (container && container.parentElement) {
-            console.log('[Document Files] Observing container parent for class changes...');
             observer.observe(container.parentElement, { 
                 attributes: true, 
                 attributeFilter: ['class'],
                 subtree: true 
             });
-        } else {
-            console.warn('[Document Files] Container or parent not found for observer');
+            
+            // Check immediately if tab is already active
+            setTimeout(() => {
+                const documentFilesTab = document.getElementById('tab-document-files');
+                if (documentFilesTab && documentFilesTab.classList.contains('active')) {
+                    hasLoaded = true;
+                    loadDocumentFiles();
+                }
+            }, 300);
         }
-        
-        // Also check immediately after setup
-        setTimeout(() => {
-            const documentFilesTab = document.getElementById('tab-document-files');
-            if (documentFilesTab && documentFilesTab.classList.contains('active')) {
-                console.log('[Document Files] Tab is active after observer setup, loading files...');
-                loadDocumentFiles();
-            }
-        }, 1000);
-    } catch (observerError) {
-        console.error('[Document Files] Error setting up observer:', observerError);
+    };
+    
+    if (document.readyState === 'loading') {
+        window.addEventListener('load', setupObserver);
+    } else {
+        setupObserver();
     }
 }
 </script>

@@ -1848,8 +1848,6 @@ async function supabaseSaveDocumentFile(fileData) {
  */
 async function supabaseGetDocumentFiles(username, role, filters = {}) {
     try {
-        console.log('[Get Document Files] Called with:', { username, role, filters });
-        
         const supabase = initSupabase();
         if (!supabase) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
@@ -1861,15 +1859,9 @@ async function supabaseGetDocumentFiles(username, role, filters = {}) {
             .order('created_at', { ascending: false });
 
         // Filter theo user (trừ admin và saleadmin)
-        // Normalize role để so sánh
         const normalizedRole = role ? role.toUpperCase() : '';
-        console.log('[Get Document Files] Normalized role:', normalizedRole);
-        
         if (normalizedRole !== 'ADMIN' && normalizedRole !== 'SALEADMIN') {
-            console.log('[Get Document Files] Filtering by created_by:', username);
             query = query.eq('created_by', username);
-        } else {
-            console.log('[Get Document Files] Admin/SaleAdmin - showing all files');
         }
 
         // Filter theo document_type
@@ -1895,30 +1887,15 @@ async function supabaseGetDocumentFiles(username, role, filters = {}) {
             query = query.lte('created_at', filters.date_to);
         }
 
-        console.log('[Get Document Files] Executing query...');
         const { data, error } = await query;
 
         if (error) {
             console.error('[Get Document Files] Query error:', error);
-            console.error('[Get Document Files] Error details:', JSON.stringify(error, null, 2));
             throw error;
         }
 
-        console.log('[Get Document Files] Query result:', { 
-            success: true, 
-            count: data ? data.length : 0,
-            dataPreview: data ? data.slice(0, 3).map(d => ({ 
-                id: d.id, 
-                document_type: d.document_type, 
-                created_by: d.created_by,
-                file_url: d.file_url ? 'present' : 'missing',
-                customer_name: d.customer_name
-            })) : []
-        });
-
         // Đảm bảo trả về array
         const resultData = Array.isArray(data) ? data : (data ? [data] : []);
-        console.log('[Get Document Files] Final result data count:', resultData.length);
         
         return { success: true, data: resultData };
     } catch (e) {
@@ -3741,7 +3718,6 @@ async function supabaseDeleteTvbhTarget(id) {
  */
 async function callSupabaseAPI(data) {
     const action = data.action;
-    console.log('[callSupabaseAPI] Called with action:', action, 'data keys:', Object.keys(data));
 
     try {
         switch (action) {
@@ -3829,11 +3805,6 @@ async function callSupabaseAPI(data) {
                 return await supabaseSaveDocumentFile(data);
             
             case 'get_document_files':
-                console.log('[callSupabaseAPI] Routing to supabaseGetDocumentFiles with:', {
-                    username: data.username,
-                    role: data.role,
-                    filters: data.filters
-                });
                 return await supabaseGetDocumentFiles(data.username, data.role, data.filters || {});
             
             // Daily Reports API
@@ -3902,12 +3873,10 @@ async function callSupabaseAPI(data) {
                 return await supabaseDeleteTvbhTarget(data.id);
             
             default:
-                console.warn('[callSupabaseAPI] Unknown action:', action);
                 return { success: false, message: 'Action không được hỗ trợ: ' + action };
         }
     } catch (e) {
         console.error('[callSupabaseAPI] Error:', e);
-        console.error('[callSupabaseAPI] Error stack:', e.stack);
         return { success: false, message: 'Lỗi: ' + e.message };
     }
 }
