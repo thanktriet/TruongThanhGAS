@@ -63,11 +63,13 @@ async function loadComponent(componentName, targetElementId) {
 
 async function loadComponentAppend(componentName, targetElementId) {
     try {
+        console.log(`[Components] Loading component: ${componentName} into ${targetElementId}`);
         const response = await fetch(`components/${componentName}.html`);
         if (!response.ok) {
-            console.error(`Failed to load component: ${componentName}`);
+            console.error(`[Components] Failed to load component ${componentName}: HTTP ${response.status} ${response.statusText}`);
             return;
         }
+        console.log(`[Components] Successfully fetched ${componentName}.html`);
         const html = await response.text();
         const target = document.getElementById(targetElementId);
         if (target) {
