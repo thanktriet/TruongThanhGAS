@@ -375,48 +375,133 @@ function closeOrderDetailModal() {
     isAdminView = false;
 }
 
-function assignContractCodeFromDetail() {
-    if (!currentOrderDetail) return;
-    
-    // Prompt for contract code
-    const contractCode = prompt('Nhập mã đơn hàng (số hợp đồng):');
-    if (!contractCode || !contractCode.trim()) {
+async function assignContractCodeFromDetail() {
+    if (!currentOrderDetail) {
+        console.error('assignContractCodeFromDetail: currentOrderDetail is null');
         return;
     }
     
-    // Call assign function
-    if (typeof assignContractCode === 'function') {
-        // Create a temporary input to use with assignContractCode
-        const tempInput = document.createElement('input');
-        tempInput.id = `contract-code-${currentOrderDetail.id}`;
-        tempInput.value = contractCode.trim().toUpperCase();
-        document.body.appendChild(tempInput);
-        
-        assignContractCode(currentOrderDetail.id).then(() => {
-            document.body.removeChild(tempInput);
-            // Reload order detail if successful
-            setTimeout(() => {
-                openOrderDetailModal(currentOrderDetail.id, isAdminView);
-            }, 500);
-        }).catch(() => {
-            document.body.removeChild(tempInput);
-        });
-    } else {
-        // Fallback: direct API call
-        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
-        if (!session || !session.username) {
-            if (typeof window.showToast === 'function') {
-                window.showToast('Vui lòng đăng nhập lại', 'danger');
+    const session = typeof getSession === 'function' ? getSession() : (() => {
+        try {
+            const sessionStr = localStorage.getItem('user_session');
+            return sessionStr ? JSON.parse(sessionStr) : null;
+        } catch (e) {
+            return null;
+        }
+    })();
+    
+    if (!session || !session.username) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng đăng nhập lại', 'danger');
+        }
+        return;
+    }
+    
+    // Use SweetAlert2 for better UX
+    if (typeof Swal !== 'undefined') {
+        const { value: contractCode } = await Swal.fire({
+            title: 'Cấp Mã Đơn Hàng',
+            html: `
+                <div style="text-align: left;">
+                    <p class="text-sm text-gray-600 mb-3">Nhập mã đơn hàng (số hợp đồng) cho đơn hàng này:</p>
+                    <input 
+                        id="swal-contract-code" 
+                        type="text" 
+                        class="swal2-input" 
+                        placeholder="Ví dụ: S10601-22-33-44"
+                        style="text-transform: uppercase;"
+                        maxlength="50"
+                    >
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: '<i class="fa-solid fa-key mr-2"></i>Cấp mã',
+            cancelButtonText: 'Hủy',
+            confirmButtonColor: '#16a34a',
+            cancelButtonColor: '#6b7280',
+            allowOutsideClick: false,
+            preConfirm: () => {
+                const input = Swal.getPopup().querySelector('#swal-contract-code');
+                const code = input ? input.value.trim().toUpperCase() : '';
+                if (!code) {
+                    Swal.showValidationMessage('Vui lòng nhập mã đơn hàng');
+                    return false;
+                }
+                return code;
+            },
+            didOpen: () => {
+                const input = Swal.getPopup().querySelector('#swal-contract-code');
+                if (input) {
+                    input.focus();
+                    // Auto uppercase on input
+                    input.addEventListener('input', (e) => {
+                        e.target.value = e.target.value.toUpperCase();
+                    });
+                }
             }
+        });
+        
+        if (!contractCode) return;
+        
+        // Show loading
+        Swal.fire({
+            title: 'Đang xử lý...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        try {
+            const result = await window.callAPI({
+                action: 'assign_contract_code',
+                orderId: currentOrderDetail.id,
+                contract_code: contractCode,
+                assigned_sale: session.username
+            });
+            
+            if (result.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công',
+                    text: 'Đã cấp mã đơn hàng thành công!',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    // Reload order detail
+                    openOrderDetailModal(currentOrderDetail.id, isAdminView);
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: result.message || 'Không thể cấp mã đơn hàng',
+                    confirmButtonText: 'OK'
+                });
+            }
+        } catch (error) {
+            console.error('assignContractCodeFromDetail error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi',
+                text: error.message || 'Không thể kết nối đến server',
+                confirmButtonText: 'OK'
+            });
+        }
+    } else {
+        // Fallback to prompt if Swal not available
+        const contractCode = prompt('Nhập mã đơn hàng (số hợp đồng):');
+        if (!contractCode || !contractCode.trim()) {
             return;
         }
         
-        window.callAPI({
-            action: 'assign_contract_code',
-            orderId: currentOrderDetail.id,
-            contract_code: contractCode.trim().toUpperCase(),
-            assigned_sale: session.username
-        }).then(result => {
+        try {
+            const result = await window.callAPI({
+                action: 'assign_contract_code',
+                orderId: currentOrderDetail.id,
+                contract_code: contractCode.trim().toUpperCase(),
+                assigned_sale: session.username
+            });
+            
             if (result.success) {
                 if (typeof window.showToast === 'function') {
                     window.showToast('Đã cấp mã đơn hàng thành công!', 'success');
@@ -430,7 +515,12 @@ function assignContractCodeFromDetail() {
                     window.showToast('Lỗi: ' + result.message, 'danger');
                 }
             }
-        });
+        } catch (error) {
+            console.error('assignContractCodeFromDetail error:', error);
+            if (typeof window.showToast === 'function') {
+                window.showToast('Lỗi: ' + error.message, 'danger');
+            }
+        }
     }
 }
 
@@ -438,6 +528,7 @@ function assignContractCodeFromDetail() {
 if (typeof window !== 'undefined') {
     window.openOrderDetailModal = openOrderDetailModal;
     window.closeOrderDetailModal = closeOrderDetailModal;
+    window.assignContractCodeFromDetail = assignContractCodeFromDetail;
 }
 </script>
 
