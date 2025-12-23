@@ -381,44 +381,38 @@ if (typeof window !== 'undefined') {
     let hasLoadedForActiveTab = false;
     
     const checkAndLoad = () => {
+        if (isLoading || hasLoadedForActiveTab) return;
+        
         const documentFilesTab = document.getElementById('tab-document-files');
         if (documentFilesTab && documentFilesTab.classList.contains('active')) {
-            if (!hasLoadedForActiveTab && !isLoading) {
-                hasLoadedForActiveTab = true;
-                isLoading = true;
-                loadDocumentFiles().finally(() => {
-                    isLoading = false;
-                });
-            }
-        } else {
-            // Reset flag when tab is inactive
-            hasLoadedForActiveTab = false;
+            hasLoadedForActiveTab = true;
+            isLoading = true;
+            loadDocumentFiles().finally(() => {
+                isLoading = false;
+            });
         }
     };
     
-    // Use simple event delegation instead of MutationObserver
-    // Listen for clicks on tab buttons
+    // Use simple event delegation - listen for clicks on tab buttons
     document.addEventListener('click', (e) => {
         if (e.target.closest('#tab-document-files')) {
-            setTimeout(checkAndLoad, 100);
+            hasLoadedForActiveTab = false; // Reset để có thể load lại
+            setTimeout(checkAndLoad, 150);
         }
     });
     
-    // Check on initial load
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(checkAndLoad, 300);
-        });
-    } else {
-        setTimeout(checkAndLoad, 300);
-    }
-    
-    // Also check periodically (but only if tab is active and not loaded)
-    setInterval(() => {
-        if (!isLoading && !hasLoadedForActiveTab) {
+    // Check on initial load (only once)
+    const initialCheck = () => {
+        setTimeout(() => {
             checkAndLoad();
-        }
-    }, 1000);
+        }, 500);
+    };
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initialCheck);
+    } else {
+        initialCheck();
+    }
 }
 </script>
 
