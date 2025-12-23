@@ -256,9 +256,8 @@ function renderOrderDetail(order) {
         : '-';
     document.getElementById('detail-customer-issue-place').textContent = customer.issue_place || '-';
     
-    // CCCD Images
-    const frontContainer = document.getElementById('detail-cccd-front-container');
-    const backContainer = document.getElementById('detail-cccd-back-container');
+    // CCCD VNeid Image
+    const vneidContainer = document.getElementById('detail-cccd-vneid-container');
     
     if (customer.cccd_front_image_url) {
         frontContainer.innerHTML = `
