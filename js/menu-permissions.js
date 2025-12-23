@@ -128,6 +128,15 @@ function updateMenuItemsByPermissions(user) {
     toggleMenuByPermission('nav-car-models', 'manage_car_models', ['ADMIN']);
     toggleMenuByPermission('nav-sales-policies', 'manage_sales_policies', ['ADMIN']);
     toggleMenuByPermission('nav-tvbh-targets', 'manage_tvbh_targets', ['ADMIN']);
+    
+    // Update mobile bottom nav active state after menu update
+    if (typeof updateMobileBottomNav === 'function') {
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab) {
+            const tabId = activeTab.id.replace('tab-', '');
+            updateMobileBottomNav(tabId);
+        }
+    }
 }
 
 /**
