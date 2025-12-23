@@ -347,6 +347,8 @@ async function handleCreateOrder(event) {
         console.log('📤 Starting file upload to Google Drive...');
         console.log('VNeid file:', cccdVneid?.name);
         console.log('Ủy nhiệm chi file:', uyNhiemChi?.name);
+        console.log('Initial cccdVneidUrl:', cccdVneidUrl);
+        console.log('Initial attachments:', attachments);
         
         // Upload to Google Drive (user requirement)
         let uploadResult = null;
@@ -354,6 +356,8 @@ async function handleCreateOrder(event) {
             { file: cccdVneid, type: 'vneid' },
             { file: uyNhiemChi, type: 'uy_nhiem_chi' }
         ];
+        
+        console.log('All files array:', allFiles);
         
         // Upload to Google Drive
         if (window.googleDocsAPI && window.googleDocsAPI.uploadFiles) {
@@ -400,49 +404,77 @@ async function handleCreateOrder(event) {
                 console.log('📋 Upload result URLs:', uploadResult.urls);
                 
                 uploadResult.urls.forEach((uploadedFile, index) => {
-                    console.log(`Processing file ${index + 1}:`, uploadedFile);
+                    console.log(`\n📄 Processing file ${index + 1}/${uploadResult.urls.length}:`);
+                    console.log('  - Uploaded file object:', uploadedFile);
+                    console.log('  - File name:', uploadedFile.name);
+                    console.log('  - File URL:', uploadedFile.url);
+                    console.log('  - File ID:', uploadedFile.id);
                     
                     const fileUrl = uploadedFile.url || uploadedFile;
-                    const fileName = uploadedFile.name || '';
+                    const fileName = (uploadedFile.name || '').toLowerCase();
+                    
+                    console.log('  - Normalized file name (lowercase):', fileName);
                     
                     // Match file by filename (more reliable than index)
                     let matchedFile = null;
-                    if (fileName.toLowerCase().includes('cccd_vneid') || fileName.toLowerCase().includes('vneid')) {
+                    if (fileName.includes('cccd_vneid') || fileName.includes('vneid')) {
                         matchedFile = allFiles.find(f => f.type === 'vneid');
-                    } else if (fileName.toLowerCase().includes('uynhiemchi') || fileName.toLowerCase().includes('uy_nhiem_chi')) {
+                        console.log('  - Matched by VNeid pattern');
+                    } else if (fileName.includes('uynhiemchi') || fileName.includes('uy_nhiem_chi')) {
                         matchedFile = allFiles.find(f => f.type === 'uy_nhiem_chi');
+                        console.log('  - Matched by ủy nhiệm chi pattern');
                     } else {
                         // Fallback to index if filename doesn't match
                         matchedFile = allFiles[index];
-                        console.warn(`⚠️ Cannot match file by name, using index ${index}`);
+                        console.warn(`  ⚠️ Cannot match file by name, using index ${index} as fallback`);
                     }
                     
                     if (!matchedFile) {
-                        console.warn(`⚠️ No matching file info for uploaded file:`, fileName);
+                        console.error(`  ❌ ERROR: No matching file info for uploaded file:`, fileName);
+                        console.error('  Available files in allFiles:', allFiles);
                         return;
                     }
                     
-                    console.log(`Matched file:`, matchedFile);
+                    console.log(`  ✅ Matched file type:`, matchedFile.type);
                     
                     if (matchedFile.type === 'vneid') {
                         cccdVneidUrl = fileUrl;
-                        console.log('✅ VNeid URL:', fileUrl);
+                        console.log('  ✅ ASSIGNED VNeid URL:', fileUrl);
+                        console.log('  ✅ cccdVneidUrl variable is now:', cccdVneidUrl);
                     } else if (matchedFile.type === 'uy_nhiem_chi') {
                         attachments.push({
                             name: uploadedFile.name || 'Ủy nhiệm chi',
                             url: fileUrl,
                             type: 'uy_nhiem_chi'
                         });
-                        console.log('✅ Ủy nhiệm chi URL:', fileUrl);
-                        console.log('✅ Attachments array now:', attachments);
+                        console.log('  ✅ ADDED ủy nhiệm chi to attachments:', fileUrl);
+                        console.log('  ✅ Attachments array now has', attachments.length, 'item(s):', attachments);
                     }
                 });
                 
-                console.log('📊 Final URLs:', {
-                    cccdVneidUrl: cccdVneidUrl,
-                    attachments: attachments,
-                    attachmentsLength: attachments.length
-                });
+                console.log('\n📊 FINAL MAPPING RESULT:');
+                console.log('  - cccdVneidUrl:', cccdVneidUrl);
+                console.log('  - cccdVneidUrl type:', typeof cccdVneidUrl);
+                console.log('  - cccdVneidUrl is null?', cccdVneidUrl === null);
+                console.log('  - cccdVneidUrl is undefined?', cccdVneidUrl === undefined);
+                console.log('  - attachments:', attachments);
+                console.log('  - attachments.length:', attachments.length);
+                console.log('  - attachments JSON:', JSON.stringify(attachments));
+                
+                // Verify both files were mapped
+                if (!cccdVneidUrl) {
+                    console.error('\n❌ ERROR: VNeid URL is null/undefined after mapping!');
+                    console.error('  This means VNeid image will NOT be saved to database!');
+                    console.error('  Uploaded files:', uploadResult.urls);
+                    console.error('  All files:', allFiles);
+                }
+                if (attachments.length === 0) {
+                    console.error('\n❌ ERROR: Attachments array is empty after mapping!');
+                    console.error('  This means ủy nhiệm chi image will NOT be saved to database!');
+                }
+                if (attachments.length > 0 && cccdVneidUrl) {
+                    console.log('\n✅ SUCCESS: Both files mapped correctly!');
+                }
                 
                 if (typeof window.showToast === 'function') {
                     window.showToast('Đã upload file thành công!', 'success');
