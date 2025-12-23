@@ -176,16 +176,24 @@ async function supabaseChangePassword(username, oldPass, newPass) {
             return { success: false, message: 'Không tìm thấy người dùng' };
         }
 
-        // Nếu có oldPass, kiểm tra mật khẩu cũ
+        // ✅ SECURITY: Verify old password using secure verification
         if (oldPass) {
-            const oldHash = hashPassword(oldPass);
-            if (oldHash !== userData.password) {
-                return { success: false, message: 'Mật khẩu cũ không đúng' };
+            if (typeof window !== 'undefined' && window.verifyPassword) {
+                const isValid = await window.verifyPassword(oldPass, userData.password);
+                if (!isValid) {
+                    return { success: false, message: 'Mật khẩu cũ không đúng' };
+                }
+            } else {
+                // Fallback to MD5 verification
+                const oldHash = hashPasswordMD5(oldPass);
+                if (oldHash !== userData.password) {
+                    return { success: false, message: 'Mật khẩu cũ không đúng' };
+                }
             }
         }
 
-        // Cập nhật mật khẩu mới
-        const newHash = hashPassword(newPass);
+        // ✅ SECURITY: Hash new password using PBKDF2 (secure method)
+        const newHash = await hashPassword(newPass);
         const { data, error } = await supabase
             .from('users')
             .update({
@@ -1283,7 +1291,7 @@ async function supabaseCreateUser(d) {
         }
 
         const passwordPlain = d.new_password || '123456';
-        const hashed = hashPassword(passwordPlain);
+        const hashed = await hashPassword(passwordPlain);
 
         const { data, error } = await supabase
             .from('users')
