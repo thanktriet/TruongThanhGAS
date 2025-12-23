@@ -385,17 +385,43 @@ function autoFillApprovalFormFromOrder(order) {
 
 // Create contract from order
 function createContractFromOrder(orderId) {
+    console.log('[My Orders] createContractFromOrder called with orderId:', orderId);
     const order = allOrders.find(o => o.id === orderId);
-    if (!order) return;
+    if (!order) {
+        console.warn('[My Orders] Order not found:', orderId);
+        return;
+    }
 
     // Chuyển sang tab tạo HĐMB và fill dữ liệu từ đơn hàng
-    if (window.switchTab) {
+    if (typeof window.switchTab === 'function') {
+        console.log('[My Orders] Switching to hdmb-create tab...');
         window.switchTab('hdmb-create');
         
-        // Đợi form load xong rồi auto-fill
-        setTimeout(() => {
-            autoFillHDMBFormFromOrder(order);
-        }, 500);
+        // Đợi form load xong rồi auto-fill với retry
+        let retryCount = 0;
+        const maxRetries = 10;
+        const tryFillForm = () => {
+            const form = document.getElementById('form-hdmb-create');
+            if (form) {
+                console.log('[My Orders] Form found, filling data...');
+                autoFillHDMBFormFromOrder(order);
+            } else if (retryCount < maxRetries) {
+                retryCount++;
+                console.log(`[My Orders] Form not ready, retrying... (${retryCount}/${maxRetries})`);
+                setTimeout(tryFillForm, 200);
+            } else {
+                console.error('[My Orders] Form not found after max retries');
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Form chưa sẵn sàng. Vui lòng thử lại.', 'warning');
+                }
+            }
+        };
+        setTimeout(tryFillForm, 300);
+    } else {
+        console.error('[My Orders] window.switchTab is not a function');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: Không thể chuyển tab. Vui lòng reload trang.', 'danger');
+        }
     }
 }
 
@@ -433,17 +459,42 @@ function autoFillHDMBFormFromOrder(order) {
 
 // Create agreement from order
 function createAgreementFromOrder(orderId) {
+    console.log('[My Orders] createAgreementFromOrder called with orderId:', orderId);
     const order = allOrders.find(o => o.id === orderId);
-    if (!order) return;
+    if (!order) {
+        console.warn('[My Orders] Order not found:', orderId);
+        return;
+    }
 
     // Chuyển sang tab tạo Thỏa Thuận và fill dữ liệu từ đơn hàng
-    if (window.switchTab) {
+    if (typeof window.switchTab === 'function') {
+        console.log('[My Orders] Switching to thoa-thuan-create tab...');
         window.switchTab('thoa-thuan-create');
         
-        // Đợi form load xong rồi auto-fill
-        setTimeout(() => {
-            autoFillThoaThuanFormFromOrder(order);
-        }, 500);
+        // Đợi form load xong rồi auto-fill với retry
+        let retryCount = 0;
+        const maxRetries = 10;
+        const tryFillForm = () => {
+            const form = document.getElementById('form-thoa-thuan-create');
+            if (form) {
+                console.log('[My Orders] Form found, filling data...');
+                autoFillThoaThuanFormFromOrder(order);
+            } else if (retryCount < maxRetries) {
+                retryCount++;
+                setTimeout(tryFillForm, 200);
+            } else {
+                console.error('[My Orders] Form not found after max retries');
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Form chưa sẵn sàng. Vui lòng thử lại.', 'warning');
+                }
+            }
+        };
+        setTimeout(tryFillForm, 300);
+    } else {
+        console.error('[My Orders] window.switchTab is not a function');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: Không thể chuyển tab. Vui lòng reload trang.', 'danger');
+        }
     }
 }
 
@@ -477,17 +528,42 @@ function autoFillThoaThuanFormFromOrder(order) {
 
 // Create de nghi from order
 function createDeNghiFromOrder(orderId) {
+    console.log('[My Orders] createDeNghiFromOrder called with orderId:', orderId);
     const order = allOrders.find(o => o.id === orderId);
-    if (!order) return;
+    if (!order) {
+        console.warn('[My Orders] Order not found:', orderId);
+        return;
+    }
 
     // Chuyển sang tab tạo Đề Nghị và fill dữ liệu từ đơn hàng
-    if (window.switchTab) {
+    if (typeof window.switchTab === 'function') {
+        console.log('[My Orders] Switching to de-nghi-create tab...');
         window.switchTab('de-nghi-create');
         
-        // Đợi form load xong rồi auto-fill
-        setTimeout(() => {
-            autoFillDeNghiFormFromOrder(order);
-        }, 500);
+        // Đợi form load xong rồi auto-fill với retry
+        let retryCount = 0;
+        const maxRetries = 10;
+        const tryFillForm = () => {
+            const form = document.getElementById('form-de-nghi-create');
+            if (form) {
+                console.log('[My Orders] Form found, filling data...');
+                autoFillDeNghiFormFromOrder(order);
+            } else if (retryCount < maxRetries) {
+                retryCount++;
+                setTimeout(tryFillForm, 200);
+            } else {
+                console.error('[My Orders] Form not found after max retries');
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Form chưa sẵn sàng. Vui lòng thử lại.', 'warning');
+                }
+            }
+        };
+        setTimeout(tryFillForm, 300);
+    } else {
+        console.error('[My Orders] window.switchTab is not a function');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: Không thể chuyển tab. Vui lòng reload trang.', 'danger');
+        }
     }
 }
 
@@ -533,8 +609,15 @@ function updateTitleBasedOnPermission() {
     }
 }
 
-// Auto load when tab is shown
+// Expose functions to window for inline event handlers
 if (typeof window !== 'undefined') {
+    window.createContractFromOrder = createContractFromOrder;
+    window.createAgreementFromOrder = createAgreementFromOrder;
+    window.createDeNghiFromOrder = createDeNghiFromOrder;
+    window.createApprovalFromOrder = createApprovalFromOrder;
+    window.viewOrderDetail = viewOrderDetail;
+    window.filterOrders = filterOrders;
+    
     window.addEventListener('load', () => {
         // Update title first
         updateTitleBasedOnPermission();
