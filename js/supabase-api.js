@@ -41,14 +41,34 @@ if (typeof window !== 'undefined') {
 }
 
 // Utility functions
-function hashPassword(str) {
-    // MD5 hash - tương tự như trong code.gs
+// Password hashing functions are now in password-hash.js
+// Legacy MD5 function kept for backward compatibility during migration
+function hashPasswordMD5(str) {
+    // MD5 hash - LEGACY, only for backward compatibility
     if (typeof CryptoJS !== 'undefined') {
         return CryptoJS.MD5(String(str)).toString();
     }
-    // Fallback nếu không có crypto-js
-    console.warn('CryptoJS not loaded, using simple hash');
+    // Fallback nếu không có crypto-js (không nên xảy ra trong production)
+    console.warn('CryptoJS not loaded, using simple hash (INSECURE)');
     return btoa(str).split('').reverse().join('');
+}
+
+// New secure password hashing - uses PBKDF2 from password-hash.js
+// This function will be overridden by password-hash.js if loaded
+async function hashPassword(str) {
+    // If password-hash.js is loaded, use PBKDF2
+    if (typeof window !== 'undefined' && window.hashPasswordPBKDF2) {
+        try {
+            return await window.hashPasswordPBKDF2(str);
+        } catch (error) {
+            console.error('PBKDF2 hashing failed, falling back to MD5:', error);
+            // Fallback to MD5 for error cases (should not happen in production)
+            return hashPasswordMD5(str);
+        }
+    }
+    // Fallback to MD5 if password-hash.js not loaded yet (for backward compatibility)
+    console.warn('password-hash.js not loaded, using MD5 (legacy)');
+    return hashPasswordMD5(str);
 }
 
 function formatDate(d) {
@@ -83,8 +103,6 @@ async function supabaseLogin(username, password) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
-        const hash = hashPassword(password);
-        
         const { data, error } = await supabase
             .from('users')
             .select('*')
@@ -96,9 +114,18 @@ async function supabaseLogin(username, password) {
             return { success: false, message: 'Sai thông tin đăng nhập' };
         }
 
-        // Verify password
-        if (data.password !== hash) {
-            return { success: false, message: 'Sai thông tin đăng nhập' };
+        // ✅ SECURITY: Verify password using secure verification (supports both MD5 and PBKDF2)
+        if (typeof window !== 'undefined' && window.verifyPassword) {
+            const isValid = await window.verifyPassword(password, data.password);
+            if (!isValid) {
+                return { success: false, message: 'Sai thông tin đăng nhập' };
+            }
+        } else {
+            // Fallback to MD5 verification if password-hash.js not loaded
+            const hash = hashPasswordMD5(password);
+            if (data.password !== hash) {
+                return { success: false, message: 'Sai thông tin đăng nhập' };
+            }
         }
 
         if (!data.active) {
@@ -1460,7 +1487,7 @@ async function supabaseResetUserPassword(d) {
         }
 
         const newPassword = d.new_password || '123456';
-        const hashed = hashPassword(newPassword);
+        const hashed = await hashPassword(newPassword);
 
         const { error } = await supabase
             .from('users')
