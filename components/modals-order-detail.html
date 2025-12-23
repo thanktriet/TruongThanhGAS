@@ -338,49 +338,9 @@ function renderOrderDetail(order) {
         statusEl.innerHTML = '<span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-bold">Chờ cấp mã</span>';
     }
     
-    // Other Attachments (exclude ủy nhiệm chi which is already displayed)
-    // Note: attachments was already parsed above for ủy nhiệm chi
-    if (!attachments || attachments.length === 0) {
-        // Re-parse if not already parsed
-        if (order.attachments && Array.isArray(order.attachments)) {
-            attachments = order.attachments;
-        } else if (order.attachments && typeof order.attachments === 'string') {
-            try {
-                attachments = JSON.parse(order.attachments);
-            } catch (e) {
-                console.warn('Error parsing attachments:', e);
-            }
-        }
-    }
-    
+    // Hide other attachments section (all attachments are already displayed above)
     const otherAttachmentsContainer = document.getElementById('detail-other-attachments-container');
-    const otherAttachmentsEl = document.getElementById('detail-other-attachments');
-    
-    // Filter out ủy nhiệm chi (already displayed separately)
-    const otherAttachments = attachments.filter(att => {
-        if (!att.url) return false;
-        // Exclude ủy nhiệm chi
-        return att.type !== 'uy_nhiem_chi' && !(att.name && att.name.toLowerCase().includes('uy nhiem chi'));
-    });
-    
-    if (otherAttachments.length > 0) {
-        otherAttachmentsEl.innerHTML = otherAttachments.map(att => `
-            <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-file text-gray-400"></i>
-                    <span class="text-gray-800">${att.name || 'File đính kèm'}</span>
-                </div>
-                <a 
-                    href="${att.url}" 
-                    target="_blank" 
-                    class="text-blue-600 hover:text-blue-800 transition"
-                >
-                    <i class="fa-solid fa-external-link mr-1"></i>Mở
-                </a>
-            </div>
-        `).join('');
-        otherAttachmentsContainer.classList.remove('hidden');
-    } else {
+    if (otherAttachmentsContainer) {
         otherAttachmentsContainer.classList.add('hidden');
     }
     
