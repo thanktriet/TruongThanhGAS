@@ -1705,6 +1705,29 @@ async function loadProfile() {
     }
 }
 
+// Open change password modal from profile page
+function openChangePasswordModal() {
+    const session = getSession();
+    if (!session || !session.username) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng đăng nhập lại', 'danger');
+        }
+        return;
+    }
+    
+    // Call the existing change password modal function from auth.js
+    if (typeof showChangePasswordModal === 'function') {
+        showChangePasswordModal(session, false); // false = not first login
+    } else if (typeof window.showChangePasswordModal === 'function') {
+        window.showChangePasswordModal(session, false);
+    } else {
+        console.error('showChangePasswordModal function not found');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Chức năng đổi mật khẩu chưa sẵn sàng', 'warning');
+        }
+    };
+}
+
 async function handleProfileUpdate(e) {
     e.preventDefault();
     const session = getSession();
