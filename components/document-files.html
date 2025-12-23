@@ -103,17 +103,45 @@ async function loadDocumentFiles() {
         });
 
         console.log('[Document Files] API result:', result);
+        console.log('[Document Files] Result details:', {
+            success: result.success,
+            hasData: !!result.data,
+            isArray: Array.isArray(result.data),
+            dataLength: result.data ? result.data.length : 0,
+            message: result.message
+        });
 
         if (loadingDiv) loadingDiv.classList.add('hidden');
 
-        if (result.success && result.data && Array.isArray(result.data)) {
-            console.log('[Document Files] Received', result.data.length, 'files');
-            allDocumentFiles = result.data;
-            filteredDocumentFiles = [...allDocumentFiles];
-            renderDocumentFiles(filteredDocumentFiles);
+        if (result && result.success) {
+            const dataArray = result.data;
+            if (dataArray && Array.isArray(dataArray)) {
+                console.log('[Document Files] Received', dataArray.length, 'files');
+                if (dataArray.length > 0) {
+                    console.log('[Document Files] First file sample:', {
+                        id: dataArray[0].id,
+                        document_type: dataArray[0].document_type,
+                        created_by: dataArray[0].created_by,
+                        file_url: dataArray[0].file_url ? 'present' : 'missing'
+                    });
+                }
+                allDocumentFiles = dataArray;
+                filteredDocumentFiles = [...allDocumentFiles];
+                renderDocumentFiles(filteredDocumentFiles);
+            } else {
+                console.warn('[Document Files] Data is not an array:', typeof dataArray, dataArray);
+                allDocumentFiles = [];
+                filteredDocumentFiles = [];
+                if (emptyDiv) emptyDiv.classList.remove('hidden');
+            }
         } else {
-            console.warn('[Document Files] No data received:', result);
+            console.warn('[Document Files] API call failed or no success flag:', result);
+            allDocumentFiles = [];
+            filteredDocumentFiles = [];
             if (emptyDiv) emptyDiv.classList.remove('hidden');
+            if (result && result.message) {
+                console.error('[Document Files] Error message:', result.message);
+            }
         }
     } catch (error) {
         console.error('Error loading document files:', error);

@@ -1900,16 +1900,27 @@ async function supabaseGetDocumentFiles(username, role, filters = {}) {
 
         if (error) {
             console.error('[Get Document Files] Query error:', error);
+            console.error('[Get Document Files] Error details:', JSON.stringify(error, null, 2));
             throw error;
         }
 
         console.log('[Get Document Files] Query result:', { 
             success: true, 
             count: data ? data.length : 0,
-            data: data ? data.slice(0, 3).map(d => ({ id: d.id, document_type: d.document_type, created_by: d.created_by })) : []
+            dataPreview: data ? data.slice(0, 3).map(d => ({ 
+                id: d.id, 
+                document_type: d.document_type, 
+                created_by: d.created_by,
+                file_url: d.file_url ? 'present' : 'missing',
+                customer_name: d.customer_name
+            })) : []
         });
 
-        return { success: true, data: data || [] };
+        // Đảm bảo trả về array
+        const resultData = Array.isArray(data) ? data : (data ? [data] : []);
+        console.log('[Get Document Files] Final result data count:', resultData.length);
+        
+        return { success: true, data: resultData };
     } catch (e) {
         console.error('[Get Document Files] Error:', e);
         return { success: false, message: 'Lỗi: ' + e.message };
