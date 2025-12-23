@@ -1715,22 +1715,23 @@ function openChangePasswordModal() {
         return;
     }
     
-    // Call the existing change password modal function from auth.js
-    if (typeof showChangePasswordModal === 'function') {
-        showChangePasswordModal(session, false); // false = not first login
-    } else if (typeof window.showChangePasswordModal === 'function') {
-        window.showChangePasswordModal(session, false);
-        } else {
-            console.error('showChangePasswordModal function not found');
-            if (typeof window.showToast === 'function') {
-                window.showToast('Chức năng đổi mật khẩu chưa sẵn sàng', 'warning');
-            }
+    // Use the new modal component
+    if (typeof window.openChangePasswordModal === 'function') {
+        window.openChangePasswordModal(false); // false = not first login
+    } else if (typeof showChangePasswordModal === 'function') {
+        // Fallback to old SweetAlert method
+        showChangePasswordModal(session, false);
+    } else {
+        console.error('Change password modal function not found');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Chức năng đổi mật khẩu chưa sẵn sàng', 'warning');
         }
+    }
 }
 
 // Export to window for use in onclick handlers
 if (typeof window !== 'undefined') {
-    window.openChangePasswordModal = openChangePasswordModal;
+    window.openChangePasswordModalFromProfile = openChangePasswordModal;
 }
 
 async function handleProfileUpdate(e) {
