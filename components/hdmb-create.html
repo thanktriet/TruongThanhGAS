@@ -282,6 +282,23 @@ async function searchOrderForHDMB(event) {
         
         if (result.success && result.data && Array.isArray(result.data)) {
             console.log('[HDMB Create] Found', result.data.length, 'orders');
+            
+            // Nếu không có đơn hàng nào
+            if (result.data.length === 0) {
+                console.log('[HDMB Create] No orders found for this user');
+                if (resultDiv) {
+                    resultDiv.className = 'mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg';
+                    resultDiv.innerHTML = `
+                        <p class="text-sm text-yellow-700">
+                            <i class="fa-solid fa-info-circle mr-2"></i>
+                            Bạn chưa có đơn hàng nào. Vui lòng tạo đơn hàng trước hoặc nhập thông tin thủ công.
+                        </p>
+                    `;
+                    resultDiv.classList.remove('hidden');
+                }
+                return;
+            }
+            
             const order = result.data.find(o => {
                 const contractMatch = o.contract_code?.toLowerCase().includes(searchTerm.toLowerCase());
                 const nameMatch = o.customers?.name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -335,13 +352,13 @@ async function searchOrderForHDMB(event) {
                     window.showToast('Đã tìm thấy và điền thông tin đơn hàng!', 'success');
                 }
             } else {
-                console.log('[HDMB Create] Order not found');
+                console.log('[HDMB Create] Order not found matching search term');
                 if (resultDiv) {
                     resultDiv.className = 'mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg';
                     resultDiv.innerHTML = `
                         <p class="text-sm text-blue-700">
                             <i class="fa-solid fa-info-circle mr-2"></i>
-                            Không tìm thấy đơn hàng. Vui lòng nhập thông tin thủ công.
+                            Không tìm thấy đơn hàng với từ khóa "<strong>${searchTerm}</strong>". Bạn có ${result.data.length} đơn hàng. Vui lòng nhập thông tin thủ công hoặc thử từ khóa khác.
                         </p>
                     `;
                     resultDiv.classList.remove('hidden');
