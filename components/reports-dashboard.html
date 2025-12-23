@@ -54,7 +54,103 @@
 
 <script>
 /**
- * Render bảng Báo cáo Ngày
+ * Render báo cáo ngày dưới dạng Cards (mobile-friendly)
+ */
+function createDailyCards(dataArray, reportedTvbhSet = null) {
+    if (!dataArray || dataArray.length === 0) {
+        return '<p class="text-center text-gray-500 py-8 text-sm md:text-base">Không có dữ liệu</p>';
+    }
+
+    const headers = dataArray[0];
+    let html = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
+    
+    for (let i = 1; i < dataArray.length; i++) {
+        const row = dataArray[i];
+        const isTotal = row[0] === 'TỔNG CỘNG';
+        const tvbhName = row[1];
+        const stt = row[0];
+        
+        // Kiểm tra nếu TVBH chưa báo cáo
+        let isNotReported = false;
+        if (!isTotal && reportedTvbhSet && tvbhName) {
+            const hasData = row.slice(2).some(val => {
+                if (typeof val === 'number') return val > 0;
+                if (typeof val === 'string') {
+                    const numVal = parseFloat(val.replace(/[^0-9.-]/g, ''));
+                    return !isNaN(numVal) && numVal > 0;
+                }
+                return false;
+            });
+            isNotReported = !reportedTvbhSet.has(tvbhName) && !hasData;
+        }
+        
+        // Card styling
+        const cardBg = isTotal 
+            ? 'bg-gradient-to-br from-indigo-100 to-indigo-50 border-indigo-300' 
+            : isNotReported 
+                ? 'bg-gradient-to-br from-red-50 to-red-100 border-red-300' 
+                : 'bg-white border-gray-200';
+        
+        const titleColor = isTotal 
+            ? 'text-indigo-900' 
+            : isNotReported 
+                ? 'text-red-700' 
+                : 'text-gray-800';
+        
+        html += `<div class="border-2 ${cardBg} rounded-xl p-4 shadow-sm hover:shadow-md transition ${isTotal ? 'md:col-span-2 lg:col-span-3' : ''}">`;
+        
+        // Card header
+        html += `<div class="flex items-center justify-between mb-4 pb-3 border-b ${isTotal ? 'border-indigo-300' : isNotReported ? 'border-red-300' : 'border-gray-200'}">`;
+        html += `<div class="flex items-center gap-2">`;
+        if (isTotal) {
+            html += `<i class="fa-solid fa-calculator text-indigo-600 text-lg"></i>`;
+        } else if (isNotReported) {
+            html += `<i class="fa-solid fa-exclamation-circle text-red-600 text-lg"></i>`;
+        } else {
+            html += `<span class="text-sm font-bold text-gray-500">${stt}</span>`;
+        }
+        html += `<h4 class="font-bold ${titleColor} text-base md:text-lg">${tvbhName || stt}</h4>`;
+        html += `</div>`;
+        if (isNotReported) {
+            html += `<span class="text-xs bg-red-200 text-red-800 px-2 py-1 rounded-full font-semibold">Chưa báo cáo</span>`;
+        }
+        html += `</div>`;
+        
+        // Card body - metrics
+        html += `<div class="grid grid-cols-2 gap-3">`;
+        for (let idx = 2; idx < headers.length && idx < row.length; idx++) {
+            const header = headers[idx];
+            const value = row[idx];
+            const formattedValue = typeof value === 'number' ? value.toLocaleString('vi-VN') : value;
+            
+            // Icon mapping
+            const iconMap = {
+                'KHTN': 'fa-users',
+                'Hợp đồng': 'fa-file-contract',
+                'Xuất HĐ': 'fa-file-export',
+                'Doanh thu': 'fa-money-bill-wave'
+            };
+            const icon = iconMap[header] || 'fa-chart-bar';
+            
+            html += `<div class="bg-white/60 rounded-lg p-3 border border-gray-100">`;
+            html += `<div class="flex items-center gap-2 mb-1">`;
+            html += `<i class="fa-solid ${icon} text-indigo-500 text-sm"></i>`;
+            html += `<span class="text-xs text-gray-600 font-medium">${header}</span>`;
+            html += `</div>`;
+            html += `<div class="text-lg font-bold ${titleColor}">${formattedValue}</div>`;
+            html += `</div>`;
+        }
+        html += `</div>`;
+        
+        html += `</div>`;
+    }
+    html += '</div>';
+    
+    return html;
+}
+
+/**
+ * Render bảng Báo cáo Ngày (desktop view)
  * @param {Array} dataArray - Mảng chứa headers và data rows
  * @param {Set} reportedTvbhSet - Set chứa các TVBH đã báo cáo (để tô đỏ những TVBH chưa báo cáo)
  */
@@ -63,16 +159,15 @@ function createDailyTable(dataArray, reportedTvbhSet = null) {
         return '<p class="text-center text-gray-500 py-8 text-sm md:text-base">Không có dữ liệu</p>';
     }
 
-    let html = '<div class="overflow-x-auto border border-gray-200 rounded-lg -mx-1 md:mx-0" style="-webkit-overflow-scrolling: touch;">';
-    html += '<table class="min-w-full divide-y divide-gray-200 text-xs md:text-sm">';
+    let html = '<div class="hidden lg:block overflow-x-auto border border-gray-200 rounded-lg" style="-webkit-overflow-scrolling: touch;">';
+    html += '<table class="min-w-full divide-y divide-gray-200 text-sm">';
     
     // Header
     html += '<thead class="bg-indigo-50 sticky top-0 z-10">';
     html += '<tr>';
     dataArray[0].forEach((header, idx) => {
-        const isNumeric = idx >= 2; // Các cột từ cột 3 trở đi là số
-        // Mobile: smaller padding, Desktop: normal padding
-        html += `<th class="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-xs font-bold text-indigo-800 uppercase whitespace-nowrap ${isNumeric ? 'text-right' : ''}">${header}</th>`;
+        const isNumeric = idx >= 2;
+        html += `<th class="px-4 py-3 text-left text-xs font-bold text-indigo-800 uppercase whitespace-nowrap ${isNumeric ? 'text-right' : ''}">${header}</th>`;
     });
     html += '</tr>';
     html += '</thead>';
@@ -82,9 +177,8 @@ function createDailyTable(dataArray, reportedTvbhSet = null) {
     for (let i = 1; i < dataArray.length; i++) {
         const row = dataArray[i];
         const isTotal = row[0] === 'TỔNG CỘNG';
-        const tvbhName = row[1]; // TVBH name ở cột thứ 2
+        const tvbhName = row[1];
         
-        // Kiểm tra nếu TVBH chưa báo cáo (tất cả giá trị = 0 và không phải dòng tổng cộng)
         let isNotReported = false;
         if (!isTotal && reportedTvbhSet && tvbhName) {
             const hasData = row.slice(2).some(val => {
@@ -101,23 +195,19 @@ function createDailyTable(dataArray, reportedTvbhSet = null) {
         const rowClass = isTotal 
             ? 'bg-indigo-100 font-bold' 
             : isNotReported 
-                ? 'bg-red-50 active:bg-red-100' 
-                : 'active:bg-gray-50';
+                ? 'bg-red-50 hover:bg-red-100' 
+                : 'hover:bg-gray-50';
         
         html += `<tr class="${rowClass}">`;
         row.forEach((cell, idx) => {
             const isNumeric = idx >= 2;
             let cellValue = typeof cell === 'number' ? cell.toLocaleString('vi-VN') : cell;
-            // Truncate long text on mobile
-            if (idx === 1 && typeof cellValue === 'string' && cellValue.length > 15) {
-                cellValue = `<span title="${cellValue}">${cellValue.substring(0, 12)}...</span>`;
-            }
             const cellClass = isTotal 
                 ? 'font-bold text-indigo-900' 
                 : isNotReported 
                     ? 'text-red-600 font-medium' 
                     : 'text-gray-700';
-            html += `<td class="px-2 py-2 md:px-4 md:py-3 text-[11px] md:text-sm whitespace-nowrap ${isNumeric ? 'text-right' : ''} ${cellClass}">${cellValue}</td>`;
+            html += `<td class="px-4 py-3 text-sm whitespace-nowrap ${isNumeric ? 'text-right' : ''} ${cellClass}">${cellValue}</td>`;
         });
         html += '</tr>';
     }
@@ -231,8 +321,12 @@ async function loadReportsDashboard() {
                 ? (reportedTvbhSet instanceof Set ? reportedTvbhSet : new Set(reportedTvbhSet))
                 : null;
             
+            // Mobile: Cards view, Desktop: Table view
+            html += '<div class="lg:hidden">';
+            html += createDailyCards(daily, reportedSet);
+            html += '</div>';
             html += createDailyTable(daily, reportedSet);
-            html += '<p class="text-[10px] md:text-xs text-gray-500 mt-2 px-1"><i class="fa-solid fa-info-circle mr-1"></i>TVBH được tô đỏ là những người chưa thực hiện báo cáo trong ngày này</p>';
+            html += '<p class="text-xs text-gray-500 mt-3 px-1"><i class="fa-solid fa-info-circle mr-1"></i>TVBH được tô đỏ là những người chưa thực hiện báo cáo trong ngày này</p>';
             html += '</div>';
             
             // Bảng 2: MTD Tổng
@@ -275,6 +369,7 @@ async function loadReportsDashboard() {
 if (typeof window !== 'undefined') {
     window.loadReportsDashboard = loadReportsDashboard;
     window.createDailyTable = createDailyTable;
+    window.createDailyCards = createDailyCards;
     window.createMtdTotalTable = createMtdTotalTable;
 }
 
