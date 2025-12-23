@@ -386,24 +386,49 @@ if (typeof window !== 'undefined') {
     window.filterDocumentFiles = filterDocumentFiles;
     window.goToPage = goToPage;
     
+    console.log('[Document Files] Setting up auto-load...');
+    
+    // Load immediately if tab is already active (when component first loads)
+    setTimeout(() => {
+        const documentFilesTab = document.getElementById('tab-document-files');
+        console.log('[Document Files] Initial check - tab exists?', !!documentFilesTab);
+        if (documentFilesTab && documentFilesTab.classList.contains('active')) {
+            console.log('[Document Files] Tab is already active, loading files...');
+            loadDocumentFiles();
+        }
+    }, 500);
+    
     window.addEventListener('load', () => {
-        // Update title first
+        console.log('[Document Files] Window loaded, setting up observer...');
         // Load files when tab is activated
         const observer = new MutationObserver((mutations) => {
             const documentFilesTab = document.getElementById('tab-document-files');
             if (documentFilesTab && documentFilesTab.classList.contains('active')) {
+                console.log('[Document Files] Tab became active, loading files...');
                 loadDocumentFiles();
             }
         });
         
         const container = document.querySelector('.tab-content');
-        if (container) {
+        if (container && container.parentElement) {
+            console.log('[Document Files] Observing container parent for class changes...');
             observer.observe(container.parentElement, { 
                 attributes: true, 
                 attributeFilter: ['class'],
                 subtree: true 
             });
+        } else {
+            console.warn('[Document Files] Container or parent not found for observer');
         }
+        
+        // Also check immediately after setup
+        setTimeout(() => {
+            const documentFilesTab = document.getElementById('tab-document-files');
+            if (documentFilesTab && documentFilesTab.classList.contains('active')) {
+                console.log('[Document Files] Tab is active after observer setup, loading files...');
+                loadDocumentFiles();
+            }
+        }, 1000);
     });
 }
 </script>
