@@ -74,11 +74,11 @@
 
                     <!-- Upload CCCD Images -->
                     <div class="mt-4">
-                        <label class="label">Hình ảnh CCCD</label>
+                        <label class="label">Hình ảnh đính kèm</label>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    <i class="fa-solid fa-asterisk text-red-500 text-xs mr-1"></i>CCCD mặt trước <span class="text-red-500">*</span>
+                                    <i class="fa-solid fa-asterisk text-red-500 text-xs mr-1"></i>VNeid <span class="text-red-500">*</span>
                                 </label>
                                 <input 
                                     type="file" 
@@ -91,7 +91,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    <i class="fa-solid fa-asterisk text-red-500 text-xs mr-1"></i>CCCD mặt sau <span class="text-red-500">*</span>
+                                    <i class="fa-solid fa-asterisk text-red-500 text-xs mr-1"></i>UNC(đặt cọc) <span class="text-red-500">*</span>
                                 </label>
                                 <input 
                                     type="file" 
@@ -268,7 +268,7 @@ async function handleCreateOrder(event) {
     
     if (!cccdFront) {
         if (typeof window.showToast === 'function') {
-            window.showToast('Vui lòng đính kèm hình CCCD mặt trước', 'warning');
+            window.showToast('Vui lòng đính kèm hình VNeid', 'warning');
         }
         document.getElementById('cccd_front').focus();
         return;
@@ -276,7 +276,7 @@ async function handleCreateOrder(event) {
     
     if (!cccdBack) {
         if (typeof window.showToast === 'function') {
-            window.showToast('Vui lòng đính kèm hình CCCD mặt sau', 'warning');
+            window.showToast('Vui lòng đính kèm hình UNC(đặt cọc)', 'warning');
         }
         document.getElementById('cccd_back').focus();
         return;
