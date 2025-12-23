@@ -511,8 +511,8 @@ function resetOrderForm() {
 // Expose functions to window for inline event handlers
 // This must be at the end of the script, after all functions are defined
 if (typeof window !== 'undefined') {
-    window.handleFileSelect = handleFileSelect;
-    window.removeFile = removeFile;
+    window.handleMultipleFileSelect = handleMultipleFileSelect;
+    window.removeAttachmentFile = removeAttachmentFile;
     window.searchCustomerByCCCD = searchCustomerByCCCD;
     window.handleCreateOrder = handleCreateOrder;
     window.resetOrderForm = resetOrderForm;
