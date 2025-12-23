@@ -72,74 +72,39 @@
                         </div>
                     </div>
 
-                    <!-- Upload file -->
+                    <!-- Upload attachments -->
                     <div class="mt-4">
-                        <label class="label">Hình ảnh đính kèm</label>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    <i class="fa-solid fa-asterisk text-red-500 text-xs mr-1"></i>Hình CCCD trên VNeid <span class="text-red-500">*</span>
+                        <label class="label">
+                            <i class="fa-solid fa-asterisk text-red-500 text-xs mr-1"></i>File đính kèm <span class="text-red-500">*</span>
+                            <span class="text-xs text-gray-500 font-normal ml-2">(Tối đa 4 file)</span>
+                        </label>
+                        <div class="space-y-3">
+                            <!-- File input -->
+                            <div class="flex items-center gap-3">
+                                <input 
+                                    type="file" 
+                                    id="order_attachments" 
+                                    name="order_attachments" 
+                                    accept="image/*" 
+                                    class="hidden"
+                                    multiple
+                                    required
+                                    onchange="handleMultipleFileSelect(this)"
+                                >
+                                <label 
+                                    for="order_attachments" 
+                                    class="flex-1 cursor-pointer bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-100 transition"
+                                >
+                                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-400 mb-2"></i>
+                                    <p class="text-sm text-gray-600 font-medium">Chọn file đính kèm</p>
+                                    <p class="text-xs text-gray-500 mt-1">Tối đa 4 file (hình ảnh)</p>
                                 </label>
-                                <div class="flex items-center gap-3">
-                                    <input 
-                                        type="file" 
-                                        id="cccd_vneid" 
-                                        name="cccd_vneid" 
-                                        accept="image/*" 
-                                        class="hidden"
-                                        required
-                                        onchange="handleFileSelect(this, 'cccd_vneid_preview')"
-                                    >
-                                    <label 
-                                        for="cccd_vneid" 
-                                        class="flex-1 cursor-pointer bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-100 transition"
-                                    >
-                                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-400 mb-2"></i>
-                                        <p class="text-sm text-gray-600">Chọn file ảnh</p>
-                                    </label>
-                                </div>
-                                <div id="cccd_vneid_preview" class="mt-2 hidden">
-                                    <img src="" alt="CCCD VNeid" class="max-w-full h-32 object-contain border rounded">
-                                    <button 
-                                        type="button" 
-                                        onclick="removeFile('cccd_vneid', 'cccd_vneid_preview')" 
-                                        class="mt-1 text-xs text-red-600 hover:text-red-800"
-                                    >
-                                        Xóa
-                                    </button>
-                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    <i class="fa-solid fa-asterisk text-red-500 text-xs mr-1"></i>Hình ủy nhiệm chi (chuyển cọc) <span class="text-red-500">*</span>
-                                </label>
-                                <div class="flex items-center gap-3">
-                                    <input 
-                                        type="file" 
-                                        id="uy_nhiem_chi" 
-                                        name="uy_nhiem_chi" 
-                                        accept="image/*" 
-                                        class="hidden"
-                                        required
-                                        onchange="handleFileSelect(this, 'uy_nhiem_chi_preview')"
-                                    >
-                                    <label 
-                                        for="uy_nhiem_chi" 
-                                        class="flex-1 cursor-pointer bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-100 transition"
-                                    >
-                                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-400 mb-2"></i>
-                                        <p class="text-sm text-gray-600">Chọn file ảnh</p>
-                                    </label>
-                                </div>
-                                <div id="uy_nhiem_chi_preview" class="mt-2 hidden">
-                                    <img src="" alt="Ủy nhiệm chi" class="max-w-full h-32 object-contain border rounded">
-                                    <button 
-                                        type="button" 
-                                        onclick="removeFile('uy_nhiem_chi', 'uy_nhiem_chi_preview')" 
-                                        class="mt-1 text-xs text-red-600 hover:text-red-800"
-                                    >
-                                        Xóa
-                                    </button>
+                            <!-- File list preview -->
+                            <div id="attachment_preview_list" class="space-y-2 hidden">
+                                <p class="text-sm font-medium text-gray-700">Các file đã chọn:</p>
+                                <div id="attachment_preview_items" class="space-y-2">
+                                    <!-- File preview items will be inserted here -->
                                 </div>
                             </div>
                         </div>
@@ -302,23 +267,22 @@ async function handleCreateOrder(event) {
         return;
     }
 
-    // Validate required images
-    const cccdVneid = document.getElementById('cccd_vneid').files[0];
-    const uyNhiemChi = document.getElementById('uy_nhiem_chi').files[0];
+    // Validate required attachments
+    const attachmentInput = document.getElementById('order_attachments');
+    const attachmentFiles = attachmentInput ? Array.from(attachmentInput.files || []) : [];
     
-    if (!cccdVneid) {
+    if (attachmentFiles.length === 0) {
         if (typeof window.showToast === 'function') {
-            window.showToast('Vui lòng đính kèm hình CCCD trên VNeid', 'warning');
+            window.showToast('Vui lòng đính kèm ít nhất 1 file', 'warning');
         }
-        document.getElementById('cccd_vneid').focus();
+        if (attachmentInput) attachmentInput.focus();
         return;
     }
     
-    if (!uyNhiemChi) {
+    if (attachmentFiles.length > 4) {
         if (typeof window.showToast === 'function') {
-            window.showToast('Vui lòng đính kèm hình ủy nhiệm chi (chuyển cọc)', 'warning');
+            window.showToast('Chỉ được đính kèm tối đa 4 file', 'warning');
         }
-        document.getElementById('uy_nhiem_chi').focus();
         return;
     }
 
@@ -337,39 +301,31 @@ async function handleCreateOrder(event) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang xử lý...';
     
-    let cccdVneidUrl = null;
     const attachments = [];
 
-    // Keep original Google Drive URL (no preview conversion needed)
-
-    // Upload files (both are required)
+    // Upload files to Google Drive
     try {
         console.log('📤 Starting file upload to Google Drive...');
-        console.log('VNeid file:', cccdVneid?.name);
-        console.log('Ủy nhiệm chi file:', uyNhiemChi?.name);
-        console.log('Initial cccdVneidUrl:', cccdVneidUrl);
-        console.log('Initial attachments:', attachments);
+        console.log('Number of files to upload:', attachmentFiles.length);
+        attachmentFiles.forEach((file, index) => {
+            console.log(`  File ${index + 1}: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+        });
         
-        // Upload to Google Drive (user requirement)
+        // Upload to Google Drive
         let uploadResult = null;
-        const allFiles = [
-            { file: cccdVneid, type: 'vneid' },
-            { file: uyNhiemChi, type: 'uy_nhiem_chi' }
-        ];
-        
-        console.log('All files array:', allFiles);
         
         // Upload to Google Drive
         if (window.googleDocsAPI && window.googleDocsAPI.uploadFiles) {
             console.log('🔄 Uploading to Google Drive...');
             
             const dataTransfer = new DataTransfer();
-            allFiles.forEach(({ file, type }) => {
-                const cccd = formData.get('cccd').trim();
-                const timestamp = Date.now();
+            const cccd = formData.get('cccd').trim();
+            const timestamp = Date.now();
+            
+            attachmentFiles.forEach((file, index) => {
                 const ext = file.name.split('.').pop();
-                const prefix = type === 'vneid' ? 'CCCD_VNeid' : 'UyNhiemChi';
-                const newName = `${prefix}_${cccd}_${timestamp}.${ext}`;
+                const sanitizedOriginalName = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_]/g, '_');
+                const newName = `Order_${cccd}_${sanitizedOriginalName}_${timestamp}_${index + 1}.${ext}`;
                 const renamedFile = new File([file], newName, { type: file.type });
                 dataTransfer.items.add(renamedFile);
             });
@@ -398,86 +354,37 @@ async function handleCreateOrder(event) {
             if (hasUrls) {
                 console.log('✅ Upload successful, mapping files to URLs...');
                 
-                // Map files to URLs based on filename (more reliable than index)
+                // Map all uploaded files to attachments array
                 console.log('📋 Processing uploaded files. Total:', uploadResult.urls.length);
-                console.log('📋 All files info:', allFiles);
                 console.log('📋 Upload result URLs:', uploadResult.urls);
                 
                 uploadResult.urls.forEach((uploadedFile, index) => {
-                    console.log(`\n📄 Processing file ${index + 1}/${uploadResult.urls.length}:`);
-                    console.log('  - Uploaded file object:', uploadedFile);
-                    console.log('  - File name:', uploadedFile.name);
-                    console.log('  - File URL:', uploadedFile.url);
-                    console.log('  - File ID:', uploadedFile.id);
+                    console.log(`Processing file ${index + 1}/${uploadResult.urls.length}:`, uploadedFile);
                     
                     const fileUrl = uploadedFile.url || uploadedFile;
-                    const fileName = (uploadedFile.name || '').toLowerCase();
+                    const fileName = uploadedFile.name || `File ${index + 1}`;
                     
-                    console.log('  - Normalized file name (lowercase):', fileName);
+                    attachments.push({
+                        name: fileName,
+                        url: fileUrl
+                    });
                     
-                    // Match file by filename (more reliable than index)
-                    let matchedFile = null;
-                    if (fileName.includes('cccd_vneid') || fileName.includes('vneid')) {
-                        matchedFile = allFiles.find(f => f.type === 'vneid');
-                        console.log('  - Matched by VNeid pattern');
-                    } else if (fileName.includes('uynhiemchi') || fileName.includes('uy_nhiem_chi')) {
-                        matchedFile = allFiles.find(f => f.type === 'uy_nhiem_chi');
-                        console.log('  - Matched by ủy nhiệm chi pattern');
-                    } else {
-                        // Fallback to index if filename doesn't match
-                        matchedFile = allFiles[index];
-                        console.warn(`  ⚠️ Cannot match file by name, using index ${index} as fallback`);
-                    }
-                    
-                    if (!matchedFile) {
-                        console.error(`  ❌ ERROR: No matching file info for uploaded file:`, fileName);
-                        console.error('  Available files in allFiles:', allFiles);
-                        return;
-                    }
-                    
-                    console.log(`  ✅ Matched file type:`, matchedFile.type);
-                    
-                    if (matchedFile.type === 'vneid') {
-                        cccdVneidUrl = fileUrl;
-                        console.log('  ✅ ASSIGNED VNeid URL:', fileUrl);
-                        console.log('  ✅ cccdVneidUrl variable is now:', cccdVneidUrl);
-                    } else if (matchedFile.type === 'uy_nhiem_chi') {
-                        attachments.push({
-                            name: uploadedFile.name || 'Ủy nhiệm chi',
-                            url: fileUrl,
-                            type: 'uy_nhiem_chi'
-                        });
-                        console.log('  ✅ ADDED ủy nhiệm chi to attachments:', fileUrl);
-                        console.log('  ✅ Attachments array now has', attachments.length, 'item(s):', attachments);
-                    }
+                    console.log(`✅ Added file to attachments: ${fileName} → ${fileUrl}`);
                 });
                 
-                console.log('\n📊 FINAL MAPPING RESULT:');
-                console.log('  - cccdVneidUrl:', cccdVneidUrl);
-                console.log('  - cccdVneidUrl type:', typeof cccdVneidUrl);
-                console.log('  - cccdVneidUrl is null?', cccdVneidUrl === null);
-                console.log('  - cccdVneidUrl is undefined?', cccdVneidUrl === undefined);
-                console.log('  - attachments:', attachments);
-                console.log('  - attachments.length:', attachments.length);
-                console.log('  - attachments JSON:', JSON.stringify(attachments));
+                console.log('\n📊 FINAL ATTACHMENTS:');
+                console.log('  - Total attachments:', attachments.length);
+                console.log('  - Attachments:', attachments);
+                console.log('  - Attachments JSON:', JSON.stringify(attachments));
                 
-                // Verify both files were mapped
-                if (!cccdVneidUrl) {
-                    console.error('\n❌ ERROR: VNeid URL is null/undefined after mapping!');
-                    console.error('  This means VNeid image will NOT be saved to database!');
-                    console.error('  Uploaded files:', uploadResult.urls);
-                    console.error('  All files:', allFiles);
-                }
                 if (attachments.length === 0) {
-                    console.error('\n❌ ERROR: Attachments array is empty after mapping!');
-                    console.error('  This means ủy nhiệm chi image will NOT be saved to database!');
-                }
-                if (attachments.length > 0 && cccdVneidUrl) {
-                    console.log('\n✅ SUCCESS: Both files mapped correctly!');
+                    console.error('\n❌ ERROR: No attachments after upload!');
+                } else {
+                    console.log('\n✅ SUCCESS: All files uploaded and added to attachments!');
                 }
                 
                 if (typeof window.showToast === 'function') {
-                    window.showToast('Đã upload file thành công!', 'success');
+                    window.showToast(`Đã upload ${attachments.length} file thành công!`, 'success');
                 }
             } else {
                 // Restore button
@@ -512,7 +419,7 @@ async function handleCreateOrder(event) {
         return;
     }
 
-    // Prepare customer data
+    // Prepare customer data (no image URLs, all in attachments)
     const customerData = {
         cccd: formData.get('cccd').trim(),
         name: formData.get('customer_name').trim(),
@@ -521,12 +428,11 @@ async function handleCreateOrder(event) {
         address: formData.get('address') || null,
         issue_date: formData.get('issue_date') || null,
         issue_place: formData.get('issue_place') || null,
-        cccd_front_image_url: cccdVneidUrl, // Lưu hình VNeid vào cccd_front_image_url
+        cccd_front_image_url: null, // Không dùng nữa, tất cả trong attachments
         cccd_back_image_url: null // Không dùng nữa
     };
 
     console.log('👤 Customer data to save:', customerData);
-    console.log('👤 VNeid URL being saved:', cccdVneidUrl);
 
     // Upsert customer
     const customerResult = await window.callAPI({
@@ -597,8 +503,8 @@ async function handleCreateOrder(event) {
 function resetOrderForm() {
     document.getElementById('form-create-order').reset();
     document.getElementById('customer-search-result').classList.add('hidden');
-    document.getElementById('cccd_vneid_preview').classList.add('hidden');
-    document.getElementById('uy_nhiem_chi_preview').classList.add('hidden');
+    document.getElementById('attachment_preview_list').classList.add('hidden');
+    document.getElementById('attachment_preview_items').innerHTML = '';
     document.getElementById('search-cccd').value = '';
 }
 
