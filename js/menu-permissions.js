@@ -129,6 +129,12 @@ function updateMenuItemsByPermissions(user) {
     toggleMenuByPermission('nav-sales-policies', 'manage_sales_policies', ['ADMIN']);
     toggleMenuByPermission('nav-tvbh-targets', 'manage_tvbh_targets', ['ADMIN']);
     
+    // =====================================================
+    // COC REQUESTS MENUS
+    // =====================================================
+    toggleMenuByPermission('nav-coc-create', 'create_coc_request', ['TVBH', 'SALE']);
+    toggleMenuByPermission('nav-coc-requests', 'view_coc_requests', ['TVBH', 'SALE', 'SALEADMIN', 'KETOAN']);
+    
     // Update mobile bottom nav active state after menu update
     if (typeof updateMobileBottomNav === 'function') {
         const activeTab = document.querySelector('.tab-content.active');

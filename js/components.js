@@ -143,6 +143,8 @@ async function loadAllComponents() {
     console.log('[Components] Loading document-files component...');
     await loadComponentAppend('document-files', 'tabs-container');
     console.log('[Components] document-files component loaded');
+    await loadComponentAppend('coc-create', 'tabs-container');
+    await loadComponentAppend('coc-requests', 'tabs-container');
     await loadComponentAppend('reports-dashboard', 'tabs-container');
     await loadComponentAppend('reports-mtd-detail', 'tabs-container');
     await loadComponentAppend('profile', 'tabs-container');
@@ -159,6 +161,8 @@ async function loadAllComponents() {
     await loadComponentAppend('modals-order-detail', 'modals-container');
     await loadComponentAppend('modals-user-permissions', 'modals-container');
     await loadComponentAppend('modals-change-password', 'modals-container');
+    await loadComponentAppend('modals-coc-issue', 'modals-container');
+    await loadComponentAppend('modals-coc-disburse', 'modals-container');
     await loadComponent('templates', 'templates-container');
     
     // Wait a bit for DOM to update after loading components

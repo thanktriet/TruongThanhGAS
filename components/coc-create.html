@@ -1,0 +1,500 @@
+<div id="tab-coc-create" class="tab-content">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden max-w-5xl mx-auto">
+        <div class="bg-blue-50 px-4 py-3 md:px-6 md:py-4 border-b border-blue-100">
+            <h2 class="text-base md:text-lg font-bold text-blue-800">
+                <i class="fa-solid fa-certificate mr-2"></i>Đề nghị cấp COC (Giấy chứng nhận xuất xưởng)
+            </h2>
+        </div>
+        <div class="p-3 md:p-6">
+            <form id="form-coc-create" onsubmit="submitCocCreateForm(event)">
+                <!-- Tìm kiếm đơn hàng (optional) -->
+                <div class="mb-4 md:mb-6 bg-gray-50 p-3 md:p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-xs md:text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass text-blue-600"></i>
+                        Tìm kiếm đơn hàng (tùy chọn - để tự động điền thông tin)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="md:col-span-2">
+                            <input 
+                                type="text" 
+                                id="coc-search-order" 
+                                class="input text-sm md:text-base w-full" 
+                                placeholder="Nhập mã hợp đồng hoặc tên khách hàng..."
+                                onkeypress="if(event.key === 'Enter') searchOrderForCoc(event)"
+                            >
+                        </div>
+                        <div>
+                            <button 
+                                type="button" 
+                                onclick="searchOrderForCoc(event)" 
+                                class="w-full bg-blue-600 text-white font-bold py-2.5 md:py-2 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition touch-manipulation text-sm md:text-base"
+                            >
+                                <i class="fa-solid fa-search mr-2"></i>Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                    <div id="coc-order-search-result" class="mt-3 hidden"></div>
+                </div>
+
+                <!-- Thông tin đơn hàng (kế thừa) -->
+                <div class="mb-4 md:mb-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">1. Thông tin Đơn hàng</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Mã đơn hàng <span class="text-red-500">*</span></label>
+                            <input name="contract_code" id="coc-create-contract_code" class="input text-sm md:text-base w-full" required>
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Tên khách hàng <span class="text-red-500">*</span></label>
+                            <input name="customer_name" id="coc-create-customer_name" class="input text-sm md:text-base w-full" required>
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Loại xe</label>
+                            <input name="car_model" id="coc-create-car_model" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Phiên bản</label>
+                            <input name="car_version" id="coc-create-car_version" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Màu sắc</label>
+                            <input name="car_color" id="coc-create-car_color" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Số khung (VIN)</label>
+                            <input name="vin_number" id="coc-create-vin_number" class="input text-sm md:text-base w-full">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin tài chính (để tính lãi) -->
+                <div class="mb-4 md:mb-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">
+                        2. Thông tin Tài chính (để tính lãi)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <!-- PO Number -->
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">
+                                Số PO (Đơn đặt hàng)
+                            </label>
+                            <input 
+                                name="po_number" 
+                                id="coc-create-po_number" 
+                                class="input text-sm md:text-base w-full"
+                                placeholder="VD: PO-2024-001"
+                            >
+                        </div>
+
+                        <!-- Giá nhập -->
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">
+                                Giá nhập (VNĐ) <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                name="import_price" 
+                                id="coc-create-import_price" 
+                                type="text"
+                                class="input text-sm md:text-base w-full" 
+                                placeholder="0"
+                                required
+                                oninput="if(window.formatMoneyInput)window.formatMoneyInput(this)"
+                                onblur="updatePrincipalAmount()"
+                            >
+                        </div>
+
+                        <!-- Phương thức thanh toán -->
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">
+                                Phương thức thanh toán
+                            </label>
+                            <select 
+                                name="payment_method" 
+                                id="coc-create-payment_method" 
+                                class="input text-sm md:text-base w-full"
+                                onchange="toggleGuaranteeBank(this.value)"
+                            >
+                                <option value="">-- Chọn phương thức --</option>
+                                <option value="Tiền mặt">Tiền mặt</option>
+                                <option value="Trả góp">Trả góp</option>
+                                <option value="Bảo lãnh ngân hàng">Bảo lãnh ngân hàng</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                        </div>
+
+                        <!-- Ngân hàng bảo lãnh (chỉ hiện khi chọn "Bảo lãnh ngân hàng") -->
+                        <div id="coc-guarantee-bank-container" class="hidden">
+                            <label class="label text-xs md:text-sm mb-1 block">
+                                Ngân hàng bảo lãnh
+                            </label>
+                            <input 
+                                name="guarantee_bank" 
+                                id="coc-create-guarantee_bank" 
+                                class="input text-sm md:text-base w-full"
+                                placeholder="VD: Techcombank, VPBank..."
+                            >
+                        </div>
+
+                        <!-- Số tiền tính lãi (có thể điều chỉnh, mặc định = giá nhập) -->
+                        <div class="md:col-span-2">
+                            <label class="label text-xs md:text-sm mb-1 block">
+                                Số tiền tính lãi (VNĐ)
+                                <span class="text-gray-500 text-xs font-normal">(Mặc định = Giá nhập, có thể điều chỉnh)</span>
+                            </label>
+                            <input 
+                                name="principal_amount" 
+                                id="coc-create-principal_amount" 
+                                type="text"
+                                class="input text-sm md:text-base w-full" 
+                                placeholder="0"
+                                oninput="if(window.formatMoneyInput)window.formatMoneyInput(this)"
+                            >
+                            <p class="text-xs text-gray-500 mt-1">
+                                <i class="fa-solid fa-info-circle mr-1"></i>
+                                Để trống sẽ tự động = Giá nhập
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ngày đề nghị -->
+                <div class="mb-4 md:mb-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">3. Thông tin khác</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Ngày đề nghị <span class="text-red-500">*</span></label>
+                            <input 
+                                name="request_date" 
+                                id="coc-create-request_date" 
+                                type="date" 
+                                class="input text-sm md:text-base w-full" 
+                                required
+                            >
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Ghi chú</label>
+                            <textarea 
+                                name="notes" 
+                                id="coc-create-notes" 
+                                class="input text-sm md:text-base w-full" 
+                                rows="2"
+                                placeholder="Ghi chú thêm (nếu có)..."
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button 
+                        type="submit" 
+                        class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg transition transform active:scale-95"
+                    >
+                        <i class="fa-solid fa-certificate mr-2"></i>Tạo Đề Nghị
+                    </button>
+                    <button 
+                        type="button" 
+                        onclick="resetCocCreateForm()" 
+                        class="px-6 bg-gray-200 text-gray-700 font-bold py-3 rounded-lg hover:bg-gray-300 transition"
+                    >
+                        <i class="fa-solid fa-rotate-left mr-2"></i>Làm mới
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentOrderForCoc = null;
+
+// Set default request date to today
+document.addEventListener('DOMContentLoaded', function() {
+    const requestDateInput = document.getElementById('coc-create-request_date');
+    if (requestDateInput && !requestDateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        requestDateInput.value = today;
+    }
+});
+
+// Toggle guarantee bank field
+function toggleGuaranteeBank(paymentMethod) {
+    const container = document.getElementById('coc-guarantee-bank-container');
+    const input = document.getElementById('coc-create-guarantee_bank');
+    
+    if (paymentMethod === 'Bảo lãnh ngân hàng') {
+        if (container) container.classList.remove('hidden');
+        if (input) input.required = true;
+    } else {
+        if (container) container.classList.add('hidden');
+        if (input) {
+            input.required = false;
+            input.value = '';
+        }
+    }
+}
+
+// Auto-fill principal_amount = import_price when import_price changes
+function updatePrincipalAmount() {
+    const importPriceInput = document.getElementById('coc-create-import_price');
+    const principalInput = document.getElementById('coc-create-principal_amount');
+    
+    if (importPriceInput && principalInput && !principalInput.value) {
+        principalInput.value = importPriceInput.value;
+        if (window.formatMoneyInput) {
+            window.formatMoneyInput(principalInput);
+        }
+    }
+}
+
+// Search order for COC
+async function searchOrderForCoc(event) {
+    if (event) event.preventDefault();
+    
+    const searchInput = document.getElementById('coc-search-order');
+    const searchTerm = searchInput.value.trim();
+    
+    if (!searchTerm) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng nhập mã hợp đồng hoặc tên khách hàng', 'warning');
+        }
+        return;
+    }
+
+    console.log('[COC Create] searchOrderForCoc called');
+    console.log('[COC Create] Search term:', searchTerm);
+
+    try {
+        // Get session
+        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+        if (!session || !session.username) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Vui lòng đăng nhập lại', 'danger');
+            }
+            return;
+        }
+
+        console.log('[COC Create] Calling API get_my_orders...');
+        const result = await window.callAPI({
+            action: 'get_my_orders',
+            username: session.username
+        });
+
+        console.log('[COC Create] API result:', result);
+
+        if (!result.success || !result.data || result.data.length === 0) {
+            showOrderSearchResult(null, 'Không tìm thấy đơn hàng nào.');
+            return;
+        }
+
+        // Filter orders by contract_code or customer name
+        const orders = result.data;
+        const matchedOrder = orders.find(order => {
+            const contractCode = (order.contract_code || '').toLowerCase();
+            const customerName = (order.customers?.name || '').toLowerCase();
+            const searchLower = searchTerm.toLowerCase();
+            
+            return contractCode.includes(searchLower) || customerName.includes(searchLower);
+        });
+
+        if (matchedOrder && matchedOrder.contract_code) {
+            currentOrderForCoc = matchedOrder;
+            autoFillCocFormFromOrder(matchedOrder);
+            showOrderSearchResult(matchedOrder, 'Đã tìm thấy đơn hàng. Thông tin đã được điền tự động.');
+        } else {
+            showOrderSearchResult(null, matchedOrder ? 'Đơn hàng chưa có mã hợp đồng. Vui lòng cấp mã trước.' : 'Không tìm thấy đơn hàng phù hợp.');
+        }
+    } catch (error) {
+        console.error('[COC Create] Search error:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi tìm kiếm đơn hàng: ' + error.message, 'danger');
+        }
+    }
+}
+
+// Show order search result
+function showOrderSearchResult(order, message) {
+    const resultDiv = document.getElementById('coc-order-search-result');
+    if (!resultDiv) return;
+
+    if (order) {
+        const customer = order.customers || {};
+        resultDiv.className = 'mt-3 p-3 bg-green-50 border border-green-200 rounded-lg';
+        resultDiv.innerHTML = `
+            <p class="text-sm text-green-700 mb-2">
+                <i class="fa-solid fa-check-circle mr-2"></i>${message}
+            </p>
+            <div class="text-xs text-gray-600">
+                <p><strong>Mã hợp đồng:</strong> ${escapeHtml(order.contract_code || '-')}</p>
+                <p><strong>Khách hàng:</strong> ${escapeHtml(customer.name || '-')}</p>
+                <p><strong>Xe:</strong> ${escapeHtml(order.car_model || '-')} ${escapeHtml(order.car_version || '')} ${escapeHtml(order.car_color || '')}</p>
+            </div>
+        `;
+        resultDiv.classList.remove('hidden');
+    } else {
+        resultDiv.className = 'mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg';
+        resultDiv.innerHTML = `
+            <p class="text-sm text-blue-700">
+                <i class="fa-solid fa-info-circle mr-2"></i>${message}
+            </p>
+        `;
+        resultDiv.classList.remove('hidden');
+    }
+}
+
+// Auto-fill form from order
+function autoFillCocFormFromOrder(order) {
+    const customer = order.customers || {};
+    
+    document.getElementById('coc-create-contract_code').value = order.contract_code || '';
+    document.getElementById('coc-create-customer_name').value = customer.name || '';
+    document.getElementById('coc-create-car_model').value = order.car_model || '';
+    document.getElementById('coc-create-car_version').value = order.car_version || '';
+    document.getElementById('coc-create-car_color').value = order.car_color || '';
+    document.getElementById('coc-create-vin_number').value = order.vin_number || '';
+    document.getElementById('coc-create-payment_method').value = order.payment_method || '';
+    
+    // Toggle guarantee bank if needed
+    if (order.payment_method === 'Bảo lãnh ngân hàng') {
+        toggleGuaranteeBank('Bảo lãnh ngân hàng');
+    }
+}
+
+// Submit COC create form
+async function submitCocCreateForm(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+
+    // Get session
+    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+    if (!session || !session.username) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng đăng nhập lại', 'danger');
+        }
+        return;
+    }
+
+    // Validate required fields
+    const contractCode = formData.get('contract_code')?.trim();
+    const customerName = formData.get('customer_name')?.trim();
+    const importPrice = formData.get('import_price')?.value || formData.get('import_price');
+
+    if (!contractCode || !customerName || !importPrice) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+        }
+        return;
+    }
+
+    // Show loading
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tạo...';
+
+    try {
+        // Parse money values (remove thousands separators)
+        const importPriceStr = (formData.get('import_price') || '').toString().replace(/\./g, '').replace(/,/g, '');
+        const importPriceValue = parseFloat(importPriceStr) || 0;
+        const principalAmountStr = formData.get('principal_amount') 
+            ? formData.get('principal_amount').toString().replace(/\./g, '').replace(/,/g, '')
+            : '';
+        const principalAmountValue = principalAmountStr ? parseFloat(principalAmountStr) : importPriceValue;
+
+        // Get order_id if we have current order
+        let orderId = null;
+        if (currentOrderForCoc && currentOrderForCoc.id) {
+            orderId = currentOrderForCoc.id;
+        }
+
+        // Prepare request data
+        const requestData = {
+            order_id: orderId,
+            contract_code: contractCode,
+            customer_name: customerName,
+            car_model: formData.get('car_model')?.trim() || null,
+            car_version: formData.get('car_version')?.trim() || null,
+            car_color: formData.get('car_color')?.trim() || null,
+            vin_number: formData.get('vin_number')?.trim() || null,
+            po_number: formData.get('po_number')?.trim() || null,
+            import_price: importPriceValue,
+            payment_method: formData.get('payment_method')?.trim() || null,
+            guarantee_bank: formData.get('guarantee_bank')?.trim() || null,
+            principal_amount: principalAmountValue,
+            request_date: formData.get('request_date') || new Date().toISOString().split('T')[0],
+            requester: session.username,
+            notes: formData.get('notes')?.trim() || null
+        };
+
+        console.log('[COC Create] Submitting request data:', requestData);
+
+        const result = await window.callAPI({
+            action: 'create_coc_request',
+            ...requestData
+        });
+
+        if (result.success) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Tạo đề nghị cấp COC thành công!', 'success');
+            }
+            resetCocCreateForm();
+            // Có thể chuyển sang trang danh sách COC requests
+            setTimeout(() => {
+                if (window.switchTab) {
+                    window.switchTab('coc-requests');
+                }
+            }, 1500);
+        } else {
+            throw new Error(result.message || 'Không thể tạo đề nghị cấp COC');
+        }
+    } catch (error) {
+        console.error('❌ COC creation error:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + (error.message || 'Không thể tạo đề nghị cấp COC'), 'danger');
+        }
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+    }
+}
+
+// Reset form
+function resetCocCreateForm() {
+    document.getElementById('form-coc-create').reset();
+    document.getElementById('coc-order-search-result').classList.add('hidden');
+    currentOrderForCoc = null;
+    
+    // Reset default date
+    const requestDateInput = document.getElementById('coc-create-request_date');
+    if (requestDateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        requestDateInput.value = today;
+    }
+    
+    // Hide guarantee bank
+    const container = document.getElementById('coc-guarantee-bank-container');
+    if (container) container.classList.add('hidden');
+}
+
+// Helper: Escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Expose functions to window
+if (typeof window !== 'undefined') {
+    window.searchOrderForCoc = searchOrderForCoc;
+    window.submitCocCreateForm = submitCocCreateForm;
+    window.resetCocCreateForm = resetCocCreateForm;
+    window.toggleGuaranteeBank = toggleGuaranteeBank;
+    window.updatePrincipalAmount = updatePrincipalAmount;
+    window.autoFillCocFormFromOrder = autoFillCocFormFromOrder;
+    
+    console.log('✅ COC create functions exposed to window');
+}
+</script>
+

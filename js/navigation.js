@@ -66,6 +66,12 @@ function switchTab(id) {
             // Không auto-load, chờ user chọn tháng và click "Lọc"
         }, 300);
     }
+    
+    if (id === 'coc-requests' && typeof loadCocRequests === 'function') {
+        setTimeout(() => {
+            loadCocRequests();
+        }, 300);
+    }
 }
 
 /**

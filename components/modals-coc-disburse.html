@@ -1,0 +1,222 @@
+<!-- Modal Giải ngân COC -->
+<div id="modal-coc-disburse" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="bg-orange-600 text-white px-6 py-4 rounded-t-xl flex justify-between items-center sticky top-0 z-10">
+            <h2 class="text-xl font-bold">
+                <i class="fa-solid fa-upload mr-2"></i>Giải Ngân COC
+            </h2>
+            <button onclick="closeCocDisburseModal()" class="text-white hover:text-gray-200">
+                <i class="fa-solid fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <form id="form-coc-disburse" onsubmit="submitCocDisburse(event)" class="p-6">
+            <!-- Thông tin request -->
+            <div class="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h3 class="font-bold text-gray-700 mb-3">Thông tin đề nghị</h3>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <span class="text-gray-600">Mã đơn hàng:</span>
+                        <span id="disburse-contract-code" class="font-bold ml-2"></span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Khách hàng:</span>
+                        <span id="disburse-customer-name" class="font-bold ml-2"></span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Ngày cấp:</span>
+                        <span id="disburse-issue-date" class="font-bold ml-2"></span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Số tiền lãi:</span>
+                        <span id="disburse-interest-amount" class="font-bold ml-2 text-orange-600"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload file giải ngân -->
+            <div class="mb-6">
+                <label class="label block mb-2">
+                    <i class="fa-solid fa-file-upload mr-2 text-orange-600"></i>
+                    File giải ngân <span class="text-red-500">*</span>
+                </label>
+                <input 
+                    type="file" 
+                    id="disburse-file" 
+                    name="disbursement_file"
+                    accept="image/*,.pdf"
+                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer"
+                    required
+                    onchange="handleDisburseFileSelect(this)"
+                >
+                <div id="disburse-file-preview" class="mt-2 hidden">
+                    <p class="text-sm text-blue-600">
+                        <i class="fa-solid fa-file-pdf mr-1"></i>File đã chọn: <span id="disburse-file-name"></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-3">
+                <button 
+                    type="submit" 
+                    class="flex-1 bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 shadow-lg transition"
+                >
+                    <i class="fa-solid fa-check mr-2"></i>Xác nhận giải ngân và đóng case
+                </button>
+                <button 
+                    type="button" 
+                    onclick="closeCocDisburseModal()" 
+                    class="px-6 bg-gray-200 text-gray-700 font-bold py-3 rounded-lg hover:bg-gray-300 transition"
+                >
+                    Hủy
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let currentCocDisburseRequestId = null;
+
+// Handle file select
+function handleDisburseFileSelect(input) {
+    const file = input.files[0];
+    if (file) {
+        const preview = document.getElementById('disburse-file-preview');
+        const nameSpan = document.getElementById('disburse-file-name');
+        if (nameSpan) {
+            nameSpan.textContent = file.name;
+        }
+        if (preview) {
+            preview.classList.remove('hidden');
+        }
+    }
+}
+
+// Submit disburse COC
+async function submitCocDisburse(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const disburseFile = document.getElementById('disburse-file').files[0];
+
+    if (!disburseFile) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng chọn file giải ngân', 'warning');
+        }
+        return;
+    }
+
+    // Get session
+    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+    if (!session || !session.username) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng đăng nhập lại', 'danger');
+        }
+        return;
+    }
+
+    // Show loading
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang xử lý...';
+
+    try {
+        // Upload file to Google Drive
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(disburseFile);
+
+        if (!window.googleDocsAPI || !window.googleDocsAPI.uploadFiles) {
+            throw new Error('Google Drive API chưa được cấu hình');
+        }
+
+        const uploadResult = await window.googleDocsAPI.uploadFiles(dataTransfer.files);
+        
+        if (!uploadResult.success || !uploadResult.urls || uploadResult.urls.length === 0) {
+            throw new Error('Lỗi upload file. Vui lòng thử lại.');
+        }
+
+        const fileInfo = uploadResult.urls[0];
+
+        // Call API to disburse COC
+        const result = await window.callAPI({
+            action: 'disburse_coc_request',
+            coc_request_id: currentCocDisburseRequestId,
+            file_url: fileInfo.url || fileInfo,
+            file_id: fileInfo.id || null,
+            accountant: session.username
+        });
+
+        if (result.success) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Giải ngân COC thành công và đã đóng case!', 'success');
+            }
+            closeCocDisburseModal();
+            // Reload COC requests list
+            if (typeof loadCocRequests === 'function') {
+                loadCocRequests();
+            }
+        } else {
+            throw new Error(result.message || 'Không thể giải ngân COC');
+        }
+    } catch (error) {
+        console.error('Error disbursing COC:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + error.message, 'danger');
+        }
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+    }
+}
+
+// Open modal
+function openCocDisburseModal(requestId) {
+    currentCocDisburseRequestId = requestId;
+    
+    // Find request data
+    if (typeof allCocRequests !== 'undefined' && allCocRequests) {
+        const request = allCocRequests.find(r => r.id === requestId);
+        if (request) {
+            document.getElementById('disburse-contract-code').textContent = cocRequest.contract_code || '-';
+            document.getElementById('disburse-customer-name').textContent = cocRequest.customer_name || '-';
+            document.getElementById('disburse-issue-date').textContent = cocRequest.actual_issue_date 
+                ? new Date(cocRequest.actual_issue_date).toLocaleDateString('vi-VN')
+                : '-';
+            document.getElementById('disburse-interest-amount').textContent = cocRequest.interest_amount 
+                ? parseFloat(cocRequest.interest_amount).toLocaleString('vi-VN') + ' VNĐ'
+                : '0 VNĐ';
+    } else {
+        console.error('COC request not found for disburse:', requestIdToUse);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Không tìm thấy đề nghị COC', 'danger');
+        }
+        return;
+    }
+    }
+    
+    // Reset form
+    document.getElementById('form-coc-disburse').reset();
+    document.getElementById('disburse-file-preview').classList.add('hidden');
+    
+    // Show modal
+    document.getElementById('modal-coc-disburse').classList.remove('hidden');
+}
+
+// Close modal
+function closeCocDisburseModal() {
+    document.getElementById('modal-coc-disburse').classList.add('hidden');
+    currentCocDisburseRequestId = null;
+}
+
+// Expose to window
+if (typeof window !== 'undefined') {
+    window.openCocDisburseModalDirect = openCocDisburseModalDirect;
+    window.closeCocDisburseModal = closeCocDisburseModal;
+    window.handleDisburseFileSelect = handleDisburseFileSelect;
+    window.submitCocDisburse = submitCocDisburse;
+}
+</script>
+

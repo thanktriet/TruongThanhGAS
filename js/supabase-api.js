@@ -3751,6 +3751,203 @@ async function supabaseDeleteTvbhTarget(id) {
 }
 
 // ======================================================
+// COC REQUESTS API - Quản lý đề nghị cấp COC
+// ======================================================
+
+/**
+ * Tạo đề nghị cấp COC (TVBH)
+ */
+async function supabaseCreateCocRequest(requestData) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // Tính principal_amount: mặc định = import_price nếu không có
+        const principalAmount = requestData.principal_amount || requestData.import_price || 0;
+
+        const { data, error } = await supabase
+            .from('coc_requests')
+            .insert([{
+                order_id: requestData.order_id,
+                contract_code: requestData.contract_code,
+                customer_name: requestData.customer_name,
+                car_model: requestData.car_model,
+                car_version: requestData.car_version,
+                car_color: requestData.car_color,
+                vin_number: requestData.vin_number,
+                
+                // Thông tin tài chính
+                po_number: requestData.po_number || null,
+                import_price: parseFloat(requestData.import_price) || 0,
+                payment_method: requestData.payment_method || null,
+                guarantee_bank: requestData.guarantee_bank || null,
+                principal_amount: parseFloat(principalAmount) || 0,
+                
+                request_date: requestData.request_date || new Date().toISOString().split('T')[0],
+                requester: requestData.requester,
+                status: 'pending',
+                notes: requestData.notes || null
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return { success: true, data };
+    } catch (error) {
+        console.error('Create COC request error:', error);
+        return { success: false, message: error.message };
+    }
+}
+
+/**
+ * Lấy danh sách COC requests (TVBH xem của mình, SaleAdmin/Kế toán xem tất cả)
+ */
+async function supabaseGetCocRequests(username, role, filters = {}) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        let query = supabase
+            .from('coc_requests')
+            .select('*, orders(*)')
+            .order('request_date', { ascending: false });
+
+        // TVBH chỉ xem của mình
+        if (role === 'TVBH' || role === 'SALE') {
+            query = query.eq('requester', username);
+        }
+
+        // Filter by status
+        if (filters.status) {
+            query = query.eq('status', filters.status);
+        }
+
+        // Filter by contract_code
+        if (filters.contract_code) {
+            query = query.ilike('contract_code', `%${filters.contract_code}%`);
+        }
+
+        // Filter by customer_name
+        if (filters.customer_name) {
+            query = query.ilike('customer_name', `%${filters.customer_name}%`);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        return { success: true, data: data || [] };
+    } catch (error) {
+        console.error('Get COC requests error:', error);
+        return { success: false, message: error.message };
+    }
+}
+
+/**
+ * Cập nhật ngày cấp COC với upload files (SaleAdmin)
+ * Bắt buộc phải upload ảnh COC và biên bản bàn giao
+ */
+async function supabaseIssueCocRequest(cocRequestId, issueData) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // Validate: Phải có ảnh COC và biên bản bàn giao
+        if (!issueData.coc_image_url || !issueData.handover_document_url) {
+            return { 
+                success: false, 
+                message: 'Vui lòng upload đầy đủ ảnh COC và biên bản bàn giao' 
+            };
+        }
+
+        // Lấy thông tin request để tính lãi
+        const { data: requestData, error: fetchError } = await supabase
+            .from('coc_requests')
+            .select('*')
+            .eq('id', cocRequestId)
+            .single();
+
+        if (fetchError) throw fetchError;
+
+        // Tính số ngày trễ và lãi
+        const delayedDays = typeof window.calculateDelayedBusinessDays === 'function' 
+            ? window.calculateDelayedBusinessDays(requestData.request_date, issueData.actual_issue_date)
+            : 0;
+
+        // Tính lãi dựa trên principal_amount
+        const principalAmount = requestData.principal_amount || requestData.import_price || 0;
+        const interestAmount = typeof window.calculateInterest === 'function'
+            ? window.calculateInterest(principalAmount, delayedDays, requestData.interest_rate || 8.0)
+            : 0;
+
+        // Cập nhật request
+        const { data, error } = await supabase
+            .from('coc_requests')
+            .update({
+                actual_issue_date: issueData.actual_issue_date,
+                coc_image_url: issueData.coc_image_url,
+                coc_image_id: issueData.coc_image_id,
+                handover_document_url: issueData.handover_document_url,
+                handover_document_id: issueData.handover_document_id,
+                issuer: issueData.issuer,
+                status: 'issued',
+                business_days_delayed: delayedDays,
+                interest_amount: interestAmount,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', cocRequestId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return { success: true, data };
+    } catch (error) {
+        console.error('Issue COC request error:', error);
+        return { success: false, message: error.message };
+    }
+}
+
+/**
+ * Upload file giải ngân và đóng case (Kế toán)
+ */
+async function supabaseDisburseCocRequest(cocRequestId, fileUrl, fileId, accountant) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        const { data, error } = await supabase
+            .from('coc_requests')
+            .update({
+                disbursement_file_url: fileUrl,
+                disbursement_file_id: fileId,
+                accountant: accountant,
+                status: 'closed',
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', cocRequestId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return { success: true, data };
+    } catch (error) {
+        console.error('Disburse COC request error:', error);
+        return { success: false, message: error.message };
+    }
+}
+
+// ======================================================
 // WRAPPER FUNCTION - Tương thích với callAPI hiện tại
 // ======================================================
 
@@ -3841,6 +4038,19 @@ async function callSupabaseAPI(data) {
             
             case 'assign_contract_code':
                 return await supabaseAssignContractCode(data.orderId, data.contract_code, data.assigned_sale);
+            
+            // COC Requests API
+            case 'create_coc_request':
+                return await supabaseCreateCocRequest(data);
+            
+            case 'get_coc_requests':
+                return await supabaseGetCocRequests(data.username, data.role, data.filters || {});
+            
+            case 'issue_coc_request':
+                return await supabaseIssueCocRequest(data.coc_request_id, data);
+            
+            case 'disburse_coc_request':
+                return await supabaseDisburseCocRequest(data.coc_request_id, data.file_url, data.file_id, data.accountant);
             
             // Document Files API
             case 'save_document_file':

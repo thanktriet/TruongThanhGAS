@@ -30,6 +30,12 @@ const ALL_PERMISSIONS = {
     'create_thoa_thuan': { label: 'Tạo Thỏa thuận lãi suất', group: 'documents' },
     'create_de_nghi': { label: 'Tạo Đề nghị giải ngân', group: 'documents' },
     
+    // COC Requests
+    'create_coc_request': { label: 'Tạo đề nghị cấp COC', group: 'coc' },
+    'view_coc_requests': { label: 'Xem đề nghị cấp COC', group: 'coc' },
+    'issue_coc': { label: 'Cấp COC', group: 'coc' },
+    'disburse_coc': { label: 'Giải ngân COC', group: 'coc' },
+    
     // Báo cáo (Reports)
     'submit_daily_report': { label: 'Nhập báo cáo ngày', group: 'reports' },
     'view_reports': { label: 'Xem báo cáo', group: 'reports' },
@@ -48,6 +54,7 @@ const PERMISSION_GROUPS = {
     'approval': { label: 'TỜ TRÌNH', icon: 'fa-file-circle-plus' },
     'orders': { label: 'ĐƠN HÀNG', icon: 'fa-cart-shopping' },
     'documents': { label: 'TÀI LIỆU', icon: 'fa-file-contract' },
+    'coc': { label: 'COC', icon: 'fa-certificate' },
     'reports': { label: 'BÁO CÁO', icon: 'fa-chart-line' },
     'system': { label: 'HỆ THỐNG', icon: 'fa-cog' }
 };
@@ -82,7 +89,11 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
         manage_permissions: true,
         manage_car_models: true,
         manage_sales_policies: true,
-        manage_tvbh_targets: true
+        manage_tvbh_targets: true,
+        create_coc_request: false,
+        view_coc_requests: true,
+        issue_coc: true,
+        disburse_coc: true
     },
     'TVBH': {
         create_request: true,
@@ -105,7 +116,11 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
         view_reports: false,
         view_dashboard: false,
         manage_users: false,
-        manage_permissions: false
+        manage_permissions: false,
+        create_coc_request: true,
+        view_coc_requests: true,
+        issue_coc: false,
+        disburse_coc: false
     },
     'SALE': {
         create_request: true,
@@ -128,7 +143,11 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
         view_reports: false,
         view_dashboard: false,
         manage_users: false,
-        manage_permissions: false
+        manage_permissions: false,
+        create_coc_request: true,
+        view_coc_requests: true,
+        issue_coc: false,
+        disburse_coc: false
     },
     'SALEADMIN': {
         create_request: true,
@@ -151,7 +170,11 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
         view_reports: false,
         view_dashboard: false,
         manage_users: false,
-        manage_permissions: false
+        manage_permissions: false,
+        create_coc_request: false,
+        view_coc_requests: true,
+        issue_coc: true,
+        disburse_coc: false
     },
     'TPKD': {
         create_request: true,

@@ -1,0 +1,267 @@
+<div id="tab-coc-requests" class="tab-content">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-blue-50 px-4 py-3 md:px-6 md:py-4 border-b border-blue-100">
+            <h2 class="text-base md:text-lg font-bold text-blue-800">
+                <i class="fa-solid fa-list-check mr-2"></i>Quản Lý Đề Nghị Cấp COC
+            </h2>
+            <p class="text-xs text-gray-600 mt-1">Quản lý các đề nghị cấp COC (Giấy chứng nhận xuất xưởng)</p>
+        </div>
+        
+        <div class="p-3 md:p-6">
+            <!-- Filters -->
+            <div class="mb-4 md:mb-6 bg-gray-50 p-3 md:p-4 rounded-lg border border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="label text-xs md:text-sm mb-1 block">Trạng thái</label>
+                        <select id="filter-coc-status" class="input text-sm md:text-base w-full" onchange="filterCocRequests()">
+                            <option value="">Tất cả</option>
+                            <option value="pending">Chờ cấp</option>
+                            <option value="issued">Đã cấp</option>
+                            <option value="disbursed">Đã giải ngân</option>
+                            <option value="closed">Đã đóng</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label text-xs md:text-sm mb-1 block">Mã hợp đồng</label>
+                        <input type="text" id="filter-coc-contract-code" class="input text-sm md:text-base w-full" placeholder="Tìm theo mã..." onkeyup="filterCocRequests()">
+                    </div>
+                    <div>
+                        <label class="label text-xs md:text-sm mb-1 block">Khách hàng</label>
+                        <input type="text" id="filter-coc-customer" class="input text-sm md:text-base w-full" placeholder="Tìm theo tên..." onkeyup="filterCocRequests()">
+                    </div>
+                    <div>
+                        <label class="label text-xs md:text-sm mb-1 block">Ngày đề nghị</label>
+                        <input type="date" id="filter-coc-date" class="input text-sm md:text-base w-full" onchange="filterCocRequests()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requests List -->
+            <div id="coc-requests-loading" class="text-center py-8 hidden">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p class="mt-2 text-gray-600">Đang tải...</p>
+            </div>
+
+            <div id="coc-requests-list" class="space-y-3">
+                <!-- Requests will be rendered here -->
+            </div>
+
+            <div id="coc-requests-empty" class="text-center py-12 hidden">
+                <i class="fa-solid fa-certificate text-4xl text-gray-300 mb-3"></i>
+                <p class="text-gray-500">Chưa có đề nghị nào</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allCocRequests = [];
+let filteredCocRequests = [];
+
+// Status labels and colors
+const COC_STATUS = {
+    'pending': { label: 'Chờ cấp', color: 'yellow', bgColor: 'yellow-100', textColor: 'yellow-800' },
+    'issued': { label: 'Đã cấp', color: 'blue', bgColor: 'blue-100', textColor: 'blue-800' },
+    'disbursed': { label: 'Đã giải ngân', color: 'orange', bgColor: 'orange-100', textColor: 'orange-800' },
+    'closed': { label: 'Đã đóng', color: 'green', bgColor: 'green-100', textColor: 'green-800' }
+};
+
+async function loadCocRequests() {
+    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+    if (!session || !session.username) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng đăng nhập lại', 'danger');
+        }
+        return;
+    }
+
+    const loadingDiv = document.getElementById('coc-requests-loading');
+    const listDiv = document.getElementById('coc-requests-list');
+    const emptyDiv = document.getElementById('coc-requests-empty');
+
+    if (loadingDiv) loadingDiv.classList.remove('hidden');
+    if (listDiv) listDiv.innerHTML = '';
+    if (emptyDiv) emptyDiv.classList.add('hidden');
+
+    try {
+        const result = await window.callAPI({
+            action: 'get_coc_requests',
+            username: session.username,
+            role: session.role
+        });
+
+        if (result.success && result.data) {
+            allCocRequests = result.data;
+            filterCocRequests();
+        } else {
+            throw new Error(result.message || 'Không thể tải danh sách đề nghị COC');
+        }
+    } catch (error) {
+        console.error('Load COC requests error:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + error.message, 'danger');
+        }
+        if (listDiv) listDiv.innerHTML = '<div class="text-center py-8 text-red-600">Lỗi tải dữ liệu</div>';
+    } finally {
+        if (loadingDiv) loadingDiv.classList.add('hidden');
+    }
+}
+
+function filterCocRequests() {
+    const statusFilter = document.getElementById('filter-coc-status')?.value || '';
+    const contractCodeFilter = (document.getElementById('filter-coc-contract-code')?.value || '').trim().toLowerCase();
+    const customerFilter = (document.getElementById('filter-coc-customer')?.value || '').trim().toLowerCase();
+    const dateFilter = document.getElementById('filter-coc-date')?.value || '';
+
+    filteredCocRequests = allCocRequests.filter(request => {
+        // Status filter
+        if (statusFilter && request.status !== statusFilter) return false;
+        
+        // Contract code filter
+        if (contractCodeFilter && !(request.contract_code || '').toLowerCase().includes(contractCodeFilter)) return false;
+        
+        // Customer name filter
+        if (customerFilter && !(request.customer_name || '').toLowerCase().includes(customerFilter)) return false;
+        
+        // Date filter
+        if (dateFilter) {
+            const requestDate = new Date(request.request_date).toISOString().split('T')[0];
+            if (requestDate !== dateFilter) return false;
+        }
+        
+        return true;
+    });
+
+    renderCocRequests();
+}
+
+function renderCocRequests() {
+    const listDiv = document.getElementById('coc-requests-list');
+    const emptyDiv = document.getElementById('coc-requests-empty');
+
+    if (!listDiv) return;
+
+    if (filteredCocRequests.length === 0) {
+        listDiv.innerHTML = '';
+        if (emptyDiv) emptyDiv.classList.remove('hidden');
+        return;
+    }
+
+    if (emptyDiv) emptyDiv.classList.add('hidden');
+
+    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+    const userRole = session.role || '';
+    const username = session.username || '';
+
+    listDiv.innerHTML = filteredCocRequests.map(request => {
+        const statusInfo = COC_STATUS[request.status] || COC_STATUS.pending;
+        const canIssue = userRole === 'SALEADMIN' && request.status === 'pending';
+        const canDisburse = userRole === 'KETOAN' && request.status === 'issued';
+        const canView = true; // All roles can view
+
+        return `
+            <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-${statusInfo.bgColor} text-${statusInfo.textColor}">
+                                ${statusInfo.label}
+                            </span>
+                            <span class="font-bold text-gray-800">${escapeHtml(request.contract_code || 'N/A')}</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                            <div><strong>Khách hàng:</strong> ${escapeHtml(request.customer_name || '-')}</div>
+                            <div><strong>Xe:</strong> ${escapeHtml(request.car_model || '-')} ${escapeHtml(request.car_version || '')} ${escapeHtml(request.car_color || '')}</div>
+                            <div><strong>Ngày đề nghị:</strong> ${request.request_date ? new Date(request.request_date).toLocaleDateString('vi-VN') : '-'}</div>
+                            ${request.actual_issue_date ? `<div><strong>Ngày cấp:</strong> ${new Date(request.actual_issue_date).toLocaleDateString('vi-VN')}</div>` : ''}
+                            ${request.po_number ? `<div><strong>PO:</strong> ${escapeHtml(request.po_number)}</div>` : ''}
+                            ${request.import_price ? `<div><strong>Giá nhập:</strong> ${parseFloat(request.import_price).toLocaleString('vi-VN')} VNĐ</div>` : ''}
+                            ${request.business_days_delayed > 0 ? `<div><strong>Số ngày trễ:</strong> ${request.business_days_delayed} ngày làm việc</div>` : ''}
+                            ${request.interest_amount > 0 ? `<div><strong>Lãi:</strong> ${parseFloat(request.interest_amount).toLocaleString('vi-VN')} VNĐ</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        ${canView ? `<button onclick="viewCocRequestDetail('${request.id}')" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm">
+                            <i class="fa-solid fa-eye mr-1"></i>Xem
+                        </button>` : ''}
+                        ${canIssue ? `<button onclick="openCocIssueModal('${request.id}')" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm">
+                            <i class="fa-solid fa-certificate mr-1"></i>Cấp COC
+                        </button>` : ''}
+                        ${canDisburse ? `<button onclick="openCocDisburseModal('${request.id}')" class="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition text-sm">
+                            <i class="fa-solid fa-upload mr-1"></i>Giải ngân
+                        </button>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function viewCocRequestDetail(requestId) {
+    // TODO: Implement detail modal
+    const request = allCocRequests.find(r => r.id === requestId);
+    if (!request) return;
+    
+    // For now, just show alert with key info
+    alert(`Chi tiết đề nghị COC:\n\nMã HĐ: ${request.contract_code}\nKhách hàng: ${request.customer_name}\nTrạng thái: ${COC_STATUS[request.status].label}`);
+}
+
+// Helper: Escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Expose functions to window
+if (typeof window !== 'undefined') {
+    window.loadCocRequests = loadCocRequests;
+    window.filterCocRequests = filterCocRequests;
+    window.viewCocRequestDetail = viewCocRequestDetail;
+    window.openCocIssueModal = openCocIssueModal;
+    window.openCocDisburseModal = function(requestId) {
+        // Find request from allCocRequests
+        const request = allCocRequests.find(r => r.id === requestId);
+        if (request && typeof window.openCocDisburseModalDirect === 'function') {
+            window.openCocDisburseModalDirect(request);
+        } else if (typeof window.openCocDisburseModalDirect === 'function') {
+            // If not found, just pass ID
+            window.openCocDisburseModalDirect(null, requestId);
+        }
+    };
+    
+    // Expose allCocRequests for modals
+    Object.defineProperty(window, 'allCocRequests', {
+        get: () => allCocRequests,
+        configurable: true
+    });
+    
+    console.log('✅ COC requests functions exposed to window');
+}
+
+// Auto-load when tab is active
+if (typeof document !== 'undefined') {
+    // Listen for tab activation
+    const observer = new MutationObserver((mutations) => {
+        const tab = document.getElementById('tab-coc-requests');
+        if (tab && tab.classList.contains('active') && allCocRequests.length === 0) {
+            loadCocRequests();
+        }
+    });
+    
+    setTimeout(() => {
+        const tabsContainer = document.getElementById('tabs-container');
+        if (tabsContainer) {
+            observer.observe(tabsContainer, { attributes: true, attributeFilter: ['class'], subtree: true });
+        }
+        
+        // Initial check
+        const tab = document.getElementById('tab-coc-requests');
+        if (tab && tab.classList.contains('active')) {
+            loadCocRequests();
+        }
+    }, 1000);
+}
+</script>
+
