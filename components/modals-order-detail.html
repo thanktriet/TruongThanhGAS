@@ -61,13 +61,24 @@
                     </div>
                 </div>
 
-                <!-- Attachments -->
-                <div id="detail-attachments-container" class="mb-6 bg-gray-50 rounded-lg p-5 border border-gray-200">
+                <!-- CCCD Images -->
+                <div class="mb-6 bg-gray-50 rounded-lg p-5 border border-gray-200">
                     <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <i class="fa-solid fa-paperclip mr-2"></i>File Đính Kèm
+                        <i class="fa-solid fa-id-card mr-2"></i>Hình ảnh CCCD
                     </h3>
-                    <div id="detail-attachments-list" class="space-y-2">
-                        <!-- Attachment links will be listed here -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase block mb-2">CCCD mặt trước:</label>
+                            <div id="detail-cccd-front-container" class="bg-white p-3 rounded-lg border border-gray-200">
+                                <p class="text-gray-400">Không có ảnh</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase block mb-2">CCCD mặt sau:</label>
+                            <div id="detail-cccd-back-container" class="bg-white p-3 rounded-lg border border-gray-200">
+                                <p class="text-gray-400">Không có ảnh</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -243,52 +254,42 @@ function renderOrderDetail(order) {
         : '-';
     document.getElementById('detail-customer-issue-place').textContent = customer.issue_place || '-';
     
-    // Attachments (all files)
-    const attachmentsContainer = document.getElementById('detail-attachments-container');
-    const attachmentsList = document.getElementById('detail-attachments-list');
+    // CCCD Images (from customer)
+    const cccdFrontContainer = document.getElementById('detail-cccd-front-container');
+    const cccdBackContainer = document.getElementById('detail-cccd-back-container');
     
-    let attachments = [];
-    if (order.attachments && Array.isArray(order.attachments)) {
-        attachments = order.attachments;
-    } else if (order.attachments && typeof order.attachments === 'string') {
-        try {
-            attachments = JSON.parse(order.attachments);
-        } catch (e) {
-            console.warn('[Order Detail] Error parsing attachments:', e);
-        }
+    if (customer.cccd_front_image_url) {
+        cccdFrontContainer.innerHTML = `
+            <a 
+                href="${customer.cccd_front_image_url}" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition"
+            >
+                <i class="fa-solid fa-file-image"></i>
+                <span class="truncate">${customer.cccd_front_image_url}</span>
+                <i class="fa-solid fa-external-link text-xs"></i>
+            </a>
+        `;
+    } else {
+        cccdFrontContainer.innerHTML = '<p class="text-gray-400">Không có ảnh</p>';
     }
     
-    console.log('[Order Detail] Attachments:', attachments);
-    
-    if (attachments && attachments.length > 0) {
-        attachmentsList.innerHTML = attachments.map((att, index) => {
-            const fileName = att.name || `File ${index + 1}`;
-            const fileUrl = att.url || '#';
-            return `
-                <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition">
-                    <div class="flex items-center gap-3 flex-1 min-w-0">
-                        <i class="fa-solid fa-file text-gray-400 text-xl flex-shrink-0"></i>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-800 truncate">${fileName}</p>
-                            <p class="text-xs text-gray-500 truncate">${fileUrl}</p>
-                        </div>
-                    </div>
-                    <a 
-                        href="${fileUrl}" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        class="ml-3 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition flex items-center gap-2 flex-shrink-0"
-                    >
-                        <i class="fa-solid fa-external-link"></i>
-                        Mở
-                    </a>
-                </div>
-            `;
-        }).join('');
-        attachmentsContainer.classList.remove('hidden');
+    if (customer.cccd_back_image_url) {
+        cccdBackContainer.innerHTML = `
+            <a 
+                href="${customer.cccd_back_image_url}" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition"
+            >
+                <i class="fa-solid fa-file-image"></i>
+                <span class="truncate">${customer.cccd_back_image_url}</span>
+                <i class="fa-solid fa-external-link text-xs"></i>
+            </a>
+        `;
     } else {
-        attachmentsList.innerHTML = '<p class="text-gray-400 text-center py-4">Không có file đính kèm</p>';
-        attachmentsContainer.classList.remove('hidden');
+        cccdBackContainer.innerHTML = '<p class="text-gray-400">Không có ảnh</p>';
     }
     
     // Order Info

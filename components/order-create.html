@@ -72,40 +72,35 @@
                         </div>
                     </div>
 
-                    <!-- Upload attachments -->
+                    <!-- Upload CCCD Images -->
                     <div class="mt-4">
-                        <label class="label">
-                            <i class="fa-solid fa-asterisk text-red-500 text-xs mr-1"></i>File đính kèm <span class="text-red-500">*</span>
-                            <span class="text-xs text-gray-500 font-normal ml-2">(Tối đa 4 file)</span>
-                        </label>
-                        <div class="space-y-3">
-                            <!-- File input -->
-                            <div class="flex items-center gap-3">
+                        <label class="label">Hình ảnh CCCD</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fa-solid fa-asterisk text-red-500 text-xs mr-1"></i>CCCD mặt trước <span class="text-red-500">*</span>
+                                </label>
                                 <input 
                                     type="file" 
-                                    id="order_attachments" 
-                                    name="order_attachments" 
+                                    id="cccd_front" 
+                                    name="cccd_front" 
                                     accept="image/*" 
-                                    class="hidden"
-                                    multiple
+                                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
                                     required
-                                    onchange="handleMultipleFileSelect(this)"
                                 >
-                                <label 
-                                    for="order_attachments" 
-                                    class="flex-1 cursor-pointer bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-100 transition"
-                                >
-                                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-400 mb-2"></i>
-                                    <p class="text-sm text-gray-600 font-medium">Chọn file đính kèm</p>
-                                    <p class="text-xs text-gray-500 mt-1">Tối đa 4 file (hình ảnh)</p>
-                                </label>
                             </div>
-                            <!-- File list preview -->
-                            <div id="attachment_preview_list" class="space-y-2 hidden">
-                                <p class="text-sm font-medium text-gray-700">Các file đã chọn:</p>
-                                <div id="attachment_preview_items" class="space-y-2">
-                                    <!-- File preview items will be inserted here -->
-                                </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fa-solid fa-asterisk text-red-500 text-xs mr-1"></i>CCCD mặt sau <span class="text-red-500">*</span>
+                                </label>
+                                <input 
+                                    type="file" 
+                                    id="cccd_back" 
+                                    name="cccd_back" 
+                                    accept="image/*" 
+                                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                                    required
+                                >
                             </div>
                         </div>
                     </div>
@@ -267,22 +262,23 @@ async function handleCreateOrder(event) {
         return;
     }
 
-    // Validate required attachments
-    const attachmentInput = document.getElementById('order_attachments');
-    const attachmentFiles = attachmentInput ? Array.from(attachmentInput.files || []) : [];
+    // Validate required CCCD images
+    const cccdFront = document.getElementById('cccd_front').files[0];
+    const cccdBack = document.getElementById('cccd_back').files[0];
     
-    if (attachmentFiles.length === 0) {
+    if (!cccdFront) {
         if (typeof window.showToast === 'function') {
-            window.showToast('Vui lòng đính kèm ít nhất 1 file', 'warning');
+            window.showToast('Vui lòng đính kèm hình CCCD mặt trước', 'warning');
         }
-        if (attachmentInput) attachmentInput.focus();
+        document.getElementById('cccd_front').focus();
         return;
     }
     
-    if (attachmentFiles.length > 4) {
+    if (!cccdBack) {
         if (typeof window.showToast === 'function') {
-            window.showToast('Chỉ được đính kèm tối đa 4 file', 'warning');
+            window.showToast('Vui lòng đính kèm hình CCCD mặt sau', 'warning');
         }
+        document.getElementById('cccd_back').focus();
         return;
     }
 
@@ -301,18 +297,21 @@ async function handleCreateOrder(event) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang xử lý...';
     
-    const attachments = [];
+    let cccdFrontUrl = null;
+    let cccdBackUrl = null;
 
     // Upload files to Google Drive
     try {
         console.log('📤 Starting file upload to Google Drive...');
-        console.log('Number of files to upload:', attachmentFiles.length);
-        attachmentFiles.forEach((file, index) => {
-            console.log(`  File ${index + 1}: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
-        });
+        console.log('CCCD Front:', cccdFront?.name);
+        console.log('CCCD Back:', cccdBack?.name);
         
         // Upload to Google Drive
         let uploadResult = null;
+        const allFiles = [
+            { file: cccdFront, type: 'cccd_front' },
+            { file: cccdBack, type: 'cccd_back' }
+        ];
         
         // Upload to Google Drive
         if (window.googleDocsAPI && window.googleDocsAPI.uploadFiles) {
@@ -322,10 +321,10 @@ async function handleCreateOrder(event) {
             const cccd = formData.get('cccd').trim();
             const timestamp = Date.now();
             
-            attachmentFiles.forEach((file, index) => {
+            allFiles.forEach(({ file, type }) => {
                 const ext = file.name.split('.').pop();
-                const sanitizedOriginalName = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_]/g, '_');
-                const newName = `Order_${cccd}_${sanitizedOriginalName}_${timestamp}_${index + 1}.${ext}`;
+                const prefix = type === 'cccd_front' ? 'CCCD_Front' : 'CCCD_Back';
+                const newName = `${prefix}_${cccd}_${timestamp}.${ext}`;
                 const renamedFile = new File([file], newName, { type: file.type });
                 dataTransfer.items.add(renamedFile);
             });
@@ -354,7 +353,7 @@ async function handleCreateOrder(event) {
             if (hasUrls) {
                 console.log('✅ Upload successful, mapping files to URLs...');
                 
-                // Map all uploaded files to attachments array
+                // Map files to URLs based on filename
                 console.log('📋 Processing uploaded files. Total:', uploadResult.urls.length);
                 console.log('📋 Upload result URLs:', uploadResult.urls);
                 
@@ -362,29 +361,39 @@ async function handleCreateOrder(event) {
                     console.log(`Processing file ${index + 1}/${uploadResult.urls.length}:`, uploadedFile);
                     
                     const fileUrl = uploadedFile.url || uploadedFile;
-                    const fileName = uploadedFile.name || `File ${index + 1}`;
+                    const fileName = (uploadedFile.name || '').toLowerCase();
                     
-                    attachments.push({
-                        name: fileName,
-                        url: fileUrl
-                    });
-                    
-                    console.log(`✅ Added file to attachments: ${fileName} → ${fileUrl}`);
+                    // Match file by filename
+                    if (fileName.includes('cccd_front')) {
+                        cccdFrontUrl = fileUrl;
+                        console.log('✅ CCCD Front URL:', fileUrl);
+                    } else if (fileName.includes('cccd_back')) {
+                        cccdBackUrl = fileUrl;
+                        console.log('✅ CCCD Back URL:', fileUrl);
+                    } else {
+                        // Fallback to index if filename doesn't match
+                        if (index === 0) {
+                            cccdFrontUrl = fileUrl;
+                            console.log('⚠️ Using index fallback for CCCD Front:', fileUrl);
+                        } else if (index === 1) {
+                            cccdBackUrl = fileUrl;
+                            console.log('⚠️ Using index fallback for CCCD Back:', fileUrl);
+                        }
+                    }
                 });
                 
-                console.log('\n📊 FINAL ATTACHMENTS:');
-                console.log('  - Total attachments:', attachments.length);
-                console.log('  - Attachments:', attachments);
-                console.log('  - Attachments JSON:', JSON.stringify(attachments));
+                console.log('\n📊 FINAL URLs:');
+                console.log('  - cccdFrontUrl:', cccdFrontUrl);
+                console.log('  - cccdBackUrl:', cccdBackUrl);
                 
-                if (attachments.length === 0) {
-                    console.error('\n❌ ERROR: No attachments after upload!');
+                if (!cccdFrontUrl || !cccdBackUrl) {
+                    console.error('\n❌ ERROR: Missing URLs after upload!');
                 } else {
-                    console.log('\n✅ SUCCESS: All files uploaded and added to attachments!');
+                    console.log('\n✅ SUCCESS: Both files uploaded successfully!');
                 }
                 
                 if (typeof window.showToast === 'function') {
-                    window.showToast(`Đã upload ${attachments.length} file thành công!`, 'success');
+                    window.showToast('Đã upload file thành công!', 'success');
                 }
             } else {
                 // Restore button
@@ -419,7 +428,7 @@ async function handleCreateOrder(event) {
         return;
     }
 
-    // Prepare customer data (no image URLs, all in attachments)
+    // Prepare customer data
     const customerData = {
         cccd: formData.get('cccd').trim(),
         name: formData.get('customer_name').trim(),
@@ -428,8 +437,8 @@ async function handleCreateOrder(event) {
         address: formData.get('address') || null,
         issue_date: formData.get('issue_date') || null,
         issue_place: formData.get('issue_place') || null,
-        cccd_front_image_url: null, // Không dùng nữa, tất cả trong attachments
-        cccd_back_image_url: null // Không dùng nữa
+        cccd_front_image_url: cccdFrontUrl,
+        cccd_back_image_url: cccdBackUrl
     };
 
     console.log('👤 Customer data to save:', customerData);
@@ -503,16 +512,12 @@ async function handleCreateOrder(event) {
 function resetOrderForm() {
     document.getElementById('form-create-order').reset();
     document.getElementById('customer-search-result').classList.add('hidden');
-    document.getElementById('attachment_preview_list').classList.add('hidden');
-    document.getElementById('attachment_preview_items').innerHTML = '';
     document.getElementById('search-cccd').value = '';
 }
 
 // Expose functions to window for inline event handlers
 // This must be at the end of the script, after all functions are defined
 if (typeof window !== 'undefined') {
-    window.handleMultipleFileSelect = handleMultipleFileSelect;
-    window.removeAttachmentFile = removeAttachmentFile;
     window.searchCustomerByCCCD = searchCustomerByCCCD;
     window.handleCreateOrder = handleCreateOrder;
     window.resetOrderForm = resetOrderForm;
