@@ -510,11 +510,16 @@ async function handleCreateOrder(event) {
         cccd_back_image_url: null // Không dùng nữa
     };
 
+    console.log('👤 Customer data to save:', customerData);
+    console.log('👤 VNeid URL being saved:', cccdVneidUrl);
+
     // Upsert customer
     const customerResult = await window.callAPI({
         action: 'upsert_customer',
         ...customerData
     });
+
+    console.log('👤 Customer upsert result:', customerResult);
 
     if (!customerResult.success) {
         // Restore button

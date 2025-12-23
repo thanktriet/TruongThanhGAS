@@ -1697,6 +1697,13 @@ async function supabaseUpsertCustomer(customerData) {
             updated_at: new Date().toISOString()
         };
 
+        console.log('[Upsert Customer] Saving customer data:', {
+            cccd: customer.cccd,
+            name: customer.name,
+            cccd_front_image_url: customer.cccd_front_image_url,
+            cccd_back_image_url: customer.cccd_back_image_url
+        });
+
         const { data, error } = await supabase
             .from('customers')
             .upsert(customer, { onConflict: 'cccd' })
