@@ -146,11 +146,146 @@ function populateSelect(selectId, options, selectedValue = null) {
     });
 }
 
-function renderMtdDetailTable(data) {
-    if (!data || data.length === 0) return;
+/**
+ * Render MTD Detail dưới dạng Cards (mobile-friendly)
+ */
+function renderMtdDetailCards(data) {
+    if (!data || data.length === 0) return '';
 
-    const container = document.getElementById('mtd-content');
-    if (!container) return;
+    const headers = data[0] || [];
+    const rows = data.slice(1) || [];
+    
+    // Parse headers để tách dòng xe và metrics
+    // Format: [Nhóm, TVBH, VF5_KHTN, VF5_HD, VF5_XHD, VF5_DoanhThu, VF6_KHTN, ...]
+    const carModels = [];
+    const metrics = ['KHTN', 'Hợp đồng', 'Xuất HĐ', 'Doanh thu'];
+    
+    // Extract car models từ headers (bỏ 2 cột đầu: Nhóm, TVBH)
+    for (let i = 2; i < headers.length; i += 4) {
+        const header = headers[i];
+        if (header) {
+            // Extract car model name (before first underscore)
+            const parts = header.split('_');
+            if (parts.length > 0 && !carModels.includes(parts[0])) {
+                carModels.push(parts[0]);
+            }
+        }
+    }
+    
+    let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+    
+    rows.forEach((row, rowIndex) => {
+        const group = row[0] || '';
+        const tvbh = row[1] || '';
+        const isTotalRow = group === 'TỔNG CỘNG';
+        
+        // Skip total row in cards (will show separately)
+        if (isTotalRow) return;
+        
+        // Card styling
+        const cardBg = 'bg-white border-gray-200';
+        const titleColor = 'text-gray-800';
+        
+        html += `<div class="border-2 ${cardBg} rounded-xl p-4 shadow-sm hover:shadow-md transition">`;
+        
+        // Card header
+        html += `<div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">`;
+        html += `<div class="flex-1 min-w-0">`;
+        if (group) {
+            html += `<div class="text-xs text-gray-500 font-medium mb-1">${escapeHtml(group)}</div>`;
+        }
+        html += `<h4 class="font-bold ${titleColor} text-base md:text-lg truncate">${escapeHtml(tvbh)}</h4>`;
+        html += `</div>`;
+        html += `</div>`;
+        
+        // Card body - Group by car model
+        html += `<div class="space-y-4">`;
+        
+        carModels.forEach((carModel, carIndex) => {
+            const startIndex = 2 + (carIndex * 4);
+            
+            // Get values for this car model
+            const khtn = row[startIndex] || 0;
+            const hopDong = row[startIndex + 1] || 0;
+            const xuatHD = row[startIndex + 2] || 0;
+            const doanhThu = row[startIndex + 3] || 0;
+            
+            // Car model section
+            html += `<div class="bg-orange-50 rounded-lg p-3 border border-orange-200">`;
+            html += `<div class="font-bold text-orange-800 text-sm mb-3 flex items-center gap-2">`;
+            html += `<i class="fa-solid fa-car"></i>`;
+            html += `<span>${escapeHtml(carModel)}</span>`;
+            html += `</div>`;
+            
+            // Metrics grid
+            html += `<div class="grid grid-cols-2 gap-2">`;
+            
+            const metricsData = [
+                { label: 'KHTN', value: khtn, icon: 'fa-users', color: 'text-blue-600' },
+                { label: 'Hợp đồng', value: hopDong, icon: 'fa-file-contract', color: 'text-green-600' },
+                { label: 'Xuất HĐ', value: xuatHD, icon: 'fa-file-export', color: 'text-purple-600' },
+                { label: 'Doanh thu', value: doanhThu, icon: 'fa-money-bill-wave', color: 'text-indigo-600' }
+            ];
+            
+            metricsData.forEach(metric => {
+                const formattedValue = typeof metric.value === 'number' 
+                    ? metric.value.toLocaleString('vi-VN') 
+                    : (metric.value || '0');
+                
+                html += `<div class="bg-white rounded p-2 border border-gray-100">`;
+                html += `<div class="flex items-center gap-1.5 mb-1">`;
+                html += `<i class="fa-solid ${metric.icon} ${metric.color} text-xs"></i>`;
+                html += `<span class="text-xs text-gray-600 font-medium">${metric.label}</span>`;
+                html += `</div>`;
+                html += `<div class="text-sm font-bold ${titleColor}">${formattedValue}</div>`;
+                html += `</div>`;
+            });
+            
+            html += `</div>`; // End metrics grid
+            html += `</div>`; // End car model section
+        });
+        
+        html += `</div>`; // End card body
+        html += `</div>`; // End card
+    });
+    
+    html += '</div>';
+    
+    // Add summary
+    const totalRow = rows.find(r => r[0] === 'TỔNG CỘNG');
+    if (totalRow) {
+        html += `<div class="mt-6 p-4 bg-gradient-to-r from-orange-100 to-orange-50 rounded-xl border-2 border-orange-300">`;
+        html += `<div class="flex items-center gap-2 mb-3">`;
+        html += `<i class="fa-solid fa-calculator text-orange-600 text-lg"></i>`;
+        html += `<h4 class="font-bold text-orange-900 text-lg">TỔNG CỘNG</h4>`;
+        html += `</div>`;
+        html += `<div class="grid grid-cols-2 md:grid-cols-4 gap-3">`;
+        
+        carModels.forEach((carModel, carIndex) => {
+            const startIndex = 2 + (carIndex * 4);
+            const doanhThu = totalRow[startIndex + 3] || 0;
+            const formattedDoanhThu = typeof doanhThu === 'number' 
+                ? doanhThu.toLocaleString('vi-VN') 
+                : (doanhThu || '0');
+            
+            html += `<div class="bg-white rounded-lg p-3 border border-orange-200">`;
+            html += `<div class="text-xs text-gray-600 font-medium mb-1">${escapeHtml(carModel)}</div>`;
+            html += `<div class="text-base font-bold text-orange-900">${formattedDoanhThu}</div>`;
+            html += `</div>`;
+        });
+        
+        html += `</div>`;
+        html += `</div>`;
+    }
+    
+    return html;
+}
+
+/**
+ * Render MTD Detail Table (desktop view)
+ */
+function renderMtdDetailTable(data) {
+    if (!data || data.length === 0) return '';
 
     // Tách headers và rows
     const headers = data[0] || [];
@@ -160,16 +295,16 @@ function renderMtdDetailTable(data) {
     const numCols = headers.length;
 
     // Tạo table HTML
-    let html = '<div class="overflow-x-auto rounded-lg border border-gray-200">';
-    html += '<table class="min-w-full divide-y divide-gray-200 bg-white">';
+    let html = '<div class="hidden lg:block overflow-x-auto rounded-lg border border-gray-200">';
+    html += '<table class="min-w-full divide-y divide-gray-200 bg-white text-sm">';
     
     // Header row
-    html += '<thead class="bg-orange-50">';
+    html += '<thead class="bg-orange-50 sticky top-0 z-10">';
     html += '<tr>';
     headers.forEach((header, index) => {
         const isFirstTwo = index < 2; // Nhóm và TVBH
         const isNumeric = !isFirstTwo; // Các cột còn lại là số
-        html += `<th class="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-bold text-gray-700 text-left ${isFirstTwo ? 'sticky left-0 z-10 bg-orange-50' : ''} ${isNumeric ? 'text-right' : ''}">`;
+        html += `<th class="px-4 py-3 font-bold text-gray-700 text-left ${isFirstTwo ? 'sticky left-0 z-20 bg-orange-50' : ''} ${isNumeric ? 'text-right' : ''} whitespace-nowrap">`;
         html += escapeHtml(header);
         html += '</th>';
     });
@@ -180,13 +315,13 @@ function renderMtdDetailTable(data) {
     html += '<tbody class="bg-white divide-y divide-gray-200">';
     rows.forEach((row, rowIndex) => {
         const isTotalRow = row[0] === 'TỔNG CỘNG';
-        const rowClass = isTotalRow ? 'bg-orange-100 font-bold' : 'hover:bg-gray-50';
+        const rowClass = isTotalRow ? 'bg-orange-100 font-bold hover:bg-orange-200' : 'hover:bg-gray-50';
         html += `<tr class="${rowClass}">`;
         
         row.forEach((cell, colIndex) => {
             const isFirstTwo = colIndex < 2;
             const isNumeric = !isFirstTwo && colIndex < numCols;
-            const cellClass = `${isFirstTwo ? 'sticky left-0 z-10 ' + (isTotalRow ? 'bg-orange-100' : 'bg-white') : ''} ${isNumeric ? 'text-right font-mono' : ''} px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm`;
+            const cellClass = `${isFirstTwo ? 'sticky left-0 z-10 ' + (isTotalRow ? 'bg-orange-100' : 'bg-white') : ''} ${isNumeric ? 'text-right font-mono' : ''} px-4 py-3`;
             html += `<td class="${cellClass}">`;
             html += escapeHtml(cell || '');
             html += '</td>';
@@ -197,11 +332,26 @@ function renderMtdDetailTable(data) {
     html += '</table>';
     html += '</div>';
 
+    return html;
+}
+
+function renderMtdDetailTable(data) {
+    const container = document.getElementById('mtd-content');
+    if (!container) return;
+
+    // Mobile: Cards view, Desktop: Table view
+    let html = '<div class="lg:hidden">';
+    html += renderMtdDetailCards(data);
+    html += '</div>';
+    html += renderMtdDetailTable(data);
+
     // Thêm summary info
+    const headers = data[0] || [];
+    const rows = data.slice(1) || [];
     html += `<div class="mt-4 text-xs md:text-sm text-gray-600">
         <i class="fa-solid fa-info-circle mr-2"></i>
         Tổng số TVBH: ${rows.filter(r => r[0] !== 'TỔNG CỘNG').length} | 
-        Tổng số dòng xe: ${Math.floor((headers.length - 2) / 3)}
+        Tổng số dòng xe: ${Math.floor((headers.length - 2) / 4)}
     </div>`;
 
     container.innerHTML = html;
