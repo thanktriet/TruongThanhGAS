@@ -401,25 +401,7 @@ async function assignContractCodeFromDetail() {
     if (typeof Swal !== 'undefined') {
         const { value: contractCode } = await Swal.fire({
             title: 'Cấp Mã Đơn Hàng',
-            html: `
-                <div style="text-align: left;">
-                    <p class="text-sm text-gray-600 mb-3">Nhập mã đơn hàng (số hợp đồng) cho đơn hàng này:</p>
-                    <input 
-                        id="swal-contract-code" 
-                        type="text" 
-                        class="swal2-input" 
-                        placeholder="Ví dụ: S10601-22-33-44"
-                        style="text-transform: uppercase;"
-                        maxlength="50"
-                    >
-                </div>
-            `,
-            showCancelButton: true,
-            confirmButtonText: '<i class="fa-solid fa-key mr-2"></i>Cấp mã',
-            cancelButtonText: 'Hủy',
-            confirmButtonColor: '#16a34a',
-            cancelButtonColor: '#6b7280',
-            allowOutsideClick: false,
+            text: 'Nhập mã đơn hàng (số hợp đồng) cho đơn hàng này:',
             input: 'text',
             inputPlaceholder: 'Ví dụ: S10601-22-33-44',
             inputAttributes: {
@@ -427,6 +409,12 @@ async function assignContractCodeFromDetail() {
                 style: 'text-transform: uppercase;'
             },
             inputValue: '',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fa-solid fa-key mr-2"></i>Cấp mã',
+            cancelButtonText: 'Hủy',
+            confirmButtonColor: '#16a34a',
+            cancelButtonColor: '#6b7280',
+            allowOutsideClick: false,
             inputValidator: (value) => {
                 if (!value || !value.trim()) {
                     return 'Vui lòng nhập mã đơn hàng';
