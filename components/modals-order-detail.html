@@ -278,18 +278,34 @@ function renderOrderDetail(order) {
     // Ủy nhiệm chi Image (from attachments)
     const uyNhiemChiContainer = document.getElementById('detail-uy-nhiem-chi-container');
     let attachments = [];
+    
+    console.log('[Order Detail] Order attachments raw:', order.attachments);
+    console.log('[Order Detail] Order attachments type:', typeof order.attachments);
+    
     if (order.attachments && Array.isArray(order.attachments)) {
         attachments = order.attachments;
+        console.log('[Order Detail] Attachments is array:', attachments);
     } else if (order.attachments && typeof order.attachments === 'string') {
         try {
             attachments = JSON.parse(order.attachments);
+            console.log('[Order Detail] Parsed attachments from string:', attachments);
         } catch (e) {
-            console.warn('Error parsing attachments:', e);
+            console.warn('[Order Detail] Error parsing attachments:', e);
         }
+    } else {
+        console.log('[Order Detail] No attachments found');
     }
     
     // Find ủy nhiệm chi from attachments
-    const uyNhiemChiAttachment = attachments.find(att => att.type === 'uy_nhiem_chi' || (att.name && att.name.toLowerCase().includes('uy nhiem chi')));
+    console.log('[Order Detail] Searching for ủy nhiệm chi in attachments:', attachments);
+    const uyNhiemChiAttachment = attachments.find(att => {
+        const hasType = att.type === 'uy_nhiem_chi';
+        const hasName = att.name && att.name.toLowerCase().includes('uy nhiem chi');
+        console.log('[Order Detail] Checking attachment:', att, 'hasType:', hasType, 'hasName:', hasName);
+        return hasType || hasName;
+    });
+    
+    console.log('[Order Detail] Found ủy nhiệm chi attachment:', uyNhiemChiAttachment);
     
     if (uyNhiemChiAttachment && uyNhiemChiAttachment.url) {
         uyNhiemChiContainer.innerHTML = `
