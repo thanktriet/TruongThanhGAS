@@ -284,7 +284,7 @@ function renderMtdDetailCards(data) {
 /**
  * Render MTD Detail Table (desktop view)
  */
-function renderMtdDetailTable(data) {
+function renderMtdDetailTableDesktop(data) {
     if (!data || data.length === 0) return '';
 
     // Tách headers và rows
@@ -343,7 +343,7 @@ function renderMtdDetailTable(data) {
     let html = '<div class="lg:hidden">';
     html += renderMtdDetailCards(data);
     html += '</div>';
-    html += renderMtdDetailTable(data);
+    html += renderMtdDetailTableDesktop(data);
 
     // Thêm summary info
     const headers = data[0] || [];
