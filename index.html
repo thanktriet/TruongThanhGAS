@@ -88,43 +88,47 @@
             </div>
 
             <!-- Mobile Bottom Navigation -->
-            <div class="bg-white border-t border-gray-200 flex justify-around items-center p-2 md:hidden z-20 sticky bottom-0">
+            <div class="bg-white border-t-2 border-gray-300 flex justify-around items-center py-2 md:hidden z-20 fixed bottom-0 left-0 right-0 shadow-lg">
                 <button 
                     onclick="toggleMobileMenu()" 
-                    class="flex flex-col items-center justify-center p-2 text-gray-600 active:text-blue-600 touch-manipulation min-w-[60px]"
+                    class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-600 active:text-blue-600 touch-manipulation min-w-[60px] transition-colors"
+                    id="mobile-nav-bottom-menu"
                     aria-label="Menu"
                 >
-                    <i class="fa-solid fa-bars text-xl mb-1"></i>
+                    <i class="fa-solid fa-bars text-xl mb-0.5"></i>
                     <span class="text-[9px] font-medium">Menu</span>
                 </button>
                 <button 
-                    onclick="switchTab('create');" 
-                    class="flex flex-col items-center justify-center p-2 text-gray-600 active:text-blue-600 touch-manipulation min-w-[60px]"
+                    onclick="switchTab('create'); updateMobileBottomNav('create');" 
+                    class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-600 active:text-blue-600 touch-manipulation min-w-[60px] transition-colors"
                     id="mobile-nav-bottom-create"
                     aria-label="Tạo mới"
                 >
-                    <i class="fa-solid fa-plus-circle text-xl mb-1"></i>
+                    <i class="fa-solid fa-plus-circle text-xl mb-0.5"></i>
                     <span class="text-[9px] font-medium">Tạo</span>
                 </button>
                 <button 
-                    onclick="switchTab('approval');" 
-                    class="flex flex-col items-center justify-center p-2 text-gray-600 active:text-blue-600 touch-manipulation min-w-[60px]"
+                    onclick="switchTab('approval'); updateMobileBottomNav('approval');" 
+                    class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-600 active:text-blue-600 touch-manipulation min-w-[60px] transition-colors"
                     id="mobile-nav-bottom-approval"
                     aria-label="Duyệt"
                 >
-                    <i class="fa-solid fa-list-check text-xl mb-1"></i>
+                    <i class="fa-solid fa-list-check text-xl mb-0.5"></i>
                     <span class="text-[9px] font-medium">Duyệt</span>
                 </button>
                 <button 
-                    onclick="switchTab('profile');" 
-                    class="flex flex-col items-center justify-center p-2 text-gray-600 active:text-blue-600 touch-manipulation min-w-[60px] hidden"
+                    onclick="switchTab('profile'); updateMobileBottomNav('profile');" 
+                    class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-600 active:text-blue-600 touch-manipulation min-w-[60px] transition-colors hidden"
                     id="mobile-nav-bottom-profile"
                     aria-label="Hồ sơ"
                 >
-                    <i class="fa-solid fa-user text-xl mb-1"></i>
+                    <i class="fa-solid fa-user text-xl mb-0.5"></i>
                     <span class="text-[9px] font-medium">Hồ sơ</span>
                 </button>
             </div>
+            
+            <!-- Spacer for mobile bottom nav -->
+            <div class="h-16 md:hidden"></div>
         </main>
     </div>
 

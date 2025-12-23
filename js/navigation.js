@@ -11,6 +11,9 @@ function switchTab(id) {
     if (tab) tab.classList.add('active');
     if (nav) nav.classList.add('active');
     
+    // Update mobile bottom nav active state
+    updateMobileBottomNav(id);
+    
     if (id === 'approval') loadApprovalList();
     if (id === 'my-requests') loadMyRequests();
     if (id === 'profile') loadProfile();
@@ -62,6 +65,44 @@ function switchTab(id) {
         setTimeout(() => {
             // Không auto-load, chờ user chọn tháng và click "Lọc"
         }, 300);
+    }
+}
+
+/**
+ * Update mobile bottom navigation active state
+ */
+function updateMobileBottomNav(activeTabId) {
+    // Reset all buttons
+    const allButtons = document.querySelectorAll('[id^="mobile-nav-bottom-"]');
+    allButtons.forEach(btn => {
+        btn.classList.remove('text-blue-600');
+        btn.classList.add('text-gray-500');
+        const icon = btn.querySelector('i');
+        if (icon) {
+            icon.classList.remove('text-blue-600');
+        }
+    });
+    
+    // Set active button
+    let activeButtonId = null;
+    if (activeTabId === 'create') {
+        activeButtonId = 'mobile-nav-bottom-create';
+    } else if (activeTabId === 'approval') {
+        activeButtonId = 'mobile-nav-bottom-approval';
+    } else if (activeTabId === 'profile') {
+        activeButtonId = 'mobile-nav-bottom-profile';
+    }
+    
+    if (activeButtonId) {
+        const activeBtn = document.getElementById(activeButtonId);
+        if (activeBtn) {
+            activeBtn.classList.remove('text-gray-500');
+            activeBtn.classList.add('text-blue-600');
+            const icon = activeBtn.querySelector('i');
+            if (icon) {
+                icon.classList.add('text-blue-600');
+            }
+        }
     }
 }
 
