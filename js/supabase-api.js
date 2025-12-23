@@ -2003,18 +2003,18 @@ async function supabaseAssignContractCode(orderId, contractCode, assignedSale) {
         }
 
         // Kiểm tra mã đã tồn tại chưa
-        const { data: existingOrder, error: checkError } = await supabase
+        // Sử dụng .filter() với .eq() để tránh lỗi encoding với ký tự đặc biệt
+        const { data: existingOrders, error: checkError } = await supabase
             .from('orders')
             .select('id')
             .eq('contract_code', contractCode.trim())
-            .neq('id', orderId)
-            .single();
+            .neq('id', orderId);
 
-        if (checkError && checkError.code !== 'PGRST116') {
+        if (checkError) {
             throw checkError;
         }
 
-        if (existingOrder) {
+        if (existingOrders && existingOrders.length > 0) {
             return { success: false, message: 'Mã đơn hàng đã tồn tại: ' + contractCode };
         }
 
