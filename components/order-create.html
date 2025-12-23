@@ -472,8 +472,7 @@ async function handleCreateOrder(event) {
         car_version: formData.get('car_version') || null,
         car_color: formData.get('car_color') || null,
         payment_method: formData.get('payment_method') || null,
-        notes: formData.get('notes') || null,
-        attachments: attachments.length > 0 ? attachments : []
+        notes: formData.get('notes') || null
     };
 
     console.log('📦 Creating order with data:', orderData);
