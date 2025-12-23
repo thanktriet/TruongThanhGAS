@@ -54,20 +54,30 @@ async function callAPI(data) {
         // Sử dụng Supabase API - 100% migration
         if (window.supabaseAPI && window.supabaseAPI.callAPI) {
             console.log('[callAPI] Using Supabase API, calling window.supabaseAPI.callAPI...');
-            const result = await window.supabaseAPI.callAPI(data);
-            console.log('[callAPI] Got result from supabaseAPI.callAPI:', { 
-                success: result.success, 
-                hasData: !!result.data,
-                message: result.message 
-            });
+            console.log('[callAPI] window.supabaseAPI.callAPI type:', typeof window.supabaseAPI.callAPI);
             
-            // Nếu lookup_contract cần fallback về Google Apps Script
-            if (data.action === 'lookup_contract' && result.fallback) {
-                console.log('[callAPI] lookup_contract: Falling back to Google Apps Script');
-                return await callGoogleAppsScriptAPI(data);
+            try {
+                const result = await window.supabaseAPI.callAPI(data);
+                console.log('[callAPI] Got result from supabaseAPI.callAPI:', { 
+                    success: result ? result.success : 'no success field',
+                    hasData: result ? !!result.data : false,
+                    message: result ? result.message : 'no message',
+                    resultType: typeof result,
+                    resultKeys: result ? Object.keys(result) : []
+                });
+                
+                // Nếu lookup_contract cần fallback về Google Apps Script
+                if (data.action === 'lookup_contract' && result && result.fallback) {
+                    console.log('[callAPI] lookup_contract: Falling back to Google Apps Script');
+                    return await callGoogleAppsScriptAPI(data);
+                }
+                
+                return result;
+            } catch (callError) {
+                console.error('[callAPI] Error calling window.supabaseAPI.callAPI:', callError);
+                console.error('[callAPI] Error stack:', callError.stack);
+                throw callError;
             }
-            
-            return result;
         }
         
         // Nếu Supabase chưa sẵn sàng, báo lỗi
