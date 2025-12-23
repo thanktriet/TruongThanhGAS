@@ -1716,8 +1716,8 @@ function openChangePasswordModal() {
     }
     
     // Use the new modal component
-    if (typeof window.openChangePasswordModalModal === 'function') {
-        window.openChangePasswordModalModal(false); // false = not first login
+    if (typeof window.openChangePasswordModal === 'function') {
+        window.openChangePasswordModal(false); // false = not first login
     } else if (typeof showChangePasswordModal === 'function') {
         // Fallback to old SweetAlert method
         showChangePasswordModal(session, false);
