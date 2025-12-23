@@ -420,23 +420,34 @@ async function assignContractCodeFromDetail() {
             confirmButtonColor: '#16a34a',
             cancelButtonColor: '#6b7280',
             allowOutsideClick: false,
-            preConfirm: () => {
-                const input = Swal.getPopup().querySelector('#swal-contract-code');
-                const code = input ? input.value.trim().toUpperCase() : '';
-                if (!code) {
+            input: 'text',
+            inputPlaceholder: 'Ví dụ: S10601-22-33-44',
+            inputAttributes: {
+                maxlength: '50',
+                style: 'text-transform: uppercase;'
+            },
+            inputValue: '',
+            inputValidator: (value) => {
+                if (!value || !value.trim()) {
+                    return 'Vui lòng nhập mã đơn hàng';
+                }
+                return null;
+            },
+            preConfirm: (value) => {
+                if (!value || !value.trim()) {
                     Swal.showValidationMessage('Vui lòng nhập mã đơn hàng');
                     return false;
                 }
-                return code;
+                return value.trim().toUpperCase();
             },
             didOpen: () => {
-                const input = Swal.getPopup().querySelector('#swal-contract-code');
+                // Auto uppercase on input
+                const input = Swal.getInput();
                 if (input) {
-                    input.focus();
-                    // Auto uppercase on input
                     input.addEventListener('input', (e) => {
                         e.target.value = e.target.value.toUpperCase();
                     });
+                    input.focus();
                 }
             }
         });
