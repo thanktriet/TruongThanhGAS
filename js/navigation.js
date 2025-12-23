@@ -106,4 +106,9 @@ function updateMobileBottomNav(activeTabId) {
     }
 }
 
+// Export to window
+if (typeof window !== 'undefined') {
+    window.switchTab = switchTab;
+    window.updateMobileBottomNav = updateMobileBottomNav;
+}
 
