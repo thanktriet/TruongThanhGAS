@@ -116,6 +116,7 @@ function updateMenuItemsByPermissions(user) {
     toggleMenuByPermission('nav-hdmb-create', 'create_order', ['TVBH', 'SALE']);
     toggleMenuByPermission('nav-thoa-thuan-create', 'create_order', ['TVBH', 'SALE']);
     toggleMenuByPermission('nav-de-nghi-create', 'create_order', ['TVBH', 'SALE']);
+    toggleMenuByPermission('nav-document-files', 'create_order', ['TVBH', 'SALE', 'ADMIN', 'SALEADMIN']);
     toggleMenuByPermission('nav-reports-dashboard', 'view_dashboard', ['ADMIN', 'GDKD', 'BKS', 'BGD']);
     toggleMenuByPermission('nav-reports-mtd-detail', 'view_dashboard', ['ADMIN', 'GDKD', 'BKS', 'BGD']);
     

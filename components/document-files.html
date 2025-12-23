@@ -1,0 +1,219 @@
+<div id="tab-document-files" class="tab-content">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-indigo-50 px-4 py-3 md:px-6 md:py-4 border-b border-indigo-100">
+            <h2 class="text-base md:text-lg font-bold text-indigo-800">
+                <i class="fa-solid fa-folder-open mr-2"></i>Quản Lý Tài Liệu Đã Tạo
+            </h2>
+            <p class="text-xs text-gray-600 mt-1">Quản lý các file HĐMB, Thỏa Thuận, Đề Nghị đã tạo</p>
+        </div>
+        
+        <div class="p-3 md:p-6">
+            <!-- Filters -->
+            <div class="mb-4 md:mb-6 bg-gray-50 p-3 md:p-4 rounded-lg border border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="label text-xs md:text-sm mb-1 block">Loại tài liệu</label>
+                        <select id="filter-document-type" class="input text-sm md:text-base w-full" onchange="filterDocumentFiles()">
+                            <option value="">Tất cả</option>
+                            <option value="HDMB">Hợp Đồng Mua Bán</option>
+                            <option value="THOA_THUAN">Thỏa Thuận Lãi Suất</option>
+                            <option value="DE_NGHI">Đề Nghị Giải Ngân</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label text-xs md:text-sm mb-1 block">Mã hợp đồng</label>
+                        <input type="text" id="filter-contract-code" class="input text-sm md:text-base w-full" placeholder="Tìm theo mã..." onkeyup="filterDocumentFiles()">
+                    </div>
+                    <div>
+                        <label class="label text-xs md:text-sm mb-1 block">Khách hàng</label>
+                        <input type="text" id="filter-customer" class="input text-sm md:text-base w-full" placeholder="Tìm theo tên..." onkeyup="filterDocumentFiles()">
+                    </div>
+                    <div>
+                        <label class="label text-xs md:text-sm mb-1 block">Ngày tạo</label>
+                        <input type="date" id="filter-date" class="input text-sm md:text-base w-full" onchange="filterDocumentFiles()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files List -->
+            <div id="document-files-loading" class="text-center py-8 hidden">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <p class="mt-2 text-gray-600">Đang tải...</p>
+            </div>
+
+            <div id="document-files-list" class="space-y-3">
+                <!-- Files will be rendered here -->
+            </div>
+
+            <div id="document-files-empty" class="text-center py-12 hidden">
+                <i class="fa-solid fa-folder-open text-4xl text-gray-300 mb-3"></i>
+                <p class="text-gray-500">Chưa có tài liệu nào</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allDocumentFiles = [];
+let filteredDocumentFiles = [];
+
+async function loadDocumentFiles() {
+    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+    if (!session || !session.username) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng đăng nhập lại', 'danger');
+        }
+        return;
+    }
+
+    const loadingDiv = document.getElementById('document-files-loading');
+    const listDiv = document.getElementById('document-files-list');
+    const emptyDiv = document.getElementById('document-files-empty');
+
+    if (loadingDiv) loadingDiv.classList.remove('hidden');
+    if (listDiv) listDiv.innerHTML = '';
+    if (emptyDiv) emptyDiv.classList.add('hidden');
+
+    try {
+        const result = await window.callAPI({
+            action: 'get_document_files',
+            username: session.username,
+            role: session.role
+        });
+
+        if (loadingDiv) loadingDiv.classList.add('hidden');
+
+        if (result.success && result.data && Array.isArray(result.data)) {
+            allDocumentFiles = result.data;
+            filteredDocumentFiles = [...allDocumentFiles];
+            renderDocumentFiles(filteredDocumentFiles);
+        } else {
+            if (emptyDiv) emptyDiv.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error loading document files:', error);
+        if (loadingDiv) loadingDiv.classList.add('hidden');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi tải danh sách tài liệu', 'danger');
+        }
+    }
+}
+
+function filterDocumentFiles() {
+    const documentType = document.getElementById('filter-document-type')?.value || '';
+    const contractCode = (document.getElementById('filter-contract-code')?.value || '').toLowerCase();
+    const customer = (document.getElementById('filter-customer')?.value || '').toLowerCase();
+    const date = document.getElementById('filter-date')?.value || '';
+
+    filteredDocumentFiles = allDocumentFiles.filter(file => {
+        if (documentType && file.document_type !== documentType) return false;
+        if (contractCode && !file.contract_code?.toLowerCase().includes(contractCode)) return false;
+        if (customer && !file.customer_name?.toLowerCase().includes(customer)) return false;
+        if (date) {
+            const fileDate = new Date(file.created_at).toISOString().split('T')[0];
+            if (fileDate !== date) return false;
+        }
+        return true;
+    });
+
+    renderDocumentFiles(filteredDocumentFiles);
+}
+
+function renderDocumentFiles(files) {
+    const container = document.getElementById('document-files-list');
+    const emptyDiv = document.getElementById('document-files-empty');
+
+    if (!container) return;
+
+    if (!files || files.length === 0) {
+        container.innerHTML = '';
+        if (emptyDiv) emptyDiv.classList.remove('hidden');
+        return;
+    }
+
+    if (emptyDiv) emptyDiv.classList.add('hidden');
+
+    container.innerHTML = files.map(file => {
+        const typeLabels = {
+            'HDMB': { label: 'Hợp Đồng Mua Bán', icon: 'fa-file-contract', color: 'purple', bgColor: 'purple-100', textColor: 'purple-800' },
+            'THOA_THUAN': { label: 'Thỏa Thuận Lãi Suất', icon: 'fa-handshake', color: 'indigo', bgColor: 'indigo-100', textColor: 'indigo-800' },
+            'DE_NGHI': { label: 'Đề Nghị Giải Ngân', icon: 'fa-file-invoice-dollar', color: 'orange', bgColor: 'orange-100', textColor: 'orange-800' }
+        };
+
+        const typeInfo = typeLabels[file.document_type] || { 
+            label: file.document_type, 
+            icon: 'fa-file', 
+            color: 'gray',
+            bgColor: 'gray-100',
+            textColor: 'gray-800'
+        };
+        
+        const createdDate = new Date(file.created_at).toLocaleString('vi-VN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        return `
+            <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2 flex-wrap">
+                            <i class="fa-solid ${typeInfo.icon} text-${typeInfo.color}-600"></i>
+                            <span class="font-bold text-gray-800">${typeInfo.label}</span>
+                            <span class="text-xs bg-${typeInfo.bgColor} text-${typeInfo.textColor} px-2 py-1 rounded">${file.document_type}</span>
+                        </div>
+                        ${file.file_name ? `<p class="text-sm text-gray-600 mb-1"><i class="fa-solid fa-file mr-1"></i>${escapeHtml(file.file_name)}</p>` : ''}
+                        ${file.contract_code ? `<p class="text-sm text-gray-600 mb-1"><i class="fa-solid fa-hashtag mr-1"></i>Mã: <strong>${escapeHtml(file.contract_code)}</strong></p>` : ''}
+                        ${file.customer_name ? `<p class="text-sm text-gray-600 mb-1"><i class="fa-solid fa-user mr-1"></i>KH: ${escapeHtml(file.customer_name)}</p>` : ''}
+                        <p class="text-xs text-gray-500"><i class="fa-solid fa-calendar mr-1"></i>${createdDate}</p>
+                        <p class="text-xs text-gray-500"><i class="fa-solid fa-user-circle mr-1"></i>Người tạo: ${escapeHtml(file.created_by || 'N/A')}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="${file.file_url}" target="_blank" class="bg-blue-600 text-white font-bold px-4 py-2 rounded hover:bg-blue-700 transition flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-external-link"></i>
+                            <span class="hidden md:inline">Mở file</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Auto load when tab is shown
+if (typeof window !== 'undefined') {
+    window.loadDocumentFiles = loadDocumentFiles;
+    window.filterDocumentFiles = filterDocumentFiles;
+    
+    window.addEventListener('load', () => {
+        // Update title first
+        // Load files when tab is activated
+        const observer = new MutationObserver((mutations) => {
+            const documentFilesTab = document.getElementById('tab-document-files');
+            if (documentFilesTab && documentFilesTab.classList.contains('active')) {
+                loadDocumentFiles();
+            }
+        });
+        
+        const container = document.querySelector('.tab-content');
+        if (container) {
+            observer.observe(container.parentElement, { 
+                attributes: true, 
+                attributeFilter: ['class'],
+                subtree: true 
+            });
+        }
+    });
+}
+</script>
+

@@ -284,6 +284,26 @@ async function submitDeNghiCreateForm(event) {
         submitBtn.innerHTML = originalText;
 
         if (result.success) {
+            // Lưu thông tin file vào database
+            try {
+                const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+                if (session && session.username) {
+                    await window.callAPI({
+                        action: 'save_document_file',
+                        document_type: 'DE_NGHI',
+                        file_url: result.fileUrl || '',
+                        file_id: result.fileId || null,
+                        file_name: result.fileName || formData.SO_HOP_DONG || `DeNghi_${formData.TEN_KHACH_HANG}`,
+                        contract_code: formData.SO_HOP_DONG || null,
+                        customer_name: formData.TEN_KHACH_HANG,
+                        created_by: session.username
+                    });
+                }
+            } catch (saveError) {
+                console.warn('Failed to save document file to database:', saveError);
+                // Không cần hiển thị lỗi vì file đã tạo thành công
+            }
+            
             if (typeof window.showToast === 'function') {
                 window.showToast('Tạo Đề nghị giải ngân thành công!', 'success');
             } else {

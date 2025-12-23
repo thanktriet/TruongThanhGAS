@@ -1804,6 +1804,102 @@ async function supabaseGetMyOrders(username, filters = {}) {
 }
 
 /**
+ * Lưu thông tin file đã tạo vào database
+ */
+async function supabaseSaveDocumentFile(fileData) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        const { data, error } = await supabase
+            .from('document_files')
+            .insert({
+                document_type: fileData.document_type,
+                file_url: fileData.file_url,
+                file_id: fileData.file_id || null,
+                file_name: fileData.file_name || null,
+                contract_code: fileData.contract_code || null,
+                customer_name: fileData.customer_name || null,
+                created_by: fileData.created_by,
+                related_order_id: fileData.related_order_id || null,
+                metadata: fileData.metadata || {}
+            })
+            .select()
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data };
+    } catch (e) {
+        console.error('Save document file error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Lấy danh sách file đã tạo
+ * @param {string} username - Username của user
+ * @param {string} role - Role của user
+ * @param {Object} filters - Filters (document_type, contract_code, customer_name, date_from, date_to)
+ */
+async function supabaseGetDocumentFiles(username, role, filters = {}) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        let query = supabase
+            .from('document_files')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        // Filter theo user (trừ admin và saleadmin)
+        if (role !== 'ADMIN' && role !== 'SALEADMIN') {
+            query = query.eq('created_by', username);
+        }
+
+        // Filter theo document_type
+        if (filters.document_type) {
+            query = query.eq('document_type', filters.document_type);
+        }
+
+        // Filter theo contract_code
+        if (filters.contract_code) {
+            query = query.ilike('contract_code', `%${filters.contract_code}%`);
+        }
+
+        // Filter theo customer_name
+        if (filters.customer_name) {
+            query = query.ilike('customer_name', `%${filters.customer_name}%`);
+        }
+
+        // Filter theo ngày
+        if (filters.date_from) {
+            query = query.gte('created_at', filters.date_from);
+        }
+        if (filters.date_to) {
+            query = query.lte('created_at', filters.date_to);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data || [] };
+    } catch (e) {
+        console.error('Get document files error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
  * SaleAdmin lấy danh sách tất cả đơn hàng (ưu tiên chưa có mã)
  */
 async function supabaseGetOrdersForSaleAdmin(filters = {}) {
@@ -2495,7 +2591,7 @@ async function supabaseCreateSalesPolicy(policyData) {
             return { success: false, message: 'Chỉ ADMIN mới có quyền tạo chính sách bán hàng' };
         }
 
-        // ✅ SECURITY: Kiểm tra permission nếu có hàm hasPermission
+  pú      // ✅ SECURITY: Kiểm tra permission nếu có hàm hasPermission
         if (typeof hasPermission === 'function' && !hasPermission(session, 'manage_sales_policies')) {
             return { success: false, message: 'Bạn không có quyền quản lý chính sách bán hàng' };
         }
@@ -3699,6 +3795,13 @@ async function callSupabaseAPI(data) {
             case 'assign_contract_code':
                 return await supabaseAssignContractCode(data.orderId, data.contract_code, data.assigned_sale);
             
+            // Document Files API
+            case 'save_document_file':
+                return await supabaseSaveDocumentFile(data);
+            
+            case 'get_document_files':
+                return await supabaseGetDocumentFiles(data.username, data.role, data.filters || {});
+            
             // Daily Reports API
             case 'submit_daily_report':
                 return await supabaseSubmitDailyReport(data);
@@ -3792,6 +3895,9 @@ window.supabaseAPI = {
     getMyOrders: supabaseGetMyOrders,
     getOrdersForSaleAdmin: supabaseGetOrdersForSaleAdmin,
     assignContractCode: supabaseAssignContractCode,
+    // Document Files API
+    saveDocumentFile: supabaseSaveDocumentFile,
+    getDocumentFiles: supabaseGetDocumentFiles,
     // Daily Reports API
     submitDailyReport: supabaseSubmitDailyReport,
     getTodayReport: supabaseGetTodayReport,
