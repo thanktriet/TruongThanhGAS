@@ -3741,6 +3741,7 @@ async function supabaseDeleteTvbhTarget(id) {
  */
 async function callSupabaseAPI(data) {
     const action = data.action;
+    console.log('[callSupabaseAPI] Called with action:', action, 'data keys:', Object.keys(data));
 
     try {
         switch (action) {
@@ -3828,6 +3829,11 @@ async function callSupabaseAPI(data) {
                 return await supabaseSaveDocumentFile(data);
             
             case 'get_document_files':
+                console.log('[callSupabaseAPI] Routing to supabaseGetDocumentFiles with:', {
+                    username: data.username,
+                    role: data.role,
+                    filters: data.filters
+                });
                 return await supabaseGetDocumentFiles(data.username, data.role, data.filters || {});
             
             // Daily Reports API
@@ -3896,10 +3902,12 @@ async function callSupabaseAPI(data) {
                 return await supabaseDeleteTvbhTarget(data.id);
             
             default:
+                console.warn('[callSupabaseAPI] Unknown action:', action);
                 return { success: false, message: 'Action không được hỗ trợ: ' + action };
         }
     } catch (e) {
-        console.error('Supabase API error:', e);
+        console.error('[callSupabaseAPI] Error:', e);
+        console.error('[callSupabaseAPI] Error stack:', e.stack);
         return { success: false, message: 'Lỗi: ' + e.message };
     }
 }
