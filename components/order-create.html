@@ -78,7 +78,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Hình CCCD trên VNeid *
+                                    <i class="fa-solid fa-asterisk text-red-500 text-xs mr-1"></i>Hình CCCD trên VNeid <span class="text-red-500">*</span>
                                 </label>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -87,6 +87,7 @@
                                         name="cccd_vneid" 
                                         accept="image/*" 
                                         class="hidden"
+                                        required
                                         onchange="handleFileSelect(this, 'cccd_vneid_preview')"
                                     >
                                     <label 
