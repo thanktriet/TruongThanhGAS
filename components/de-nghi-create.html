@@ -1,0 +1,266 @@
+<div id="tab-de-nghi-create" class="tab-content">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden max-w-5xl mx-auto">
+        <div class="bg-orange-50 px-4 py-3 md:px-6 md:py-4 border-b border-orange-100">
+            <h2 class="text-base md:text-lg font-bold text-orange-800">
+                <i class="fa-solid fa-file-invoice-dollar mr-2"></i>Tạo Đề Nghị Giải Ngân
+            </h2>
+        </div>
+        <div class="p-3 md:p-6">
+            <form id="form-de-nghi-create" onsubmit="submitDeNghiCreateForm(event)">
+                <!-- Tìm kiếm đơn hàng (optional) -->
+                <div class="mb-4 md:mb-6 bg-gray-50 p-3 md:p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-xs md:text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass text-orange-600"></i>
+                        Tìm kiếm đơn hàng (tùy chọn - để tự động điền thông tin)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="md:col-span-2">
+                            <input 
+                                type="text" 
+                                id="dngn-search-order" 
+                                class="input text-sm md:text-base w-full" 
+                                placeholder="Nhập mã hợp đồng hoặc tên khách hàng..."
+                                onkeypress="if(event.key === 'Enter') searchOrderForDeNghi(event)"
+                            >
+                        </div>
+                        <div>
+                            <button 
+                                type="button" 
+                                onclick="searchOrderForDeNghi(event)" 
+                                class="w-full bg-orange-600 text-white font-bold py-2.5 md:py-2 rounded-lg hover:bg-orange-700 active:bg-orange-800 transition touch-manipulation text-sm md:text-base"
+                            >
+                                <i class="fa-solid fa-search mr-2"></i>Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                    <div id="dngn-order-search-result" class="mt-3 hidden"></div>
+                </div>
+
+                <!-- Thông tin khách hàng -->
+                <div class="mb-4 md:mb-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">1. Thông tin Khách hàng</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Tên khách hàng *</label>
+                            <input name="ten_khach_hang" id="dngn-create-ten_khach_hang" class="input text-sm md:text-base w-full" required>
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Số hợp đồng *</label>
+                            <input name="so_hop_dong" id="dngn-create-so_hop_dong" class="input text-sm md:text-base w-full" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin đề nghị -->
+                <div class="mb-4 md:mb-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">2. Thông tin Đề nghị</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Tên ngân hàng vay *</label>
+                            <input name="ten_ngan_hang_vay" id="dngn-create-ten_ngan_hang_vay" class="input text-sm md:text-base w-full" placeholder="VD: Techcombank" required>
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Ngày cấp TBCV</label>
+                            <input name="ngay_captbcv" id="dngn-create-ngay_captbcv" type="date" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Loại xe</label>
+                            <input name="loai_xe" id="dngn-create-loai_xe" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Số tài khoản</label>
+                            <input name="so_tai_khoan" id="dngn-create-so_tai_khoan" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Số tiền đối ứng (VNĐ) *</label>
+                            <input name="so_tien_doi_ung" id="dngn-create-so_tien_doi_ung" type="text" class="input text-sm md:text-base w-full" placeholder="0" required oninput="if(window.formatMoneyInput)window.formatMoneyInput(this)">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Số tiền giải ngân (VNĐ) *</label>
+                            <input name="so_tien_giai_ngan" id="dngn-create-so_tien_giai_ngan" type="text" class="input text-sm md:text-base w-full" placeholder="0" required oninput="if(window.formatMoneyInput)window.formatMoneyInput(this)">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button 
+                        type="submit" 
+                        class="flex-1 bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 shadow-lg transition transform active:scale-95"
+                    >
+                        <i class="fa-solid fa-file-invoice-dollar mr-2"></i>Tạo Đề Nghị
+                    </button>
+                    <button 
+                        type="button" 
+                        onclick="resetDeNghiCreateForm()" 
+                        class="px-6 bg-gray-200 text-gray-700 font-bold py-3 rounded-lg hover:bg-gray-300 transition"
+                    >
+                        <i class="fa-solid fa-rotate-left mr-2"></i>Làm mới
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Search order for De Nghi
+async function searchOrderForDeNghi(event) {
+    event.preventDefault();
+    const searchInput = document.getElementById('dngn-search-order');
+    const searchTerm = searchInput.value.trim();
+    
+    if (!searchTerm) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng nhập mã hợp đồng hoặc tên khách hàng', 'warning');
+        }
+        return;
+    }
+
+    try {
+        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+        if (!session || !session.username) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Vui lòng đăng nhập lại', 'danger');
+            }
+            return;
+        }
+
+        const result = await window.callAPI({
+            action: 'get_my_orders',
+            username: session.username
+        });
+
+        const resultDiv = document.getElementById('dngn-order-search-result');
+        
+        if (result.success && result.data && Array.isArray(result.data)) {
+            const order = result.data.find(o => 
+                o.contract_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                o.customers?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            if (order) {
+                const customer = order.customers || {};
+                
+                // Fill form với dữ liệu từ order
+                document.getElementById('dngn-create-ten_khach_hang').value = customer.name || '';
+                document.getElementById('dngn-create-so_hop_dong').value = order.contract_code || '';
+                document.getElementById('dngn-create-loai_xe').value = order.car_model || '';
+                document.getElementById('dngn-create-ngay_captbcv').value = new Date().toISOString().split('T')[0];
+                
+                resultDiv.className = 'mt-3 p-3 bg-green-50 border border-green-200 rounded-lg';
+                resultDiv.innerHTML = `
+                    <p class="text-sm text-green-700">
+                        <i class="fa-solid fa-check-circle mr-2"></i>
+                        Đã tìm thấy đơn hàng: <strong>${order.contract_code}</strong> - <strong>${customer.name}</strong>
+                    </p>
+                `;
+                resultDiv.classList.remove('hidden');
+            } else {
+                resultDiv.className = 'mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg';
+                resultDiv.innerHTML = `
+                    <p class="text-sm text-blue-700">
+                        <i class="fa-solid fa-info-circle mr-2"></i>
+                        Không tìm thấy đơn hàng. Vui lòng nhập thông tin thủ công.
+                    </p>
+                `;
+                resultDiv.classList.remove('hidden');
+            }
+        } else {
+            resultDiv.className = 'mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg';
+            resultDiv.innerHTML = `
+                <p class="text-sm text-blue-700">
+                    <i class="fa-solid fa-info-circle mr-2"></i>
+                    Không tìm thấy đơn hàng. Vui lòng nhập thông tin thủ công.
+                </p>
+            `;
+            resultDiv.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error searching order:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi tìm kiếm đơn hàng', 'danger');
+        }
+    }
+}
+
+async function submitDeNghiCreateForm(event) {
+    event.preventDefault();
+    
+    const formData = {
+        ten_khach_hang: document.getElementById('dngn-create-ten_khach_hang').value.trim(),
+        so_hop_dong: document.getElementById('dngn-create-so_hop_dong').value.trim(),
+        ten_ngan_hang_vay: document.getElementById('dngn-create-ten_ngan_hang_vay').value.trim(),
+        ngay_captbcv: document.getElementById('dngn-create-ngay_captbcv').value || '',
+        loai_xe: document.getElementById('dngn-create-loai_xe').value.trim(),
+        so_tai_khoan: document.getElementById('dngn-create-so_tai_khoan').value.trim(),
+        so_tien_doi_ung: parseFloat(String(document.getElementById('dngn-create-so_tien_doi_ung').value || '0').replace(/\./g, '').replace(/\D/g, '')) || 0,
+        so_tien_giai_ngan: parseFloat(String(document.getElementById('dngn-create-so_tien_giai_ngan').value || '0').replace(/\./g, '').replace(/\D/g, '')) || 0
+    };
+
+    // Validate
+    if (!formData.ten_khach_hang || !formData.so_hop_dong || !formData.ten_ngan_hang_vay || !formData.so_tien_doi_ung || !formData.so_tien_giai_ngan) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+        } else {
+            alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+        }
+        return;
+    }
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tạo...';
+
+    try {
+        const result = await window.googleDocsAPI.createDeNghiGiaiNgan(formData);
+        
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+
+        if (result.success) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Tạo Đề nghị giải ngân thành công!', 'success');
+            } else {
+                alert('Tạo Đề nghị giải ngân thành công!');
+            }
+            resetDeNghiCreateForm();
+            
+            if (result.fileUrl) {
+                setTimeout(() => {
+                    window.open(result.fileUrl, '_blank');
+                }, 500);
+            }
+        } else {
+            const errorMsg = 'Lỗi: ' + (result.message || 'Không thể tạo Đề nghị giải ngân');
+            if (typeof window.showToast === 'function') {
+                window.showToast(errorMsg, 'danger');
+            } else {
+                alert(errorMsg);
+            }
+        }
+    } catch (error) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        const errorMsg = 'Lỗi: ' + error.message;
+        if (typeof window.showToast === 'function') {
+            window.showToast(errorMsg, 'danger');
+        } else {
+            alert(errorMsg);
+        }
+    }
+}
+
+function resetDeNghiCreateForm() {
+    document.getElementById('form-de-nghi-create').reset();
+    document.getElementById('dngn-order-search-result').classList.add('hidden');
+    document.getElementById('dngn-create-ngay_captbcv').value = new Date().toISOString().split('T')[0];
+}
+
+// Expose functions to window
+if (typeof window !== 'undefined') {
+    window.searchOrderForDeNghi = searchOrderForDeNghi;
+    window.submitDeNghiCreateForm = submitDeNghiCreateForm;
+    window.resetDeNghiCreateForm = resetDeNghiCreateForm;
+}
+</script>

@@ -132,6 +132,9 @@ async function loadAllComponents() {
     await loadComponentAppend('my-orders', 'tabs-container');
     await loadComponentAppend('orders-admin', 'tabs-container');
     await loadComponentAppend('daily-report', 'tabs-container');
+    await loadComponentAppend('hdmb-create', 'tabs-container');
+    await loadComponentAppend('thoa-thuan-create', 'tabs-container');
+    await loadComponentAppend('de-nghi-create', 'tabs-container');
     await loadComponentAppend('reports-dashboard', 'tabs-container');
     await loadComponentAppend('reports-mtd-detail', 'tabs-container');
     await loadComponentAppend('profile', 'tabs-container');

@@ -1,0 +1,421 @@
+<div id="tab-thoa-thuan-create" class="tab-content">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden max-w-5xl mx-auto">
+        <div class="bg-indigo-50 px-4 py-3 md:px-6 md:py-4 border-b border-indigo-100">
+            <h2 class="text-base md:text-lg font-bold text-indigo-800">
+                <i class="fa-solid fa-handshake mr-2"></i>Tạo Thỏa Thuận Lãi Suất
+            </h2>
+        </div>
+        <div class="p-3 md:p-6">
+            <form id="form-thoa-thuan-create" onsubmit="submitThoaThuanCreateForm(event)">
+                <!-- Tìm kiếm đơn hàng (optional) -->
+                <div class="mb-4 md:mb-6 bg-gray-50 p-3 md:p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-xs md:text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass text-indigo-600"></i>
+                        Tìm kiếm đơn hàng (tùy chọn - để tự động điền thông tin)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="md:col-span-2">
+                            <input 
+                                type="text" 
+                                id="tt-search-order" 
+                                class="input text-sm md:text-base w-full" 
+                                placeholder="Nhập mã hợp đồng hoặc tên khách hàng..."
+                                onkeypress="if(event.key === 'Enter') searchOrderForThoaThuan(event)"
+                            >
+                        </div>
+                        <div>
+                            <button 
+                                type="button" 
+                                onclick="searchOrderForThoaThuan(event)" 
+                                class="w-full bg-indigo-600 text-white font-bold py-2.5 md:py-2 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition touch-manipulation text-sm md:text-base"
+                            >
+                                <i class="fa-solid fa-search mr-2"></i>Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                    <div id="tt-order-search-result" class="mt-3 hidden"></div>
+                </div>
+
+                <!-- Chọn ngân hàng -->
+                <div class="mb-4 md:mb-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">1. Chọn ngân hàng</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <label class="flex items-center gap-2 cursor-pointer border rounded p-3 hover:bg-gray-50">
+                            <input type="radio" name="bank" value="techcom" class="radio" required>
+                            <span class="text-sm font-bold">Techcombank</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer border rounded p-3 hover:bg-gray-50">
+                            <input type="radio" name="bank" value="vpbank" class="radio">
+                            <span class="text-sm font-bold">VPBank</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer border rounded p-3 hover:bg-gray-50">
+                            <input type="radio" name="bank" value="tpbank" class="radio">
+                            <span class="text-sm font-bold">TPBank</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer border rounded p-3 hover:bg-gray-50">
+                            <input type="radio" name="bank" value="bidv" class="radio">
+                            <span class="text-sm font-bold">BIDV</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer border rounded p-3 hover:bg-gray-50">
+                            <input type="radio" name="bank" value="sacombank" class="radio">
+                            <span class="text-sm font-bold">Sacombank</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Thông tin khách hàng -->
+                <div class="mb-4 md:mb-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">2. Thông tin Khách hàng</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Họ tên Khách hàng *</label>
+                            <input name="ten_khach_hang" id="tt-create-ten_khach_hang" class="input text-sm md:text-base w-full" required>
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Số CCCD</label>
+                            <input name="cccd" id="tt-create-cccd" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Số điện thoại</label>
+                            <input name="dien_thoai" id="tt-create-dien_thoai" type="tel" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="label text-xs md:text-sm mb-1 block">Địa chỉ</label>
+                            <textarea name="dia_chi" id="tt-create-dia_chi" rows="2" class="input text-sm md:text-base w-full"></textarea>
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Ngày cấp CCCD</label>
+                            <input name="ngay_cap" id="tt-create-ngay_cap" type="date" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Nơi cấp CCCD</label>
+                            <input name="noi_cap" id="tt-create-noi_cap" class="input text-sm md:text-base w-full">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin hợp đồng vay -->
+                <div class="mb-4 md:mb-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">3. Thông tin Hợp đồng vay</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Số hợp đồng *</label>
+                            <input name="so_hop_dong" id="tt-create-so_hop_dong" class="input text-sm md:text-base w-full" required>
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Loại xe</label>
+                            <input name="loai_xe" id="tt-create-loai_xe" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Số khung</label>
+                            <input name="so_khung" id="tt-create-so_khung" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Số máy</label>
+                            <input name="so_may" id="tt-create-so_may" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Giá trị hợp đồng (VNĐ) *</label>
+                            <input name="gia_tri_hop_dong" id="tt-create-gia_tri_hop_dong" type="text" class="input text-sm md:text-base w-full" placeholder="0" required oninput="if(window.formatMoneyInput)window.formatMoneyInput(this); calculateThoaThuanCreate()">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Số tiền vay (VNĐ) *</label>
+                            <input name="so_tien_vay_so" id="tt-create-so_tien_vay_so" type="text" class="input text-sm md:text-base w-full" placeholder="0" required oninput="if(window.formatMoneyInput)window.formatMoneyInput(this); calculateThoaThuanCreate()">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Tỷ lệ vay (%)</label>
+                            <input name="ty_le_vay" id="tt-create-ty_le_vay" type="text" class="input text-sm md:text-base w-full bg-gray-100" readonly>
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Thời hạn vay (tháng)</label>
+                            <input name="thoi_han_vay" id="tt-create-thoi_han_vay" type="number" class="input text-sm md:text-base w-full" min="1">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="label text-xs md:text-sm mb-1 block">Số tiền vay (bằng chữ)</label>
+                            <input name="so_tien_vay_chu" id="tt-create-so_tien_vay_chu" type="text" class="input text-sm md:text-base w-full bg-gray-100" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin người đồng vay (optional) -->
+                <div class="mb-4 md:mb-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">4. Người đồng vay (nếu có)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Tên người đồng vay</label>
+                            <input name="ten_dong_vay" id="tt-create-ten_dong_vay" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">CCCD</label>
+                            <input name="cccd_dong_vay" id="tt-create-cccd_dong_vay" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">SĐT</label>
+                            <input name="dien_thoai_dong_vay" id="tt-create-dien_thoai_dong_vay" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Ngày cấp</label>
+                            <input name="ngay_cap_dong_vay" id="tt-create-ngay_cap_dong_vay" type="date" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Nơi cấp</label>
+                            <input name="noi_cap_dong_vay" id="tt-create-noi_cap_dong_vay" class="input text-sm md:text-base w-full">
+                        </div>
+                        <div>
+                            <label class="label text-xs md:text-sm mb-1 block">Địa chỉ</label>
+                            <input name="dia_chi_dong_vay" id="tt-create-dia_chi_dong_vay" class="input text-sm md:text-base w-full">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export PDF -->
+                <div class="mb-6">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="tt-create-export-pdf" class="w-5 h-5">
+                        <span class="text-sm font-medium">Xuất PDF</span>
+                    </label>
+                </div>
+
+                <div class="flex gap-3">
+                    <button 
+                        type="submit" 
+                        class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 shadow-lg transition transform active:scale-95"
+                    >
+                        <i class="fa-solid fa-handshake mr-2"></i>Tạo Thỏa Thuận
+                    </button>
+                    <button 
+                        type="button" 
+                        onclick="resetThoaThuanCreateForm()" 
+                        class="px-6 bg-gray-200 text-gray-700 font-bold py-3 rounded-lg hover:bg-gray-300 transition"
+                    >
+                        <i class="fa-solid fa-rotate-left mr-2"></i>Làm mới
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Search order for Thoa Thuan
+async function searchOrderForThoaThuan(event) {
+    event.preventDefault();
+    const searchInput = document.getElementById('tt-search-order');
+    const searchTerm = searchInput.value.trim();
+    
+    if (!searchTerm) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng nhập mã hợp đồng hoặc tên khách hàng', 'warning');
+        }
+        return;
+    }
+
+    try {
+        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+        if (!session || !session.username) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Vui lòng đăng nhập lại', 'danger');
+            }
+            return;
+        }
+
+        const result = await window.callAPI({
+            action: 'get_my_orders',
+            username: session.username
+        });
+
+        const resultDiv = document.getElementById('tt-order-search-result');
+        
+        if (result.success && result.data && Array.isArray(result.data)) {
+            const order = result.data.find(o => 
+                o.contract_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                o.customers?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            if (order) {
+                const customer = order.customers || {};
+                
+                // Fill form với dữ liệu từ order
+                document.getElementById('tt-create-ten_khach_hang').value = customer.name || '';
+                document.getElementById('tt-create-cccd').value = customer.cccd || '';
+                document.getElementById('tt-create-dien_thoai').value = customer.phone || '';
+                document.getElementById('tt-create-dia_chi').value = customer.address || '';
+                document.getElementById('tt-create-ngay_cap').value = customer.issue_date ? new Date(customer.issue_date).toISOString().split('T')[0] : '';
+                document.getElementById('tt-create-noi_cap').value = customer.issue_place || '';
+                
+                document.getElementById('tt-create-so_hop_dong').value = order.contract_code || '';
+                document.getElementById('tt-create-loai_xe').value = order.car_model || '';
+                
+                resultDiv.className = 'mt-3 p-3 bg-green-50 border border-green-200 rounded-lg';
+                resultDiv.innerHTML = `
+                    <p class="text-sm text-green-700">
+                        <i class="fa-solid fa-check-circle mr-2"></i>
+                        Đã tìm thấy đơn hàng: <strong>${order.contract_code}</strong> - <strong>${customer.name}</strong>
+                    </p>
+                `;
+                resultDiv.classList.remove('hidden');
+            } else {
+                resultDiv.className = 'mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg';
+                resultDiv.innerHTML = `
+                    <p class="text-sm text-blue-700">
+                        <i class="fa-solid fa-info-circle mr-2"></i>
+                        Không tìm thấy đơn hàng. Vui lòng nhập thông tin thủ công.
+                    </p>
+                `;
+                resultDiv.classList.remove('hidden');
+            }
+        } else {
+            resultDiv.className = 'mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg';
+            resultDiv.innerHTML = `
+                <p class="text-sm text-blue-700">
+                    <i class="fa-solid fa-info-circle mr-2"></i>
+                    Không tìm thấy đơn hàng. Vui lòng nhập thông tin thủ công.
+                </p>
+            `;
+            resultDiv.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error searching order:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi tìm kiếm đơn hàng', 'danger');
+        }
+    }
+}
+
+function calculateThoaThuanCreate() {
+    const giaTriHDStr = document.getElementById('tt-create-gia_tri_hop_dong').value.replace(/\./g, '').replace(/\D/g, '');
+    const soTienVayStr = document.getElementById('tt-create-so_tien_vay_so').value.replace(/\./g, '').replace(/\D/g, '');
+    
+    const giaTriHD = parseFloat(giaTriHDStr) || 0;
+    const soTienVay = parseFloat(soTienVayStr) || 0;
+    
+    // Cập nhật tỷ lệ vay
+    if (giaTriHD > 0 && soTienVay > 0) {
+        const tyLe = (soTienVay / giaTriHD) * 100;
+        document.getElementById('tt-create-ty_le_vay').value = tyLe.toFixed(2) + '%';
+    } else {
+        document.getElementById('tt-create-ty_le_vay').value = '';
+    }
+    
+    // Cập nhật số tiền vay bằng chữ
+    if (soTienVay > 0) {
+        if (typeof window.numberToWords === 'function') {
+            document.getElementById('tt-create-so_tien_vay_chu').value = window.numberToWords(soTienVay);
+        } else {
+            document.getElementById('tt-create-so_tien_vay_chu').value = '';
+        }
+    } else {
+        document.getElementById('tt-create-so_tien_vay_chu').value = '';
+    }
+}
+
+async function submitThoaThuanCreateForm(event) {
+    event.preventDefault();
+    
+    const bankRadio = document.querySelector('input[name="bank"]:checked');
+    
+    if (!bankRadio) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng chọn ngân hàng', 'warning');
+        } else {
+            alert('Vui lòng chọn ngân hàng');
+        }
+        return;
+    }
+
+    const giaTriHDStr = document.getElementById('tt-create-gia_tri_hop_dong').value.replace(/\./g, '').replace(/\D/g, '');
+    const soTienVayStr = document.getElementById('tt-create-so_tien_vay_so').value.replace(/\./g, '').replace(/\D/g, '');
+    
+    const formData = {
+        BANK: bankRadio.value,
+        TEN_KHACH_HANG: document.getElementById('tt-create-ten_khach_hang').value.trim(),
+        DIA_CHI: document.getElementById('tt-create-dia_chi').value.trim(),
+        DIEN_THOAI: document.getElementById('tt-create-dien_thoai').value.trim(),
+        CCCD: document.getElementById('tt-create-cccd').value.trim(),
+        NGAY_CAP: document.getElementById('tt-create-ngay_cap').value || '',
+        NOI_CAP: document.getElementById('tt-create-noi_cap').value.trim(),
+        SO_HOP_DONG: document.getElementById('tt-create-so_hop_dong').value.trim(),
+        LOAI_XE: document.getElementById('tt-create-loai_xe').value.trim(),
+        SO_KHUNG: document.getElementById('tt-create-so_khung').value.trim(),
+        SO_MAY: document.getElementById('tt-create-so_may').value.trim(),
+        GIA_TRI_HOP_DONG: parseFloat(giaTriHDStr) || 0,
+        SO_TIEN_VAY_SO: parseFloat(soTienVayStr) || 0,
+        SO_TIEN_VAY_CHU: document.getElementById('tt-create-so_tien_vay_chu').value.trim() || (typeof window.numberToWords === 'function' ? window.numberToWords(parseFloat(soTienVayStr) || 0) : ''),
+        TY_LE_VAY: document.getElementById('tt-create-ty_le_vay').value.replace('%', '') || '',
+        THOI_HAN_VAY: document.getElementById('tt-create-thoi_han_vay').value.trim() || '',
+        TEN_DONG_VAY: document.getElementById('tt-create-ten_dong_vay').value.trim() || '',
+        DIA_CHI_DONG_VAY: document.getElementById('tt-create-dia_chi_dong_vay').value.trim() || '',
+        DIEN_THOAI_DONG_VAY: document.getElementById('tt-create-dien_thoai_dong_vay').value.trim() || '',
+        CCCD_DONG_VAY: document.getElementById('tt-create-cccd_dong_vay').value.trim() || '',
+        NGAY_CAP_DONG_VAY: document.getElementById('tt-create-ngay_cap_dong_vay').value || '',
+        NOI_CAP_DONG_VAY: document.getElementById('tt-create-noi_cap_dong_vay').value.trim() || '',
+        EXPORT_PDF: document.getElementById('tt-create-export-pdf').checked ? 'yes' : 'no'
+    };
+
+    // Validate
+    if (!formData.SO_HOP_DONG || !formData.GIA_TRI_HOP_DONG || !formData.SO_TIEN_VAY_SO || !formData.TEN_KHACH_HANG) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+        } else {
+            alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+        }
+        return;
+    }
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tạo...';
+
+    try {
+        const result = await window.googleDocsAPI.createThoaThuan(formData);
+        
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+
+        if (result.success) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Tạo Thỏa thuận thành công!', 'success');
+            } else {
+                alert('Tạo Thỏa thuận thành công!');
+            }
+            resetThoaThuanCreateForm();
+            
+            if (result.docUrl) {
+                setTimeout(() => {
+                    window.open(result.docUrl, '_blank');
+                }, 500);
+            }
+        } else {
+            const errorMsg = 'Lỗi: ' + (result.message || 'Không thể tạo Thỏa thuận');
+            if (typeof window.showToast === 'function') {
+                window.showToast(errorMsg, 'danger');
+            } else {
+                alert(errorMsg);
+            }
+        }
+    } catch (error) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        const errorMsg = 'Lỗi: ' + error.message;
+        if (typeof window.showToast === 'function') {
+            window.showToast(errorMsg, 'danger');
+        } else {
+            alert(errorMsg);
+        }
+    }
+}
+
+function resetThoaThuanCreateForm() {
+    document.getElementById('form-thoa-thuan-create').reset();
+    document.getElementById('tt-order-search-result').classList.add('hidden');
+}
+
+// Expose functions to window
+if (typeof window !== 'undefined') {
+    window.searchOrderForThoaThuan = searchOrderForThoaThuan;
+    window.submitThoaThuanCreateForm = submitThoaThuanCreateForm;
+    window.resetThoaThuanCreateForm = resetThoaThuanCreateForm;
+    window.calculateThoaThuanCreate = calculateThoaThuanCreate;
+}
+</script>
