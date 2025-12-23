@@ -135,7 +135,9 @@ async function loadAllComponents() {
     await loadComponentAppend('hdmb-create', 'tabs-container');
     await loadComponentAppend('thoa-thuan-create', 'tabs-container');
     await loadComponentAppend('de-nghi-create', 'tabs-container');
+    console.log('[Components] Loading document-files component...');
     await loadComponentAppend('document-files', 'tabs-container');
+    console.log('[Components] document-files component loaded');
     await loadComponentAppend('reports-dashboard', 'tabs-container');
     await loadComponentAppend('reports-mtd-detail', 'tabs-container');
     await loadComponentAppend('profile', 'tabs-container');
