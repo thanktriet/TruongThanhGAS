@@ -1720,12 +1720,17 @@ function openChangePasswordModal() {
         showChangePasswordModal(session, false); // false = not first login
     } else if (typeof window.showChangePasswordModal === 'function') {
         window.showChangePasswordModal(session, false);
-    } else {
-        console.error('showChangePasswordModal function not found');
-        if (typeof window.showToast === 'function') {
-            window.showToast('Chức năng đổi mật khẩu chưa sẵn sàng', 'warning');
+        } else {
+            console.error('showChangePasswordModal function not found');
+            if (typeof window.showToast === 'function') {
+                window.showToast('Chức năng đổi mật khẩu chưa sẵn sàng', 'warning');
+            }
         }
-    };
+}
+
+// Export to window for use in onclick handlers
+if (typeof window !== 'undefined') {
+    window.openChangePasswordModal = openChangePasswordModal;
 }
 
 async function handleProfileUpdate(e) {
