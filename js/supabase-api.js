@@ -1848,6 +1848,8 @@ async function supabaseSaveDocumentFile(fileData) {
  */
 async function supabaseGetDocumentFiles(username, role, filters = {}) {
     try {
+        console.log('[Get Document Files] Called with:', { username, role, filters });
+        
         const supabase = initSupabase();
         if (!supabase) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
@@ -1859,8 +1861,15 @@ async function supabaseGetDocumentFiles(username, role, filters = {}) {
             .order('created_at', { ascending: false });
 
         // Filter theo user (trừ admin và saleadmin)
-        if (role !== 'ADMIN' && role !== 'SALEADMIN') {
+        // Normalize role để so sánh
+        const normalizedRole = role ? role.toUpperCase() : '';
+        console.log('[Get Document Files] Normalized role:', normalizedRole);
+        
+        if (normalizedRole !== 'ADMIN' && normalizedRole !== 'SALEADMIN') {
+            console.log('[Get Document Files] Filtering by created_by:', username);
             query = query.eq('created_by', username);
+        } else {
+            console.log('[Get Document Files] Admin/SaleAdmin - showing all files');
         }
 
         // Filter theo document_type
@@ -1886,15 +1895,23 @@ async function supabaseGetDocumentFiles(username, role, filters = {}) {
             query = query.lte('created_at', filters.date_to);
         }
 
+        console.log('[Get Document Files] Executing query...');
         const { data, error } = await query;
 
         if (error) {
+            console.error('[Get Document Files] Query error:', error);
             throw error;
         }
 
+        console.log('[Get Document Files] Query result:', { 
+            success: true, 
+            count: data ? data.length : 0,
+            data: data ? data.slice(0, 3).map(d => ({ id: d.id, document_type: d.document_type, created_by: d.created_by })) : []
+        });
+
         return { success: true, data: data || [] };
     } catch (e) {
-        console.error('Get document files error:', e);
+        console.error('[Get Document Files] Error:', e);
         return { success: false, message: 'Lỗi: ' + e.message };
     }
 }

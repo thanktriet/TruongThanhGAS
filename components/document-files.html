@@ -95,19 +95,24 @@ async function loadDocumentFiles() {
     if (emptyDiv) emptyDiv.classList.add('hidden');
 
     try {
+        console.log('[Document Files] Loading files for:', { username: session.username, role: session.role });
         const result = await window.callAPI({
             action: 'get_document_files',
             username: session.username,
             role: session.role
         });
 
+        console.log('[Document Files] API result:', result);
+
         if (loadingDiv) loadingDiv.classList.add('hidden');
 
         if (result.success && result.data && Array.isArray(result.data)) {
+            console.log('[Document Files] Received', result.data.length, 'files');
             allDocumentFiles = result.data;
             filteredDocumentFiles = [...allDocumentFiles];
             renderDocumentFiles(filteredDocumentFiles);
         } else {
+            console.warn('[Document Files] No data received:', result);
             if (emptyDiv) emptyDiv.classList.remove('hidden');
         }
     } catch (error) {

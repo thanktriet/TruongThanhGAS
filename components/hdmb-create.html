@@ -454,7 +454,17 @@ async function submitHDMBCreateForm(event) {
             try {
                 const session = JSON.parse(localStorage.getItem('user_session') || '{}');
                 if (session && session.username) {
-                    await window.callAPI({
+                    console.log('[HDMB Create] Saving file to database...', {
+                        document_type: 'HDMB',
+                        file_url: result.fileUrl,
+                        file_id: result.fileId,
+                        file_name: result.fileName || formData.so_hop_dong,
+                        contract_code: formData.so_hop_dong,
+                        customer_name: formData.khach_hang,
+                        created_by: session.username
+                    });
+                    
+                    const saveResult = await window.callAPI({
                         action: 'save_document_file',
                         document_type: 'HDMB',
                         file_url: result.fileUrl || '',
@@ -464,9 +474,13 @@ async function submitHDMBCreateForm(event) {
                         customer_name: formData.khach_hang,
                         created_by: session.username
                     });
+                    
+                    console.log('[HDMB Create] Save result:', saveResult);
+                } else {
+                    console.warn('[HDMB Create] No session found, cannot save to database');
                 }
             } catch (saveError) {
-                console.warn('Failed to save document file to database:', saveError);
+                console.error('[HDMB Create] Failed to save document file to database:', saveError);
                 // Không cần hiển thị lỗi vì file đã tạo thành công
             }
             
