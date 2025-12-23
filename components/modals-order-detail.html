@@ -64,20 +64,20 @@
                 <!-- CCCD Images -->
                 <div class="mb-6 bg-gray-50 rounded-lg p-5 border border-gray-200">
                     <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <i class="fa-solid fa-id-card mr-2"></i>Ảnh CCCD
+                        <i class="fa-solid fa-id-card mr-2"></i>Hình ảnh đính kèm
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- CCCD Front -->
+                        <!-- CCCD VNeid -->
                         <div>
-                            <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Mặt trước:</label>
-                            <div id="detail-cccd-front-container" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center bg-white min-h-[200px] flex items-center justify-center">
+                            <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Hình CCCD trên VNeid:</label>
+                            <div id="detail-cccd-vneid-container" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center bg-white min-h-[200px] flex items-center justify-center">
                                 <p class="text-gray-400">Không có ảnh</p>
                             </div>
                         </div>
-                        <!-- CCCD Back -->
+                        <!-- Ủy nhiệm chi -->
                         <div>
-                            <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Mặt sau:</label>
-                            <div id="detail-cccd-back-container" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center bg-white min-h-[200px] flex items-center justify-center">
+                            <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Hình ủy nhiệm chi (chuyển cọc):</label>
+                            <div id="detail-uy-nhiem-chi-container" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center bg-white min-h-[200px] flex items-center justify-center">
                                 <p class="text-gray-400">Không có ảnh</p>
                             </div>
                         </div>
@@ -321,26 +321,29 @@ function renderOrderDetail(order) {
         statusEl.innerHTML = '<span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-bold">Chờ cấp mã</span>';
     }
     
-    // Other Attachments
-    let attachments = [];
-    if (order.attachments && Array.isArray(order.attachments)) {
-        attachments = order.attachments;
-    } else if (order.attachments && typeof order.attachments === 'string') {
-        try {
-            attachments = JSON.parse(order.attachments);
-        } catch (e) {
-            console.warn('Error parsing attachments:', e);
+    // Other Attachments (exclude ủy nhiệm chi which is already displayed)
+    // Note: attachments was already parsed above for ủy nhiệm chi
+    if (!attachments || attachments.length === 0) {
+        // Re-parse if not already parsed
+        if (order.attachments && Array.isArray(order.attachments)) {
+            attachments = order.attachments;
+        } else if (order.attachments && typeof order.attachments === 'string') {
+            try {
+                attachments = JSON.parse(order.attachments);
+            } catch (e) {
+                console.warn('Error parsing attachments:', e);
+            }
         }
     }
     
     const otherAttachmentsContainer = document.getElementById('detail-other-attachments-container');
     const otherAttachmentsEl = document.getElementById('detail-other-attachments');
     
-    // Filter out CCCD images
+    // Filter out ủy nhiệm chi (already displayed separately)
     const otherAttachments = attachments.filter(att => {
         if (!att.url) return false;
-        const url = att.url.toLowerCase();
-        return !url.includes('cccd_front') && !url.includes('cccd_back');
+        // Exclude ủy nhiệm chi
+        return att.type !== 'uy_nhiem_chi' && !(att.name && att.name.toLowerCase().includes('uy nhiem chi'));
     });
     
     if (otherAttachments.length > 0) {

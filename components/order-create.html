@@ -423,18 +423,27 @@ async function handleCreateOrder(event) {
                 console.log('✅ Upload successful, converting to preview URLs...');
                 
                 // Map files to URLs based on order and convert to preview URLs
+                console.log('📋 Processing uploaded files. Total:', uploadResult.urls.length);
                 uploadResult.urls.forEach((uploadedFile, index) => {
+                    console.log(`Processing file ${index + 1}:`, uploadedFile);
                     const fileInfo = allFiles[index];
+                    console.log(`File info for index ${index}:`, fileInfo);
+                    
+                    if (!fileInfo) {
+                        console.warn(`⚠️ No file info for index ${index}`);
+                        return;
+                    }
+                    
                     const originalUrl = uploadedFile.url || uploadedFile;
                     const fileId = uploadedFile.id || null;
                     
                     // Convert to preview URL
                     const previewUrl = convertToPreviewUrl(originalUrl, fileId);
                     
-                    if (fileInfo && fileInfo.type === 'vneid') {
+                    if (fileInfo.type === 'vneid') {
                         cccdVneidUrl = previewUrl;
                         console.log('✅ VNeid URL (preview):', previewUrl);
-                    } else if (fileInfo && fileInfo.type === 'uy_nhiem_chi') {
+                    } else if (fileInfo.type === 'uy_nhiem_chi') {
                         attachments.push({
                             name: uploadedFile.name || 'Ủy nhiệm chi',
                             url: previewUrl,
@@ -442,7 +451,14 @@ async function handleCreateOrder(event) {
                             type: 'uy_nhiem_chi'
                         });
                         console.log('✅ Ủy nhiệm chi URL (preview):', previewUrl);
+                        console.log('✅ Attachments array now:', attachments);
                     }
+                });
+                
+                console.log('📊 Final URLs:', {
+                    cccdVneidUrl: cccdVneidUrl,
+                    attachments: attachments,
+                    attachmentsLength: attachments.length
                 });
                 
                 if (typeof window.showToast === 'function') {
