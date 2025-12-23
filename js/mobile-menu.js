@@ -319,23 +319,15 @@ if (typeof window !== 'undefined') {
     });
 }
 
-// Update bottom navigation active state
+// updateMobileBottomNav is now defined in navigation.js
+// This function is kept for backward compatibility but delegates to the main one
 function updateMobileBottomNav() {
-    const activeTab = document.querySelector('.tab-content.active');
-    if (!activeTab) return;
-    
-    const tabId = activeTab.id.replace('tab-', '');
-    
-    // Update all bottom nav buttons
-    document.querySelectorAll('[id^="mobile-nav-bottom-"]').forEach(btn => {
-        btn.classList.remove('text-blue-600');
-        btn.classList.add('text-gray-600');
-    });
-    
-    const activeBtn = document.getElementById(`mobile-nav-bottom-${tabId}`);
-    if (activeBtn) {
-        activeBtn.classList.remove('text-gray-600');
-        activeBtn.classList.add('text-blue-600');
+    if (typeof window.updateMobileBottomNav === 'function') {
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab) {
+            const tabId = activeTab.id.replace('tab-', '');
+            window.updateMobileBottomNav(tabId);
+        }
     }
 }
 
@@ -363,7 +355,7 @@ if (typeof window !== 'undefined') {
     window.closeMobileMenu = closeMobileMenu;
     window.syncMobileMenuItems = syncMobileMenuItems;
     window.updateMobileMenuActiveState = updateMobileMenuActiveState;
-    window.updateMobileBottomNav = updateMobileBottomNav;
+    // updateMobileBottomNav is defined in navigation.js, no need to expose here
     window.updateMobileBottomNavVisibility = updateMobileBottomNavVisibility;
     
     // Initialize on load
