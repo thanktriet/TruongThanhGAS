@@ -105,15 +105,31 @@
 <script>
 // Search order for De Nghi
 async function searchOrderForDeNghi(event) {
-    event.preventDefault();
+    if (event) {
+        event.preventDefault();
+    }
+    
+    console.log('[De Nghi Create] searchOrderForDeNghi called');
     const searchInput = document.getElementById('dngn-search-order');
+    if (!searchInput) {
+        console.error('[De Nghi Create] Search input not found');
+        return;
+    }
+    
     const searchTerm = searchInput.value.trim();
+    console.log('[De Nghi Create] Search term:', searchTerm);
     
     if (!searchTerm) {
         if (typeof window.showToast === 'function') {
             window.showToast('Vui lòng nhập mã hợp đồng hoặc tên khách hàng', 'warning');
         }
         return;
+    }
+
+    const resultDiv = document.getElementById('dngn-order-search-result');
+    if (resultDiv) {
+        resultDiv.innerHTML = '<div class="text-center py-2"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tìm kiếm...</div>';
+        resultDiv.classList.remove('hidden');
     }
 
     try {
@@ -125,60 +141,92 @@ async function searchOrderForDeNghi(event) {
             return;
         }
 
+        console.log('[De Nghi Create] Calling API get_my_orders...');
         const result = await window.callAPI({
             action: 'get_my_orders',
             username: session.username
         });
 
-        const resultDiv = document.getElementById('dngn-order-search-result');
+        console.log('[De Nghi Create] API result:', result);
         
         if (result.success && result.data && Array.isArray(result.data)) {
-            const order = result.data.find(o => 
-                o.contract_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                o.customers?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-            );
+            console.log('[De Nghi Create] Found', result.data.length, 'orders');
+            const order = result.data.find(o => {
+                const contractMatch = o.contract_code?.toLowerCase().includes(searchTerm.toLowerCase());
+                const nameMatch = o.customers?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+                const cccdMatch = o.customers?.cccd?.toLowerCase().includes(searchTerm.toLowerCase());
+                return contractMatch || nameMatch || cccdMatch;
+            });
 
             if (order) {
+                console.log('[De Nghi Create] Order found:', order);
                 const customer = order.customers || {};
                 
                 // Fill form với dữ liệu từ order
-                document.getElementById('dngn-create-ten_khach_hang').value = customer.name || '';
-                document.getElementById('dngn-create-so_hop_dong').value = order.contract_code || '';
-                document.getElementById('dngn-create-loai_xe').value = order.car_model || '';
-                document.getElementById('dngn-create-ngay_captbcv').value = new Date().toISOString().split('T')[0];
+                const tenKhachHangEl = document.getElementById('dngn-create-ten_khach_hang');
+                const soHopDongEl = document.getElementById('dngn-create-so_hop_dong');
+                const loaiXeEl = document.getElementById('dngn-create-loai_xe');
+                const ngayCaptbcvEl = document.getElementById('dngn-create-ngay_captbcv');
                 
-                resultDiv.className = 'mt-3 p-3 bg-green-50 border border-green-200 rounded-lg';
-                resultDiv.innerHTML = `
-                    <p class="text-sm text-green-700">
-                        <i class="fa-solid fa-check-circle mr-2"></i>
-                        Đã tìm thấy đơn hàng: <strong>${order.contract_code}</strong> - <strong>${customer.name}</strong>
-                    </p>
-                `;
-                resultDiv.classList.remove('hidden');
+                if (tenKhachHangEl) tenKhachHangEl.value = customer.name || '';
+                if (soHopDongEl) soHopDongEl.value = order.contract_code || '';
+                if (loaiXeEl) loaiXeEl.value = order.car_model || '';
+                if (ngayCaptbcvEl) ngayCaptbcvEl.value = new Date().toISOString().split('T')[0];
+                
+                if (resultDiv) {
+                    resultDiv.className = 'mt-3 p-3 bg-green-50 border border-green-200 rounded-lg';
+                    resultDiv.innerHTML = `
+                        <p class="text-sm text-green-700">
+                            <i class="fa-solid fa-check-circle mr-2"></i>
+                            Đã tìm thấy đơn hàng: <strong>${order.contract_code || 'Chưa có mã'}</strong> - <strong>${customer.name || ''}</strong>
+                        </p>
+                    `;
+                    resultDiv.classList.remove('hidden');
+                }
+                
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Đã tìm thấy và điền thông tin đơn hàng!', 'success');
+                }
             } else {
-                resultDiv.className = 'mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg';
+                console.log('[De Nghi Create] Order not found');
+                if (resultDiv) {
+                    resultDiv.className = 'mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg';
+                    resultDiv.innerHTML = `
+                        <p class="text-sm text-blue-700">
+                            <i class="fa-solid fa-info-circle mr-2"></i>
+                            Không tìm thấy đơn hàng. Vui lòng nhập thông tin thủ công.
+                        </p>
+                    `;
+                    resultDiv.classList.remove('hidden');
+                }
+            }
+        } else {
+            console.warn('[De Nghi Create] API result format unexpected:', result);
+            if (resultDiv) {
+                resultDiv.className = 'mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg';
                 resultDiv.innerHTML = `
-                    <p class="text-sm text-blue-700">
-                        <i class="fa-solid fa-info-circle mr-2"></i>
-                        Không tìm thấy đơn hàng. Vui lòng nhập thông tin thủ công.
+                    <p class="text-sm text-yellow-700">
+                        <i class="fa-solid fa-exclamation-triangle mr-2"></i>
+                        ${result.message || 'Không thể tải danh sách đơn hàng. Vui lòng thử lại.'}
                     </p>
                 `;
                 resultDiv.classList.remove('hidden');
             }
-        } else {
-            resultDiv.className = 'mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg';
+        }
+    } catch (error) {
+        console.error('[De Nghi Create] Error searching order:', error);
+        if (resultDiv) {
+            resultDiv.className = 'mt-3 p-3 bg-red-50 border border-red-200 rounded-lg';
             resultDiv.innerHTML = `
-                <p class="text-sm text-blue-700">
-                    <i class="fa-solid fa-info-circle mr-2"></i>
-                    Không tìm thấy đơn hàng. Vui lòng nhập thông tin thủ công.
+                <p class="text-sm text-red-700">
+                    <i class="fa-solid fa-exclamation-circle mr-2"></i>
+                    Lỗi: ${error.message || 'Không thể tìm kiếm đơn hàng'}
                 </p>
             `;
             resultDiv.classList.remove('hidden');
         }
-    } catch (error) {
-        console.error('Error searching order:', error);
         if (typeof window.showToast === 'function') {
-            window.showToast('Lỗi tìm kiếm đơn hàng', 'danger');
+            window.showToast('Lỗi tìm kiếm đơn hàng: ' + error.message, 'danger');
         }
     }
 }
