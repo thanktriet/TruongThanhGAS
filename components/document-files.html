@@ -382,16 +382,18 @@ if (typeof window !== 'undefined') {
     const MIN_LOAD_INTERVAL = 2000; // Minimum 2 seconds between loads
     
     // Wrapper function to prevent multiple simultaneous calls
-    const safeLoadDocumentFiles = () => {
+    const safeLoadDocumentFiles = async () => {
         const now = Date.now();
         if (isLoading || (now - lastLoadTime < MIN_LOAD_INTERVAL)) {
             return;
         }
         isLoading = true;
         lastLoadTime = now;
-        loadDocumentFiles().finally(() => {
+        try {
+            await loadDocumentFiles();
+        } finally {
             isLoading = false;
-        });
+        }
     };
     
     // Load files when tab is activated
