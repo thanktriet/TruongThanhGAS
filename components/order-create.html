@@ -422,28 +422,44 @@ async function handleCreateOrder(event) {
             if (hasUrls) {
                 console.log('✅ Upload successful, converting to preview URLs...');
                 
-                // Map files to URLs based on order and convert to preview URLs
+                // Map files to URLs based on filename (more reliable than index)
                 console.log('📋 Processing uploaded files. Total:', uploadResult.urls.length);
+                console.log('📋 All files info:', allFiles);
+                console.log('📋 Upload result URLs:', uploadResult.urls);
+                
                 uploadResult.urls.forEach((uploadedFile, index) => {
                     console.log(`Processing file ${index + 1}:`, uploadedFile);
-                    const fileInfo = allFiles[index];
-                    console.log(`File info for index ${index}:`, fileInfo);
-                    
-                    if (!fileInfo) {
-                        console.warn(`⚠️ No file info for index ${index}`);
-                        return;
-                    }
                     
                     const originalUrl = uploadedFile.url || uploadedFile;
                     const fileId = uploadedFile.id || null;
+                    const fileName = uploadedFile.name || '';
                     
                     // Convert to preview URL
                     const previewUrl = convertToPreviewUrl(originalUrl, fileId);
                     
-                    if (fileInfo.type === 'vneid') {
+                    // Match file by filename (more reliable than index)
+                    let matchedFile = null;
+                    if (fileName.toLowerCase().includes('cccd_vneid') || fileName.toLowerCase().includes('vneid')) {
+                        matchedFile = allFiles.find(f => f.type === 'vneid');
+                    } else if (fileName.toLowerCase().includes('uynhiemchi') || fileName.toLowerCase().includes('uy_nhiem_chi')) {
+                        matchedFile = allFiles.find(f => f.type === 'uy_nhiem_chi');
+                    } else {
+                        // Fallback to index if filename doesn't match
+                        matchedFile = allFiles[index];
+                        console.warn(`⚠️ Cannot match file by name, using index ${index}`);
+                    }
+                    
+                    if (!matchedFile) {
+                        console.warn(`⚠️ No matching file info for uploaded file:`, fileName);
+                        return;
+                    }
+                    
+                    console.log(`Matched file:`, matchedFile);
+                    
+                    if (matchedFile.type === 'vneid') {
                         cccdVneidUrl = previewUrl;
                         console.log('✅ VNeid URL (preview):', previewUrl);
-                    } else if (fileInfo.type === 'uy_nhiem_chi') {
+                    } else if (matchedFile.type === 'uy_nhiem_chi') {
                         attachments.push({
                             name: uploadedFile.name || 'Ủy nhiệm chi',
                             url: previewUrl,
