@@ -243,72 +243,52 @@ function renderOrderDetail(order) {
         : '-';
     document.getElementById('detail-customer-issue-place').textContent = customer.issue_place || '-';
     
-    // CCCD VNeid Image
-    const vneidContainer = document.getElementById('detail-cccd-vneid-container');
-    if (customer.cccd_front_image_url) {
-        vneidContainer.innerHTML = `
-            <img 
-                src="${customer.cccd_front_image_url}" 
-                alt="CCCD VNeid" 
-                class="max-w-full max-h-[300px] mx-auto rounded-lg cursor-pointer hover:opacity-80 transition"
-                onclick="window.open('${customer.cccd_front_image_url}', '_blank')"
-                onerror="this.parentElement.innerHTML='<p class=\\'text-red-400\\'>Không thể tải ảnh</p>'"
-            >
-            <p class="text-xs text-gray-500 mt-2">
-                <i class="fa-solid fa-magnifying-glass-plus mr-1"></i>Click để xem ảnh lớn
-            </p>
-        `;
-    } else {
-        vneidContainer.innerHTML = '<p class="text-gray-400">Không có ảnh</p>';
-    }
+    // Attachments (all files)
+    const attachmentsContainer = document.getElementById('detail-attachments-container');
+    const attachmentsList = document.getElementById('detail-attachments-list');
     
-    // Ủy nhiệm chi Image (from attachments)
-    const uyNhiemChiContainer = document.getElementById('detail-uy-nhiem-chi-container');
     let attachments = [];
-    
-    console.log('[Order Detail] Order attachments raw:', order.attachments);
-    console.log('[Order Detail] Order attachments type:', typeof order.attachments);
-    
     if (order.attachments && Array.isArray(order.attachments)) {
         attachments = order.attachments;
-        console.log('[Order Detail] Attachments is array:', attachments);
     } else if (order.attachments && typeof order.attachments === 'string') {
         try {
             attachments = JSON.parse(order.attachments);
-            console.log('[Order Detail] Parsed attachments from string:', attachments);
         } catch (e) {
             console.warn('[Order Detail] Error parsing attachments:', e);
         }
-    } else {
-        console.log('[Order Detail] No attachments found');
     }
     
-    // Find ủy nhiệm chi from attachments
-    console.log('[Order Detail] Searching for ủy nhiệm chi in attachments:', attachments);
-    const uyNhiemChiAttachment = attachments.find(att => {
-        const hasType = att.type === 'uy_nhiem_chi';
-        const hasName = att.name && att.name.toLowerCase().includes('uy nhiem chi');
-        console.log('[Order Detail] Checking attachment:', att, 'hasType:', hasType, 'hasName:', hasName);
-        return hasType || hasName;
-    });
+    console.log('[Order Detail] Attachments:', attachments);
     
-    console.log('[Order Detail] Found ủy nhiệm chi attachment:', uyNhiemChiAttachment);
-    
-    if (uyNhiemChiAttachment && uyNhiemChiAttachment.url) {
-        uyNhiemChiContainer.innerHTML = `
-            <img 
-                src="${uyNhiemChiAttachment.url}" 
-                alt="Ủy nhiệm chi" 
-                class="max-w-full max-h-[300px] mx-auto rounded-lg cursor-pointer hover:opacity-80 transition"
-                onclick="window.open('${uyNhiemChiAttachment.url}', '_blank')"
-                onerror="this.parentElement.innerHTML='<p class=\\'text-red-400\\'>Không thể tải ảnh</p>'"
-            >
-            <p class="text-xs text-gray-500 mt-2">
-                <i class="fa-solid fa-magnifying-glass-plus mr-1"></i>Click để xem ảnh lớn
-            </p>
-        `;
+    if (attachments && attachments.length > 0) {
+        attachmentsList.innerHTML = attachments.map((att, index) => {
+            const fileName = att.name || `File ${index + 1}`;
+            const fileUrl = att.url || '#';
+            return `
+                <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <i class="fa-solid fa-file text-gray-400 text-xl flex-shrink-0"></i>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-800 truncate">${fileName}</p>
+                            <p class="text-xs text-gray-500 truncate">${fileUrl}</p>
+                        </div>
+                    </div>
+                    <a 
+                        href="${fileUrl}" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        class="ml-3 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition flex items-center gap-2 flex-shrink-0"
+                    >
+                        <i class="fa-solid fa-external-link"></i>
+                        Mở
+                    </a>
+                </div>
+            `;
+        }).join('');
+        attachmentsContainer.classList.remove('hidden');
     } else {
-        uyNhiemChiContainer.innerHTML = '<p class="text-gray-400">Không có ảnh</p>';
+        attachmentsList.innerHTML = '<p class="text-gray-400 text-center py-4">Không có file đính kèm</p>';
+        attachmentsContainer.classList.remove('hidden');
     }
     
     // Order Info
