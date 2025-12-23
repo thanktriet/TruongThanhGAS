@@ -93,27 +93,36 @@ async function loadComponentAppend(componentName, targetElementId) {
             target.insertAdjacentHTML('beforeend', tempDiv.innerHTML);
             
             // Execute scripts after HTML is inserted
-            scriptsToExecute.forEach(scriptData => {
-                if (scriptData.src) {
-                    // External script - create and append
-                    const newScript = document.createElement('script');
-                    newScript.src = scriptData.src;
-                    newScript.type = scriptData.type;
-                    document.body.appendChild(newScript);
-                } else {
-                    // Inline script - execute directly
-                    const newScript = document.createElement('script');
-                    newScript.type = scriptData.type;
-                    newScript.textContent = scriptData.content;
-                    document.body.appendChild(newScript);
-                    document.body.removeChild(newScript);
+            console.log(`[Components] Found ${scriptsToExecute.length} scripts in ${componentName}`);
+            scriptsToExecute.forEach((scriptData, index) => {
+                try {
+                    if (scriptData.src) {
+                        // External script - create and append
+                        console.log(`[Components] Executing external script ${index + 1} for ${componentName}: ${scriptData.src}`);
+                        const newScript = document.createElement('script');
+                        newScript.src = scriptData.src;
+                        newScript.type = scriptData.type;
+                        document.body.appendChild(newScript);
+                    } else {
+                        // Inline script - execute directly
+                        console.log(`[Components] Executing inline script ${index + 1} for ${componentName} (length: ${scriptData.content ? scriptData.content.length : 0})`);
+                        const newScript = document.createElement('script');
+                        newScript.type = scriptData.type;
+                        newScript.textContent = scriptData.content;
+                        document.body.appendChild(newScript);
+                        document.body.removeChild(newScript);
+                    }
+                } catch (scriptError) {
+                    console.error(`[Components] Error executing script ${index + 1} for ${componentName}:`, scriptError);
                 }
             });
+            console.log(`[Components] Component ${componentName} loaded successfully`);
         } else {
-            console.error(`Target element not found: ${targetElementId}`);
+            console.error(`[Components] Target element not found: ${targetElementId}`);
         }
     } catch (error) {
-        console.error(`Error loading component ${componentName}:`, error);
+        console.error(`[Components] Error loading component ${componentName}:`, error);
+        console.error(`[Components] Error stack:`, error.stack);
     }
 }
 
