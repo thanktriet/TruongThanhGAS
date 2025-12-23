@@ -286,7 +286,13 @@ if (typeof window !== 'undefined') {
             originalSwitchTab(id);
             setTimeout(() => {
                 updateMobileMenuActiveState();
-                updateMobileBottomNav();
+                if (typeof window.updateMobileBottomNav === 'function') {
+                    const activeTab = document.querySelector('.tab-content.active');
+                    if (activeTab) {
+                        const tabId = activeTab.id.replace('tab-', '');
+                        window.updateMobileBottomNav(tabId);
+                    }
+                }
             }, 100);
         };
     }
@@ -320,16 +326,7 @@ if (typeof window !== 'undefined') {
 }
 
 // updateMobileBottomNav is now defined in navigation.js
-// This function is kept for backward compatibility but delegates to the main one
-function updateMobileBottomNav() {
-    if (typeof window.updateMobileBottomNav === 'function') {
-        const activeTab = document.querySelector('.tab-content.active');
-        if (activeTab) {
-            const tabId = activeTab.id.replace('tab-', '');
-            window.updateMobileBottomNav(tabId);
-        }
-    }
-}
+// DO NOT redefine it here to avoid infinite recursion
 
 // Show/hide bottom nav items based on permissions
 function updateMobileBottomNavVisibility() {
@@ -362,7 +359,13 @@ if (typeof window !== 'undefined') {
     window.addEventListener('load', function() {
         setTimeout(() => {
             updateMobileBottomNavVisibility();
-            updateMobileBottomNav();
+            if (typeof window.updateMobileBottomNav === 'function') {
+                const activeTab = document.querySelector('.tab-content.active');
+                if (activeTab) {
+                    const tabId = activeTab.id.replace('tab-', '');
+                    window.updateMobileBottomNav(tabId);
+                }
+            }
         }, 500);
     });
 }
