@@ -49,6 +49,24 @@
                 <i class="fa-solid fa-folder-open text-4xl text-gray-300 mb-3"></i>
                 <p class="text-gray-500">Chưa có tài liệu nào</p>
             </div>
+
+            <!-- Pagination -->
+            <div id="document-files-pagination" class="mt-6 flex flex-col md:flex-row items-center justify-between gap-4 hidden">
+                <div class="text-sm text-gray-600">
+                    Hiển thị <span id="pagination-info-start">0</span> - <span id="pagination-info-end">0</span> trong tổng số <span id="pagination-info-total">0</span> tài liệu
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="pagination-prev" onclick="goToPage(currentPage - 1)" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition" disabled>
+                        <i class="fa-solid fa-chevron-left mr-1"></i>Trước
+                    </button>
+                    <div id="pagination-numbers" class="flex items-center gap-1">
+                        <!-- Page numbers will be rendered here -->
+                    </div>
+                    <button id="pagination-next" onclick="goToPage(currentPage + 1)" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition" disabled>
+                        Sau<i class="fa-solid fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -56,6 +74,8 @@
 <script>
 let allDocumentFiles = [];
 let filteredDocumentFiles = [];
+let currentPage = 1;
+const itemsPerPage = 10; // Số items mỗi trang
 
 async function loadDocumentFiles() {
     const session = JSON.parse(localStorage.getItem('user_session') || '{}');
@@ -116,24 +136,35 @@ function filterDocumentFiles() {
         return true;
     });
 
+    // Reset về trang 1 khi filter thay đổi
+    currentPage = 1;
     renderDocumentFiles(filteredDocumentFiles);
 }
 
 function renderDocumentFiles(files) {
     const container = document.getElementById('document-files-list');
     const emptyDiv = document.getElementById('document-files-empty');
+    const paginationDiv = document.getElementById('document-files-pagination');
 
     if (!container) return;
 
     if (!files || files.length === 0) {
         container.innerHTML = '';
         if (emptyDiv) emptyDiv.classList.remove('hidden');
+        if (paginationDiv) paginationDiv.classList.add('hidden');
         return;
     }
 
     if (emptyDiv) emptyDiv.classList.add('hidden');
 
-    container.innerHTML = files.map(file => {
+    // Tính toán phân trang
+    const totalPages = Math.ceil(files.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, files.length);
+    const filesToShow = files.slice(startIndex, endIndex);
+
+    // Render files
+    container.innerHTML = filesToShow.map(file => {
         const typeLabels = {
             'HDMB': { label: 'Hợp Đồng Mua Bán', icon: 'fa-file-contract', color: 'purple', bgColor: 'purple-100', textColor: 'purple-800' },
             'THOA_THUAN': { label: 'Thỏa Thuận Lãi Suất', icon: 'fa-handshake', color: 'indigo', bgColor: 'indigo-100', textColor: 'indigo-800' },
@@ -181,6 +212,132 @@ function renderDocumentFiles(files) {
             </div>
         `;
     }).join('');
+
+    // Render pagination
+    renderPagination(files.length, totalPages);
+}
+
+function renderPagination(totalItems, totalPages) {
+    const paginationDiv = document.getElementById('document-files-pagination');
+    const prevBtn = document.getElementById('pagination-prev');
+    const nextBtn = document.getElementById('pagination-next');
+    const paginationNumbers = document.getElementById('pagination-numbers');
+    const infoStart = document.getElementById('pagination-info-start');
+    const infoEnd = document.getElementById('pagination-info-end');
+    const infoTotal = document.getElementById('pagination-info-total');
+
+    if (!paginationDiv || totalItems === 0) {
+        if (paginationDiv) paginationDiv.classList.add('hidden');
+        return;
+    }
+
+    paginationDiv.classList.remove('hidden');
+
+    // Update info
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+    if (infoStart) infoStart.textContent = totalItems > 0 ? startIndex + 1 : 0;
+    if (infoEnd) infoEnd.textContent = endIndex;
+    if (infoTotal) infoTotal.textContent = totalItems;
+
+    // Update buttons
+    if (prevBtn) {
+        prevBtn.disabled = currentPage <= 1;
+    }
+    if (nextBtn) {
+        nextBtn.disabled = currentPage >= totalPages;
+    }
+
+    // Render page numbers
+    if (paginationNumbers) {
+        let pageNumbersHTML = '';
+        const maxVisiblePages = 5; // Số trang hiển thị tối đa
+        
+        if (totalPages <= maxVisiblePages) {
+            // Hiển thị tất cả các trang nếu ít hơn maxVisiblePages
+            for (let i = 1; i <= totalPages; i++) {
+                const isActive = i === currentPage;
+                pageNumbersHTML += `
+                    <button onclick="goToPage(${i})" class="px-3 py-2 rounded ${isActive ? 'bg-indigo-600 text-white font-bold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition">
+                        ${i}
+                    </button>
+                `;
+            }
+        } else {
+            // Hiển thị với ellipsis
+            if (currentPage <= 3) {
+                // Hiển thị: 1 2 3 4 ... last
+                for (let i = 1; i <= 4; i++) {
+                    const isActive = i === currentPage;
+                    pageNumbersHTML += `
+                        <button onclick="goToPage(${i})" class="px-3 py-2 rounded ${isActive ? 'bg-indigo-600 text-white font-bold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition">
+                            ${i}
+                        </button>
+                    `;
+                }
+                pageNumbersHTML += `<span class="px-2 text-gray-500">...</span>`;
+                pageNumbersHTML += `
+                    <button onclick="goToPage(${totalPages})" class="px-3 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+                        ${totalPages}
+                    </button>
+                `;
+            } else if (currentPage >= totalPages - 2) {
+                // Hiển thị: 1 ... (n-3) (n-2) (n-1) n
+                pageNumbersHTML += `
+                    <button onclick="goToPage(1)" class="px-3 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+                        1
+                    </button>
+                `;
+                pageNumbersHTML += `<span class="px-2 text-gray-500">...</span>`;
+                for (let i = totalPages - 3; i <= totalPages; i++) {
+                    const isActive = i === currentPage;
+                    pageNumbersHTML += `
+                        <button onclick="goToPage(${i})" class="px-3 py-2 rounded ${isActive ? 'bg-indigo-600 text-white font-bold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition">
+                            ${i}
+                        </button>
+                    `;
+                }
+            } else {
+                // Hiển thị: 1 ... (current-1) current (current+1) ... last
+                pageNumbersHTML += `
+                    <button onclick="goToPage(1)" class="px-3 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+                        1
+                    </button>
+                `;
+                pageNumbersHTML += `<span class="px-2 text-gray-500">...</span>`;
+                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                    const isActive = i === currentPage;
+                    pageNumbersHTML += `
+                        <button onclick="goToPage(${i})" class="px-3 py-2 rounded ${isActive ? 'bg-indigo-600 text-white font-bold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition">
+                            ${i}
+                        </button>
+                    `;
+                }
+                pageNumbersHTML += `<span class="px-2 text-gray-500">...</span>`;
+                pageNumbersHTML += `
+                    <button onclick="goToPage(${totalPages})" class="px-3 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+                        ${totalPages}
+                    </button>
+                `;
+            }
+        }
+
+        paginationNumbers.innerHTML = pageNumbersHTML;
+    }
+}
+
+function goToPage(page) {
+    const totalPages = Math.ceil(filteredDocumentFiles.length / itemsPerPage);
+    if (page < 1 || page > totalPages) return;
+    
+    currentPage = page;
+    renderDocumentFiles(filteredDocumentFiles);
+    
+    // Scroll to top of list
+    const container = document.getElementById('document-files-list');
+    if (container) {
+        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 function escapeHtml(text) {
@@ -194,6 +351,7 @@ function escapeHtml(text) {
 if (typeof window !== 'undefined') {
     window.loadDocumentFiles = loadDocumentFiles;
     window.filterDocumentFiles = filterDocumentFiles;
+    window.goToPage = goToPage;
     
     window.addEventListener('load', () => {
         // Update title first
