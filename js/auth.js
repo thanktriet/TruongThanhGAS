@@ -207,6 +207,14 @@ async function handleLogin(e) {
 }
 
 async function showChangePasswordModal(user, isFirstLogin = false) {
+    // Use the new modal component instead of SweetAlert
+    if (typeof window.openChangePasswordModal === 'function') {
+        window.openChangePasswordModal(isFirstLogin);
+        return;
+    }
+    
+    // Fallback to SweetAlert if modal not loaded yet
+    console.warn('Change password modal component not loaded, using SweetAlert fallback');
     const title = isFirstLogin 
         ? 'Yêu cầu đổi mật khẩu' 
         : 'Đổi mật khẩu';
