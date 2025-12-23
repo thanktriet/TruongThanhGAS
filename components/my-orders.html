@@ -385,41 +385,131 @@ function autoFillApprovalFormFromOrder(order) {
 
 // Create contract from order
 function createContractFromOrder(orderId) {
-    console.log('[My Orders] createContractFromOrder called with orderId:', orderId);
-    console.log('[My Orders] typeof openHDMBModal:', typeof openHDMBModal);
-    console.log('[My Orders] typeof window.openHDMBModal:', typeof window.openHDMBModal);
-    
-    if (typeof window.openHDMBModal === 'function') {
-        console.log('[My Orders] Calling window.openHDMBModal...');
-        window.openHDMBModal(orderId);
-    } else if (typeof openHDMBModal === 'function') {
-        console.log('[My Orders] Calling openHDMBModal (local)...');
-        openHDMBModal(orderId);
-    } else {
-        console.error('[My Orders] openHDMBModal not found!');
-        if (typeof showToast === 'function') {
-            showToast('Modal chưa được load. Vui lòng reload trang.', 'warning');
-        } else {
-            alert('Modal chưa được load. Vui lòng reload trang.');
+    const order = allOrders.find(o => o.id === orderId);
+    if (!order) return;
+
+    // Chuyển sang tab tạo HĐMB và fill dữ liệu từ đơn hàng
+    if (window.switchTab) {
+        window.switchTab('hdmb-create');
+        
+        // Đợi form load xong rồi auto-fill
+        setTimeout(() => {
+            autoFillHDMBFormFromOrder(order);
+        }, 500);
+    }
+}
+
+// Auto-fill HDMB form from order
+function autoFillHDMBFormFromOrder(order) {
+    const customer = order.customers || {};
+    const form = document.getElementById('form-hdmb-create');
+    if (!form) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Form chưa sẵn sàng. Vui lòng thử lại.', 'warning');
         }
+        return;
+    }
+
+    // Fill customer info
+    document.getElementById('hdmb-create-khach_hang').value = customer.name || '';
+    document.getElementById('hdmb-create-so_cccd').value = customer.cccd || '';
+    document.getElementById('hdmb-create-sdt').value = customer.phone || '';
+    document.getElementById('hdmb-create-email').value = customer.email || '';
+    document.getElementById('hdmb-create-dia_chi').value = customer.address || '';
+    document.getElementById('hdmb-create-ngay_cap').value = customer.issue_date ? new Date(customer.issue_date).toISOString().split('T')[0] : '';
+    document.getElementById('hdmb-create-noi_cap').value = customer.issue_place || '';
+    
+    // Fill contract info
+    document.getElementById('hdmb-create-so_hop_dong').value = order.contract_code || '';
+    document.getElementById('hdmb-create-ngay_ky').value = new Date().toISOString().split('T')[0];
+    document.getElementById('hdmb-create-loai_xe').value = order.car_model || '';
+    document.getElementById('hdmb-create-phien_ban').value = order.car_version || '';
+    document.getElementById('hdmb-create-mau_xe').value = order.car_color || '';
+
+    if (typeof window.showToast === 'function') {
+        window.showToast('Đã điền sẵn thông tin từ đơn hàng. Vui lòng kiểm tra và điền thêm!', 'success');
     }
 }
 
 // Create agreement from order
 function createAgreementFromOrder(orderId) {
-    if (typeof openThoaThuanModal === 'function') {
-        openThoaThuanModal(orderId);
-    } else {
-        showToast('Modal chưa được load. Vui lòng reload trang.', 'warning');
+    const order = allOrders.find(o => o.id === orderId);
+    if (!order) return;
+
+    // Chuyển sang tab tạo Thỏa Thuận và fill dữ liệu từ đơn hàng
+    if (window.switchTab) {
+        window.switchTab('thoa-thuan-create');
+        
+        // Đợi form load xong rồi auto-fill
+        setTimeout(() => {
+            autoFillThoaThuanFormFromOrder(order);
+        }, 500);
+    }
+}
+
+// Auto-fill Thoa Thuan form from order
+function autoFillThoaThuanFormFromOrder(order) {
+    const customer = order.customers || {};
+    const form = document.getElementById('form-thoa-thuan-create');
+    if (!form) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Form chưa sẵn sàng. Vui lòng thử lại.', 'warning');
+        }
+        return;
+    }
+
+    // Fill customer info
+    document.getElementById('tt-create-ten_khach_hang').value = customer.name || '';
+    document.getElementById('tt-create-cccd').value = customer.cccd || '';
+    document.getElementById('tt-create-dien_thoai').value = customer.phone || '';
+    document.getElementById('tt-create-dia_chi').value = customer.address || '';
+    document.getElementById('tt-create-ngay_cap').value = customer.issue_date ? new Date(customer.issue_date).toISOString().split('T')[0] : '';
+    document.getElementById('tt-create-noi_cap').value = customer.issue_place || '';
+    
+    // Fill contract info
+    document.getElementById('tt-create-so_hop_dong').value = order.contract_code || '';
+    document.getElementById('tt-create-loai_xe').value = order.car_model || '';
+
+    if (typeof window.showToast === 'function') {
+        window.showToast('Đã điền sẵn thông tin từ đơn hàng. Vui lòng kiểm tra và điền thêm!', 'success');
     }
 }
 
 // Create de nghi from order
 function createDeNghiFromOrder(orderId) {
-    if (typeof openDeNghiModal === 'function') {
-        openDeNghiModal(orderId);
-    } else {
-        showToast('Modal chưa được load. Vui lòng reload trang.', 'warning');
+    const order = allOrders.find(o => o.id === orderId);
+    if (!order) return;
+
+    // Chuyển sang tab tạo Đề Nghị và fill dữ liệu từ đơn hàng
+    if (window.switchTab) {
+        window.switchTab('de-nghi-create');
+        
+        // Đợi form load xong rồi auto-fill
+        setTimeout(() => {
+            autoFillDeNghiFormFromOrder(order);
+        }, 500);
+    }
+}
+
+// Auto-fill De Nghi form from order
+function autoFillDeNghiFormFromOrder(order) {
+    const customer = order.customers || {};
+    const form = document.getElementById('form-de-nghi-create');
+    if (!form) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Form chưa sẵn sàng. Vui lòng thử lại.', 'warning');
+        }
+        return;
+    }
+
+    // Fill customer info
+    document.getElementById('dngn-create-ten_khach_hang').value = customer.name || '';
+    document.getElementById('dngn-create-so_hop_dong').value = order.contract_code || '';
+    document.getElementById('dngn-create-loai_xe').value = order.car_model || '';
+    document.getElementById('dngn-create-ngay_captbcv').value = new Date().toISOString().split('T')[0];
+
+    if (typeof window.showToast === 'function') {
+        window.showToast('Đã điền sẵn thông tin từ đơn hàng. Vui lòng kiểm tra và điền thêm!', 'success');
     }
 }
 
