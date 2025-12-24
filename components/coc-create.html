@@ -476,10 +476,9 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Expose functions to window immediately
-// Note: toggleLoanFields must be exposed early for inline handlers
+// Expose remaining functions to window
+// Note: toggleLoanFields already exposed at top of script
 if (typeof window !== 'undefined') {
-    window.toggleLoanFields = toggleLoanFields;
     window.searchOrderForCoc = searchOrderForCoc;
     window.submitCocCreateForm = submitCocCreateForm;
     window.resetCocCreateForm = resetCocCreateForm;
