@@ -157,12 +157,25 @@ function filterCocRequests() {
     console.log('[COC Requests] allCocRequests count:', allCocRequests.length);
     
     // Don't filter if we haven't loaded data yet
+    console.log('[COC Requests] Checking if need to load data:', {
+        allCocRequestsLength: allCocRequests.length,
+        isLoadingCocRequests: isLoadingCocRequests,
+        shouldLoad: allCocRequests.length === 0 && !isLoadingCocRequests
+    });
+    
     if (allCocRequests.length === 0 && !isLoadingCocRequests) {
         console.warn('[COC Requests] No data loaded yet, calling loadCocRequests first...');
         if (typeof window.loadCocRequests === 'function') {
+            console.log('[COC Requests] window.loadCocRequests exists, calling...');
             window.loadCocRequests();
             return; // Exit early, loadCocRequests will call filterCocRequests after loading
+        } else {
+            console.error('[COC Requests] window.loadCocRequests function not found!');
         }
+    } else {
+        console.log('[COC Requests] Skipping auto-load:', {
+            reason: allCocRequests.length > 0 ? 'has data' : 'is loading'
+        });
     }
     
     console.log('[COC Requests] allCocRequests data:', allCocRequests);
