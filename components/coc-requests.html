@@ -241,11 +241,15 @@ function renderCocRequests() {
         const hasDisbursePermission = typeof window.hasPermission === 'function'
             ? window.hasPermission(session, 'disburse_coc')
             : (userRole === 'KETOAN' || userRole === 'ADMIN');
+        
+        // SaleAdmin có thể cập nhật thông tin tài chính (dùng cùng permission với issue_coc)
+        const hasUpdateFinancialPermission = hasIssuePermission;
 
         listDiv.innerHTML = filteredCocRequests.map(request => {
             const statusInfo = COC_STATUS[request.status] || COC_STATUS.pending;
             const canIssue = hasIssuePermission && request.status === 'pending';
             const canDisburse = hasDisbursePermission && request.status === 'issued';
+            const canUpdateFinancial = hasUpdateFinancialPermission && request.status === 'pending';
             const canView = true; // All roles can view (if they have view_coc_requests permission)
 
             // Use explicit class names instead of template strings for Tailwind
@@ -280,6 +284,9 @@ function renderCocRequests() {
                         <div class="flex flex-wrap gap-2">
                             ${canView ? `<button onclick="viewCocRequestDetail('${request.id}')" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm">
                                 <i class="fa-solid fa-eye mr-1"></i>Xem
+                            </button>` : ''}
+                            ${canUpdateFinancial ? `<button onclick="openCocFinancialModal('${request.id}')" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition text-sm">
+                                <i class="fa-solid fa-coins mr-1"></i>Cập nhật tài chính
                             </button>` : ''}
                             ${canIssue ? `<button onclick="openCocIssueModal('${request.id}')" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm">
                                 <i class="fa-solid fa-certificate mr-1"></i>Cấp COC

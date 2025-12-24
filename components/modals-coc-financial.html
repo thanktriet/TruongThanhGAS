@@ -1,0 +1,306 @@
+<!-- Modal Cập nhật thông tin tài chính COC -->
+<div id="modal-coc-financial" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="bg-purple-600 text-white px-6 py-4 rounded-t-xl flex justify-between items-center sticky top-0 z-10">
+            <h2 class="text-xl font-bold">
+                <i class="fa-solid fa-coins mr-2"></i>Cập Nhật Thông Tin Tài Chính
+            </h2>
+            <button onclick="closeCocFinancialModal()" class="text-white hover:text-gray-200">
+                <i class="fa-solid fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <form id="form-coc-financial" onsubmit="submitCocFinancial(event)" class="p-6">
+            <!-- Thông tin request (readonly) -->
+            <div class="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h3 class="font-bold text-gray-700 mb-3">Thông tin đề nghị</h3>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <span class="text-gray-600">Mã đơn hàng:</span>
+                        <span id="financial-contract-code" class="font-bold ml-2"></span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Khách hàng:</span>
+                        <span id="financial-customer-name" class="font-bold ml-2"></span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Loại xe:</span>
+                        <span id="financial-car-model" class="font-bold ml-2"></span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Ngày đề nghị:</span>
+                        <span id="financial-request-date" class="font-bold ml-2"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thông tin tài chính (editable) -->
+            <div class="mb-6 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <h3 class="font-bold text-gray-700 mb-4">
+                    <i class="fa-solid fa-coins mr-2 text-yellow-600"></i>
+                    Thông tin tài chính (để tính lãi)
+                </h3>
+                
+                <!-- Số PO -->
+                <div class="mb-4">
+                    <label class="label block mb-2">
+                        <i class="fa-solid fa-hashtag mr-2 text-purple-600"></i>
+                        Số PO
+                    </label>
+                    <input 
+                        type="text" 
+                        id="financial-po-number" 
+                        name="po_number"
+                        class="input w-full" 
+                        placeholder="Nhập số PO"
+                    >
+                </div>
+
+                <!-- Giá nhập -->
+                <div class="mb-4">
+                    <label class="label block mb-2">
+                        <i class="fa-solid fa-dollar-sign mr-2 text-purple-600"></i>
+                        Giá nhập (VNĐ)
+                    </label>
+                    <input 
+                        type="text" 
+                        id="financial-import-price" 
+                        name="import_price"
+                        class="input w-full money-input" 
+                        placeholder="0"
+                        oninput="formatMoneyInput(this)"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">Nhập giá nhập để tính lãi</p>
+                </div>
+
+                <!-- Phương thức thanh toán -->
+                <div class="mb-4">
+                    <label class="label block mb-2">
+                        <i class="fa-solid fa-credit-card mr-2 text-purple-600"></i>
+                        Phương thức thanh toán
+                    </label>
+                    <select 
+                        id="financial-payment-method" 
+                        name="payment_method"
+                        class="input w-full"
+                    >
+                        <option value="">-- Chọn phương thức --</option>
+                        <option value="Tiền mặt">Tiền mặt</option>
+                        <option value="Chuyển khoản">Chuyển khoản</option>
+                        <option value="Bảo lãnh ngân hàng">Bảo lãnh ngân hàng</option>
+                        <option value="Trả góp">Trả góp</option>
+                    </select>
+                </div>
+
+                <!-- Ngân hàng bảo lãnh -->
+                <div class="mb-4">
+                    <label class="label block mb-2">
+                        <i class="fa-solid fa-building-columns mr-2 text-purple-600"></i>
+                        Ngân hàng bảo lãnh
+                    </label>
+                    <input 
+                        type="text" 
+                        id="financial-guarantee-bank" 
+                        name="guarantee_bank"
+                        class="input w-full" 
+                        placeholder="Nhập tên ngân hàng bảo lãnh"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">Chỉ điền nếu thanh toán bằng bảo lãnh ngân hàng</p>
+                </div>
+
+                <!-- Số tiền tính lãi (Principal Amount) -->
+                <div class="mb-4 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <label class="label block mb-2">
+                        <i class="fa-solid fa-calculator mr-2 text-blue-600"></i>
+                        Số tiền tính lãi (VNĐ) <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="financial-principal-amount" 
+                        name="principal_amount"
+                        class="input w-full money-input font-bold text-blue-600" 
+                        placeholder="0"
+                        required
+                        oninput="formatMoneyInput(this); updatePrincipalAmountFromImportPrice()"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">
+                        Số tiền này sẽ được dùng để tính lãi. Mặc định = Giá nhập nếu để trống.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                <button 
+                    type="button"
+                    onclick="closeCocFinancialModal()" 
+                    class="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition font-bold"
+                >
+                    Hủy
+                </button>
+                <button 
+                    type="submit"
+                    class="px-6 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition font-bold"
+                >
+                    <i class="fa-solid fa-save mr-2"></i>Cập Nhật
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let currentCocFinancialRequestId = null;
+let cocFinancialRequestData = null;
+
+// Format money input
+function formatMoneyInput(input) {
+    if (!input) return;
+    let value = input.value.replace(/[^\d]/g, '');
+    if (value) {
+        value = parseInt(value).toLocaleString('vi-VN');
+        input.value = value;
+    }
+}
+
+// Auto-fill principal_amount từ import_price nếu principal_amount trống
+function updatePrincipalAmountFromImportPrice() {
+    const importPriceInput = document.getElementById('financial-import-price');
+    const principalAmountInput = document.getElementById('financial-principal-amount');
+    
+    if (!importPriceInput || !principalAmountInput) return;
+    
+    // Nếu principal_amount đang trống và import_price có giá trị
+    const principalValue = principalAmountInput.value.replace(/[^\d]/g, '');
+    if (!principalValue && importPriceInput.value) {
+        principalAmountInput.value = importPriceInput.value;
+    }
+}
+
+// Open modal
+function openCocFinancialModal(requestId) {
+    currentCocFinancialRequestId = requestId;
+    
+    // Find request data
+    if (typeof window.allCocRequests !== 'undefined' && Array.isArray(window.allCocRequests)) {
+        cocFinancialRequestData = window.allCocRequests.find(r => r.id === requestId);
+    }
+    
+    if (!cocFinancialRequestData) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Không tìm thấy thông tin đề nghị COC', 'danger');
+        }
+        return;
+    }
+
+    // Fill readonly info
+    document.getElementById('financial-contract-code').textContent = cocFinancialRequestData.contract_code || 'N/A';
+    document.getElementById('financial-customer-name').textContent = cocFinancialRequestData.customer_name || 'N/A';
+    document.getElementById('financial-car-model').textContent = 
+        `${cocFinancialRequestData.car_model || ''} ${cocFinancialRequestData.car_version || ''} ${cocFinancialRequestData.car_color || ''}`.trim() || 'N/A';
+    
+    const requestDate = cocFinancialRequestData.request_date 
+        ? new Date(cocFinancialRequestData.request_date).toLocaleDateString('vi-VN')
+        : 'N/A';
+    document.getElementById('financial-request-date').textContent = requestDate;
+
+    // Fill financial info (editable)
+    document.getElementById('financial-po-number').value = cocFinancialRequestData.po_number || '';
+    document.getElementById('financial-import-price').value = cocFinancialRequestData.import_price 
+        ? parseFloat(cocFinancialRequestData.import_price).toLocaleString('vi-VN')
+        : '';
+    document.getElementById('financial-payment-method').value = cocFinancialRequestData.payment_method || '';
+    document.getElementById('financial-guarantee-bank').value = cocFinancialRequestData.guarantee_bank || '';
+    document.getElementById('financial-principal-amount').value = cocFinancialRequestData.principal_amount 
+        ? parseFloat(cocFinancialRequestData.principal_amount).toLocaleString('vi-VN')
+        : '';
+
+    // Show modal
+    document.getElementById('modal-coc-financial').classList.remove('hidden');
+}
+
+// Close modal
+function closeCocFinancialModal() {
+    document.getElementById('modal-coc-financial').classList.add('hidden');
+    currentCocFinancialRequestId = null;
+    cocFinancialRequestData = null;
+    
+    // Reset form
+    const form = document.getElementById('form-coc-financial');
+    if (form) form.reset();
+}
+
+// Submit form
+async function submitCocFinancial(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    
+    // Get session
+    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+    if (!session || !session.username) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Vui lòng đăng nhập lại', 'danger');
+        }
+        return;
+    }
+
+    // Get form data
+    const poNumber = document.getElementById('financial-po-number').value.trim();
+    const importPriceStr = document.getElementById('financial-import-price').value.replace(/[^\d]/g, '');
+    const importPrice = importPriceStr ? parseFloat(importPriceStr) : 0;
+    const paymentMethod = document.getElementById('financial-payment-method').value.trim();
+    const guaranteeBank = document.getElementById('financial-guarantee-bank').value.trim();
+    const principalAmountStr = document.getElementById('financial-principal-amount').value.replace(/[^\d]/g, '');
+    const principalAmount = principalAmountStr ? parseFloat(principalAmountStr) : (importPrice || 0);
+
+    // Show loading
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang xử lý...';
+
+    try {
+        // Call API to update financial info
+        const result = await window.callAPI({
+            action: 'update_coc_financial_info',
+            coc_request_id: currentCocFinancialRequestId,
+            po_number: poNumber || null,
+            import_price: importPrice,
+            payment_method: paymentMethod || null,
+            guarantee_bank: guaranteeBank || null,
+            principal_amount: principalAmount
+        });
+
+        if (result.success) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Cập nhật thông tin tài chính thành công!', 'success');
+            }
+            closeCocFinancialModal();
+            // Reload COC requests list
+            if (typeof window.loadCocRequests === 'function') {
+                window.loadCocRequests();
+            }
+        } else {
+            throw new Error(result.message || 'Không thể cập nhật thông tin tài chính');
+        }
+    } catch (error) {
+        console.error('Error updating COC financial info:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + error.message, 'danger');
+        }
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+    }
+}
+
+// Expose functions to window
+if (typeof window !== 'undefined') {
+    window.openCocFinancialModal = openCocFinancialModal;
+    window.closeCocFinancialModal = closeCocFinancialModal;
+    window.submitCocFinancial = submitCocFinancial;
+    console.log('✅ COC financial modal functions exposed to window');
+}
+</script>
+

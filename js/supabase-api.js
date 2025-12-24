@@ -3967,6 +3967,74 @@ async function supabaseIssueCocRequest(cocRequestId, issueData) {
 }
 
 /**
+ * Cập nhật thông tin tài chính COC (SaleAdmin)
+ */
+async function supabaseUpdateCocFinancialInfo(cocRequestId, financialData) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // ✅ SECURITY: Kiểm tra session và permission
+        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Kiểm tra permission (dùng issue_coc permission vì chỉ SaleAdmin mới cần)
+        if (typeof hasPermission === 'function' && !hasPermission(session, 'issue_coc')) {
+            return { success: false, message: 'Bạn không có quyền cập nhật thông tin tài chính COC' };
+        }
+
+        // Fallback: Check role nếu không có hasPermission function
+        if (typeof hasPermission !== 'function' && session.role !== 'SALEADMIN' && session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ SaleAdmin và Admin mới có quyền cập nhật thông tin tài chính' };
+        }
+
+        // Kiểm tra request tồn tại và đang ở status pending
+        const { data: requestData, error: fetchError } = await supabase
+            .from('coc_requests')
+            .select('id, status')
+            .eq('id', cocRequestId)
+            .single();
+
+        if (fetchError || !requestData) {
+            return { success: false, message: 'Không tìm thấy đề nghị COC' };
+        }
+
+        if (requestData.status !== 'pending') {
+            return { success: false, message: 'Chỉ có thể cập nhật thông tin tài chính cho đề nghị đang ở trạng thái "Đang chờ"' };
+        }
+
+        // Tính principal_amount: mặc định = import_price nếu không có
+        const principalAmount = financialData.principal_amount || financialData.import_price || 0;
+
+        // Cập nhật thông tin tài chính
+        const { data, error } = await supabase
+            .from('coc_requests')
+            .update({
+                po_number: financialData.po_number || null,
+                import_price: parseFloat(financialData.import_price) || 0,
+                payment_method: financialData.payment_method || null,
+                guarantee_bank: financialData.guarantee_bank || null,
+                principal_amount: parseFloat(principalAmount) || 0,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', cocRequestId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return { success: true, data };
+    } catch (error) {
+        console.error('Update COC financial info error:', error);
+        return { success: false, message: error.message };
+    }
+}
+
+/**
  * Upload file giải ngân và đóng case (Kế toán)
  */
 async function supabaseDisburseCocRequest(cocRequestId, fileUrl, fileId, accountant) {
@@ -4118,6 +4186,9 @@ async function callSupabaseAPI(data) {
                     filters: data.filters || {}
                 });
                 return await supabaseGetCocRequests(data.username, data.role, data.filters || {});
+            
+            case 'update_coc_financial_info':
+                return await supabaseUpdateCocFinancialInfo(data.coc_request_id, data);
             
             case 'issue_coc_request':
                 return await supabaseIssueCocRequest(data.coc_request_id, data);
