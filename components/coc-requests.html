@@ -128,10 +128,14 @@ async function loadCocRequests() {
 }
 
 function filterCocRequests() {
+    console.log('[COC Requests] filterCocRequests called, allCocRequests count:', allCocRequests.length);
+    
     const statusFilter = document.getElementById('filter-coc-status')?.value || '';
     const contractCodeFilter = (document.getElementById('filter-coc-contract-code')?.value || '').trim().toLowerCase();
     const customerFilter = (document.getElementById('filter-coc-customer')?.value || '').trim().toLowerCase();
     const dateFilter = document.getElementById('filter-coc-date')?.value || '';
+
+    console.log('[COC Requests] Filters:', { statusFilter, contractCodeFilter, customerFilter, dateFilter });
 
     filteredCocRequests = allCocRequests.filter(request => {
         // Status filter
