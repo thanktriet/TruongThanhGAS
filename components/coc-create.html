@@ -275,7 +275,27 @@ function autoFillCocFormFromOrder(order) {
     document.getElementById('coc-create-car_version').value = order.car_version || '';
     document.getElementById('coc-create-car_color').value = order.car_color || '';
     document.getElementById('coc-create-vin_number').value = order.vin_number || '';
-    document.getElementById('coc-create-payment_method_display').value = order.payment_method || '';
+    
+    // Set payment method and toggle loan fields if needed
+    const paymentMethodSelect = document.getElementById('coc-create-payment_method');
+    if (paymentMethodSelect && order.payment_method) {
+        paymentMethodSelect.value = order.payment_method;
+        toggleLoanFields(order.payment_method);
+        
+        // If payment method is "Trả góp" and order has loan info, fill it
+        if (order.payment_method === 'Trả góp') {
+            if (order.loan_bank_name) {
+                document.getElementById('coc-create-loan_bank_name').value = order.loan_bank_name;
+            }
+            if (order.loan_amount) {
+                const loanAmountInput = document.getElementById('coc-create-loan_amount');
+                loanAmountInput.value = parseFloat(order.loan_amount).toLocaleString('vi-VN');
+                if (window.formatMoneyInput) {
+                    window.formatMoneyInput(loanAmountInput);
+                }
+            }
+        }
+    }
 }
 
 // Submit COC create form
