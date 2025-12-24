@@ -233,11 +233,20 @@ function renderCocRequests() {
         const userRole = session.role || '';
         const username = session.username || '';
 
+        // Check permissions using hasPermission function
+        const hasIssuePermission = typeof window.hasPermission === 'function' 
+            ? window.hasPermission(session, 'issue_coc') 
+            : (userRole === 'SALEADMIN' || userRole === 'ADMIN');
+        
+        const hasDisbursePermission = typeof window.hasPermission === 'function'
+            ? window.hasPermission(session, 'disburse_coc')
+            : (userRole === 'KETOAN' || userRole === 'ADMIN');
+
         listDiv.innerHTML = filteredCocRequests.map(request => {
             const statusInfo = COC_STATUS[request.status] || COC_STATUS.pending;
-            const canIssue = userRole === 'SALEADMIN' && request.status === 'pending';
-            const canDisburse = userRole === 'KETOAN' && request.status === 'issued';
-            const canView = true; // All roles can view
+            const canIssue = hasIssuePermission && request.status === 'pending';
+            const canDisburse = hasDisbursePermission && request.status === 'issued';
+            const canView = true; // All roles can view (if they have view_coc_requests permission)
 
             // Use explicit class names instead of template strings for Tailwind
             const statusClass = {

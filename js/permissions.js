@@ -289,7 +289,11 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
         view_reports: false,
         view_dashboard: false,
         manage_users: false,
-        manage_permissions: false
+        manage_permissions: false,
+        create_coc_request: false,
+        view_coc_requests: true,
+        issue_coc: false,
+        disburse_coc: true
     }
 };
 

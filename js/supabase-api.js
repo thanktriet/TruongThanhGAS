@@ -3960,6 +3960,22 @@ async function supabaseDisburseCocRequest(cocRequestId, fileUrl, fileId, account
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
+        // ✅ SECURITY: Kiểm tra session và permission
+        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Kiểm tra permission nếu có hàm hasPermission
+        if (typeof hasPermission === 'function' && !hasPermission(session, 'disburse_coc')) {
+            return { success: false, message: 'Bạn không có quyền giải ngân COC' };
+        }
+
+        // Fallback: Check role nếu không có hasPermission function
+        if (typeof hasPermission !== 'function' && session.role !== 'KETOAN' && session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ Kế toán và Admin mới có quyền giải ngân COC' };
+        }
+
         const { data, error } = await supabase
             .from('coc_requests')
             .update({
