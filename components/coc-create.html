@@ -265,6 +265,32 @@ function showOrderSearchResult(order, message) {
     }
 }
 
+// Toggle loan fields based on payment method
+function toggleLoanFields(paymentMethod) {
+    const bankContainer = document.getElementById('coc-loan-bank-container');
+    const amountContainer = document.getElementById('coc-loan-amount-container');
+    const bankInput = document.getElementById('coc-create-loan_bank_name');
+    const amountInput = document.getElementById('coc-create-loan_amount');
+    
+    if (paymentMethod === 'Trả góp') {
+        if (bankContainer) bankContainer.classList.remove('hidden');
+        if (amountContainer) amountContainer.classList.remove('hidden');
+        if (bankInput) bankInput.required = true;
+        if (amountInput) amountInput.required = true;
+    } else {
+        if (bankContainer) bankContainer.classList.add('hidden');
+        if (amountContainer) amountContainer.classList.add('hidden');
+        if (bankInput) {
+            bankInput.required = false;
+            bankInput.value = '';
+        }
+        if (amountInput) {
+            amountInput.required = false;
+            amountInput.value = '';
+        }
+    }
+}
+
 // Auto-fill form from order
 function autoFillCocFormFromOrder(order) {
     const customer = order.customers || {};
