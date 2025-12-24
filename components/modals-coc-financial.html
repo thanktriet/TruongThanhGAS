@@ -73,39 +73,22 @@
                     <p class="text-xs text-gray-500 mt-1">Nhập giá nhập để tính lãi</p>
                 </div>
 
-                <!-- Phương thức thanh toán -->
-                <div class="mb-4">
-                    <label class="label block mb-2">
-                        <i class="fa-solid fa-credit-card mr-2 text-purple-600"></i>
-                        Phương thức thanh toán
-                    </label>
-                    <select 
-                        id="financial-payment-method" 
-                        name="payment_method"
-                        class="input w-full"
-                    >
-                        <option value="">-- Chọn phương thức --</option>
-                        <option value="Tiền mặt">Tiền mặt</option>
-                        <option value="Chuyển khoản">Chuyển khoản</option>
-                        <option value="Bảo lãnh ngân hàng">Bảo lãnh ngân hàng</option>
-                        <option value="Trả góp">Trả góp</option>
-                    </select>
-                </div>
-
-                <!-- Ngân hàng bảo lãnh -->
+                <!-- Ngân hàng bảo lãnh COC -->
                 <div class="mb-4">
                     <label class="label block mb-2">
                         <i class="fa-solid fa-building-columns mr-2 text-purple-600"></i>
-                        Ngân hàng bảo lãnh
+                        Ngân Hàng Bảo Lãnh COC
                     </label>
-                    <input 
-                        type="text" 
-                        id="financial-guarantee-bank" 
-                        name="guarantee_bank"
-                        class="input w-full" 
-                        placeholder="Nhập tên ngân hàng bảo lãnh"
+                    <select 
+                        id="financial-guarantee-bank-coc" 
+                        name="guarantee_bank_coc"
+                        class="input w-full"
                     >
-                    <p class="text-xs text-gray-500 mt-1">Chỉ điền nếu thanh toán bằng bảo lãnh ngân hàng</p>
+                        <option value="">-- Chọn ngân hàng --</option>
+                        <option value="MB Bank">MB Bank</option>
+                        <option value="VPBank">VPBank</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Chọn ngân hàng bảo lãnh COC (MB Bank hoặc VPBank)</p>
                 </div>
 
                 <!-- Số tiền tính lãi (Principal Amount) -->
@@ -209,8 +192,7 @@ function openCocFinancialModal(requestId) {
     document.getElementById('financial-import-price').value = cocFinancialRequestData.import_price 
         ? parseFloat(cocFinancialRequestData.import_price).toLocaleString('vi-VN')
         : '';
-    document.getElementById('financial-payment-method').value = cocFinancialRequestData.payment_method || '';
-    document.getElementById('financial-guarantee-bank').value = cocFinancialRequestData.guarantee_bank || '';
+    document.getElementById('financial-guarantee-bank-coc').value = cocFinancialRequestData.guarantee_bank_coc || '';
     document.getElementById('financial-principal-amount').value = cocFinancialRequestData.principal_amount 
         ? parseFloat(cocFinancialRequestData.principal_amount).toLocaleString('vi-VN')
         : '';
@@ -249,8 +231,7 @@ async function submitCocFinancial(event) {
     const poNumber = document.getElementById('financial-po-number').value.trim();
     const importPriceStr = document.getElementById('financial-import-price').value.replace(/[^\d]/g, '');
     const importPrice = importPriceStr ? parseFloat(importPriceStr) : 0;
-    const paymentMethod = document.getElementById('financial-payment-method').value.trim();
-    const guaranteeBank = document.getElementById('financial-guarantee-bank').value.trim();
+    const guaranteeBankCoc = document.getElementById('financial-guarantee-bank-coc').value.trim();
     const principalAmountStr = document.getElementById('financial-principal-amount').value.replace(/[^\d]/g, '');
     const principalAmount = principalAmountStr ? parseFloat(principalAmountStr) : (importPrice || 0);
 
@@ -267,8 +248,7 @@ async function submitCocFinancial(event) {
             coc_request_id: currentCocFinancialRequestId,
             po_number: poNumber || null,
             import_price: importPrice,
-            payment_method: paymentMethod || null,
-            guarantee_bank: guaranteeBank || null,
+            guarantee_bank_coc: guaranteeBankCoc || null,
             principal_amount: principalAmount
         });
 

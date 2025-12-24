@@ -3781,8 +3781,7 @@ async function supabaseCreateCocRequest(requestData) {
                 // Thông tin tài chính
                 po_number: requestData.po_number || null,
                 import_price: parseFloat(requestData.import_price) || 0,
-                payment_method: requestData.payment_method || null,
-                guarantee_bank: requestData.guarantee_bank || null,
+                // payment_method không lưu vào coc_requests, lấy từ orders.payment_method
                 principal_amount: parseFloat(principalAmount) || 0,
                 
                 request_date: requestData.request_date || new Date().toISOString().split('T')[0],
@@ -4016,8 +4015,7 @@ async function supabaseUpdateCocFinancialInfo(cocRequestId, financialData) {
             .update({
                 po_number: financialData.po_number || null,
                 import_price: parseFloat(financialData.import_price) || 0,
-                payment_method: financialData.payment_method || null,
-                guarantee_bank: financialData.guarantee_bank || null,
+                guarantee_bank_coc: financialData.guarantee_bank_coc || null,
                 principal_amount: parseFloat(principalAmount) || 0,
                 updated_at: new Date().toISOString()
             })

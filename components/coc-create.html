@@ -103,37 +103,6 @@
                             >
                         </div>
 
-                        <!-- Phương thức thanh toán -->
-                        <div>
-                            <label class="label text-xs md:text-sm mb-1 block">
-                                Phương thức thanh toán
-                            </label>
-                            <select 
-                                name="payment_method" 
-                                id="coc-create-payment_method" 
-                                class="input text-sm md:text-base w-full"
-                                onchange="toggleGuaranteeBank(this.value)"
-                            >
-                                <option value="">-- Chọn phương thức --</option>
-                                <option value="Tiền mặt">Tiền mặt</option>
-                                <option value="Trả góp">Trả góp</option>
-                                <option value="Bảo lãnh ngân hàng">Bảo lãnh ngân hàng</option>
-                                <option value="Khác">Khác</option>
-                            </select>
-                        </div>
-
-                        <!-- Ngân hàng bảo lãnh (chỉ hiện khi chọn "Bảo lãnh ngân hàng") -->
-                        <div id="coc-guarantee-bank-container" class="hidden">
-                            <label class="label text-xs md:text-sm mb-1 block">
-                                Ngân hàng bảo lãnh
-                            </label>
-                            <input 
-                                name="guarantee_bank" 
-                                id="coc-create-guarantee_bank" 
-                                class="input text-sm md:text-base w-full"
-                                placeholder="VD: Techcombank, VPBank..."
-                            >
-                        </div>
 
                         <!-- Số tiền tính lãi (có thể điều chỉnh, mặc định = giá nhập) -->
                         <div class="md:col-span-2">
@@ -216,22 +185,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Toggle guarantee bank field
-function toggleGuaranteeBank(paymentMethod) {
-    const container = document.getElementById('coc-guarantee-bank-container');
-    const input = document.getElementById('coc-create-guarantee_bank');
-    
-    if (paymentMethod === 'Bảo lãnh ngân hàng') {
-        if (container) container.classList.remove('hidden');
-        if (input) input.required = true;
-    } else {
-        if (container) container.classList.add('hidden');
-        if (input) {
-            input.required = false;
-            input.value = '';
-        }
-    }
-}
 
 // Auto-fill principal_amount = import_price when import_price changes
 function updatePrincipalAmount() {
@@ -351,12 +304,7 @@ function autoFillCocFormFromOrder(order) {
     document.getElementById('coc-create-car_version').value = order.car_version || '';
     document.getElementById('coc-create-car_color').value = order.car_color || '';
     document.getElementById('coc-create-vin_number').value = order.vin_number || '';
-    document.getElementById('coc-create-payment_method').value = order.payment_method || '';
-    
-    // Toggle guarantee bank if needed
-    if (order.payment_method === 'Bảo lãnh ngân hàng') {
-        toggleGuaranteeBank('Bảo lãnh ngân hàng');
-    }
+    document.getElementById('coc-create-payment_method_display').value = order.payment_method || '';
 }
 
 // Submit COC create form
@@ -419,8 +367,7 @@ async function submitCocCreateForm(event) {
             vin_number: formData.get('vin_number')?.trim() || null,
             po_number: formData.get('po_number')?.trim() || null,
             import_price: importPriceValue,
-            payment_method: formData.get('payment_method')?.trim() || null,
-            guarantee_bank: formData.get('guarantee_bank')?.trim() || null,
+            // payment_method không lưu vào coc_requests, lấy từ orders
             principal_amount: principalAmountValue,
             request_date: formData.get('request_date') || new Date().toISOString().split('T')[0],
             requester: session.username,
@@ -472,9 +419,6 @@ function resetCocCreateForm() {
         requestDateInput.value = today;
     }
     
-    // Hide guarantee bank
-    const container = document.getElementById('coc-guarantee-bank-container');
-    if (container) container.classList.add('hidden');
 }
 
 // Helper: Escape HTML
@@ -490,7 +434,6 @@ if (typeof window !== 'undefined') {
     window.searchOrderForCoc = searchOrderForCoc;
     window.submitCocCreateForm = submitCocCreateForm;
     window.resetCocCreateForm = resetCocCreateForm;
-    window.toggleGuaranteeBank = toggleGuaranteeBank;
     window.updatePrincipalAmount = updatePrincipalAmount;
     window.autoFillCocFormFromOrder = autoFillCocFormFromOrder;
     
