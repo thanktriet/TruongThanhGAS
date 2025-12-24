@@ -155,6 +155,16 @@ async function loadCocRequests() {
 function filterCocRequests() {
     console.log('[COC Requests] filterCocRequests called');
     console.log('[COC Requests] allCocRequests count:', allCocRequests.length);
+    
+    // Don't filter if we haven't loaded data yet
+    if (allCocRequests.length === 0 && !isLoadingCocRequests) {
+        console.warn('[COC Requests] No data loaded yet, calling loadCocRequests first...');
+        if (typeof window.loadCocRequests === 'function') {
+            window.loadCocRequests();
+            return; // Exit early, loadCocRequests will call filterCocRequests after loading
+        }
+    }
+    
     console.log('[COC Requests] allCocRequests data:', allCocRequests);
     
     const statusFilter = document.getElementById('filter-coc-status')?.value || '';
