@@ -3894,6 +3894,22 @@ async function supabaseIssueCocRequest(cocRequestId, issueData) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
+        // ✅ SECURITY: Kiểm tra session và permission
+        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Kiểm tra permission nếu có hàm hasPermission
+        if (typeof hasPermission === 'function' && !hasPermission(session, 'issue_coc')) {
+            return { success: false, message: 'Bạn không có quyền cấp COC' };
+        }
+
+        // Fallback: Check role nếu không có hasPermission function
+        if (typeof hasPermission !== 'function' && session.role !== 'SALEADMIN' && session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ SaleAdmin và Admin mới có quyền cấp COC' };
+        }
+
         // Validate: Phải có ảnh COC và biên bản bàn giao
         if (!issueData.coc_image_url || !issueData.handover_document_url) {
             return { 
