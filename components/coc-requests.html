@@ -128,7 +128,9 @@ async function loadCocRequests() {
 }
 
 function filterCocRequests() {
-    console.log('[COC Requests] filterCocRequests called, allCocRequests count:', allCocRequests.length);
+    console.log('[COC Requests] filterCocRequests called');
+    console.log('[COC Requests] allCocRequests count:', allCocRequests.length);
+    console.log('[COC Requests] allCocRequests data:', allCocRequests);
     
     const statusFilter = document.getElementById('filter-coc-status')?.value || '';
     const contractCodeFilter = (document.getElementById('filter-coc-contract-code')?.value || '').trim().toLowerCase();
