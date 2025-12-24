@@ -3992,6 +3992,7 @@ async function supabaseDisburseCocRequest(cocRequestId, fileUrl, fileId, account
  */
 async function callSupabaseAPI(data) {
     const action = data.action;
+    console.log('[callSupabaseAPI] Called with action:', action, 'data keys:', Object.keys(data));
 
     try {
         switch (action) {
