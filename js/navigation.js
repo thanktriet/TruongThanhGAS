@@ -67,9 +67,14 @@ function switchTab(id) {
         }, 300);
     }
     
-    if (id === 'coc-requests' && typeof loadCocRequests === 'function') {
+    if (id === 'coc-requests') {
+        console.log('[Navigation] Switching to coc-requests tab');
         setTimeout(() => {
-            loadCocRequests();
+            if (typeof window.loadCocRequests === 'function') {
+                window.loadCocRequests();
+            } else {
+                console.error('[Navigation] loadCocRequests function not found');
+            }
         }, 300);
     }
 }

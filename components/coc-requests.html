@@ -146,10 +146,17 @@ function filterCocRequests() {
 }
 
 function renderCocRequests() {
+    console.log('[COC Requests] renderCocRequests called, filtered count:', filteredCocRequests.length);
+    
     const listDiv = document.getElementById('coc-requests-list');
     const emptyDiv = document.getElementById('coc-requests-empty');
 
-    if (!listDiv) return;
+    if (!listDiv) {
+        console.error('[COC Requests] listDiv not found');
+        return;
+    }
+
+    try {
 
     if (filteredCocRequests.length === 0) {
         listDiv.innerHTML = '';
@@ -169,12 +176,20 @@ function renderCocRequests() {
         const canDisburse = userRole === 'KETOAN' && request.status === 'issued';
         const canView = true; // All roles can view
 
+        // Use explicit class names instead of template strings for Tailwind
+        const statusClass = {
+            'pending': 'bg-yellow-100 text-yellow-800',
+            'issued': 'bg-blue-100 text-blue-800',
+            'disbursed': 'bg-orange-100 text-orange-800',
+            'closed': 'bg-green-100 text-green-800'
+        }[request.status] || 'bg-yellow-100 text-yellow-800';
+
         return `
             <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div class="flex-1">
                         <div class="flex items-center gap-3 mb-2">
-                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-${statusInfo.bgColor} text-${statusInfo.textColor}">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold ${statusClass}">
                                 ${statusInfo.label}
                             </span>
                             <span class="font-bold text-gray-800">${escapeHtml(request.contract_code || 'N/A')}</span>
