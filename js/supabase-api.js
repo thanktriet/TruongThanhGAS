@@ -3775,6 +3775,11 @@ async function supabaseCreateCocRequest(requestData) {
                 car_color: requestData.car_color,
                 vin_number: requestData.vin_number,
                 
+                // Thông tin thanh toán (TVBH điền)
+                payment_method: requestData.payment_method || null,
+                loan_bank_name: requestData.loan_bank_name || null,
+                loan_amount: requestData.loan_amount ? parseFloat(requestData.loan_amount) : null,
+                
                 // Thông tin tài chính sẽ được SaleAdmin/Kế toán điền sau qua modal cập nhật tài chính
                 po_number: null,
                 import_price: 0,

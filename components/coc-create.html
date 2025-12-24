@@ -66,13 +66,44 @@
                         </div>
                         <div>
                             <label class="label text-xs md:text-sm mb-1 block">Phương thức thanh toán</label>
+                            <select 
+                                name="payment_method" 
+                                id="coc-create-payment_method" 
+                                class="input text-sm md:text-base w-full"
+                                onchange="toggleLoanFields(this.value)"
+                            >
+                                <option value="">-- Chọn phương thức --</option>
+                                <option value="Tiền mặt">Tiền mặt</option>
+                                <option value="Trả góp">Trả góp</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Tên ngân hàng (chỉ hiện khi chọn Trả góp) -->
+                        <div id="coc-loan-bank-container" class="hidden">
+                            <label class="label text-xs md:text-sm mb-1 block">
+                                Tên ngân hàng <span class="text-red-500">*</span>
+                            </label>
                             <input 
-                                name="payment_method_display" 
-                                id="coc-create-payment_method_display" 
+                                name="loan_bank_name" 
+                                id="coc-create-loan_bank_name" 
                                 type="text"
-                                class="input text-sm md:text-base w-full bg-gray-100" 
-                                readonly
-                                placeholder="Tự động lấy từ đơn hàng"
+                                class="input text-sm md:text-base w-full"
+                                placeholder="VD: VPBank, MB Bank..."
+                            >
+                        </div>
+                        
+                        <!-- Số tiền vay (chỉ hiện khi chọn Trả góp) -->
+                        <div id="coc-loan-amount-container" class="hidden">
+                            <label class="label text-xs md:text-sm mb-1 block">
+                                Số tiền vay (VNĐ) <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                name="loan_amount" 
+                                id="coc-create-loan_amount" 
+                                type="text"
+                                class="input text-sm md:text-base w-full money-input"
+                                placeholder="0"
+                                oninput="if(window.formatMoneyInput)window.formatMoneyInput(this)"
                             >
                         </div>
                     </div>
@@ -363,6 +394,7 @@ if (typeof window !== 'undefined') {
     window.searchOrderForCoc = searchOrderForCoc;
     window.submitCocCreateForm = submitCocCreateForm;
     window.resetCocCreateForm = resetCocCreateForm;
+    window.toggleLoanFields = toggleLoanFields;
     window.autoFillCocFormFromOrder = autoFillCocFormFromOrder;
     
     console.log('✅ COC create functions exposed to window');
