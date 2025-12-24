@@ -101,8 +101,15 @@ async function loadCocRequests() {
         });
 
         console.log('[COC Requests] API result:', result);
+        console.log('[COC Requests] API result.success:', result.success);
         console.log('[COC Requests] API result.data type:', typeof result.data, 'isArray:', Array.isArray(result.data));
         console.log('[COC Requests] API result.data value:', result.data);
+        console.log('[COC Requests] API result.message:', result.message);
+        
+        // Check if there are any errors or warnings
+        if (result && !result.success) {
+            console.error('[COC Requests] API call failed:', result.message || 'Unknown error');
+        }
 
         if (result.success) {
             allCocRequests = Array.isArray(result.data) ? result.data : [];
