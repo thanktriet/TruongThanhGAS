@@ -307,19 +307,33 @@ if (typeof document !== 'undefined') {
     // Check if tab is already active when component loads
     const checkAndLoad = () => {
         const tab = document.getElementById('tab-coc-requests');
+        console.log('[COC Requests] Checking tab state:', {
+            tabExists: !!tab,
+            hasActiveClass: tab ? tab.classList.contains('active') : false,
+            tabClasses: tab ? Array.from(tab.classList) : []
+        });
+        
         if (tab && tab.classList.contains('active')) {
             console.log('[COC Requests] Tab is already active on load, calling loadCocRequests');
             if (typeof window.loadCocRequests === 'function') {
+                console.log('[COC Requests] window.loadCocRequests exists, calling...');
                 window.loadCocRequests();
+            } else {
+                console.error('[COC Requests] window.loadCocRequests function not found');
             }
+        } else {
+            console.log('[COC Requests] Tab is not active, waiting for navigation.js to call loadCocRequests');
         }
     };
     
     // Check immediately if DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', checkAndLoad);
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(checkAndLoad, 1000); // Delay to ensure components are loaded
+        });
     } else {
-        setTimeout(checkAndLoad, 500); // Delay to ensure tab rendering is complete
+        // Delay to ensure tab rendering is complete
+        setTimeout(checkAndLoad, 1000);
     }
 }
 </script>
