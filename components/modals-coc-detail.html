@@ -262,6 +262,7 @@ async function openCocDetailModal(requestId) {
         }
         
         // Fill basic info
+        console.log('[COC Detail] Request data:', requestData);
         document.getElementById('detail-contract-code').textContent = requestData.contract_code || '-';
         document.getElementById('detail-customer-name').textContent = requestData.customer_name || '-';
         document.getElementById('detail-car-model').textContent = requestData.car_model || '-';
@@ -275,10 +276,12 @@ async function openCocDetailModal(requestId) {
         document.getElementById('detail-po-number').textContent = requestData.po_number || '-';
         document.getElementById('detail-import-price').textContent = formatCurrency(requestData.import_price);
         
-        // Payment method: Lấy từ orders nếu có
-        let paymentMethod = '-';
-        if (requestData.orders && requestData.orders.payment_method) {
-            paymentMethod = requestData.orders.payment_method;
+        // Payment method: Lấy từ coc_requests (đã lưu trực tiếp) hoặc từ orders nếu chưa có
+        let paymentMethod = requestData.payment_method || '-';
+        if (!paymentMethod || paymentMethod === '-') {
+            if (requestData.orders && requestData.orders.payment_method) {
+                paymentMethod = requestData.orders.payment_method;
+            }
         }
         document.getElementById('detail-payment-method').textContent = paymentMethod;
         
