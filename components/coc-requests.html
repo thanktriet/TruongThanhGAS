@@ -323,6 +323,15 @@ if (typeof window !== 'undefined') {
     });
     
     console.log('✅ COC requests functions exposed to window');
+    
+    // Also try to load immediately if tab is active (as a fallback)
+    setTimeout(() => {
+        const tab = document.getElementById('tab-coc-requests');
+        if (tab && tab.classList.contains('active')) {
+            console.log('[COC Requests] Tab is active after component load, calling loadCocRequests');
+            loadCocRequests();
+        }
+    }, 1500);
 }
 
 // Auto-load when tab is active
