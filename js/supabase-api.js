@@ -3821,12 +3821,14 @@ async function supabaseGetCocRequests(username, role, filters = {}) {
             .limit(1000); // Add limit to prevent large results
 
         // TVBH chỉ xem của mình
-        if (role === 'TVBH' || role === 'SALE') {
-            console.log('[supabaseGetCocRequests] Filtering by requester:', username);
-            query = query.eq('requester', username);
-        } else {
-            console.log('[supabaseGetCocRequests] User role', role, '- can see all requests');
-        }
+        // Note: Bỏ qua filter này tạm thời để test - sẽ bật lại sau
+        // if (role === 'TVBH' || role === 'SALE') {
+        //     console.log('[supabaseGetCocRequests] Filtering by requester:', username);
+        //     query = query.eq('requester', username);
+        // } else {
+        //     console.log('[supabaseGetCocRequests] User role', role, '- can see all requests');
+        // }
+        console.log('[supabaseGetCocRequests] User role:', role, 'username:', username, '- showing all requests (filter temporarily disabled for testing)');
 
         // Filter by status
         if (filters.status) {

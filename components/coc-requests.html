@@ -101,15 +101,25 @@ async function loadCocRequests() {
         });
 
         console.log('[COC Requests] API result:', result);
+        console.log('[COC Requests] API result.data type:', typeof result.data, 'isArray:', Array.isArray(result.data));
+        console.log('[COC Requests] API result.data value:', result.data);
 
         if (result.success) {
             allCocRequests = Array.isArray(result.data) ? result.data : [];
             console.log('[COC Requests] Loaded', allCocRequests.length, 'requests');
+            console.log('[COC Requests] allCocRequests after assignment:', allCocRequests);
+            
             if (allCocRequests.length > 0) {
                 console.log('[COC Requests] First request:', allCocRequests[0]);
+                console.log('[COC Requests] First request keys:', Object.keys(allCocRequests[0]));
             } else {
-                console.warn('[COC Requests] No requests found - check RLS policies and filters');
+                console.warn('[COC Requests] No requests found');
+                console.warn('[COC Requests] result.data:', result.data);
+                console.warn('[COC Requests] Check: RLS policies, user role, query filters');
             }
+            
+            // Force a small delay to ensure state is updated
+            await new Promise(resolve => setTimeout(resolve, 100));
             filterCocRequests();
         } else {
             console.error('[COC Requests] API returned error:', result.message);

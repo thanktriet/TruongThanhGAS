@@ -96,7 +96,13 @@ COMMENT ON COLUMN coc_requests.business_days_delayed IS 'Số ngày làm việc 
 COMMENT ON COLUMN coc_requests.interest_rate IS 'Lãi suất %/năm (mặc định 8%)';
 
 -- ======================================================
--- 3. GRANT PERMISSIONS
+-- 3. DISABLE RLS (Row Level Security)
+-- ======================================================
+-- Disable RLS để cho phép truy cập từ anon/authenticated roles
+ALTER TABLE coc_requests DISABLE ROW LEVEL SECURITY;
+
+-- ======================================================
+-- 4. GRANT PERMISSIONS
 -- ======================================================
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT ALL ON coc_requests TO anon, authenticated;
