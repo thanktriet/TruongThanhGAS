@@ -57,6 +57,8 @@
 <script>
 let allCocRequests = [];
 let filteredCocRequests = [];
+let isLoadingCocRequests = false;
+let cocRequestsObserver = null;
 
 // Status labels and colors
 const COC_STATUS = {
@@ -67,6 +69,12 @@ const COC_STATUS = {
 };
 
 async function loadCocRequests() {
+    // Prevent multiple simultaneous calls
+    if (isLoadingCocRequests) {
+        console.log('[COC Requests] Already loading, skipping...');
+        return;
+    }
+    
     const session = JSON.parse(localStorage.getItem('user_session') || '{}');
     if (!session || !session.username) {
         if (typeof window.showToast === 'function') {
@@ -75,6 +83,7 @@ async function loadCocRequests() {
         return;
     }
 
+    isLoadingCocRequests = true;
     const loadingDiv = document.getElementById('coc-requests-loading');
     const listDiv = document.getElementById('coc-requests-list');
     const emptyDiv = document.getElementById('coc-requests-empty');
@@ -104,6 +113,7 @@ async function loadCocRequests() {
         if (listDiv) listDiv.innerHTML = '<div class="text-center py-8 text-red-600">Lỗi tải dữ liệu</div>';
     } finally {
         if (loadingDiv) loadingDiv.classList.add('hidden');
+        isLoadingCocRequests = false;
     }
 }
 
@@ -233,26 +243,9 @@ if (typeof window !== 'undefined') {
 
 // Auto-load when tab is active
 if (typeof document !== 'undefined') {
-    // Listen for tab activation
-    const observer = new MutationObserver((mutations) => {
-        const tab = document.getElementById('tab-coc-requests');
-        if (tab && tab.classList.contains('active') && allCocRequests.length === 0) {
-            loadCocRequests();
-        }
-    });
-    
-    setTimeout(() => {
-        const tabsContainer = document.getElementById('tabs-container');
-        if (tabsContainer) {
-            observer.observe(tabsContainer, { attributes: true, attributeFilter: ['class'], subtree: true });
-        }
-        
-        // Initial check
-        const tab = document.getElementById('tab-coc-requests');
-        if (tab && tab.classList.contains('active')) {
-            loadCocRequests();
-        }
-    }, 1000);
+    // Use a simpler approach - check on tab activation via navigation.js
+    // The loadCocRequests will be called from navigation.js when switching to coc-requests tab
+    // This prevents multiple observers and potential loops
 }
 </script>
 

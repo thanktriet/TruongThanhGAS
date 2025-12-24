@@ -3814,7 +3814,7 @@ async function supabaseGetCocRequests(username, role, filters = {}) {
 
         let query = supabase
             .from('coc_requests')
-            .select('*, orders(*)')
+            .select('*')
             .order('request_date', { ascending: false });
 
         // TVBH chỉ xem của mình
