@@ -69,19 +69,27 @@ const COC_STATUS = {
 };
 
 async function loadCocRequests() {
+    console.log('[COC Requests] loadCocRequests called');
+    
     // Prevent multiple simultaneous calls
     if (isLoadingCocRequests) {
         console.log('[COC Requests] Already loading, skipping...');
         return;
     }
     
+    console.log('[COC Requests] Checking session...');
     const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+    console.log('[COC Requests] Session:', session);
+    
     if (!session || !session.username) {
+        console.warn('[COC Requests] No session or username, showing toast');
         if (typeof window.showToast === 'function') {
             window.showToast('Vui lòng đăng nhập lại', 'danger');
         }
         return;
     }
+    
+    console.log('[COC Requests] Session valid, proceeding with API call...');
 
     isLoadingCocRequests = true;
     const loadingDiv = document.getElementById('coc-requests-loading');
