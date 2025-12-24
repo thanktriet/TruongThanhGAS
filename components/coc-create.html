@@ -78,68 +78,9 @@
                     </div>
                 </div>
 
-                <!-- Thông tin tài chính (để tính lãi) -->
-                <div class="mb-4 md:mb-6">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">
-                        2. Thông tin Tài chính (để tính lãi)
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                        <!-- PO Number -->
-                        <div>
-                            <label class="label text-xs md:text-sm mb-1 block">
-                                Số PO (Đơn đặt hàng)
-                            </label>
-                            <input 
-                                name="po_number" 
-                                id="coc-create-po_number" 
-                                class="input text-sm md:text-base w-full"
-                                placeholder="VD: PO-2024-001"
-                            >
-                        </div>
-
-                        <!-- Giá nhập -->
-                        <div>
-                            <label class="label text-xs md:text-sm mb-1 block">
-                                Giá nhập (VNĐ) <span class="text-red-500">*</span>
-                            </label>
-                            <input 
-                                name="import_price" 
-                                id="coc-create-import_price" 
-                                type="text"
-                                class="input text-sm md:text-base w-full" 
-                                placeholder="0"
-                                required
-                                oninput="if(window.formatMoneyInput)window.formatMoneyInput(this)"
-                                onblur="updatePrincipalAmount()"
-                            >
-                        </div>
-
-
-                        <!-- Số tiền tính lãi (có thể điều chỉnh, mặc định = giá nhập) -->
-                        <div class="md:col-span-2">
-                            <label class="label text-xs md:text-sm mb-1 block">
-                                Số tiền tính lãi (VNĐ)
-                                <span class="text-gray-500 text-xs font-normal">(Mặc định = Giá nhập, có thể điều chỉnh)</span>
-                            </label>
-                            <input 
-                                name="principal_amount" 
-                                id="coc-create-principal_amount" 
-                                type="text"
-                                class="input text-sm md:text-base w-full" 
-                                placeholder="0"
-                                oninput="if(window.formatMoneyInput)window.formatMoneyInput(this)"
-                            >
-                            <p class="text-xs text-gray-500 mt-1">
-                                <i class="fa-solid fa-info-circle mr-1"></i>
-                                Để trống sẽ tự động = Giá nhập
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Ngày đề nghị -->
                 <div class="mb-4 md:mb-6">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">3. Thông tin khác</h3>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 border-b pb-1">2. Thông tin khác</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                         <div>
                             <label class="label text-xs md:text-sm mb-1 block">Ngày đề nghị <span class="text-red-500">*</span></label>
@@ -197,18 +138,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-// Auto-fill principal_amount = import_price when import_price changes
-function updatePrincipalAmount() {
-    const importPriceInput = document.getElementById('coc-create-import_price');
-    const principalInput = document.getElementById('coc-create-principal_amount');
-    
-    if (importPriceInput && principalInput && !principalInput.value) {
-        principalInput.value = importPriceInput.value;
-        if (window.formatMoneyInput) {
-            window.formatMoneyInput(principalInput);
-        }
-    }
-}
 
 // Search order for COC
 async function searchOrderForCoc(event) {
@@ -376,10 +305,8 @@ async function submitCocCreateForm(event) {
             car_version: formData.get('car_version')?.trim() || null,
             car_color: formData.get('car_color')?.trim() || null,
             vin_number: formData.get('vin_number')?.trim() || null,
-            po_number: formData.get('po_number')?.trim() || null,
-            import_price: importPriceValue,
-            // payment_method không lưu vào coc_requests, lấy từ orders
-            principal_amount: principalAmountValue,
+            // Thông tin tài chính (po_number, import_price, principal_amount, guarantee_bank_coc) 
+            // sẽ được SaleAdmin/Kế toán điền sau qua modal cập nhật tài chính
             request_date: formData.get('request_date') || new Date().toISOString().split('T')[0],
             requester: session.username,
             notes: formData.get('notes')?.trim() || null

@@ -3764,9 +3764,6 @@ async function supabaseCreateCocRequest(requestData) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
-        // Tính principal_amount: mặc định = import_price nếu không có
-        const principalAmount = requestData.principal_amount || requestData.import_price || 0;
-
         const { data, error } = await supabase
             .from('coc_requests')
             .insert([{
@@ -3778,11 +3775,11 @@ async function supabaseCreateCocRequest(requestData) {
                 car_color: requestData.car_color,
                 vin_number: requestData.vin_number,
                 
-                // Thông tin tài chính
-                po_number: requestData.po_number || null,
-                import_price: parseFloat(requestData.import_price) || 0,
-                // payment_method không lưu vào coc_requests, lấy từ orders.payment_method
-                principal_amount: parseFloat(principalAmount) || 0,
+                // Thông tin tài chính sẽ được SaleAdmin/Kế toán điền sau qua modal cập nhật tài chính
+                po_number: null,
+                import_price: 0,
+                principal_amount: 0,
+                guarantee_bank_coc: null,
                 
                 request_date: requestData.request_date || new Date().toISOString().split('T')[0],
                 requester: requestData.requester,
