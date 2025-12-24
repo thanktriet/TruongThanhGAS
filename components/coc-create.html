@@ -306,7 +306,11 @@ function autoFillCocFormFromOrder(order) {
     const paymentMethodSelect = document.getElementById('coc-create-payment_method');
     if (paymentMethodSelect && order.payment_method) {
         paymentMethodSelect.value = order.payment_method;
-        toggleLoanFields(order.payment_method);
+        if (window.toggleLoanFields) {
+            window.toggleLoanFields(order.payment_method);
+        } else if (typeof toggleLoanFields === 'function') {
+            toggleLoanFields(order.payment_method);
+        }
         
         // If payment method is "Trả góp" and order has loan info, fill it
         if (order.payment_method === 'Trả góp') {
