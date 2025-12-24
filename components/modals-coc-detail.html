@@ -273,8 +273,15 @@ async function openCocDetailModal(requestId) {
         // Fill financial info
         document.getElementById('detail-po-number').textContent = requestData.po_number || '-';
         document.getElementById('detail-import-price').textContent = formatCurrency(requestData.import_price);
-        document.getElementById('detail-payment-method').textContent = requestData.payment_method || '-';
-        document.getElementById('detail-guarantee-bank').textContent = requestData.guarantee_bank || '-';
+        
+        // Payment method: Lấy từ orders nếu có
+        let paymentMethod = '-';
+        if (requestData.orders && requestData.orders.payment_method) {
+            paymentMethod = requestData.orders.payment_method;
+        }
+        document.getElementById('detail-payment-method').textContent = paymentMethod;
+        
+        document.getElementById('detail-guarantee-bank-coc').textContent = requestData.guarantee_bank_coc || '-';
         document.getElementById('detail-principal-amount').textContent = formatCurrency(requestData.principal_amount);
         
         // Fill issue info (if issued)

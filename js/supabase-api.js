@@ -3815,7 +3815,7 @@ async function supabaseGetCocRequests(username, role, filters = {}) {
 
         let query = supabase
             .from('coc_requests')
-            .select('*')
+            .select('*, orders(payment_method)')
             .order('request_date', { ascending: false })
             .limit(1000); // Add limit to prevent large results
 
