@@ -166,11 +166,11 @@ function renderCocRequests() {
 
         if (emptyDiv) emptyDiv.classList.add('hidden');
 
-    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
-    const userRole = session.role || '';
-    const username = session.username || '';
+        const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+        const userRole = session.role || '';
+        const username = session.username || '';
 
-    listDiv.innerHTML = filteredCocRequests.map(request => {
+        listDiv.innerHTML = filteredCocRequests.map(request => {
         const statusInfo = COC_STATUS[request.status] || COC_STATUS.pending;
         const canIssue = userRole === 'SALEADMIN' && request.status === 'pending';
         const canDisburse = userRole === 'KETOAN' && request.status === 'issued';
@@ -220,6 +220,12 @@ function renderCocRequests() {
             </div>
         `;
     }).join('');
+    
+    console.log('[COC Requests] Rendering completed');
+    } catch (error) {
+        console.error('[COC Requests] Render error:', error);
+        listDiv.innerHTML = '<div class="text-center py-8 text-red-600">Lỗi hiển thị dữ liệu: ' + escapeHtml(error.message) + '</div>';
+    }
 }
 
 function viewCocRequestDetail(requestId) {
