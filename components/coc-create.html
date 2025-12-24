@@ -312,6 +312,34 @@ async function submitCocCreateForm(event) {
     submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tạo...';
 
     try {
+        // Get payment method and loan info
+        const paymentMethod = formData.get('payment_method')?.trim() || null;
+        const loanBankName = formData.get('loan_bank_name')?.trim() || null;
+        const loanAmountStr = formData.get('loan_amount') 
+            ? formData.get('loan_amount').toString().replace(/\./g, '').replace(/,/g, '')
+            : '';
+        const loanAmount = loanAmountStr ? parseFloat(loanAmountStr) : 0;
+        
+        // Validate loan fields if payment method is Trả góp
+        if (paymentMethod === 'Trả góp') {
+            if (!loanBankName) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Vui lòng nhập tên ngân hàng khi chọn Trả góp', 'warning');
+                }
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                return;
+            }
+            if (!loanAmount || loanAmount <= 0) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Vui lòng nhập số tiền vay khi chọn Trả góp', 'warning');
+                }
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                return;
+            }
+        }
+
         // Get order_id if we have current order
         let orderId = null;
         if (currentOrderForCoc && currentOrderForCoc.id) {
@@ -327,6 +355,9 @@ async function submitCocCreateForm(event) {
             car_version: formData.get('car_version')?.trim() || null,
             car_color: formData.get('car_color')?.trim() || null,
             vin_number: formData.get('vin_number')?.trim() || null,
+            payment_method: paymentMethod,
+            loan_bank_name: loanBankName,
+            loan_amount: loanAmount > 0 ? loanAmount : null,
             // Thông tin tài chính (po_number, import_price, principal_amount, guarantee_bank_coc) 
             // sẽ được SaleAdmin/Kế toán điền sau qua modal cập nhật tài chính
             request_date: formData.get('request_date') || new Date().toISOString().split('T')[0],
