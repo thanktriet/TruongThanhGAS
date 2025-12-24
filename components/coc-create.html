@@ -281,14 +281,6 @@ async function submitCocCreateForm(event) {
     submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tạo...';
 
     try {
-        // Parse money values (remove thousands separators)
-        const importPriceStr = (formData.get('import_price') || '').toString().replace(/\./g, '').replace(/,/g, '');
-        const importPriceValue = parseFloat(importPriceStr) || 0;
-        const principalAmountStr = formData.get('principal_amount') 
-            ? formData.get('principal_amount').toString().replace(/\./g, '').replace(/,/g, '')
-            : '';
-        const principalAmountValue = principalAmountStr ? parseFloat(principalAmountStr) : importPriceValue;
-
         // Get order_id if we have current order
         let orderId = null;
         if (currentOrderForCoc && currentOrderForCoc.id) {
