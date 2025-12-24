@@ -220,8 +220,8 @@ function renderCocRequests() {
                 </div>
             `;
         }).join('');
-    
-    console.log('[COC Requests] Rendering completed');
+        
+        console.log('[COC Requests] Rendering completed');
     } catch (error) {
         console.error('[COC Requests] Render error:', error);
         listDiv.innerHTML = '<div class="text-center py-8 text-red-600">Lỗi hiển thị dữ liệu: ' + escapeHtml(error.message) + '</div>';
