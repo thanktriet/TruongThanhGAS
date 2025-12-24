@@ -171,55 +171,55 @@ function renderCocRequests() {
         const username = session.username || '';
 
         listDiv.innerHTML = filteredCocRequests.map(request => {
-        const statusInfo = COC_STATUS[request.status] || COC_STATUS.pending;
-        const canIssue = userRole === 'SALEADMIN' && request.status === 'pending';
-        const canDisburse = userRole === 'KETOAN' && request.status === 'issued';
-        const canView = true; // All roles can view
+            const statusInfo = COC_STATUS[request.status] || COC_STATUS.pending;
+            const canIssue = userRole === 'SALEADMIN' && request.status === 'pending';
+            const canDisburse = userRole === 'KETOAN' && request.status === 'issued';
+            const canView = true; // All roles can view
 
-        // Use explicit class names instead of template strings for Tailwind
-        const statusClass = {
-            'pending': 'bg-yellow-100 text-yellow-800',
-            'issued': 'bg-blue-100 text-blue-800',
-            'disbursed': 'bg-orange-100 text-orange-800',
-            'closed': 'bg-green-100 text-green-800'
-        }[request.status] || 'bg-yellow-100 text-yellow-800';
+            // Use explicit class names instead of template strings for Tailwind
+            const statusClass = {
+                'pending': 'bg-yellow-100 text-yellow-800',
+                'issued': 'bg-blue-100 text-blue-800',
+                'disbursed': 'bg-orange-100 text-orange-800',
+                'closed': 'bg-green-100 text-green-800'
+            }[request.status] || 'bg-yellow-100 text-yellow-800';
 
-        return `
-            <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-3 mb-2">
-                            <span class="px-3 py-1 rounded-full text-xs font-bold ${statusClass}">
-                                ${statusInfo.label}
-                            </span>
-                            <span class="font-bold text-gray-800">${escapeHtml(request.contract_code || 'N/A')}</span>
+            return `
+                <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold ${statusClass}">
+                                    ${statusInfo.label}
+                                </span>
+                                <span class="font-bold text-gray-800">${escapeHtml(request.contract_code || 'N/A')}</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                                <div><strong>Khách hàng:</strong> ${escapeHtml(request.customer_name || '-')}</div>
+                                <div><strong>Xe:</strong> ${escapeHtml(request.car_model || '-')} ${escapeHtml(request.car_version || '')} ${escapeHtml(request.car_color || '')}</div>
+                                <div><strong>Ngày đề nghị:</strong> ${request.request_date ? new Date(request.request_date).toLocaleDateString('vi-VN') : '-'}</div>
+                                ${request.actual_issue_date ? `<div><strong>Ngày cấp:</strong> ${new Date(request.actual_issue_date).toLocaleDateString('vi-VN')}</div>` : ''}
+                                ${request.po_number ? `<div><strong>PO:</strong> ${escapeHtml(request.po_number)}</div>` : ''}
+                                ${request.import_price ? `<div><strong>Giá nhập:</strong> ${parseFloat(request.import_price).toLocaleString('vi-VN')} VNĐ</div>` : ''}
+                                ${request.business_days_delayed > 0 ? `<div><strong>Số ngày trễ:</strong> ${request.business_days_delayed} ngày làm việc</div>` : ''}
+                                ${request.interest_amount > 0 ? `<div><strong>Lãi:</strong> ${parseFloat(request.interest_amount).toLocaleString('vi-VN')} VNĐ</div>` : ''}
+                            </div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-                            <div><strong>Khách hàng:</strong> ${escapeHtml(request.customer_name || '-')}</div>
-                            <div><strong>Xe:</strong> ${escapeHtml(request.car_model || '-')} ${escapeHtml(request.car_version || '')} ${escapeHtml(request.car_color || '')}</div>
-                            <div><strong>Ngày đề nghị:</strong> ${request.request_date ? new Date(request.request_date).toLocaleDateString('vi-VN') : '-'}</div>
-                            ${request.actual_issue_date ? `<div><strong>Ngày cấp:</strong> ${new Date(request.actual_issue_date).toLocaleDateString('vi-VN')}</div>` : ''}
-                            ${request.po_number ? `<div><strong>PO:</strong> ${escapeHtml(request.po_number)}</div>` : ''}
-                            ${request.import_price ? `<div><strong>Giá nhập:</strong> ${parseFloat(request.import_price).toLocaleString('vi-VN')} VNĐ</div>` : ''}
-                            ${request.business_days_delayed > 0 ? `<div><strong>Số ngày trễ:</strong> ${request.business_days_delayed} ngày làm việc</div>` : ''}
-                            ${request.interest_amount > 0 ? `<div><strong>Lãi:</strong> ${parseFloat(request.interest_amount).toLocaleString('vi-VN')} VNĐ</div>` : ''}
+                        <div class="flex flex-wrap gap-2">
+                            ${canView ? `<button onclick="viewCocRequestDetail('${request.id}')" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm">
+                                <i class="fa-solid fa-eye mr-1"></i>Xem
+                            </button>` : ''}
+                            ${canIssue ? `<button onclick="openCocIssueModal('${request.id}')" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm">
+                                <i class="fa-solid fa-certificate mr-1"></i>Cấp COC
+                            </button>` : ''}
+                            ${canDisburse ? `<button onclick="openCocDisburseModal('${request.id}')" class="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition text-sm">
+                                <i class="fa-solid fa-upload mr-1"></i>Giải ngân
+                            </button>` : ''}
                         </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        ${canView ? `<button onclick="viewCocRequestDetail('${request.id}')" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm">
-                            <i class="fa-solid fa-eye mr-1"></i>Xem
-                        </button>` : ''}
-                        ${canIssue ? `<button onclick="openCocIssueModal('${request.id}')" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm">
-                            <i class="fa-solid fa-certificate mr-1"></i>Cấp COC
-                        </button>` : ''}
-                        ${canDisburse ? `<button onclick="openCocDisburseModal('${request.id}')" class="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition text-sm">
-                            <i class="fa-solid fa-upload mr-1"></i>Giải ngân
-                        </button>` : ''}
                     </div>
                 </div>
-            </div>
-        `;
-    }).join('');
+            `;
+        }).join('');
     
     console.log('[COC Requests] Rendering completed');
     } catch (error) {
