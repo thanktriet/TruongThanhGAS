@@ -1,0 +1,379 @@
+<!-- Modal Chi tiết COC Request -->
+<div id="modal-coc-detail" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="bg-blue-600 text-white px-6 py-4 rounded-t-xl flex justify-between items-center sticky top-0 z-10">
+            <h2 class="text-xl font-bold">
+                <i class="fa-solid fa-certificate mr-2"></i>Chi Tiết Đề Nghị Cấp COC
+            </h2>
+            <button onclick="closeCocDetailModal()" class="text-white hover:text-gray-200">
+                <i class="fa-solid fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <div id="coc-detail-content" class="p-6">
+            <!-- Loading state -->
+            <div id="coc-detail-loading" class="text-center py-8">
+                <i class="fa-solid fa-spinner fa-spin text-3xl text-blue-600 mb-4"></i>
+                <p class="text-gray-600">Đang tải thông tin...</p>
+            </div>
+
+            <!-- Content -->
+            <div id="coc-detail-body" class="hidden">
+                <!-- Thông tin cơ bản -->
+                <div class="mb-6 bg-gray-50 p-5 rounded-lg border border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-info-circle mr-2 text-blue-600"></i>
+                        Thông Tin Cơ Bản
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600">Mã đơn hàng:</span>
+                            <span id="detail-contract-code" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Khách hàng:</span>
+                            <span id="detail-customer-name" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Loại xe:</span>
+                            <span id="detail-car-model" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Phiên bản:</span>
+                            <span id="detail-car-version" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Màu sắc:</span>
+                            <span id="detail-car-color" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Số khung (VIN):</span>
+                            <span id="detail-vin-number" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Người đề nghị:</span>
+                            <span id="detail-requester" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Ngày đề nghị:</span>
+                            <span id="detail-request-date" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin tài chính -->
+                <div class="mb-6 bg-yellow-50 p-5 rounded-lg border border-yellow-200">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-coins mr-2 text-yellow-600"></i>
+                        Thông Tin Tài Chính
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600">Số PO:</span>
+                            <span id="detail-po-number" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Giá nhập:</span>
+                            <span id="detail-import-price" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Phương thức thanh toán:</span>
+                            <span id="detail-payment-method" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Ngân hàng bảo lãnh:</span>
+                            <span id="detail-guarantee-bank" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                        <div class="md:col-span-2">
+                            <span class="text-gray-600">Số tiền tính lãi:</span>
+                            <span id="detail-principal-amount" class="font-bold ml-2 text-blue-600 text-lg"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin cấp COC -->
+                <div id="detail-issue-section" class="mb-6 bg-blue-50 p-5 rounded-lg border border-blue-200 hidden">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-certificate mr-2 text-blue-600"></i>
+                        Thông Tin Cấp COC
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600">Người cấp:</span>
+                            <span id="detail-issuer" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Ngày cấp thực tế:</span>
+                            <span id="detail-actual-issue-date" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Số ngày trễ:</span>
+                            <span id="detail-delayed-days" class="font-bold ml-2 text-orange-600"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Số tiền lãi:</span>
+                            <span id="detail-interest-amount" class="font-bold ml-2 text-red-600"></span>
+                        </div>
+                        <div class="md:col-span-2">
+                            <span class="text-gray-600">Ảnh COC:</span>
+                            <div id="detail-coc-image" class="mt-2">
+                                <a id="detail-coc-image-link" href="#" target="_blank" class="text-blue-600 hover:underline inline-flex items-center">
+                                    <i class="fa-solid fa-image mr-2"></i>
+                                    <span id="detail-coc-image-text">Xem ảnh COC</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <span class="text-gray-600">Biên bản bàn giao:</span>
+                            <div id="detail-handover-doc" class="mt-2">
+                                <a id="detail-handover-doc-link" href="#" target="_blank" class="text-blue-600 hover:underline inline-flex items-center">
+                                    <i class="fa-solid fa-file-pdf mr-2"></i>
+                                    <span id="detail-handover-doc-text">Xem biên bản bàn giao</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin giải ngân -->
+                <div id="detail-disburse-section" class="mb-6 bg-orange-50 p-5 rounded-lg border border-orange-200 hidden">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-upload mr-2 text-orange-600"></i>
+                        Thông Tin Giải Ngân
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600">Người giải ngân:</span>
+                            <span id="detail-accountant" class="font-bold ml-2 text-gray-800"></span>
+                        </div>
+                        <div class="md:col-span-2">
+                            <span class="text-gray-600">File giải ngân:</span>
+                            <div id="detail-disbursement-file" class="mt-2">
+                                <a id="detail-disbursement-file-link" href="#" target="_blank" class="text-blue-600 hover:underline inline-flex items-center">
+                                    <i class="fa-solid fa-file-upload mr-2"></i>
+                                    <span id="detail-disbursement-file-text">Xem file giải ngân</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trạng thái -->
+                <div class="mb-6 bg-gray-50 p-5 rounded-lg border border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-info-circle mr-2 text-gray-600"></i>
+                        Trạng Thái
+                    </h3>
+                    <div class="flex items-center gap-3">
+                        <span id="detail-status-badge" class="px-4 py-2 rounded-full text-sm font-bold"></span>
+                        <span id="detail-status-label" class="text-gray-700"></span>
+                    </div>
+                </div>
+
+                <!-- Ghi chú -->
+                <div id="detail-notes-section" class="mb-6 bg-gray-50 p-5 rounded-lg border border-gray-200 hidden">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-sticky-note mr-2 text-gray-600"></i>
+                        Ghi Chú
+                    </h3>
+                    <p id="detail-notes" class="text-gray-700 whitespace-pre-wrap"></p>
+                </div>
+            </div>
+
+            <!-- Error state -->
+            <div id="coc-detail-error" class="hidden text-center py-8">
+                <i class="fa-solid fa-exclamation-circle text-3xl text-red-600 mb-4"></i>
+                <p class="text-red-600" id="coc-detail-error-message">Không thể tải thông tin chi tiết</p>
+            </div>
+        </div>
+
+        <!-- Footer buttons -->
+        <div class="border-t border-gray-200 p-4 bg-gray-50 flex justify-end gap-3 sticky bottom-0">
+            <button 
+                onclick="closeCocDetailModal()" 
+                class="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition font-bold"
+            >
+                Đóng
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Helper: Escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Helper: Format date
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    try {
+        return new Date(dateString).toLocaleDateString('vi-VN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+    } catch (e) {
+        return dateString;
+    }
+}
+
+// Helper: Format currency
+function formatCurrency(amount) {
+    if (!amount && amount !== 0) return '-';
+    return parseFloat(amount).toLocaleString('vi-VN') + ' VNĐ';
+}
+
+// COC Status mapping
+const COC_STATUS_DETAIL = {
+    'pending': { label: 'Đang chờ', class: 'bg-yellow-100 text-yellow-800' },
+    'issued': { label: 'Đã cấp', class: 'bg-blue-100 text-blue-800' },
+    'disbursed': { label: 'Đã giải ngân', class: 'bg-orange-100 text-orange-800' },
+    'closed': { label: 'Đã đóng', class: 'bg-green-100 text-green-800' }
+};
+
+// Open modal
+async function openCocDetailModal(requestId) {
+    const modal = document.getElementById('modal-coc-detail');
+    const loadingDiv = document.getElementById('coc-detail-loading');
+    const bodyDiv = document.getElementById('coc-detail-body');
+    const errorDiv = document.getElementById('coc-detail-error');
+    
+    // Show modal and loading
+    modal.classList.remove('hidden');
+    loadingDiv.classList.remove('hidden');
+    bodyDiv.classList.add('hidden');
+    errorDiv.classList.add('hidden');
+    
+    try {
+        // Find request data from allCocRequests
+        let requestData = null;
+        if (typeof window.allCocRequests !== 'undefined' && Array.isArray(window.allCocRequests)) {
+            requestData = window.allCocRequests.find(r => r.id === requestId);
+        }
+        
+        if (!requestData) {
+            throw new Error('Không tìm thấy thông tin đề nghị COC');
+        }
+        
+        // Fill basic info
+        document.getElementById('detail-contract-code').textContent = requestData.contract_code || '-';
+        document.getElementById('detail-customer-name').textContent = requestData.customer_name || '-';
+        document.getElementById('detail-car-model').textContent = requestData.car_model || '-';
+        document.getElementById('detail-car-version').textContent = requestData.car_version || '-';
+        document.getElementById('detail-car-color').textContent = requestData.car_color || '-';
+        document.getElementById('detail-vin-number').textContent = requestData.vin_number || '-';
+        document.getElementById('detail-requester').textContent = requestData.requester || '-';
+        document.getElementById('detail-request-date').textContent = formatDate(requestData.request_date);
+        
+        // Fill financial info
+        document.getElementById('detail-po-number').textContent = requestData.po_number || '-';
+        document.getElementById('detail-import-price').textContent = formatCurrency(requestData.import_price);
+        document.getElementById('detail-payment-method').textContent = requestData.payment_method || '-';
+        document.getElementById('detail-guarantee-bank').textContent = requestData.guarantee_bank || '-';
+        document.getElementById('detail-principal-amount').textContent = formatCurrency(requestData.principal_amount);
+        
+        // Fill issue info (if issued)
+        if (requestData.status === 'issued' || requestData.status === 'closed') {
+            const issueSection = document.getElementById('detail-issue-section');
+            issueSection.classList.remove('hidden');
+            
+            document.getElementById('detail-issuer').textContent = requestData.issuer || '-';
+            document.getElementById('detail-actual-issue-date').textContent = formatDate(requestData.actual_issue_date);
+            document.getElementById('detail-delayed-days').textContent = 
+                requestData.business_days_delayed > 0 
+                    ? `${requestData.business_days_delayed} ngày làm việc`
+                    : '0 ngày';
+            document.getElementById('detail-interest-amount').textContent = formatCurrency(requestData.interest_amount);
+            
+            // COC image
+            const cocImageDiv = document.getElementById('detail-coc-image');
+            const cocImageLink = document.getElementById('detail-coc-image-link');
+            if (requestData.coc_image_url) {
+                cocImageLink.href = requestData.coc_image_url;
+                cocImageLink.classList.remove('hidden');
+                cocImageDiv.classList.remove('hidden');
+            } else {
+                cocImageDiv.classList.add('hidden');
+            }
+            
+            // Handover document
+            const handoverDocDiv = document.getElementById('detail-handover-doc');
+            const handoverDocLink = document.getElementById('detail-handover-doc-link');
+            if (requestData.handover_document_url) {
+                handoverDocLink.href = requestData.handover_document_url;
+                handoverDocLink.classList.remove('hidden');
+                handoverDocDiv.classList.remove('hidden');
+            } else {
+                handoverDocDiv.classList.add('hidden');
+            }
+        } else {
+            document.getElementById('detail-issue-section').classList.add('hidden');
+        }
+        
+        // Fill disburse info (if closed)
+        if (requestData.status === 'closed') {
+            const disburseSection = document.getElementById('detail-disburse-section');
+            disburseSection.classList.remove('hidden');
+            
+            document.getElementById('detail-accountant').textContent = requestData.accountant || '-';
+            
+            // Disbursement file
+            const disburseFileDiv = document.getElementById('detail-disbursement-file');
+            const disburseFileLink = document.getElementById('detail-disbursement-file-link');
+            if (requestData.disbursement_file_url) {
+                disburseFileLink.href = requestData.disbursement_file_url;
+                disburseFileLink.classList.remove('hidden');
+                disburseFileDiv.classList.remove('hidden');
+            } else {
+                disburseFileDiv.classList.add('hidden');
+            }
+        } else {
+            document.getElementById('detail-disburse-section').classList.add('hidden');
+        }
+        
+        // Fill status
+        const statusInfo = COC_STATUS_DETAIL[requestData.status] || COC_STATUS_DETAIL.pending;
+        const statusBadge = document.getElementById('detail-status-badge');
+        statusBadge.textContent = statusInfo.label;
+        statusBadge.className = `px-4 py-2 rounded-full text-sm font-bold ${statusInfo.class}`;
+        document.getElementById('detail-status-label').textContent = 
+            `Trạng thái hiện tại: ${statusInfo.label}`;
+        
+        // Fill notes
+        if (requestData.notes) {
+            document.getElementById('detail-notes-section').classList.remove('hidden');
+            document.getElementById('detail-notes').textContent = requestData.notes;
+        } else {
+            document.getElementById('detail-notes-section').classList.add('hidden');
+        }
+        
+        // Hide loading, show body
+        loadingDiv.classList.add('hidden');
+        bodyDiv.classList.remove('hidden');
+        
+    } catch (error) {
+        console.error('Error loading COC detail:', error);
+        loadingDiv.classList.add('hidden');
+        errorDiv.classList.remove('hidden');
+        document.getElementById('coc-detail-error-message').textContent = error.message || 'Không thể tải thông tin chi tiết';
+    }
+}
+
+// Close modal
+function closeCocDetailModal() {
+    document.getElementById('modal-coc-detail').classList.add('hidden');
+}
+
+// Expose functions to window
+if (typeof window !== 'undefined') {
+    window.openCocDetailModal = openCocDetailModal;
+    window.closeCocDetailModal = closeCocDetailModal;
+    console.log('✅ COC detail modal functions exposed to window');
+}
+</script>
+

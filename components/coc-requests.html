@@ -308,12 +308,14 @@ function renderCocRequests() {
 }
 
 function viewCocRequestDetail(requestId) {
-    // TODO: Implement detail modal
-    const request = allCocRequests.find(r => r.id === requestId);
-    if (!request) return;
-    
-    // For now, just show alert with key info
-    alert(`Chi tiết đề nghị COC:\n\nMã HĐ: ${request.contract_code}\nKhách hàng: ${request.customer_name}\nTrạng thái: ${COC_STATUS[request.status].label}`);
+    if (typeof window.openCocDetailModal === 'function') {
+        window.openCocDetailModal(requestId);
+    } else {
+        // Fallback: show alert if modal not loaded
+        const request = allCocRequests.find(r => r.id === requestId);
+        if (!request) return;
+        alert(`Chi tiết đề nghị COC:\n\nMã HĐ: ${request.contract_code}\nKhách hàng: ${request.customer_name}\nTrạng thái: ${COC_STATUS[request.status].label}`);
+    }
 }
 
 // Helper: Escape HTML

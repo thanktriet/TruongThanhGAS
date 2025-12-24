@@ -164,6 +164,7 @@ async function loadAllComponents() {
     await loadComponentAppend('modals-coc-issue', 'modals-container');
     await loadComponentAppend('modals-coc-disburse', 'modals-container');
     await loadComponentAppend('modals-coc-financial', 'modals-container');
+    await loadComponentAppend('modals-coc-detail', 'modals-container');
     await loadComponent('templates', 'templates-container');
     
     // Wait a bit for DOM to update after loading components
