@@ -157,12 +157,11 @@ function renderCocRequests() {
     }
 
     try {
-
-    if (filteredCocRequests.length === 0) {
-        listDiv.innerHTML = '';
-        if (emptyDiv) emptyDiv.classList.remove('hidden');
-        return;
-    }
+        if (filteredCocRequests.length === 0) {
+            listDiv.innerHTML = '';
+            if (emptyDiv) emptyDiv.classList.remove('hidden');
+            return;
+        }
 
     if (emptyDiv) emptyDiv.classList.add('hidden');
 
