@@ -164,7 +164,7 @@ function renderCocRequests() {
             return;
         }
 
-    if (emptyDiv) emptyDiv.classList.add('hidden');
+        if (emptyDiv) emptyDiv.classList.add('hidden');
 
     const session = JSON.parse(localStorage.getItem('user_session') || '{}');
     const userRole = session.role || '';
