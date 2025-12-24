@@ -3812,10 +3812,13 @@ async function supabaseGetCocRequests(username, role, filters = {}) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
+        console.log('[supabaseGetCocRequests] Starting query for user:', username, 'role:', role);
+
         let query = supabase
             .from('coc_requests')
             .select('*')
-            .order('request_date', { ascending: false });
+            .order('request_date', { ascending: false })
+            .limit(1000); // Add limit to prevent large results
 
         // TVBH chỉ xem của mình
         if (role === 'TVBH' || role === 'SALE') {
@@ -3837,14 +3840,29 @@ async function supabaseGetCocRequests(username, role, filters = {}) {
             query = query.ilike('customer_name', `%${filters.customer_name}%`);
         }
 
+        console.log('[supabaseGetCocRequests] Executing query...');
         const { data, error } = await query;
 
-        if (error) throw error;
+        if (error) {
+            console.error('[supabaseGetCocRequests] Query error:', error);
+            // Nếu bảng chưa tồn tại, trả về empty array thay vì lỗi
+            if (error.code === '42P01' || error.message?.includes('does not exist')) {
+                console.warn('[supabaseGetCocRequests] Table coc_requests does not exist yet, returning empty array');
+                return { success: true, data: [] };
+            }
+            throw error;
+        }
 
+        console.log('[supabaseGetCocRequests] Query successful, found', data?.length || 0, 'records');
         return { success: true, data: data || [] };
     } catch (error) {
-        console.error('Get COC requests error:', error);
-        return { success: false, message: error.message };
+        console.error('[supabaseGetCocRequests] Error:', error);
+        // Nếu bảng chưa tồn tại, trả về empty array thay vì lỗi
+        if (error.code === '42P01' || error.message?.includes('does not exist')) {
+            console.warn('[supabaseGetCocRequests] Table does not exist, returning empty array');
+            return { success: true, data: [] };
+        }
+        return { success: false, message: error.message || 'Lỗi khi lấy danh sách COC requests' };
     }
 }
 

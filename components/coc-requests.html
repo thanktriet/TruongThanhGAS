@@ -99,8 +99,9 @@ async function loadCocRequests() {
             role: session.role
         });
 
-        if (result.success && result.data) {
-            allCocRequests = result.data;
+        if (result.success) {
+            allCocRequests = Array.isArray(result.data) ? result.data : [];
+            console.log('[COC Requests] Loaded', allCocRequests.length, 'requests');
             filterCocRequests();
         } else {
             throw new Error(result.message || 'Không thể tải danh sách đề nghị COC');
