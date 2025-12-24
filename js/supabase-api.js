@@ -3812,7 +3812,7 @@ async function supabaseGetCocRequests(username, role, filters = {}) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
-        console.log('[supabaseGetCocRequests] Starting query for user:', username, 'role:', role);
+        console.log('[supabaseGetCocRequests] Starting query for user:', username, 'role:', role, 'filters:', filters);
 
         let query = supabase
             .from('coc_requests')
@@ -3822,21 +3822,27 @@ async function supabaseGetCocRequests(username, role, filters = {}) {
 
         // TVBH chỉ xem của mình
         if (role === 'TVBH' || role === 'SALE') {
+            console.log('[supabaseGetCocRequests] Filtering by requester:', username);
             query = query.eq('requester', username);
+        } else {
+            console.log('[supabaseGetCocRequests] User role', role, '- can see all requests');
         }
 
         // Filter by status
         if (filters.status) {
+            console.log('[supabaseGetCocRequests] Filtering by status:', filters.status);
             query = query.eq('status', filters.status);
         }
 
         // Filter by contract_code
         if (filters.contract_code) {
+            console.log('[supabaseGetCocRequests] Filtering by contract_code:', filters.contract_code);
             query = query.ilike('contract_code', `%${filters.contract_code}%`);
         }
 
         // Filter by customer_name
         if (filters.customer_name) {
+            console.log('[supabaseGetCocRequests] Filtering by customer_name:', filters.customer_name);
             query = query.ilike('customer_name', `%${filters.customer_name}%`);
         }
 
@@ -3850,10 +3856,19 @@ async function supabaseGetCocRequests(username, role, filters = {}) {
                 console.warn('[supabaseGetCocRequests] Table coc_requests does not exist yet, returning empty array');
                 return { success: true, data: [] };
             }
+            // Log RLS errors specifically
+            if (error.code === '42501' || error.message?.includes('permission denied')) {
+                console.error('[supabaseGetCocRequests] RLS permission error - user may not have access');
+            }
             throw error;
         }
 
         console.log('[supabaseGetCocRequests] Query successful, found', data?.length || 0, 'records');
+        if (data && data.length > 0) {
+            console.log('[supabaseGetCocRequests] First record:', JSON.stringify(data[0], null, 2));
+        } else {
+            console.log('[supabaseGetCocRequests] No records found - this might be due to RLS policies or filters');
+        }
         return { success: true, data: data || [] };
     } catch (error) {
         console.error('[supabaseGetCocRequests] Error:', error);

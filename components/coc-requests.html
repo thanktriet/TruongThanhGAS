@@ -93,17 +93,26 @@ async function loadCocRequests() {
     if (emptyDiv) emptyDiv.classList.add('hidden');
 
     try {
+        console.log('[COC Requests] Loading requests for user:', session.username, 'role:', session.role);
         const result = await window.callAPI({
             action: 'get_coc_requests',
             username: session.username,
             role: session.role
         });
 
+        console.log('[COC Requests] API result:', result);
+
         if (result.success) {
             allCocRequests = Array.isArray(result.data) ? result.data : [];
             console.log('[COC Requests] Loaded', allCocRequests.length, 'requests');
+            if (allCocRequests.length > 0) {
+                console.log('[COC Requests] First request:', allCocRequests[0]);
+            } else {
+                console.warn('[COC Requests] No requests found - check RLS policies and filters');
+            }
             filterCocRequests();
         } else {
+            console.error('[COC Requests] API returned error:', result.message);
             throw new Error(result.message || 'Không thể tải danh sách đề nghị COC');
         }
     } catch (error) {
