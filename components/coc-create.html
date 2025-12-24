@@ -70,7 +70,7 @@
                                 name="payment_method" 
                                 id="coc-create-payment_method" 
                                 class="input text-sm md:text-base w-full"
-                                onchange="toggleLoanFields(this.value)"
+                                onchange="if(window.toggleLoanFields)window.toggleLoanFields(this.value)"
                             >
                                 <option value="">-- Chọn phương thức --</option>
                                 <option value="Tiền mặt">Tiền mặt</option>
