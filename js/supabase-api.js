@@ -4079,6 +4079,11 @@ async function callSupabaseAPI(data) {
                 return await supabaseCreateCocRequest(data);
             
             case 'get_coc_requests':
+                console.log('[callSupabaseAPI] Routing to supabaseGetCocRequests with:', {
+                    username: data.username,
+                    role: data.role,
+                    filters: data.filters || {}
+                });
                 return await supabaseGetCocRequests(data.username, data.role, data.filters || {});
             
             case 'issue_coc_request':

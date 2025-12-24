@@ -47,10 +47,20 @@ async function callGoogleAppsScriptAPI(data) {
  */
 async function callAPI(data) {
     try {
+        console.log('[callAPI] Called with action:', data.action, 'data keys:', Object.keys(data));
+        
         // Sử dụng Supabase API - 100% migration
         if (window.supabaseAPI && window.supabaseAPI.callAPI) {
+            console.log('[callAPI] Using Supabase API, calling window.supabaseAPI.callAPI...');
             try {
                 const result = await window.supabaseAPI.callAPI(data);
+                console.log('[callAPI] Got result from supabaseAPI.callAPI:', {
+                    success: result?.success,
+                    hasData: !!result?.data,
+                    message: result?.message,
+                    resultType: typeof result,
+                    resultKeys: result ? Object.keys(result) : []
+                });
                 
                 // Nếu lookup_contract cần fallback về Google Apps Script
                 if (data.action === 'lookup_contract' && result && result.fallback) {
