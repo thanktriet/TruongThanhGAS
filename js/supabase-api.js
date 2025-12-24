@@ -3784,7 +3784,8 @@ async function supabaseCreateCocRequest(requestData) {
                 po_number: null,
                 import_price: 0,
                 principal_amount: 0,
-                guarantee_bank_coc: null,
+                // guarantee_bank_coc sẽ được thêm sau khi migration được apply
+                // guarantee_bank_coc: null,
                 
                 request_date: requestData.request_date || new Date().toISOString().split('T')[0],
                 requester: requestData.requester,
