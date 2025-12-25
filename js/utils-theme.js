@@ -59,30 +59,68 @@ function applyTheme(theme) {
     body.style.backgroundAttachment = '';
     body.style.backgroundRepeat = '';
     
-    // Apply new background
-    if (theme.background_gradient) {
-        console.log('[Theme] Applying gradient:', theme.background_gradient);
-        body.style.background = theme.background_gradient;
-        body.style.backgroundAttachment = 'fixed';
-    } else if (theme.background_color) {
-        console.log('[Theme] Applying background color:', theme.background_color);
-        body.style.backgroundColor = theme.background_color;
-    }
-
-    // Apply background image if exists (overrides gradient/color)
+    // Build background string with base color/gradient
+    let backgroundValue = '';
+    
+    // Apply background image first (lowest layer)
     if (theme.background_image_url) {
         console.log('[Theme] Applying background image:', theme.background_image_url);
-        body.style.backgroundImage = `url(${theme.background_image_url})`;
+        backgroundValue = `url(${theme.background_image_url})`;
         body.style.backgroundSize = 'cover';
         body.style.backgroundPosition = 'center';
         body.style.backgroundAttachment = 'fixed';
         body.style.backgroundRepeat = 'no-repeat';
     }
-
-    // Apply background pattern
+    
+    // Apply gradient or color (middle layer)
+    if (theme.background_gradient) {
+        console.log('[Theme] Applying gradient:', theme.background_gradient);
+        if (backgroundValue) {
+            // Combine image and gradient
+            backgroundValue = `${theme.background_gradient}, ${backgroundValue}`;
+        } else {
+            backgroundValue = theme.background_gradient;
+        }
+    } else if (theme.background_color) {
+        console.log('[Theme] Applying background color:', theme.background_color);
+        if (backgroundValue) {
+            // Combine image and color
+            backgroundValue = `${theme.background_color}, ${backgroundValue}`;
+        } else {
+            backgroundValue = theme.background_color;
+        }
+    }
+    
+    // Apply background pattern as overlay (top layer)
     if (theme.background_pattern && theme.background_pattern !== 'none') {
         console.log('[Theme] Applying background pattern:', theme.background_pattern);
-        applyBackgroundPattern(theme.background_pattern);
+        const patternBg = getBackgroundPattern(theme.background_pattern);
+        if (patternBg) {
+            if (backgroundValue) {
+                backgroundValue = `${patternBg}, ${backgroundValue}`;
+            } else {
+                backgroundValue = patternBg;
+            }
+        }
+    }
+    
+    // Apply the final background
+    if (backgroundValue) {
+        body.style.background = backgroundValue;
+        body.style.backgroundAttachment = 'fixed';
+        
+        // Set background size for patterns
+        if (theme.background_pattern && (theme.background_pattern === 'grid' || theme.background_pattern === 'dots')) {
+            body.style.backgroundSize = '20px 20px, cover';
+        } else if (theme.background_pattern) {
+            // For other patterns, try to maintain image size
+            if (theme.background_image_url) {
+                body.style.backgroundSize = 'auto, cover';
+            }
+        }
+        
+        console.log('[Theme] Final background value:', backgroundValue);
+        console.log('[Theme] Body computed style check:', window.getComputedStyle(body).background);
     }
 
     // Apply logo if exists
