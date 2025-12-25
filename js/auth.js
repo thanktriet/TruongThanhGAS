@@ -196,6 +196,19 @@ async function handleLogin(e) {
                     login_time: new Date().toISOString()
                 };
                 localStorage.setItem('user_session', JSON.stringify(userWithTime));
+                
+                // Hiển thị thông báo đăng nhập thành công
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Đăng nhập thành công!',
+                    text: `Chào mừng ${res.user.fullname || res.user.username}`,
+                    timer: 1500,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+                
                 location.reload();
             }
         } else {
