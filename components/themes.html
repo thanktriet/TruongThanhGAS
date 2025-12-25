@@ -50,8 +50,8 @@
 let allThemes = [];
 let isLoadingThemes = false;
 
-// Load themes list
-async function loadThemes() {
+// Load themes list - define as const to avoid hoisting issues
+const loadThemes = async function() {
     // Prevent multiple simultaneous calls
     if (isLoadingThemes) {
         console.log('[Themes] Already loading themes, skipping...');
