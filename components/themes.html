@@ -419,30 +419,24 @@ function formatDate(dateString) {
 }
 
 // Expose functions to window
+// Store original function references before exposing
+const loadThemesOriginal = loadThemes;
+const activateThemeOriginal = activateTheme;
+const deleteThemeOriginal = deleteTheme;
+const openThemeEditModalOriginal = openThemeEditModal;
+const openThemeCreateModalOriginal = openThemeCreateModal;
+
 if (typeof window !== 'undefined') {
-    // Ensure functions are properly exposed
-    window.loadThemes = function() {
-        return loadThemes();
-    };
-    window.activateTheme = function(themeId) {
-        return activateTheme(themeId);
-    };
-    window.deleteTheme = function(themeId, themeName) {
-        return deleteTheme(themeId, themeName);
-    };
-    window.openThemeEditModal = function(themeId) {
-        return openThemeEditModal(themeId);
-    };
-    window.openThemeCreateModal = function() {
-        return openThemeCreateModal();
-    };
+    // Direct assignment - no wrapper needed
+    window.loadThemes = loadThemesOriginal;
+    window.activateTheme = activateThemeOriginal;
+    window.deleteTheme = deleteThemeOriginal;
+    window.openThemeEditModal = openThemeEditModalOriginal;
+    window.openThemeCreateModal = openThemeCreateModalOriginal;
     
     console.log('✅ Themes functions exposed to window');
     console.log('[Themes] window.loadThemes type:', typeof window.loadThemes);
     console.log('[Themes] window.loadThemes exists:', !!window.loadThemes);
-    
-    // Test call to verify it works
-    console.log('[Themes] Test: window.loadThemes is callable:', typeof window.loadThemes === 'function');
 }
 
 // Auto-load when tab becomes active (as fallback if navigation.js doesn't trigger)
