@@ -476,6 +476,36 @@ function formatDate(dateString) {
             console.log('✅ Themes functions exposed to window');
             console.log('[Themes] window.loadThemes type:', typeof window.loadThemes);
             console.log('[Themes] window.loadThemes === fnLoadThemes:', window.loadThemes === fnLoadThemes);
+            
+            // Setup MutationObserver to auto-load when tab becomes active
+            setTimeout(() => {
+                const themesTab = document.getElementById('tab-themes');
+                if (themesTab) {
+                    console.log('[Themes] Setting up MutationObserver on themes tab');
+                    const observer = new MutationObserver((mutations) => {
+                        mutations.forEach((mutation) => {
+                            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                                const isActive = themesTab.classList.contains('active');
+                                console.log('[Themes] Tab class changed, isActive:', isActive);
+                                if (isActive && !isLoadingThemes) {
+                                    console.log('[Themes] Tab is active, auto-loading themes...');
+                                    fnLoadThemes();
+                                }
+                            }
+                        });
+                    });
+                    observer.observe(themesTab, { attributes: true, attributeFilter: ['class'] });
+                    console.log('[Themes] ✅ MutationObserver setup complete');
+                    
+                    // Also check immediately if tab is already active
+                    if (themesTab.classList.contains('active')) {
+                        console.log('[Themes] Tab is already active, loading themes...');
+                        fnLoadThemes();
+                    }
+                } else {
+                    console.warn('[Themes] themes tab not found for MutationObserver');
+                }
+            }, 1000);
         } else {
             console.log('[Themes] Functions already exposed, skipping re-exposure');
         }
