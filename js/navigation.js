@@ -81,10 +81,14 @@ function switchTab(id) {
     if (id === 'themes') {
         console.log('[Navigation] Switching to themes tab');
         setTimeout(() => {
+            console.log('[Navigation] Checking for loadThemes function...');
+            console.log('[Navigation] window.loadThemes exists?', typeof window.loadThemes);
             if (typeof window.loadThemes === 'function') {
+                console.log('[Navigation] Calling loadThemes()...');
                 window.loadThemes();
             } else {
-                console.error('[Navigation] loadThemes function not found');
+                console.error('[Navigation] loadThemes function not found on window object');
+                console.error('[Navigation] Available window functions:', Object.keys(window).filter(k => k.includes('Theme') || k.includes('theme')).join(', '));
             }
         }, 300);
     }

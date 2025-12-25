@@ -385,6 +385,8 @@ if (typeof window !== 'undefined') {
     window.openThemeCreateModal = openThemeCreateModal;
     
     console.log('✅ Themes functions exposed to window');
+    console.log('[Themes] window.loadThemes type:', typeof window.loadThemes);
+    console.log('[Themes] window.loadThemes === loadThemes:', window.loadThemes === loadThemes);
 }
 
 // Note: loadThemes() will be called by navigation.js when switching to themes tab
