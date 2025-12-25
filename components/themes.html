@@ -432,15 +432,20 @@ if (typeof window !== 'undefined') {
 }
 
 // Auto-load when tab becomes active (as fallback if navigation.js doesn't trigger)
-// Use MutationObserver to watch for tab activation, but only trigger once
+// Use simple interval check, only trigger once
 if (typeof document !== 'undefined') {
     let hasLoadedOnce = false;
+    let intervalId = null;
     
     const tryLoadIfActive = () => {
+        if (hasLoadedOnce || isLoadingThemes) return;
+        
         const tab = document.getElementById('tab-themes');
-        if (tab && tab.classList.contains('active') && !hasLoadedOnce && !isLoadingThemes) {
-            console.log('[Themes] Tab is active, auto-loading themes...');
+        if (tab && tab.classList.contains('active')) {
+            console.log('[Themes] Tab is active, auto-loading themes (fallback)...');
             hasLoadedOnce = true;
+            if (intervalId) clearInterval(intervalId);
+            
             // Small delay to ensure DOM is ready
             setTimeout(() => {
                 if (typeof window.loadThemes === 'function') {
@@ -450,50 +455,20 @@ if (typeof document !== 'undefined') {
         }
     };
     
-    // Check immediately
-    tryLoadIfActive();
-    
-    // Watch for tab activation changes
-    const observer = new MutationObserver(() => {
-        if (!hasLoadedOnce) {
-            tryLoadIfActive();
-        }
-    });
-    
-    // Observe tabs-container for class changes
-    const tabsContainer = document.getElementById('tabs-container');
-    if (tabsContainer) {
-        observer.observe(tabsContainer, {
-            attributes: true,
-            attributeFilter: ['class'],
-            subtree: true,
-            childList: false
-        });
-    }
-    
-    // Also check periodically as fallback (max 5 seconds)
+    // Check periodically (max 5 seconds = 25 checks * 200ms)
     let checkCount = 0;
-    const maxChecks = 25; // 25 * 200ms = 5 seconds
-    const intervalId = setInterval(() => {
+    const maxChecks = 25;
+    intervalId = setInterval(() => {
         checkCount++;
         if (checkCount >= maxChecks) {
-            clearInterval(intervalId);
+            if (intervalId) clearInterval(intervalId);
             return;
         }
-        if (!hasLoadedOnce) {
-            tryLoadIfActive();
-        }
+        tryLoadIfActive();
     }, 200);
     
-    // Clear interval if loaded
-    const originalLoadThemes = window.loadThemes;
-    if (originalLoadThemes) {
-        window.loadThemes = function(...args) {
-            hasLoadedOnce = true;
-            clearInterval(intervalId);
-            return originalLoadThemes.apply(this, args);
-        };
-    }
+    // Also check immediately after a short delay
+    setTimeout(tryLoadIfActive, 300);
 }
 </script>
 
