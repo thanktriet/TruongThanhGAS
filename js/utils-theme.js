@@ -4,6 +4,41 @@
  */
 
 /**
+ * Helper function to adjust color opacity
+ */
+function adjustOpacity(color, opacity) {
+    // Convert hex to rgba
+    if (color.startsWith('#')) {
+        const hex = color.slice(1);
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+    return color;
+}
+
+/**
+ * Helper function to adjust color brightness
+ */
+function adjustBrightness(color, percent) {
+    // Convert hex to rgb, adjust brightness, convert back
+    if (color.startsWith('#')) {
+        const hex = color.slice(1);
+        let r = parseInt(hex.slice(0, 2), 16);
+        let g = parseInt(hex.slice(2, 4), 16);
+        let b = parseInt(hex.slice(4, 6), 16);
+        
+        r = Math.max(0, Math.min(255, r + (r * percent / 100)));
+        g = Math.max(0, Math.min(255, g + (g * percent / 100)));
+        b = Math.max(0, Math.min(255, b + (b * percent / 100)));
+        
+        return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+    }
+    return color;
+}
+
+/**
  * Get background pattern CSS value (returns string for use in background property)
  */
 function getBackgroundPattern(pattern) {
@@ -58,12 +93,142 @@ function applyTheme(theme) {
     // Get root element
     const root = document.documentElement;
 
-    // Apply CSS variables
-    root.style.setProperty('--theme-primary', theme.primary_color || '#3B82F6');
-    root.style.setProperty('--theme-secondary', theme.secondary_color || '#6366F1');
-    root.style.setProperty('--theme-accent', theme.accent_color || '#8B5CF6');
+    // Apply CSS variables for theme colors
+    const primaryColor = theme.primary_color || '#3B82F6';
+    const secondaryColor = theme.secondary_color || '#6366F1';
+    const accentColor = theme.accent_color || '#8B5CF6';
+    
+    root.style.setProperty('--theme-primary', primaryColor);
+    root.style.setProperty('--theme-secondary', secondaryColor);
+    root.style.setProperty('--theme-accent', accentColor);
     root.style.setProperty('--theme-background', theme.background_color || '#FFFFFF');
     root.style.setProperty('--theme-text', theme.text_color || '#1F2937');
+    
+    // Apply theme colors to sidebar (if exists) - use primary color
+    const sidebar = document.querySelector('aside, #sidebar-container aside');
+    if (sidebar) {
+        sidebar.style.backgroundColor = primaryColor;
+        console.log('[Theme] Applied primary color to sidebar:', primaryColor);
+        
+        // Also update hover colors for nav items in sidebar
+        const navItems = sidebar.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            // Set hover color to darker shade of primary
+            if (!item.style.cssText.includes('hover:')) {
+                item.addEventListener('mouseenter', function() {
+                    if (!this.classList.contains('active')) {
+                        this.style.backgroundColor = adjustBrightness(primaryColor, -10);
+                    }
+                });
+                item.addEventListener('mouseleave', function() {
+                    if (!this.classList.contains('active')) {
+                        this.style.backgroundColor = '';
+                    }
+                });
+            }
+        });
+    }
+    
+    // Apply theme colors to active nav items
+    const activeNavItems = document.querySelectorAll('.nav-item.active');
+    activeNavItems.forEach(item => {
+        item.style.backgroundColor = primaryColor;
+        item.style.borderLeftColor = secondaryColor;
+    });
+    
+    // Create dynamic style element to apply theme to common elements
+    let themeStyleElement = document.getElementById('dynamic-theme-styles');
+    if (!themeStyleElement) {
+        themeStyleElement = document.createElement('style');
+        themeStyleElement.id = 'dynamic-theme-styles';
+        document.head.appendChild(themeStyleElement);
+    }
+    
+    // Helper function to darken color for hover states
+    const darkenColor = (color, percent) => {
+        // Simple darken function - you might want to use a library for better results
+        return color; // Will use CSS filter or inline styles instead
+    };
+    
+    // Generate comprehensive CSS rules for theme colors
+    themeStyleElement.textContent = `
+        /* Theme Colors - Applied dynamically */
+        :root {
+            --theme-primary: ${primaryColor};
+            --theme-secondary: ${secondaryColor};
+            --theme-accent: ${accentColor};
+        }
+        
+        /* Sidebar theming */
+        aside.bg-slate-900,
+        #sidebar-container aside {
+            background-color: ${primaryColor} !important;
+        }
+        
+        /* Active nav items */
+        .nav-item.active {
+            background-color: ${primaryColor} !important;
+            border-left-color: ${secondaryColor} !important;
+        }
+        
+        /* Primary buttons - all variants */
+        button.bg-blue-600,
+        button.bg-purple-600,
+        button.bg-indigo-600,
+        .bg-blue-600:not(button),
+        .bg-purple-600:not(button),
+        .bg-indigo-600:not(button) {
+            background-color: ${primaryColor} !important;
+        }
+        
+        /* Primary buttons hover */
+        button.bg-blue-600:hover,
+        button.bg-purple-600:hover,
+        button.bg-indigo-600:hover,
+        .bg-blue-600:hover:not(button),
+        .bg-purple-600:hover:not(button),
+        .bg-indigo-600:hover:not(button) {
+            background-color: ${secondaryColor} !important;
+        }
+        
+        /* Border colors */
+        .border-blue-600,
+        .border-purple-600,
+        .border-indigo-600 {
+            border-color: ${primaryColor} !important;
+        }
+        
+        /* Text colors */
+        .text-blue-600,
+        .text-purple-600,
+        .text-indigo-600 {
+            color: ${primaryColor} !important;
+        }
+        
+        /* Gradient backgrounds */
+        .bg-gradient-to-r.from-blue-600,
+        .bg-gradient-to-r.from-purple-600,
+        .bg-gradient-to-r.from-indigo-600 {
+            background-image: linear-gradient(to right, ${primaryColor}, ${secondaryColor}) !important;
+        }
+        
+        /* Role badges */
+        .bg-blue-600.text-white,
+        span.bg-blue-600 {
+            background-color: ${accentColor} !important;
+        }
+        
+        /* Card headers with colored backgrounds */
+        .bg-blue-50,
+        .bg-purple-50,
+        .bg-indigo-50,
+        .bg-green-50 {
+            background-color: ${adjustOpacity(primaryColor, 0.1)} !important;
+        }
+    `;
+    
+    console.log('[Theme] Applied CSS variables and dynamic styles');
+    console.log('[Theme] Primary:', primaryColor, 'Secondary:', secondaryColor, 'Accent:', accentColor);
 
     // Apply background to body, dashboard-view, and main container
     const body = document.body;
