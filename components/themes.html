@@ -99,6 +99,11 @@ function renderThemes(themes) {
     const listDiv = document.getElementById('themes-list');
     const emptyDiv = document.getElementById('themes-empty');
 
+    if (!listDiv) {
+        console.error('[Themes] themes-list element not found');
+        return;
+    }
+
     if (!themes || themes.length === 0) {
         if (emptyDiv) emptyDiv.classList.remove('hidden');
         listDiv.innerHTML = '';
@@ -107,7 +112,12 @@ function renderThemes(themes) {
 
     if (emptyDiv) emptyDiv.classList.add('hidden');
 
-    listDiv.innerHTML = themes.map(theme => {
+    // Use DocumentFragment for better performance when rendering many items
+    const fragment = document.createDocumentFragment();
+    const tempDiv = document.createElement('div');
+    tempDiv.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+    
+    tempDiv.innerHTML = themes.map(theme => {
         const isActive = theme.is_active;
         const isSystem = theme.is_system;
         const iconHtml = theme.icon_emoji 
@@ -200,6 +210,15 @@ function renderThemes(themes) {
             </div>
         `;
     }).join('');
+    
+    // Move children from tempDiv to fragment
+    while (tempDiv.firstChild) {
+        fragment.appendChild(tempDiv.firstChild);
+    }
+    
+    // Clear and append
+    listDiv.innerHTML = '';
+    listDiv.appendChild(fragment);
 }
 
 // Activate theme
