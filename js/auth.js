@@ -199,10 +199,54 @@ async function handleLogin(e) {
                 location.reload();
             }
         } else {
-            Swal.fire('Lỗi', res.message || 'Đăng nhập thất bại', 'error');
+            // Login failed - clear password and re-enable form
+            const passwordInput = document.getElementById('login-pass');
+            const loginBtn = document.getElementById('btn-login');
+            
+            // Clear password for security
+            if (passwordInput) {
+                passwordInput.value = '';
+            }
+            
+            // Show error message
+            await Swal.fire('Lỗi', res.message || 'Đăng nhập thất bại', 'error');
+            
+            // Re-enable button and focus password field
+            if (loginBtn) {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+                const btnText = document.getElementById('btn-login-text');
+                if (btnText) btnText.textContent = 'Đăng Nhập';
+            }
+            
+            // Focus password field for easy retry
+            if (passwordInput) {
+                setTimeout(() => passwordInput.focus(), 300);
+            }
         }
     } catch (error) {
-        Swal.fire('Lỗi', 'Không thể kết nối đến server', 'error');
+        console.error('Login error:', error);
+        // Connection error - clear password and re-enable form
+        const passwordInput = document.getElementById('login-pass');
+        const loginBtn = document.getElementById('btn-login');
+        
+        if (passwordInput) {
+            passwordInput.value = '';
+        }
+        
+        await Swal.fire('Lỗi', 'Không thể kết nối đến server', 'error');
+        
+        // Re-enable button and focus password field
+        if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.classList.remove('loading');
+            const btnText = document.getElementById('btn-login-text');
+            if (btnText) btnText.textContent = 'Đăng Nhập';
+        }
+        
+        if (passwordInput) {
+            setTimeout(() => passwordInput.focus(), 300);
+        }
     }
 }
 
