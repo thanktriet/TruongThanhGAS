@@ -47,17 +47,25 @@ function applyTheme(theme) {
     root.style.setProperty('--theme-background', theme.background_color || '#FFFFFF');
     root.style.setProperty('--theme-text', theme.text_color || '#1F2937');
 
-    // Apply background gradient or color to body
+    // Apply background to both body and dashboard-view container
     const body = document.body;
+    const dashboardView = document.getElementById('dashboard-view');
     
     // Reset background styles first
-    body.style.background = '';
-    body.style.backgroundColor = '';
-    body.style.backgroundImage = '';
-    body.style.backgroundSize = '';
-    body.style.backgroundPosition = '';
-    body.style.backgroundAttachment = '';
-    body.style.backgroundRepeat = '';
+    const resetBackground = (element) => {
+        element.style.background = '';
+        element.style.backgroundColor = '';
+        element.style.backgroundImage = '';
+        element.style.backgroundSize = '';
+        element.style.backgroundPosition = '';
+        element.style.backgroundAttachment = '';
+        element.style.backgroundRepeat = '';
+    };
+    
+    resetBackground(body);
+    if (dashboardView) {
+        resetBackground(dashboardView);
+    }
     
     // Build background string with base color/gradient
     let backgroundValue = '';
@@ -104,23 +112,39 @@ function applyTheme(theme) {
         }
     }
     
-    // Apply the final background
+    // Apply the final background to both body and dashboard-view
     if (backgroundValue) {
+        // Apply to body
         body.style.background = backgroundValue;
         body.style.backgroundAttachment = 'fixed';
         
+        // Apply to dashboard-view if exists (main container)
+        if (dashboardView) {
+            dashboardView.style.background = backgroundValue;
+            dashboardView.style.backgroundAttachment = 'fixed';
+            console.log('[Theme] Applied background to dashboard-view');
+        }
+        
         // Set background size for patterns
+        let bgSize = '';
         if (theme.background_pattern && (theme.background_pattern === 'grid' || theme.background_pattern === 'dots')) {
-            body.style.backgroundSize = '20px 20px, cover';
-        } else if (theme.background_pattern) {
-            // For other patterns, try to maintain image size
-            if (theme.background_image_url) {
-                body.style.backgroundSize = 'auto, cover';
+            bgSize = theme.background_image_url ? '20px 20px, cover' : '20px 20px';
+        } else if (theme.background_image_url) {
+            bgSize = 'cover';
+        }
+        
+        if (bgSize) {
+            body.style.backgroundSize = bgSize;
+            if (dashboardView) {
+                dashboardView.style.backgroundSize = bgSize;
             }
         }
         
         console.log('[Theme] Final background value:', backgroundValue);
-        console.log('[Theme] Body computed style check:', window.getComputedStyle(body).background);
+        console.log('[Theme] Body computed style:', window.getComputedStyle(body).background);
+        if (dashboardView) {
+            console.log('[Theme] Dashboard-view computed style:', window.getComputedStyle(dashboardView).background);
+        }
     }
 
     // Apply logo if exists

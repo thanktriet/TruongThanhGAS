@@ -106,7 +106,20 @@ async function loadThemes() {
         });
 
         console.log('[Themes] Waiting for API response (race with timeout)...');
-        const result = await Promise.race([apiPromise, timeoutPromise]);
+        let result;
+        try {
+            result = await Promise.race([apiPromise, timeoutPromise]);
+            // Clear timeout if API succeeded
+            if (timeoutId && result && result.success) {
+                clearTimeout(timeoutId);
+            }
+        } catch (error) {
+            // Clear timeout on error
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            throw error;
+        }
         
         console.log('[Themes] ✅ API response received:', result);
 
@@ -237,6 +250,9 @@ function renderThemes(themes) {
 
     console.log('[Themes] ✅ Rendering', themes.length, 'theme cards');
     if (emptyDiv) emptyDiv.classList.add('hidden');
+    
+    // IMPORTANT: Keep loading div structure intact - don't remove it when rendering
+    // We'll only replace the content between loading/empty divs
 
     // Build HTML string and set innerHTML once (simpler and faster)
     const html = themes.map(theme => {
