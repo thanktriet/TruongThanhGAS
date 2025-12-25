@@ -48,14 +48,27 @@
 
 <script>
 let allThemes = [];
+let isLoadingThemes = false;
 
 // Load themes list
 async function loadThemes() {
+    // Prevent multiple simultaneous calls
+    if (isLoadingThemes) {
+        console.log('[Themes] Already loading themes, skipping...');
+        return;
+    }
+
     const listDiv = document.getElementById('themes-list');
     const loadingDiv = document.getElementById('themes-loading');
     const emptyDiv = document.getElementById('themes-empty');
 
-    if (loadingDiv) loadingDiv.classList.remove('hidden');
+    if (!listDiv || !loadingDiv) {
+        console.warn('[Themes] Required DOM elements not found');
+        return;
+    }
+
+    isLoadingThemes = true;
+    loadingDiv.classList.remove('hidden');
     if (emptyDiv) emptyDiv.classList.add('hidden');
 
     try {
@@ -76,6 +89,7 @@ async function loadThemes() {
         }
         listDiv.innerHTML = `<div class="col-span-full text-center py-8 text-red-600">Lỗi: ${escapeHtml(error.message)}</div>`;
     } finally {
+        isLoadingThemes = false;
         if (loadingDiv) loadingDiv.classList.add('hidden');
     }
 }
@@ -310,29 +324,20 @@ if (typeof window !== 'undefined') {
     console.log('✅ Themes functions exposed to window');
 }
 
-// Auto-load when tab is active
+// Auto-load when tab is active (on component load)
+// Note: Navigation.js will also call loadThemes() when switching to themes tab
 if (typeof document !== 'undefined') {
+    // Check if tab is already active when component loads
     const checkAndLoad = () => {
         const tab = document.getElementById('tab-themes');
-        if (tab && tab.classList.contains('active')) {
-            console.log('[Themes] Tab is active, loading themes...');
+        if (tab && tab.classList.contains('active') && allThemes.length === 0 && !isLoadingThemes) {
+            console.log('[Themes] Tab is already active on component load, loading themes...');
             loadThemes();
         }
     };
 
-    // Check immediately
-    checkAndLoad();
-
-    // Also listen for tab changes
-    const observer = new MutationObserver(checkAndLoad);
-    const tabsContainer = document.getElementById('tabs-container');
-    if (tabsContainer) {
-        observer.observe(tabsContainer, {
-            attributes: true,
-            attributeFilter: ['class'],
-            subtree: true
-        });
-    }
+    // Small delay to ensure DOM is ready
+    setTimeout(checkAndLoad, 100);
 }
 </script>
 
