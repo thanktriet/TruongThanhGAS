@@ -2845,6 +2845,11 @@ async function supabaseListThemes() {
 
         if (error) {
             console.error('[supabaseListThemes] Supabase error:', error);
+            // Nếu bảng chưa tồn tại, trả về empty array thay vì lỗi
+            if (error.code === '42P01' || error.message?.includes('does not exist')) {
+                console.warn('[supabaseListThemes] Table themes does not exist yet, returning empty array');
+                return { success: true, data: [] };
+            }
             throw error;
         }
 
@@ -2855,6 +2860,11 @@ async function supabaseListThemes() {
         console.error('[supabaseListThemes] Exception:', e);
         console.error('[supabaseListThemes] Error message:', e.message);
         console.error('[supabaseListThemes] Error code:', e.code);
+        // Nếu bảng chưa tồn tại, trả về empty array thay vì lỗi
+        if (e.code === '42P01' || e.message?.includes('does not exist')) {
+            console.warn('[supabaseListThemes] Table does not exist, returning empty array');
+            return { success: true, data: [] };
+        }
         return { success: false, message: 'Lỗi: ' + e.message };
     }
 }

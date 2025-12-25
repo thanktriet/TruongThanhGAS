@@ -79,20 +79,35 @@ function switchTab(id) {
     }
     
     if (id === 'themes') {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'navigation.js:81',message:'Navigation: themes tab activated',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+        // #endregion
         console.log('[Navigation] Switching to themes tab');
         // Increase delay to ensure component is fully loaded
         setTimeout(() => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'navigation.js:85',message:'Navigation: Checking loadThemes function',data:{loadThemesType:typeof window.loadThemes},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+            // #endregion
             console.log('[Navigation] Checking for loadThemes function...');
             console.log('[Navigation] window.loadThemes exists?', typeof window.loadThemes);
             
             if (typeof window.loadThemes === 'function') {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'navigation.js:89',message:'Navigation: CALLING loadThemes',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+                // #endregion
                 console.log('[Navigation] Calling loadThemes()...');
                 try {
                     window.loadThemes();
                 } catch (error) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'navigation.js:93',message:'Navigation: ERROR calling loadThemes',data:{errorMessage:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+                    // #endregion
                     console.error('[Navigation] Error calling loadThemes():', error);
                 }
             } else {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'navigation.js:96',message:'Navigation: loadThemes NOT FOUND',data:{availableFunctions:Object.keys(window).filter(k => k.includes('Theme') || k.includes('theme')).join(',')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+                // #endregion
                 console.error('[Navigation] loadThemes function not found on window object');
                 console.error('[Navigation] Available window functions:', Object.keys(window).filter(k => k.includes('Theme') || k.includes('theme')).join(', '));
             }
