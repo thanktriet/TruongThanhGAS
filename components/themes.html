@@ -431,7 +431,69 @@ if (typeof window !== 'undefined') {
     console.log('[Themes] window.loadThemes === loadThemes:', window.loadThemes === loadThemes);
 }
 
-// Note: loadThemes() will be called by navigation.js when switching to themes tab
-// No auto-load logic here to prevent infinite loops
+// Auto-load when tab becomes active (as fallback if navigation.js doesn't trigger)
+// Use MutationObserver to watch for tab activation, but only trigger once
+if (typeof document !== 'undefined') {
+    let hasLoadedOnce = false;
+    
+    const tryLoadIfActive = () => {
+        const tab = document.getElementById('tab-themes');
+        if (tab && tab.classList.contains('active') && !hasLoadedOnce && !isLoadingThemes) {
+            console.log('[Themes] Tab is active, auto-loading themes...');
+            hasLoadedOnce = true;
+            // Small delay to ensure DOM is ready
+            setTimeout(() => {
+                if (typeof window.loadThemes === 'function') {
+                    window.loadThemes();
+                }
+            }, 200);
+        }
+    };
+    
+    // Check immediately
+    tryLoadIfActive();
+    
+    // Watch for tab activation changes
+    const observer = new MutationObserver(() => {
+        if (!hasLoadedOnce) {
+            tryLoadIfActive();
+        }
+    });
+    
+    // Observe tabs-container for class changes
+    const tabsContainer = document.getElementById('tabs-container');
+    if (tabsContainer) {
+        observer.observe(tabsContainer, {
+            attributes: true,
+            attributeFilter: ['class'],
+            subtree: true,
+            childList: false
+        });
+    }
+    
+    // Also check periodically as fallback (max 5 seconds)
+    let checkCount = 0;
+    const maxChecks = 25; // 25 * 200ms = 5 seconds
+    const intervalId = setInterval(() => {
+        checkCount++;
+        if (checkCount >= maxChecks) {
+            clearInterval(intervalId);
+            return;
+        }
+        if (!hasLoadedOnce) {
+            tryLoadIfActive();
+        }
+    }, 200);
+    
+    // Clear interval if loaded
+    const originalLoadThemes = window.loadThemes;
+    if (originalLoadThemes) {
+        window.loadThemes = function(...args) {
+            hasLoadedOnce = true;
+            clearInterval(intervalId);
+            return originalLoadThemes.apply(this, args);
+        };
+    }
+}
 </script>
 
