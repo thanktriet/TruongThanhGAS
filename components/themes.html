@@ -419,16 +419,33 @@ function formatDate(dateString) {
 }
 
 // Expose functions to window
-if (typeof window !== 'undefined') {
-    // Direct assignment - functions are already defined at this point
-    window.loadThemes = loadThemes;
-    window.activateTheme = activateTheme;
-    window.deleteTheme = deleteTheme;
-    window.openThemeEditModal = openThemeEditModal;
-    window.openThemeCreateModal = openThemeCreateModal;
+// Use IIFE to ensure proper closure and avoid recursion
+(function() {
+    // Store references to original functions in closure
+    const originalLoadThemes = loadThemes;
+    const originalActivateTheme = activateTheme;
+    const originalDeleteTheme = deleteTheme;
+    const originalOpenThemeEditModal = openThemeEditModal;
+    const originalOpenThemeCreateModal = openThemeCreateModal;
     
-    console.log('✅ Themes functions exposed to window');
-    console.log('[Themes] window.loadThemes type:', typeof window.loadThemes);
-}
+    if (typeof window !== 'undefined') {
+        // Only expose if not already exposed (avoid overwriting on reload)
+        if (!window.loadThemes || !window.loadThemes._isThemesFunction) {
+            window.loadThemes = originalLoadThemes;
+            window.activateTheme = originalActivateTheme;
+            window.deleteTheme = originalDeleteTheme;
+            window.openThemeEditModal = originalOpenThemeEditModal;
+            window.openThemeCreateModal = originalOpenThemeCreateModal;
+            
+            // Mark as exposed (for debugging/protection)
+            window.loadThemes._isThemesFunction = true;
+            
+            console.log('✅ Themes functions exposed to window');
+            console.log('[Themes] window.loadThemes type:', typeof window.loadThemes);
+        } else {
+            console.log('[Themes] Functions already exposed, skipping');
+        }
+    }
+})();
 </script>
 
