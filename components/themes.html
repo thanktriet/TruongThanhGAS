@@ -52,15 +52,11 @@ let isLoadingThemes = false;
 
 // Load themes list
 async function loadThemes() {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:54',message:'loadThemes ENTRY',data:{isLoadingThemes},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'})}).catch(()=>{});
-    // #endregion
+    console.log('[Themes] ========== loadThemes STARTED ==========');
+    console.log('[Themes] isLoadingThemes:', isLoadingThemes);
     
     // Prevent multiple simultaneous calls
     if (isLoadingThemes) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:57',message:'loadThemes BLOCKED by isLoadingThemes flag',data:{isLoadingThemes},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'})}).catch(()=>{});
-        // #endregion
         console.log('[Themes] Already loading themes, skipping...');
         return;
     }
@@ -69,68 +65,64 @@ async function loadThemes() {
     const loadingDiv = document.getElementById('themes-loading');
     const emptyDiv = document.getElementById('themes-empty');
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:65',message:'DOM elements check BEFORE',data:{listDivExists:!!listDiv,loadingDivExists:!!loadingDiv,emptyDivExists:!!emptyDiv},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
-    // #endregion
+    console.log('[Themes] DOM elements:', {
+        listDiv: !!listDiv,
+        loadingDiv: !!loadingDiv,
+        emptyDiv: !!emptyDiv
+    });
 
     if (!listDiv || !loadingDiv) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:67',message:'DOM elements MISSING - EARLY RETURN',data:{listDivExists:!!listDiv,loadingDivExists:!!loadingDiv},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
-        // #endregion
-        console.warn('[Themes] Required DOM elements not found');
+        console.error('[Themes] ❌ Required DOM elements not found - listDiv:', !!listDiv, 'loadingDiv:', !!loadingDiv);
         return;
     }
 
-    console.log('[Themes] Starting loadThemes...');
+    console.log('[Themes] ✅ DOM ready, starting API call...');
     isLoadingThemes = true;
     loadingDiv.classList.remove('hidden');
     if (emptyDiv) emptyDiv.classList.add('hidden');
 
     try {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:76',message:'BEFORE API call',data:{callAPIType:typeof window.callAPI},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-        // #endregion
-        console.log('[Themes] Calling API with action: list_themes');
+        console.log('[Themes] Checking window.callAPI...');
+        console.log('[Themes] typeof window.callAPI:', typeof window.callAPI);
+        console.log('[Themes] window.callAPI:', window.callAPI);
+        
+        if (typeof window.callAPI !== 'function') {
+            throw new Error('window.callAPI is not a function. Type: ' + typeof window.callAPI);
+        }
+
+        console.log('[Themes] ✅ window.callAPI is available, calling API with action: list_themes');
         
         // Add timeout to prevent hanging (10 seconds)
         const timeoutPromise = new Promise((_, reject) => {
             setTimeout(() => {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:82',message:'API TIMEOUT',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-                // #endregion
-                console.error('[Themes] Request timeout after 10 seconds');
+                console.error('[Themes] ❌ Request timeout after 10 seconds');
                 reject(new Error('Request timeout - có thể bảng themes chưa được tạo. Vui lòng chạy migration SQL trong Supabase Dashboard.'));
             }, 10000);
         });
 
+        console.log('[Themes] Creating API promise...');
         const apiPromise = window.callAPI({
             action: 'list_themes'
         });
 
-        console.log('[Themes] Waiting for API response...');
+        console.log('[Themes] Waiting for API response (race with timeout)...');
         const result = await Promise.race([apiPromise, timeoutPromise]);
         
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:92',message:'API response RECEIVED',data:{hasResult:!!result,success:result?.success,hasData:!!result?.data,dataType:typeof result?.data,dataIsArray:Array.isArray(result?.data),dataLength:Array.isArray(result?.data)?result.data.length:'N/A'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2,H3'})}).catch(()=>{});
-        // #endregion
-        console.log('[Themes] API response received:', result);
+        console.log('[Themes] ✅ API response received:', result);
 
         if (result) {
-            console.log('[Themes] Result success:', result.success);
-            console.log('[Themes] Result data:', result.data);
-            console.log('[Themes] Result data type:', typeof result.data);
-            console.log('[Themes] Result data length:', Array.isArray(result.data) ? result.data.length : 'not array');
+            console.log('[Themes] Result details:', {
+                success: result.success,
+                hasData: !!result.data,
+                dataType: typeof result.data,
+                isArray: Array.isArray(result.data),
+                dataLength: Array.isArray(result.data) ? result.data.length : 'not array',
+                message: result.message
+            });
         }
 
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:101',message:'BEFORE condition check',data:{condition1:result&&result.success&&result.data&&Array.isArray(result.data)&&result.data.length>0,condition2:result&&result.success&&(!result.data||(Array.isArray(result.data)&&result.data.length===0)),condition3:result&&!result.success},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
-        // #endregion
-
         if (result && result.success && result.data && Array.isArray(result.data) && result.data.length > 0) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:102',message:'BRANCH: Success with data',data:{dataLength:result.data.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
-            // #endregion
-            console.log('[Themes] Success! Rendering', result.data.length, 'themes');
+            console.log('[Themes] ✅ Success! Rendering', result.data.length, 'themes');
             allThemes = result.data;
             
             // Đảm bảo DOM đã sẵn sàng trước khi render
@@ -138,9 +130,6 @@ async function loadThemes() {
             const maxRetries = 10; // Max 10 retries = 1 second
             const checkDOM = () => {
                 const listDiv = document.getElementById('themes-list');
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:109',message:'checkDOM iteration',data:{retryCount,listDivExists:!!listDiv},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
-                // #endregion
                 if (!listDiv) {
                     retryCount++;
                     if (retryCount < maxRetries) {
@@ -148,17 +137,11 @@ async function loadThemes() {
                         setTimeout(checkDOM, 100);
                         return;
                     } else {
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:117',message:'DOM element NOT FOUND after max retries',data:{retryCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
-                        // #endregion
-                        console.error('[Themes] themes-list not found after', maxRetries, 'retries');
+                        console.error('[Themes] ❌ themes-list not found after', maxRetries, 'retries');
                         return;
                     }
                 }
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:121',message:'BEFORE renderThemes call',data:{dataLength:result.data.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
-                // #endregion
-                console.log('[Themes] DOM ready, rendering themes...');
+                console.log('[Themes] ✅ DOM ready, calling renderThemes with', result.data.length, 'themes');
                 renderThemes(result.data);
             };
             
@@ -166,10 +149,7 @@ async function loadThemes() {
             setTimeout(checkDOM, 50);
             
         } else if (result && result.success && (!result.data || (Array.isArray(result.data) && result.data.length === 0))) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:129',message:'BRANCH: Success but empty data',data:{hasData:!!result.data,dataIsArray:Array.isArray(result.data),dataLength:Array.isArray(result.data)?result.data.length:'N/A'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
-            // #endregion
-            console.log('[Themes] Success but no data (empty array)');
+            console.log('[Themes] ✅ Success but no data (empty array)');
             allThemes = [];
             
             // Đảm bảo DOM đã sẵn sàng
@@ -192,23 +172,15 @@ async function loadThemes() {
             setTimeout(checkDOM, 50);
             
         } else if (result && !result.success) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:152',message:'BRANCH: API returned error',data:{message:result.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-            // #endregion
-            console.error('[Themes] API returned error:', result.message);
+            console.error('[Themes] ❌ API returned error:', result.message);
             throw new Error(result.message || 'Không thể tải danh sách themes');
         } else {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:155',message:'BRANCH: Unexpected result format',data:{hasResult:!!result,resultType:typeof result},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
-            // #endregion
-            console.error('[Themes] Unexpected result format:', result);
+            console.error('[Themes] ❌ Unexpected result format:', result);
             throw new Error('Không nhận được phản hồi hợp lệ từ server');
         }
     } catch (error) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/b6dc82df-6454-4237-a979-ab49405f20fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'themes.html:159',message:'CATCH block',data:{errorMessage:error.message,errorStack:error.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-        // #endregion
-        console.error('[Themes] Load error:', error);
+        console.error('[Themes] ❌ ERROR in loadThemes:', error);
+        console.error('[Themes] Error stack:', error.stack);
         
         // Show user-friendly error message
         const errorMessage = error.message || 'Lỗi không xác định';
@@ -247,24 +219,27 @@ async function loadThemes() {
 
 // Render themes cards
 function renderThemes(themes) {
+    console.log('[Themes] renderThemes called with', themes ? themes.length : 'null', 'themes');
     const listDiv = document.getElementById('themes-list');
     const emptyDiv = document.getElementById('themes-empty');
 
     if (!listDiv) {
-        console.error('[Themes] themes-list element not found');
+        console.error('[Themes] ❌ themes-list element not found in renderThemes');
         return;
     }
 
     if (!themes || themes.length === 0) {
+        console.log('[Themes] No themes to render, showing empty state');
         if (emptyDiv) emptyDiv.classList.remove('hidden');
         listDiv.innerHTML = '';
         return;
     }
 
+    console.log('[Themes] ✅ Rendering', themes.length, 'theme cards');
     if (emptyDiv) emptyDiv.classList.add('hidden');
 
     // Build HTML string and set innerHTML once (simpler and faster)
-    listDiv.innerHTML = themes.map(theme => {
+    const html = themes.map(theme => {
         const isActive = theme.is_active;
         const isSystem = theme.is_system;
         const iconHtml = theme.icon_emoji 
@@ -357,6 +332,10 @@ function renderThemes(themes) {
             </div>
         `;
     }).join('');
+    
+    console.log('[Themes] ✅ Theme cards HTML generated (' + html.length + ' chars), setting innerHTML');
+    listDiv.innerHTML = html;
+    console.log('[Themes] ✅ Themes rendered successfully');
 }
 
 // Activate theme
