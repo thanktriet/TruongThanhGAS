@@ -93,8 +93,9 @@ async function loadThemes() {
         console.log('[Themes] ✅ window.callAPI is available, calling API with action: list_themes');
         
         // Add timeout to prevent hanging (10 seconds)
+        let timeoutId;
         const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => {
+            timeoutId = setTimeout(() => {
                 console.error('[Themes] ❌ Request timeout after 10 seconds');
                 reject(new Error('Request timeout - có thể bảng themes chưa được tạo. Vui lòng chạy migration SQL trong Supabase Dashboard.'));
             }, 10000);
