@@ -72,22 +72,57 @@ async function loadThemes() {
     if (emptyDiv) emptyDiv.classList.add('hidden');
 
     try {
-        const result = await window.callAPI({
+        // Add timeout to prevent hanging (10 seconds)
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Request timeout - có thể bảng themes chưa được tạo. Vui lòng chạy migration SQL trong Supabase Dashboard.')), 10000);
+        });
+
+        const apiPromise = window.callAPI({
             action: 'list_themes'
         });
 
-        if (result.success && result.data) {
+        const result = await Promise.race([apiPromise, timeoutPromise]);
+
+        if (result && result.success && result.data) {
             allThemes = result.data;
             renderThemes(result.data);
-        } else {
+        } else if (result && !result.success) {
             throw new Error(result.message || 'Không thể tải danh sách themes');
+        } else {
+            throw new Error('Không nhận được phản hồi từ server');
         }
     } catch (error) {
         console.error('[Themes] Load error:', error);
+        
+        // Show user-friendly error message
+        const errorMessage = error.message || 'Lỗi không xác định';
+        const isTimeoutError = errorMessage.includes('timeout') || errorMessage.includes('timeout');
+        
+        listDiv.innerHTML = `
+            <div class="col-span-full text-center py-8">
+                <div class="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+                    <i class="fa-solid fa-exclamation-triangle text-red-600 text-3xl mb-4"></i>
+                    <h3 class="text-red-800 font-bold mb-2">Không thể tải themes</h3>
+                    <p class="text-red-600 text-sm mb-4">${escapeHtml(errorMessage)}</p>
+                    ${isTimeoutError ? `
+                        <p class="text-xs text-gray-600 mb-4">
+                            <i class="fa-solid fa-info-circle mr-1"></i>
+                            Có thể bảng themes chưa được tạo. Vui lòng chạy migration SQL trong Supabase Dashboard.
+                        </p>
+                    ` : ''}
+                    <button 
+                        onclick="if(window.loadThemes) window.loadThemes()" 
+                        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                    >
+                        <i class="fa-solid fa-refresh mr-2"></i>Thử lại
+                    </button>
+                </div>
+            </div>
+        `;
+        
         if (typeof window.showToast === 'function') {
-            window.showToast('Lỗi: ' + error.message, 'danger');
+            window.showToast('Lỗi: ' + errorMessage, 'danger');
         }
-        listDiv.innerHTML = `<div class="col-span-full text-center py-8 text-red-600">Lỗi: ${escapeHtml(error.message)}</div>`;
     } finally {
         isLoadingThemes = false;
         if (loadingDiv) loadingDiv.classList.add('hidden');
