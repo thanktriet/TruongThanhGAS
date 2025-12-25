@@ -85,16 +85,13 @@ function switchTab(id) {
             console.log('[Navigation] Checking for loadThemes function...');
             console.log('[Navigation] window.loadThemes exists?', typeof window.loadThemes);
             
-            // Double check that tab is actually visible
-            const themesTab = document.getElementById('tab-themes');
-            if (!themesTab || !themesTab.classList.contains('active')) {
-                console.warn('[Navigation] Themes tab not active yet, skipping loadThemes');
-                return;
-            }
-            
             if (typeof window.loadThemes === 'function') {
                 console.log('[Navigation] Calling loadThemes()...');
-                window.loadThemes();
+                try {
+                    window.loadThemes();
+                } catch (error) {
+                    console.error('[Navigation] Error calling loadThemes():', error);
+                }
             } else {
                 console.error('[Navigation] loadThemes function not found on window object');
                 console.error('[Navigation] Available window functions:', Object.keys(window).filter(k => k.includes('Theme') || k.includes('theme')).join(', '));
