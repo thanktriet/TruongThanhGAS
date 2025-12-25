@@ -173,50 +173,40 @@ function applyTheme(theme) {
 }
 
 /**
- * Apply background pattern
+ * Get background pattern CSS value (returns string for use in background property)
  */
-function applyBackgroundPattern(pattern) {
-    const body = document.body;
-    let patternStyle = '';
-
+function getBackgroundPattern(pattern) {
     switch (pattern) {
         case 'dots':
-            patternStyle = `
-                background-image: radial-gradient(circle, rgba(0,0,0,0.1) 1px, transparent 1px);
-                background-size: 20px 20px;
-            `;
-            break;
+            return 'radial-gradient(circle, rgba(0,0,0,0.1) 1px, transparent 1px)';
         case 'lines':
-            patternStyle = `
-                background-image: repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 2px,
-                    rgba(0,0,0,0.05) 2px,
-                    rgba(0,0,0,0.05) 4px
-                );
-            `;
-            break;
+            return 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px)';
         case 'grid':
-            patternStyle = `
-                background-image: 
-                    linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
-                background-size: 20px 20px;
-            `;
-            break;
+            return 'linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px)';
         case 'waves':
-            patternStyle = `
-                background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            `;
-            break;
+            return `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`;
         default:
-            return;
+            return null;
     }
+}
 
-    // Apply pattern as overlay
-    if (patternStyle) {
-        body.style.cssText += patternStyle;
+/**
+ * Apply background pattern (legacy function, kept for compatibility)
+ */
+function applyBackgroundPattern(pattern) {
+    const patternBg = getBackgroundPattern(pattern);
+    if (patternBg) {
+        const body = document.body;
+        // Add pattern as overlay using multiple backgrounds
+        const currentBg = body.style.background || '';
+        if (currentBg) {
+            body.style.background = `${patternBg}, ${currentBg}`;
+        } else {
+            body.style.background = patternBg;
+            if (pattern === 'grid' || pattern === 'dots') {
+                body.style.backgroundSize = '20px 20px';
+            }
+        }
     }
 }
 
