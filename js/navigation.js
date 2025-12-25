@@ -148,9 +148,12 @@ function updateMobileBottomNav(activeTabId) {
     }
 }
 
-// Export to window
+// Export to window - OVERRIDE any existing switchTab
 if (typeof window !== 'undefined') {
+    console.log('[Navigation] Exposing switchTab to window...');
     window.switchTab = switchTab;
     window.updateMobileBottomNav = updateMobileBottomNav;
+    console.log('[Navigation] ✅ switchTab exposed to window');
+    console.log('[Navigation] window.switchTab type:', typeof window.switchTab);
 }
 
