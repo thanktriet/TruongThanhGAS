@@ -419,64 +419,16 @@ function formatDate(dateString) {
 }
 
 // Expose functions to window
-// Store original function references before exposing
-const loadThemesOriginal = loadThemes;
-const activateThemeOriginal = activateTheme;
-const deleteThemeOriginal = deleteTheme;
-const openThemeEditModalOriginal = openThemeEditModal;
-const openThemeCreateModalOriginal = openThemeCreateModal;
-
 if (typeof window !== 'undefined') {
-    // Direct assignment - no wrapper needed
-    window.loadThemes = loadThemesOriginal;
-    window.activateTheme = activateThemeOriginal;
-    window.deleteTheme = deleteThemeOriginal;
-    window.openThemeEditModal = openThemeEditModalOriginal;
-    window.openThemeCreateModal = openThemeCreateModalOriginal;
+    // Direct assignment - functions are already defined at this point
+    window.loadThemes = loadThemes;
+    window.activateTheme = activateTheme;
+    window.deleteTheme = deleteTheme;
+    window.openThemeEditModal = openThemeEditModal;
+    window.openThemeCreateModal = openThemeCreateModal;
     
     console.log('✅ Themes functions exposed to window');
     console.log('[Themes] window.loadThemes type:', typeof window.loadThemes);
-    console.log('[Themes] window.loadThemes exists:', !!window.loadThemes);
-}
-
-// Auto-load when tab becomes active (as fallback if navigation.js doesn't trigger)
-// Use simple interval check, only trigger once
-if (typeof document !== 'undefined') {
-    let hasLoadedOnce = false;
-    let intervalId = null;
-    
-    const tryLoadIfActive = () => {
-        if (hasLoadedOnce || isLoadingThemes) return;
-        
-        const tab = document.getElementById('tab-themes');
-        if (tab && tab.classList.contains('active')) {
-            console.log('[Themes] Tab is active, auto-loading themes (fallback)...');
-            hasLoadedOnce = true;
-            if (intervalId) clearInterval(intervalId);
-            
-            // Small delay to ensure DOM is ready
-            setTimeout(() => {
-                if (typeof window.loadThemes === 'function') {
-                    window.loadThemes();
-                }
-            }, 200);
-        }
-    };
-    
-    // Check periodically (max 5 seconds = 25 checks * 200ms)
-    let checkCount = 0;
-    const maxChecks = 25;
-    intervalId = setInterval(() => {
-        checkCount++;
-        if (checkCount >= maxChecks) {
-            if (intervalId) clearInterval(intervalId);
-            return;
-        }
-        tryLoadIfActive();
-    }, 200);
-    
-    // Also check immediately after a short delay
-    setTimeout(tryLoadIfActive, 300);
 }
 </script>
 
