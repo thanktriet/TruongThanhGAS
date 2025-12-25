@@ -354,15 +354,32 @@ async function activateTheme(themeId) {
             if (typeof window.showToast === 'function') {
                 window.showToast('Đã kích hoạt theme thành công!', 'success');
             }
-            // Reload themes list
-            await loadThemes();
-            // Apply theme ngay lập tức (không dùng await vì applyTheme không phải async)
-            if (typeof window.applyTheme === 'function' && result.data) {
-                window.applyTheme(result.data);
+            
+            // Get the activated theme data
+            let themeData = result.data;
+            
+            // If result.data doesn't have full theme info, fetch it
+            if (!themeData || !themeData.primary_color) {
+                console.log('[Themes] Theme data incomplete, fetching active theme...');
+                const activeThemeResult = await window.callAPI({
+                    action: 'get_active_theme'
+                });
+                if (activeThemeResult.success && activeThemeResult.data) {
+                    themeData = activeThemeResult.data;
+                }
+            }
+            
+            // Apply theme ngay lập tức
+            if (typeof window.applyTheme === 'function' && themeData) {
+                console.log('[Themes] Applying theme:', themeData.name);
+                window.applyTheme(themeData);
             } else {
-                // Reload page để apply theme
+                console.warn('[Themes] applyTheme function not found or no theme data, reloading page...');
                 setTimeout(() => location.reload(), 1000);
             }
+            
+            // Reload themes list to update UI
+            await loadThemes();
         } else {
             throw new Error(result.message || 'Không thể kích hoạt theme');
         }
@@ -478,17 +495,21 @@ function formatDate(dateString) {
             console.log('[Themes] window.loadThemes === fnLoadThemes:', window.loadThemes === fnLoadThemes);
             
             // Setup MutationObserver to auto-load when tab becomes active
-            setTimeout(() => {
+            // Retry mechanism to wait for DOM to be ready
+            let retryCount = 0;
+            const maxRetries = 20; // 20 retries = 2 seconds max
+            
+            const setupObserver = () => {
                 const themesTab = document.getElementById('tab-themes');
                 if (themesTab) {
-                    console.log('[Themes] Setting up MutationObserver on themes tab');
+                    console.log('[Themes] ✅ Found themes tab, setting up MutationObserver...');
                     const observer = new MutationObserver((mutations) => {
                         mutations.forEach((mutation) => {
                             if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                                 const isActive = themesTab.classList.contains('active');
-                                console.log('[Themes] Tab class changed, isActive:', isActive);
+                                console.log('[Themes] 🔍 Tab class changed, isActive:', isActive, 'isLoadingThemes:', isLoadingThemes);
                                 if (isActive && !isLoadingThemes) {
-                                    console.log('[Themes] Tab is active, auto-loading themes...');
+                                    console.log('[Themes] ✅ Tab is active, auto-loading themes...');
                                     fnLoadThemes();
                                 }
                             }
@@ -499,13 +520,22 @@ function formatDate(dateString) {
                     
                     // Also check immediately if tab is already active
                     if (themesTab.classList.contains('active')) {
-                        console.log('[Themes] Tab is already active, loading themes...');
+                        console.log('[Themes] ✅ Tab is already active, loading themes immediately...');
                         fnLoadThemes();
                     }
                 } else {
-                    console.warn('[Themes] themes tab not found for MutationObserver');
+                    retryCount++;
+                    if (retryCount < maxRetries) {
+                        console.log(`[Themes] ⏳ Themes tab not found, retrying (${retryCount}/${maxRetries})...`);
+                        setTimeout(setupObserver, 100);
+                    } else {
+                        console.warn('[Themes] ❌ Themes tab not found after', maxRetries, 'retries. MutationObserver not setup.');
+                    }
                 }
-            }, 1000);
+            };
+            
+            // Start setup after a short delay to ensure DOM is ready
+            setTimeout(setupObserver, 100);
         } else {
             console.log('[Themes] Functions already exposed, skipping re-exposure');
         }

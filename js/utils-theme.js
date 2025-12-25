@@ -24,9 +24,18 @@ async function loadAndApplyActiveTheme() {
  * Áp dụng theme vào trang
  */
 function applyTheme(theme) {
-    if (!theme) return;
+    if (!theme) {
+        console.warn('[Theme] No theme provided to applyTheme');
+        return;
+    }
 
     console.log('[Theme] Applying theme:', theme.name);
+    console.log('[Theme] Theme data:', {
+        primary_color: theme.primary_color,
+        background_gradient: theme.background_gradient,
+        background_color: theme.background_color,
+        background_image_url: theme.background_image_url
+    });
 
     // Get root element
     const root = document.documentElement;
@@ -38,17 +47,31 @@ function applyTheme(theme) {
     root.style.setProperty('--theme-background', theme.background_color || '#FFFFFF');
     root.style.setProperty('--theme-text', theme.text_color || '#1F2937');
 
-    // Apply background gradient or color
+    // Apply background gradient or color to body
     const body = document.body;
+    
+    // Reset background styles first
+    body.style.background = '';
+    body.style.backgroundColor = '';
+    body.style.backgroundImage = '';
+    body.style.backgroundSize = '';
+    body.style.backgroundPosition = '';
+    body.style.backgroundAttachment = '';
+    body.style.backgroundRepeat = '';
+    
+    // Apply new background
     if (theme.background_gradient) {
+        console.log('[Theme] Applying gradient:', theme.background_gradient);
         body.style.background = theme.background_gradient;
         body.style.backgroundAttachment = 'fixed';
     } else if (theme.background_color) {
+        console.log('[Theme] Applying background color:', theme.background_color);
         body.style.backgroundColor = theme.background_color;
     }
 
-    // Apply background image if exists
+    // Apply background image if exists (overrides gradient/color)
     if (theme.background_image_url) {
+        console.log('[Theme] Applying background image:', theme.background_image_url);
         body.style.backgroundImage = `url(${theme.background_image_url})`;
         body.style.backgroundSize = 'cover';
         body.style.backgroundPosition = 'center';
@@ -58,6 +81,7 @@ function applyTheme(theme) {
 
     // Apply background pattern
     if (theme.background_pattern && theme.background_pattern !== 'none') {
+        console.log('[Theme] Applying background pattern:', theme.background_pattern);
         applyBackgroundPattern(theme.background_pattern);
     }
 
@@ -65,6 +89,7 @@ function applyTheme(theme) {
     if (theme.logo_url) {
         const logoElement = document.querySelector('#header-logo, .logo, [data-theme-logo]');
         if (logoElement) {
+            console.log('[Theme] Applying logo:', theme.logo_url);
             if (logoElement.tagName === 'IMG') {
                 logoElement.src = theme.logo_url;
             } else {
@@ -73,13 +98,16 @@ function applyTheme(theme) {
                 logoElement.style.backgroundRepeat = 'no-repeat';
                 logoElement.style.backgroundPosition = 'center';
             }
+        } else {
+            console.warn('[Theme] Logo element not found');
         }
     }
 
     // Store theme in localStorage for quick access
     localStorage.setItem('active_theme', JSON.stringify(theme));
 
-    console.log('[Theme] Theme applied successfully');
+    console.log('[Theme] ✅ Theme applied successfully');
+    console.log('[Theme] Body background style:', body.style.background || body.style.backgroundColor || 'none');
 }
 
 /**
