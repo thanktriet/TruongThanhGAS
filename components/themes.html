@@ -110,13 +110,13 @@ async function loadThemes() {
         let result;
         try {
             result = await Promise.race([apiPromise, timeoutPromise]);
-            // Clear timeout if API succeeded
-            if (timeoutId && result && result.success) {
+            // Clear timeout if API succeeded (timeoutId is in parent scope)
+            if (typeof timeoutId !== 'undefined' && timeoutId && result && result.success) {
                 clearTimeout(timeoutId);
             }
         } catch (error) {
-            // Clear timeout on error
-            if (timeoutId) {
+            // Clear timeout on error (timeoutId is in parent scope)
+            if (typeof timeoutId !== 'undefined' && timeoutId) {
                 clearTimeout(timeoutId);
             }
             throw error;
