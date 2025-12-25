@@ -103,12 +103,20 @@ async function loadThemes() {
             allThemes = result.data;
             
             // Đảm bảo DOM đã sẵn sàng trước khi render
+            let retryCount = 0;
+            const maxRetries = 10; // Max 10 retries = 1 second
             const checkDOM = () => {
                 const listDiv = document.getElementById('themes-list');
                 if (!listDiv) {
-                    console.warn('[Themes] themes-list not ready, retrying in 100ms...');
-                    setTimeout(checkDOM, 100);
-                    return;
+                    retryCount++;
+                    if (retryCount < maxRetries) {
+                        console.warn(`[Themes] themes-list not ready, retrying (${retryCount}/${maxRetries})...`);
+                        setTimeout(checkDOM, 100);
+                        return;
+                    } else {
+                        console.error('[Themes] themes-list not found after', maxRetries, 'retries');
+                        return;
+                    }
                 }
                 console.log('[Themes] DOM ready, rendering themes...');
                 renderThemes(result.data);
@@ -122,11 +130,19 @@ async function loadThemes() {
             allThemes = [];
             
             // Đảm bảo DOM đã sẵn sàng
+            let retryCount = 0;
+            const maxRetries = 10;
             const checkDOM = () => {
                 const listDiv = document.getElementById('themes-list');
                 if (!listDiv) {
-                    setTimeout(checkDOM, 100);
-                    return;
+                    retryCount++;
+                    if (retryCount < maxRetries) {
+                        setTimeout(checkDOM, 100);
+                        return;
+                    } else {
+                        console.error('[Themes] themes-list not found after', maxRetries, 'retries');
+                        return;
+                    }
                 }
                 renderThemes([]);
             };
