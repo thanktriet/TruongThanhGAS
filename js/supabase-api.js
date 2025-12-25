@@ -4242,6 +4242,25 @@ async function callSupabaseAPI(data) {
             case 'get_active_sales_policies':
                 return await supabaseGetActiveSalesPolicies();
             
+            // Themes Management API (ADMIN only)
+            case 'list_themes':
+                return await supabaseListThemes();
+            
+            case 'get_active_theme':
+                return await supabaseGetActiveTheme();
+            
+            case 'create_theme':
+                return await supabaseCreateTheme(data);
+            
+            case 'update_theme':
+                return await supabaseUpdateTheme(data.id, data);
+            
+            case 'delete_theme':
+                return await supabaseDeleteTheme(data.id);
+            
+            case 'activate_theme':
+                return await supabaseActivateTheme(data.id);
+            
             // Dashboard & Reports API
             case 'get_dashboard_data':
                 return await supabaseGetDashboardData(data.filterDate, data.filterMonth);

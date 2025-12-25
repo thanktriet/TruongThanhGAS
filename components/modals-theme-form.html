@@ -1,0 +1,582 @@
+<!-- Modal Form Tạo/Sửa Theme -->
+<div id="modal-theme-form" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 rounded-t-xl flex justify-between items-center sticky top-0 z-10">
+            <h2 id="theme-form-title" class="text-xl font-bold">
+                <i class="fa-solid fa-palette mr-2"></i>Tạo Theme Mới
+            </h2>
+            <button onclick="closeThemeFormModal()" class="text-white hover:text-gray-200">
+                <i class="fa-solid fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <form id="form-theme" onsubmit="submitThemeForm(event)" class="p-6">
+            <!-- Basic Info -->
+            <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fa-solid fa-info-circle mr-2 text-purple-600"></i>
+                    Thông Tin Cơ Bản
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="label block mb-2">
+                            Tên Theme <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="theme-name" 
+                            name="name"
+                            class="input w-full" 
+                            placeholder="VD: Giáng Sinh, Tết Nguyên Đán..."
+                            required
+                        >
+                    </div>
+                    <div>
+                        <label class="label block mb-2">
+                            Slug <span class="text-red-500">*</span>
+                            <span class="text-xs text-gray-500">(Tự động tạo từ tên)</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="theme-slug" 
+                            name="slug"
+                            class="input w-full" 
+                            placeholder="VD: giang-sinh, tet"
+                            required
+                        >
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="label block mb-2">
+                            Mô tả
+                        </label>
+                        <textarea 
+                            id="theme-description" 
+                            name="description"
+                            class="input w-full" 
+                            rows="2"
+                            placeholder="Mô tả về theme này..."
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colors -->
+            <div class="mb-6 bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fa-solid fa-palette mr-2 text-purple-600"></i>
+                    Màu Sắc
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="label block mb-2">
+                            Màu chính (Primary)
+                        </label>
+                        <div class="flex gap-2">
+                            <input 
+                                type="color" 
+                                id="theme-primary-color" 
+                                name="primary_color"
+                                class="w-16 h-10 rounded border border-gray-300 cursor-pointer"
+                                value="#3B82F6"
+                            >
+                            <input 
+                                type="text" 
+                                id="theme-primary-color-hex"
+                                class="input flex-1 font-mono" 
+                                value="#3B82F6"
+                                placeholder="#3B82F6"
+                            >
+                        </div>
+                    </div>
+                    <div>
+                        <label class="label block mb-2">
+                            Màu phụ (Secondary)
+                        </label>
+                        <div class="flex gap-2">
+                            <input 
+                                type="color" 
+                                id="theme-secondary-color" 
+                                name="secondary_color"
+                                class="w-16 h-10 rounded border border-gray-300 cursor-pointer"
+                                value="#6366F1"
+                            >
+                            <input 
+                                type="text" 
+                                id="theme-secondary-color-hex"
+                                class="input flex-1 font-mono" 
+                                value="#6366F1"
+                                placeholder="#6366F1"
+                            >
+                        </div>
+                    </div>
+                    <div>
+                        <label class="label block mb-2">
+                            Màu nhấn (Accent)
+                        </label>
+                        <div class="flex gap-2">
+                            <input 
+                                type="color" 
+                                id="theme-accent-color" 
+                                name="accent_color"
+                                class="w-16 h-10 rounded border border-gray-300 cursor-pointer"
+                                value="#8B5CF6"
+                            >
+                            <input 
+                                type="text" 
+                                id="theme-accent-color-hex"
+                                class="input flex-1 font-mono" 
+                                value="#8B5CF6"
+                                placeholder="#8B5CF6"
+                            >
+                        </div>
+                    </div>
+                    <div>
+                        <label class="label block mb-2">
+                            Màu nền (Background)
+                        </label>
+                        <div class="flex gap-2">
+                            <input 
+                                type="color" 
+                                id="theme-background-color" 
+                                name="background_color"
+                                class="w-16 h-10 rounded border border-gray-300 cursor-pointer"
+                                value="#FFFFFF"
+                            >
+                            <input 
+                                type="text" 
+                                id="theme-background-color-hex"
+                                class="input flex-1 font-mono" 
+                                value="#FFFFFF"
+                                placeholder="#FFFFFF"
+                            >
+                        </div>
+                    </div>
+                    <div>
+                        <label class="label block mb-2">
+                            Màu chữ (Text)
+                        </label>
+                        <div class="flex gap-2">
+                            <input 
+                                type="color" 
+                                id="theme-text-color" 
+                                name="text_color"
+                                class="w-16 h-10 rounded border border-gray-300 cursor-pointer"
+                                value="#1F2937"
+                            >
+                            <input 
+                                type="text" 
+                                id="theme-text-color-hex"
+                                class="input flex-1 font-mono" 
+                                value="#1F2937"
+                                placeholder="#1F2937"
+                            >
+                        </div>
+                    </div>
+                    <div>
+                        <label class="label block mb-2">
+                            Gradient Background
+                            <span class="text-xs text-gray-500">(CSS gradient string, optional)</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="theme-background-gradient" 
+                            name="background_gradient"
+                            class="input w-full font-mono text-sm" 
+                            placeholder="VD: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Icons & Images -->
+            <div class="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fa-solid fa-image mr-2 text-blue-600"></i>
+                    Icon & Hình Ảnh
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="label block mb-2">
+                            Icon Emoji
+                            <span class="text-xs text-gray-500">(VD: 🎄, 🧧, ☀️, 🎂)</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="theme-icon-emoji" 
+                            name="icon_emoji"
+                            class="input w-full text-2xl text-center" 
+                            placeholder="🎄"
+                            maxlength="2"
+                        >
+                    </div>
+                    <div>
+                        <label class="label block mb-2">
+                            Icon FontAwesome
+                            <span class="text-xs text-gray-500">(VD: fa-snowflake, fa-dragon)</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="theme-icon-fontawesome" 
+                            name="icon_fontawesome"
+                            class="input w-full" 
+                            placeholder="fa-snowflake"
+                        >
+                    </div>
+                    <div>
+                        <label class="label block mb-2">
+                            Background Image URL
+                        </label>
+                        <input 
+                            type="url" 
+                            id="theme-background-image" 
+                            name="background_image_url"
+                            class="input w-full" 
+                            placeholder="https://..."
+                        >
+                    </div>
+                    <div>
+                        <label class="label block mb-2">
+                            Logo URL
+                        </label>
+                        <input 
+                            type="url" 
+                            id="theme-logo-url" 
+                            name="logo_url"
+                            class="input w-full" 
+                            placeholder="https://..."
+                        >
+                    </div>
+                    <div>
+                        <label class="label block mb-2">
+                            Background Pattern
+                        </label>
+                        <select 
+                            id="theme-background-pattern" 
+                            name="background_pattern"
+                            class="input w-full"
+                        >
+                            <option value="none">Không có</option>
+                            <option value="dots">Dots (Chấm)</option>
+                            <option value="lines">Lines (Đường kẻ)</option>
+                            <option value="grid">Grid (Lưới)</option>
+                            <option value="waves">Waves (Sóng)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date Range (Optional) -->
+            <div class="mb-6 bg-green-50 p-4 rounded-lg border border-green-200">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fa-solid fa-calendar mr-2 text-green-600"></i>
+                    Tự Động Kích Hoạt (Tùy chọn)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="label block mb-2">
+                            Ngày bắt đầu
+                        </label>
+                        <input 
+                            type="date" 
+                            id="theme-start-date" 
+                            name="start_date"
+                            class="input w-full"
+                        >
+                    </div>
+                    <div>
+                        <label class="label block mb-2">
+                            Ngày kết thúc
+                        </label>
+                        <input 
+                            type="date" 
+                            id="theme-end-date" 
+                            name="end_date"
+                            class="input w-full"
+                        >
+                    </div>
+                </div>
+                <p class="text-xs text-gray-600 mt-2">
+                    <i class="fa-solid fa-info-circle mr-1"></i>
+                    Theme sẽ tự động được kích hoạt trong khoảng thời gian này
+                </p>
+            </div>
+
+            <!-- Preview -->
+            <div class="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fa-solid fa-eye mr-2 text-gray-600"></i>
+                    Preview
+                </h3>
+                <div id="theme-preview" class="rounded-lg p-6 border-2 border-gray-300 min-h-[200px]">
+                    <div class="text-center">
+                        <div id="preview-icon" class="text-5xl mb-4">🎨</div>
+                        <h4 id="preview-name" class="text-2xl font-bold mb-2">Tên Theme</h4>
+                        <p id="preview-description" class="text-gray-600">Mô tả theme</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                <button 
+                    type="button"
+                    onclick="closeThemeFormModal()" 
+                    class="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition font-bold"
+                >
+                    Hủy
+                </button>
+                <button 
+                    type="submit" 
+                    class="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded hover:from-purple-700 hover:to-indigo-700 transition font-bold"
+                >
+                    <i class="fa-solid fa-save mr-2"></i>
+                    <span id="theme-form-submit-text">Lưu Theme</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let currentEditingTheme = null;
+
+// Sync color picker with text input
+function setupColorSync() {
+    const colorInputs = [
+        { picker: 'theme-primary-color', hex: 'theme-primary-color-hex' },
+        { picker: 'theme-secondary-color', hex: 'theme-secondary-color-hex' },
+        { picker: 'theme-accent-color', hex: 'theme-accent-color-hex' },
+        { picker: 'theme-background-color', hex: 'theme-background-color-hex' },
+        { picker: 'theme-text-color', hex: 'theme-text-color-hex' }
+    ];
+
+    colorInputs.forEach(({ picker, hex }) => {
+        const pickerEl = document.getElementById(picker);
+        const hexEl = document.getElementById(hex);
+
+        if (pickerEl && hexEl) {
+            // Picker -> Hex
+            pickerEl.addEventListener('input', (e) => {
+                hexEl.value = e.target.value.toUpperCase();
+                updatePreview();
+            });
+
+            // Hex -> Picker
+            hexEl.addEventListener('input', (e) => {
+                const value = e.target.value;
+                if (/^#[0-9A-F]{6}$/i.test(value)) {
+                    pickerEl.value = value.toUpperCase();
+                    updatePreview();
+                }
+            });
+        }
+    });
+
+    // Other inputs that trigger preview update
+    ['theme-name', 'theme-description', 'theme-icon-emoji', 'theme-icon-fontawesome', 
+     'theme-background-gradient', 'theme-background-pattern'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', updatePreview);
+        }
+    });
+}
+
+// Update preview
+function updatePreview() {
+    const preview = document.getElementById('theme-preview');
+    if (!preview) return;
+
+    const name = document.getElementById('theme-name')?.value || 'Tên Theme';
+    const description = document.getElementById('theme-description')?.value || 'Mô tả theme';
+    const iconEmoji = document.getElementById('theme-icon-emoji')?.value || '🎨';
+    const primaryColor = document.getElementById('theme-primary-color')?.value || '#3B82F6';
+    const backgroundGradient = document.getElementById('theme-background-gradient')?.value;
+    const backgroundColor = document.getElementById('theme-background-color')?.value || '#FFFFFF';
+
+    document.getElementById('preview-name').textContent = name;
+    document.getElementById('preview-description').textContent = description;
+    document.getElementById('preview-icon').textContent = iconEmoji;
+
+    if (backgroundGradient) {
+        preview.style.background = backgroundGradient;
+    } else {
+        preview.style.backgroundColor = backgroundColor;
+    }
+}
+
+// Open modal (create or edit)
+function openThemeFormModal(theme = null) {
+    currentEditingTheme = theme;
+    const modal = document.getElementById('modal-theme-form');
+    const form = document.getElementById('form-theme');
+    const title = document.getElementById('theme-form-title');
+    const submitText = document.getElementById('theme-form-submit-text');
+
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+
+    if (title) {
+        title.innerHTML = theme 
+            ? '<i class="fa-solid fa-edit mr-2"></i>Sửa Theme'
+            : '<i class="fa-solid fa-plus mr-2"></i>Tạo Theme Mới';
+    }
+
+    if (submitText) {
+        submitText.textContent = theme ? 'Cập Nhật Theme' : 'Tạo Theme';
+    }
+
+    if (form) {
+        form.reset();
+    }
+
+    // Fill form if editing
+    if (theme) {
+        document.getElementById('theme-name').value = theme.name || '';
+        document.getElementById('theme-slug').value = theme.slug || '';
+        document.getElementById('theme-description').value = theme.description || '';
+        document.getElementById('theme-primary-color').value = theme.primary_color || '#3B82F6';
+        document.getElementById('theme-primary-color-hex').value = theme.primary_color || '#3B82F6';
+        document.getElementById('theme-secondary-color').value = theme.secondary_color || '#6366F1';
+        document.getElementById('theme-secondary-color-hex').value = theme.secondary_color || '#6366F1';
+        document.getElementById('theme-accent-color').value = theme.accent_color || '#8B5CF6';
+        document.getElementById('theme-accent-color-hex').value = theme.accent_color || '#8B5CF6';
+        document.getElementById('theme-background-color').value = theme.background_color || '#FFFFFF';
+        document.getElementById('theme-background-color-hex').value = theme.background_color || '#FFFFFF';
+        document.getElementById('theme-text-color').value = theme.text_color || '#1F2937';
+        document.getElementById('theme-text-color-hex').value = theme.text_color || '#1F2937';
+        document.getElementById('theme-background-gradient').value = theme.background_gradient || '';
+        document.getElementById('theme-background-image').value = theme.background_image_url || '';
+        document.getElementById('theme-logo-url').value = theme.logo_url || '';
+        document.getElementById('theme-icon-emoji').value = theme.icon_emoji || '';
+        document.getElementById('theme-icon-fontawesome').value = theme.icon_fontawesome || '';
+        document.getElementById('theme-background-pattern').value = theme.background_pattern || 'none';
+        document.getElementById('theme-start-date').value = theme.start_date || '';
+        document.getElementById('theme-end-date').value = theme.end_date || '';
+    }
+
+    // Setup color sync and update preview
+    setTimeout(() => {
+        setupColorSync();
+        updatePreview();
+        
+        // Auto-generate slug from name if creating new theme
+        if (!theme) {
+            const nameInput = document.getElementById('theme-name');
+            const slugInput = document.getElementById('theme-slug');
+            if (nameInput && slugInput) {
+                nameInput.addEventListener('input', (e) => {
+                    if (!slugInput.dataset.manualEdit) {
+                        const slug = e.target.value
+                            .toLowerCase()
+                            .normalize('NFD')
+                            .replace(/[\u0300-\u036f]/g, '')
+                            .replace(/[^a-z0-9]+/g, '-')
+                            .replace(/^-+|-+$/g, '');
+                        slugInput.value = slug;
+                    }
+                });
+
+                slugInput.addEventListener('input', () => {
+                    slugInput.dataset.manualEdit = 'true';
+                });
+            }
+        }
+    }, 100);
+}
+
+// Close modal
+function closeThemeFormModal() {
+    const modal = document.getElementById('modal-theme-form');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+    currentEditingTheme = null;
+}
+
+// Submit form
+async function submitThemeForm(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang lưu...';
+
+    try {
+        const themeData = {
+            name: formData.get('name')?.trim(),
+            slug: formData.get('slug')?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+            description: formData.get('description')?.trim() || null,
+            primary_color: document.getElementById('theme-primary-color-hex').value || '#3B82F6',
+            secondary_color: document.getElementById('theme-secondary-color-hex').value || '#6366F1',
+            accent_color: document.getElementById('theme-accent-color-hex').value || '#8B5CF6',
+            background_color: document.getElementById('theme-background-color-hex').value || '#FFFFFF',
+            text_color: document.getElementById('theme-text-color-hex').value || '#1F2937',
+            background_gradient: formData.get('background_gradient')?.trim() || null,
+            background_image_url: formData.get('background_image_url')?.trim() || null,
+            background_pattern: formData.get('background_pattern') || 'none',
+            logo_url: formData.get('logo_url')?.trim() || null,
+            icon_emoji: formData.get('icon_emoji')?.trim() || null,
+            icon_fontawesome: formData.get('icon_fontawesome')?.trim() || null,
+            start_date: formData.get('start_date') || null,
+            end_date: formData.get('end_date') || null
+        };
+
+        let result;
+        if (currentEditingTheme) {
+            // Update
+            result = await window.callAPI({
+                action: 'update_theme',
+                id: currentEditingTheme.id,
+                ...themeData
+            });
+        } else {
+            // Create
+            result = await window.callAPI({
+                action: 'create_theme',
+                ...themeData
+            });
+        }
+
+        if (result.success) {
+            if (typeof window.showToast === 'function') {
+                window.showToast(
+                    currentEditingTheme ? 'Đã cập nhật theme thành công!' : 'Đã tạo theme thành công!',
+                    'success'
+                );
+            }
+            closeThemeFormModal();
+            
+            // Reload themes list
+            if (typeof window.loadThemes === 'function') {
+                await window.loadThemes();
+            }
+        } else {
+            throw new Error(result.message || 'Không thể lưu theme');
+        }
+    } catch (error) {
+        console.error('[Theme Form] Submit error:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + error.message, 'danger');
+        }
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+    }
+}
+
+// Expose functions to window
+if (typeof window !== 'undefined') {
+    window.openThemeFormModal = openThemeFormModal;
+    window.closeThemeFormModal = closeThemeFormModal;
+    window.submitThemeForm = submitThemeForm;
+    
+    console.log('✅ Theme form modal functions exposed to window');
+}
+</script>
+

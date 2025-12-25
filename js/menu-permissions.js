@@ -128,6 +128,7 @@ function updateMenuItemsByPermissions(user) {
     toggleMenuByPermission('nav-car-models', 'manage_car_models', ['ADMIN']);
     toggleMenuByPermission('nav-sales-policies', 'manage_sales_policies', ['ADMIN']);
     toggleMenuByPermission('nav-tvbh-targets', 'manage_tvbh_targets', ['ADMIN']);
+    toggleMenuByPermission('nav-themes', 'manage_themes', ['ADMIN']);
     
     // =====================================================
     // COC REQUESTS MENUS

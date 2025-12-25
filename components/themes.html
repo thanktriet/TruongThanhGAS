@@ -1,0 +1,338 @@
+<div id="tab-themes" class="tab-content">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 border-b border-purple-500">
+            <h2 class="text-xl font-bold text-white flex items-center gap-3">
+                <i class="fa-solid fa-palette text-2xl"></i>
+                Quản Lý Themes (Chủ Đề)
+            </h2>
+            <p class="text-purple-100 text-sm mt-1">Thay đổi giao diện toàn bộ trang web theo sự kiện/ngày lễ</p>
+        </div>
+
+        <div class="p-6">
+            <!-- Toolbar -->
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+                <div class="flex gap-3">
+                    <button 
+                        onclick="openThemeCreateModal()" 
+                        class="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-lg hover:from-purple-700 hover:to-indigo-700 shadow-lg transition transform active:scale-95 flex items-center gap-2"
+                    >
+                        <i class="fa-solid fa-plus"></i>
+                        Tạo Theme Mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Themes List -->
+            <div id="themes-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Loading state -->
+                <div id="themes-loading" class="col-span-full text-center py-12">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl text-purple-600 mb-4"></i>
+                    <p class="text-gray-600">Đang tải themes...</p>
+                </div>
+
+                <!-- Empty state -->
+                <div id="themes-empty" class="col-span-full text-center py-12 hidden">
+                    <i class="fa-solid fa-palette text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-600 text-lg mb-4">Chưa có theme nào</p>
+                    <button 
+                        onclick="openThemeCreateModal()" 
+                        class="px-6 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition"
+                    >
+                        <i class="fa-solid fa-plus mr-2"></i>Tạo Theme Đầu Tiên
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allThemes = [];
+
+// Load themes list
+async function loadThemes() {
+    const listDiv = document.getElementById('themes-list');
+    const loadingDiv = document.getElementById('themes-loading');
+    const emptyDiv = document.getElementById('themes-empty');
+
+    if (loadingDiv) loadingDiv.classList.remove('hidden');
+    if (emptyDiv) emptyDiv.classList.add('hidden');
+
+    try {
+        const result = await window.callAPI({
+            action: 'list_themes'
+        });
+
+        if (result.success && result.data) {
+            allThemes = result.data;
+            renderThemes(result.data);
+        } else {
+            throw new Error(result.message || 'Không thể tải danh sách themes');
+        }
+    } catch (error) {
+        console.error('[Themes] Load error:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + error.message, 'danger');
+        }
+        listDiv.innerHTML = `<div class="col-span-full text-center py-8 text-red-600">Lỗi: ${escapeHtml(error.message)}</div>`;
+    } finally {
+        if (loadingDiv) loadingDiv.classList.add('hidden');
+    }
+}
+
+// Render themes cards
+function renderThemes(themes) {
+    const listDiv = document.getElementById('themes-list');
+    const emptyDiv = document.getElementById('themes-empty');
+
+    if (!themes || themes.length === 0) {
+        if (emptyDiv) emptyDiv.classList.remove('hidden');
+        listDiv.innerHTML = '';
+        return;
+    }
+
+    if (emptyDiv) emptyDiv.classList.add('hidden');
+
+    listDiv.innerHTML = themes.map(theme => {
+        const isActive = theme.is_active;
+        const isSystem = theme.is_system;
+        const iconHtml = theme.icon_emoji 
+            ? `<span class="text-4xl">${theme.icon_emoji}</span>`
+            : (theme.icon_fontawesome 
+                ? `<i class="${theme.icon_fontawesome} text-4xl"></i>`
+                : '<i class="fa-solid fa-palette text-4xl"></i>');
+        
+        const backgroundStyle = theme.background_gradient 
+            ? `background: ${theme.background_gradient};`
+            : (theme.background_color 
+                ? `background-color: ${theme.background_color};`
+                : '');
+
+        return `
+            <div class="bg-white rounded-xl shadow-md border-2 ${isActive ? 'border-purple-500 ring-2 ring-purple-200' : 'border-gray-200'} overflow-hidden hover:shadow-xl transition-all transform hover:scale-105">
+                <!-- Theme Preview Header -->
+                <div class="h-32 relative" style="${backgroundStyle}">
+                    ${theme.background_image_url ? `<img src="${escapeHtml(theme.background_image_url)}" alt="${escapeHtml(theme.name)}" class="w-full h-full object-cover opacity-50">` : ''}
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        ${iconHtml}
+                    </div>
+                    ${isActive ? `
+                        <div class="absolute top-2 right-2 bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-check-circle"></i>
+                            Đang dùng
+                        </div>
+                    ` : ''}
+                    ${isSystem ? `
+                        <div class="absolute top-2 left-2 bg-gray-700 text-white px-2 py-1 rounded text-xs font-bold">
+                            Hệ thống
+                        </div>
+                    ` : ''}
+                </div>
+
+                <!-- Theme Info -->
+                <div class="p-4">
+                    <h3 class="font-bold text-lg text-gray-800 mb-1">${escapeHtml(theme.name)}</h3>
+                    ${theme.description ? `<p class="text-sm text-gray-600 mb-3 line-clamp-2">${escapeHtml(theme.description)}</p>` : ''}
+                    
+                    <!-- Color Palette -->
+                    <div class="flex gap-2 mb-3">
+                        <div class="w-8 h-8 rounded-full border-2 border-white shadow" style="background-color: ${theme.primary_color || '#3B82F6'}"></div>
+                        <div class="w-8 h-8 rounded-full border-2 border-white shadow" style="background-color: ${theme.secondary_color || '#6366F1'}"></div>
+                        <div class="w-8 h-8 rounded-full border-2 border-white shadow" style="background-color: ${theme.accent_color || '#8B5CF6'}"></div>
+                    </div>
+
+                    <!-- Date Range (if any) -->
+                    ${theme.start_date || theme.end_date ? `
+                        <div class="text-xs text-gray-500 mb-3">
+                            ${theme.start_date ? `<div><i class="fa-solid fa-calendar-start mr-1"></i>Bắt đầu: ${formatDate(theme.start_date)}</div>` : ''}
+                            ${theme.end_date ? `<div><i class="fa-solid fa-calendar-check mr-1"></i>Kết thúc: ${formatDate(theme.end_date)}</div>` : ''}
+                        </div>
+                    ` : ''}
+
+                    <!-- Actions -->
+                    <div class="flex gap-2 mt-4">
+                        ${!isActive ? `
+                            <button 
+                                onclick="activateTheme('${theme.id}')" 
+                                class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-bold text-sm"
+                            >
+                                <i class="fa-solid fa-power-off mr-1"></i>Kích hoạt
+                            </button>
+                        ` : `
+                            <button 
+                                disabled
+                                class="flex-1 px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed font-bold text-sm"
+                            >
+                                <i class="fa-solid fa-check mr-1"></i>Đang dùng
+                            </button>
+                        `}
+                        <button 
+                            onclick="openThemeEditModal('${theme.id}')" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold text-sm"
+                            ${isSystem ? 'disabled title="Không thể sửa theme hệ thống"' : ''}
+                        >
+                            <i class="fa-solid fa-edit"></i>
+                        </button>
+                        ${!isSystem && !isActive ? `
+                            <button 
+                                onclick="deleteTheme('${theme.id}', '${escapeHtml(theme.name)}')" 
+                                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-bold text-sm"
+                            >
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Activate theme
+async function activateTheme(themeId) {
+    if (!confirm('Bạn có chắc muốn kích hoạt theme này? Theme hiện tại sẽ bị tắt.')) {
+        return;
+    }
+
+    try {
+        const result = await window.callAPI({
+            action: 'activate_theme',
+            id: themeId
+        });
+
+        if (result.success) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Đã kích hoạt theme thành công!', 'success');
+            }
+            // Reload themes list
+            await loadThemes();
+            // Apply theme ngay lập tức
+            if (typeof window.applyTheme === 'function') {
+                await window.applyTheme(result.data);
+            } else {
+                // Reload page để apply theme
+                setTimeout(() => location.reload(), 1000);
+            }
+        } else {
+            throw new Error(result.message || 'Không thể kích hoạt theme');
+        }
+    } catch (error) {
+        console.error('[Themes] Activate error:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + error.message, 'danger');
+        }
+    }
+}
+
+// Delete theme
+async function deleteTheme(themeId, themeName) {
+    if (!confirm(`Bạn có chắc muốn xóa theme "${themeName}"? Hành động này không thể hoàn tác.`)) {
+        return;
+    }
+
+    try {
+        const result = await window.callAPI({
+            action: 'delete_theme',
+            id: themeId
+        });
+
+        if (result.success) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('Đã xóa theme thành công!', 'success');
+            }
+            await loadThemes();
+        } else {
+            throw new Error(result.message || 'Không thể xóa theme');
+        }
+    } catch (error) {
+        console.error('[Themes] Delete error:', error);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Lỗi: ' + error.message, 'danger');
+        }
+    }
+}
+
+// Open create modal
+function openThemeCreateModal() {
+    if (typeof window.openThemeFormModal === 'function') {
+        window.openThemeFormModal();
+    } else {
+        alert('Form modal chưa được load. Vui lòng thử lại.');
+    }
+}
+
+// Open edit modal
+function openThemeEditModal(themeId) {
+    const theme = allThemes.find(t => t.id === themeId);
+    if (!theme) {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Không tìm thấy theme', 'warning');
+        }
+        return;
+    }
+
+    if (typeof window.openThemeFormModal === 'function') {
+        window.openThemeFormModal(theme);
+    } else {
+        alert('Form modal chưa được load. Vui lòng thử lại.');
+    }
+}
+
+// Helper functions
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    try {
+        return new Date(dateString + 'T00:00:00').toLocaleDateString('vi-VN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+    } catch (e) {
+        return dateString;
+    }
+}
+
+// Expose functions to window
+if (typeof window !== 'undefined') {
+    window.loadThemes = loadThemes;
+    window.activateTheme = activateTheme;
+    window.deleteTheme = deleteTheme;
+    window.openThemeEditModal = openThemeEditModal;
+    window.openThemeCreateModal = openThemeCreateModal;
+    
+    console.log('✅ Themes functions exposed to window');
+}
+
+// Auto-load when tab is active
+if (typeof document !== 'undefined') {
+    const checkAndLoad = () => {
+        const tab = document.getElementById('tab-themes');
+        if (tab && tab.classList.contains('active')) {
+            console.log('[Themes] Tab is active, loading themes...');
+            loadThemes();
+        }
+    };
+
+    // Check immediately
+    checkAndLoad();
+
+    // Also listen for tab changes
+    const observer = new MutationObserver(checkAndLoad);
+    const tabsContainer = document.getElementById('tabs-container');
+    if (tabsContainer) {
+        observer.observe(tabsContainer, {
+            attributes: true,
+            attributeFilter: ['class'],
+            subtree: true
+        });
+    }
+}
+</script>
+

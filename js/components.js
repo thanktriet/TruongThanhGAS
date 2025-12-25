@@ -152,6 +152,7 @@ async function loadAllComponents() {
     await loadComponentAppend('car-models', 'tabs-container');
     await loadComponentAppend('sales-policies', 'tabs-container');
     await loadComponentAppend('tvbh-targets', 'tabs-container');
+    await loadComponentAppend('themes', 'tabs-container');
     
     // Load modals and templates
     await loadComponent('modals', 'modals-container');

@@ -77,6 +77,17 @@ function switchTab(id) {
             }
         }, 300);
     }
+    
+    if (id === 'themes') {
+        console.log('[Navigation] Switching to themes tab');
+        setTimeout(() => {
+            if (typeof window.loadThemes === 'function') {
+                window.loadThemes();
+            } else {
+                console.error('[Navigation] loadThemes function not found');
+            }
+        }, 300);
+    }
 }
 
 /**

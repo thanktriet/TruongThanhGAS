@@ -46,7 +46,8 @@ const ALL_PERMISSIONS = {
     'manage_permissions': { label: 'Quản lý permissions', group: 'system' },
     'manage_car_models': { label: 'Quản lý dòng xe', group: 'system' },
     'manage_sales_policies': { label: 'Quản lý chính sách bán hàng', group: 'system' },
-    'manage_tvbh_targets': { label: 'Quản lý chỉ tiêu TVBH', group: 'system' }
+    'manage_tvbh_targets': { label: 'Quản lý chỉ tiêu TVBH', group: 'system' },
+    'manage_themes': { label: 'Quản lý themes/chủ đề', group: 'system' }
 };
 
 // Permission groups
@@ -90,6 +91,7 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
         manage_car_models: true,
         manage_sales_policies: true,
         manage_tvbh_targets: true,
+        manage_themes: true,
         create_coc_request: false,
         view_coc_requests: true,
         issue_coc: true,
