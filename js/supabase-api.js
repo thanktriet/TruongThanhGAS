@@ -2825,24 +2825,36 @@ async function supabaseDeleteSalesPolicy(d) {
  */
 async function supabaseListThemes() {
     try {
+        console.log('[supabaseListThemes] Starting...');
         const supabase = initSupabase();
         if (!supabase) {
+            console.error('[supabaseListThemes] Supabase not initialized');
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
+        console.log('[supabaseListThemes] Querying themes table...');
         const { data, error } = await supabase
             .from('themes')
             .select('*')
             .order('is_active', { ascending: false })
             .order('created_at', { ascending: false });
 
+        console.log('[supabaseListThemes] Query completed. Error:', error);
+        console.log('[supabaseListThemes] Data:', data);
+        console.log('[supabaseListThemes] Data count:', data ? data.length : 'null');
+
         if (error) {
+            console.error('[supabaseListThemes] Supabase error:', error);
             throw error;
         }
 
-        return { success: true, data: data || [] };
+        const result = { success: true, data: data || [] };
+        console.log('[supabaseListThemes] Returning result with', result.data.length, 'themes');
+        return result;
     } catch (e) {
-        console.error('List themes error:', e);
+        console.error('[supabaseListThemes] Exception:', e);
+        console.error('[supabaseListThemes] Error message:', e.message);
+        console.error('[supabaseListThemes] Error code:', e.code);
         return { success: false, message: 'Lỗi: ' + e.message };
     }
 }

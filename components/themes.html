@@ -67,29 +67,51 @@ async function loadThemes() {
         return;
     }
 
+    console.log('[Themes] Starting loadThemes...');
     isLoadingThemes = true;
     loadingDiv.classList.remove('hidden');
     if (emptyDiv) emptyDiv.classList.add('hidden');
 
     try {
+        console.log('[Themes] Calling API with action: list_themes');
+        
         // Add timeout to prevent hanging (10 seconds)
         const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Request timeout - có thể bảng themes chưa được tạo. Vui lòng chạy migration SQL trong Supabase Dashboard.')), 10000);
+            setTimeout(() => {
+                console.error('[Themes] Request timeout after 10 seconds');
+                reject(new Error('Request timeout - có thể bảng themes chưa được tạo. Vui lòng chạy migration SQL trong Supabase Dashboard.'));
+            }, 10000);
         });
 
         const apiPromise = window.callAPI({
             action: 'list_themes'
         });
 
+        console.log('[Themes] Waiting for API response...');
         const result = await Promise.race([apiPromise, timeoutPromise]);
+        console.log('[Themes] API response received:', result);
+
+        if (result) {
+            console.log('[Themes] Result success:', result.success);
+            console.log('[Themes] Result data:', result.data);
+            console.log('[Themes] Result data type:', typeof result.data);
+            console.log('[Themes] Result data length:', Array.isArray(result.data) ? result.data.length : 'not array');
+        }
 
         if (result && result.success && result.data) {
+            console.log('[Themes] Success! Rendering', result.data.length, 'themes');
             allThemes = result.data;
             renderThemes(result.data);
+        } else if (result && result.success && (!result.data || (Array.isArray(result.data) && result.data.length === 0))) {
+            console.log('[Themes] Success but no data (empty array)');
+            allThemes = [];
+            renderThemes([]);
         } else if (result && !result.success) {
+            console.error('[Themes] API returned error:', result.message);
             throw new Error(result.message || 'Không thể tải danh sách themes');
         } else {
-            throw new Error('Không nhận được phản hồi từ server');
+            console.error('[Themes] Unexpected result format:', result);
+            throw new Error('Không nhận được phản hồi hợp lệ từ server');
         }
     } catch (error) {
         console.error('[Themes] Load error:', error);
