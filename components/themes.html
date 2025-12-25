@@ -419,33 +419,26 @@ function formatDate(dateString) {
 }
 
 // Expose functions to window
-// Use IIFE to ensure proper closure and avoid recursion
-(function() {
-    // Store references to original functions in closure
-    const originalLoadThemes = loadThemes;
-    const originalActivateTheme = activateTheme;
-    const originalDeleteTheme = deleteTheme;
-    const originalOpenThemeEditModal = openThemeEditModal;
-    const originalOpenThemeCreateModal = openThemeCreateModal;
-    
-    if (typeof window !== 'undefined') {
-        // Only expose if not already exposed (avoid overwriting on reload)
-        if (!window.loadThemes || !window.loadThemes._isThemesFunction) {
-            window.loadThemes = originalLoadThemes;
-            window.activateTheme = originalActivateTheme;
-            window.deleteTheme = originalDeleteTheme;
-            window.openThemeEditModal = originalOpenThemeEditModal;
-            window.openThemeCreateModal = originalOpenThemeCreateModal;
-            
-            // Mark as exposed (for debugging/protection)
-            window.loadThemes._isThemesFunction = true;
-            
-            console.log('✅ Themes functions exposed to window');
-            console.log('[Themes] window.loadThemes type:', typeof window.loadThemes);
-        } else {
-            console.log('[Themes] Functions already exposed, skipping');
-        }
+// IMPORTANT: Define functions first, then expose immediately to avoid recursion
+// Only expose once to prevent issues when component reloads
+if (typeof window !== 'undefined') {
+    // Check if already exposed to avoid recursion on reload
+    if (!window._themesFunctionsExposed) {
+        // Direct assignment - functions are declared above
+        window.loadThemes = loadThemes;
+        window.activateTheme = activateTheme;
+        window.deleteTheme = deleteTheme;
+        window.openThemeEditModal = openThemeEditModal;
+        window.openThemeCreateModal = openThemeCreateModal;
+        
+        // Mark as exposed to prevent re-exposure
+        window._themesFunctionsExposed = true;
+        
+        console.log('✅ Themes functions exposed to window');
+        console.log('[Themes] window.loadThemes type:', typeof window.loadThemes);
+    } else {
+        console.log('[Themes] Functions already exposed, skipping re-exposure');
     }
-})();
+}
 </script>
 
