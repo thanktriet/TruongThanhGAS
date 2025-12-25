@@ -129,13 +129,15 @@
 </style>
 
 <script>
-// Add loading state to login button
+// Add loading state to login button and handle errors properly
 const originalHandleLogin = window.handleLogin;
 if (typeof originalHandleLogin === 'function') {
     window.handleLogin = async function(e) {
         e.preventDefault();
         const btn = document.getElementById('btn-login');
         const btnText = document.getElementById('btn-login-text');
+        const usernameInput = document.getElementById('login-user');
+        const passwordInput = document.getElementById('login-pass');
         
         if (btn) {
             btn.classList.add('loading');
@@ -145,14 +147,68 @@ if (typeof originalHandleLogin === 'function') {
         }
         
         try {
+            // Call original handler
             await originalHandleLogin(e);
-        } catch (error) {
+            
+            // If we get here without reload, login was successful (but should have reloaded)
+            // Reset button state just in case
             if (btn) {
                 btn.classList.remove('loading');
                 btn.disabled = false;
                 if (btnText) btnText.textContent = originalText;
             }
+        } catch (error) {
+            console.error('Login error:', error);
+            // Reset button state on error
+            if (btn) {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                if (btnText) btnText.textContent = originalText;
+            }
+        } finally {
+            // After SweetAlert closes (if login failed), re-enable form and clear password
+            // Use a small delay to wait for SweetAlert to finish
+            setTimeout(() => {
+                if (btn && btn.disabled) {
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                    if (btnText) btnText.textContent = 'Đăng Nhập';
+                }
+                
+                // Clear password field but keep username
+                if (passwordInput) {
+                    passwordInput.value = '';
+                    // Focus password field for easy retry
+                    setTimeout(() => {
+                        passwordInput.focus();
+                    }, 100);
+                }
+            }, 500);
         }
     };
+} else {
+    // Fallback: ensure form can be submitted again after error
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form[onsubmit*="handleLogin"]');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const btn = document.getElementById('btn-login');
+                const passwordInput = document.getElementById('login-pass');
+                
+                // Reset button after a delay (to catch errors)
+                setTimeout(() => {
+                    if (btn && btn.disabled) {
+                        btn.disabled = false;
+                        btn.classList.remove('loading');
+                    }
+                    // Clear password after error
+                    if (passwordInput && !passwordInput.value) {
+                        // Password was cleared, focus it
+                        setTimeout(() => passwordInput.focus(), 100);
+                    }
+                }, 1000);
+            });
+        }
+    });
 }
 </script>
