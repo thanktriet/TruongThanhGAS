@@ -50,8 +50,8 @@
 let allThemes = [];
 let isLoadingThemes = false;
 
-// Load themes list - define as const to avoid hoisting issues
-const loadThemes = async function() {
+// Load themes list
+async function loadThemes() {
     // Prevent multiple simultaneous calls
     if (isLoadingThemes) {
         console.log('[Themes] Already loading themes, skipping...');
@@ -418,27 +418,37 @@ function formatDate(dateString) {
     }
 }
 
-// Expose functions to window
-// IMPORTANT: Define functions first, then expose immediately to avoid recursion
-// Only expose once to prevent issues when component reloads
-if (typeof window !== 'undefined') {
-    // Check if already exposed to avoid recursion on reload
-    if (!window._themesFunctionsExposed) {
-        // Direct assignment - functions are declared above
-        window.loadThemes = loadThemes;
-        window.activateTheme = activateTheme;
-        window.deleteTheme = deleteTheme;
-        window.openThemeEditModal = openThemeEditModal;
-        window.openThemeCreateModal = openThemeCreateModal;
-        
-        // Mark as exposed to prevent re-exposure
-        window._themesFunctionsExposed = true;
-        
-        console.log('✅ Themes functions exposed to window');
-        console.log('[Themes] window.loadThemes type:', typeof window.loadThemes);
-    } else {
-        console.log('[Themes] Functions already exposed, skipping re-exposure');
+// Expose functions to window - wrap in IIFE to preserve scope
+(function() {
+    'use strict';
+    
+    // Store references BEFORE any potential overwrites
+    const fnLoadThemes = loadThemes;
+    const fnActivateTheme = activateTheme;
+    const fnDeleteTheme = deleteTheme;
+    const fnOpenThemeEditModal = openThemeEditModal;
+    const fnOpenThemeCreateModal = openThemeCreateModal;
+    
+    if (typeof window !== 'undefined') {
+        // Check if already exposed
+        if (!window._themesFunctionsExposed) {
+            // Assign stored references
+            window.loadThemes = fnLoadThemes;
+            window.activateTheme = fnActivateTheme;
+            window.deleteTheme = fnDeleteTheme;
+            window.openThemeEditModal = fnOpenThemeEditModal;
+            window.openThemeCreateModal = fnOpenThemeCreateModal;
+            
+            // Mark as exposed
+            window._themesFunctionsExposed = true;
+            
+            console.log('✅ Themes functions exposed to window');
+            console.log('[Themes] window.loadThemes type:', typeof window.loadThemes);
+            console.log('[Themes] window.loadThemes === fnLoadThemes:', window.loadThemes === fnLoadThemes);
+        } else {
+            console.log('[Themes] Functions already exposed, skipping re-exposure');
+        }
     }
-}
+})();
 </script>
 
