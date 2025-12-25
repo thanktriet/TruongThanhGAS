@@ -324,20 +324,7 @@ if (typeof window !== 'undefined') {
     console.log('✅ Themes functions exposed to window');
 }
 
-// Auto-load when tab is active (on component load)
-// Note: Navigation.js will also call loadThemes() when switching to themes tab
-if (typeof document !== 'undefined') {
-    // Check if tab is already active when component loads
-    const checkAndLoad = () => {
-        const tab = document.getElementById('tab-themes');
-        if (tab && tab.classList.contains('active') && allThemes.length === 0 && !isLoadingThemes) {
-            console.log('[Themes] Tab is already active on component load, loading themes...');
-            loadThemes();
-        }
-    };
-
-    // Small delay to ensure DOM is ready
-    setTimeout(checkAndLoad, 100);
-}
+// Note: loadThemes() will be called by navigation.js when switching to themes tab
+// No auto-load logic here to prevent infinite loops
 </script>
 

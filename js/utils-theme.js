@@ -159,14 +159,25 @@ if (typeof window !== 'undefined') {
     console.log('✅ Theme utilities exposed to window');
 }
 
-// Auto-load theme on page load
+// Auto-load theme on page load (only once, with error handling)
 if (typeof document !== 'undefined') {
+    let themeLoaded = false;
+    const tryLoadTheme = () => {
+        if (themeLoaded) return;
+        themeLoaded = true;
+        // Wrap in try-catch to prevent blocking if themes table doesn't exist yet
+        loadAndApplyActiveTheme().catch(error => {
+            console.warn('[Theme] Could not load active theme (table may not exist yet):', error.message);
+            themeLoaded = false; // Allow retry
+        });
+    };
+    
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(loadAndApplyActiveTheme, 500);
+            setTimeout(tryLoadTheme, 500);
         });
     } else {
-        setTimeout(loadAndApplyActiveTheme, 500);
+        setTimeout(tryLoadTheme, 500);
     }
 }
 
