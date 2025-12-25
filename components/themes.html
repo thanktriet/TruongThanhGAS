@@ -101,11 +101,37 @@ async function loadThemes() {
         if (result && result.success && result.data) {
             console.log('[Themes] Success! Rendering', result.data.length, 'themes');
             allThemes = result.data;
-            renderThemes(result.data);
+            
+            // Đảm bảo DOM đã sẵn sàng trước khi render
+            const checkDOM = () => {
+                const listDiv = document.getElementById('themes-list');
+                if (!listDiv) {
+                    console.warn('[Themes] themes-list not ready, retrying in 100ms...');
+                    setTimeout(checkDOM, 100);
+                    return;
+                }
+                console.log('[Themes] DOM ready, rendering themes...');
+                renderThemes(result.data);
+            };
+            
+            // Small delay để đảm bảo DOM đã được update
+            setTimeout(checkDOM, 50);
+            
         } else if (result && result.success && (!result.data || (Array.isArray(result.data) && result.data.length === 0))) {
             console.log('[Themes] Success but no data (empty array)');
             allThemes = [];
-            renderThemes([]);
+            
+            // Đảm bảo DOM đã sẵn sàng
+            const checkDOM = () => {
+                const listDiv = document.getElementById('themes-list');
+                if (!listDiv) {
+                    setTimeout(checkDOM, 100);
+                    return;
+                }
+                renderThemes([]);
+            };
+            setTimeout(checkDOM, 50);
+            
         } else if (result && !result.success) {
             console.error('[Themes] API returned error:', result.message);
             throw new Error(result.message || 'Không thể tải danh sách themes');

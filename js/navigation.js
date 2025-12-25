@@ -80,9 +80,18 @@ function switchTab(id) {
     
     if (id === 'themes') {
         console.log('[Navigation] Switching to themes tab');
+        // Increase delay to ensure component is fully loaded
         setTimeout(() => {
             console.log('[Navigation] Checking for loadThemes function...');
             console.log('[Navigation] window.loadThemes exists?', typeof window.loadThemes);
+            
+            // Double check that tab is actually visible
+            const themesTab = document.getElementById('tab-themes');
+            if (!themesTab || !themesTab.classList.contains('active')) {
+                console.warn('[Navigation] Themes tab not active yet, skipping loadThemes');
+                return;
+            }
+            
             if (typeof window.loadThemes === 'function') {
                 console.log('[Navigation] Calling loadThemes()...');
                 window.loadThemes();
@@ -90,7 +99,7 @@ function switchTab(id) {
                 console.error('[Navigation] loadThemes function not found on window object');
                 console.error('[Navigation] Available window functions:', Object.keys(window).filter(k => k.includes('Theme') || k.includes('theme')).join(', '));
             }
-        }, 300);
+        }, 500); // Increased from 300ms to 500ms to ensure component is ready
     }
 }
 
