@@ -2817,6 +2817,387 @@ async function supabaseDeleteSalesPolicy(d) {
 }
 
 // ======================================================
+// THEMES MANAGEMENT API (ADMIN ONLY)
+// ======================================================
+
+/**
+ * Lấy danh sách tất cả themes
+ */
+async function supabaseListThemes() {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        const { data, error } = await supabase
+            .from('themes')
+            .select('*')
+            .order('is_active', { ascending: false })
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data || [] };
+    } catch (e) {
+        console.error('List themes error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Lấy theme đang active
+ */
+async function supabaseGetActiveTheme() {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        const { data, error } = await supabase
+            .from('themes')
+            .select('*')
+            .eq('is_active', true)
+            .single();
+
+        if (error) {
+            // Nếu không có theme active, trả về theme default
+            if (error.code === 'PGRST116') {
+                const { data: defaultTheme, error: defaultError } = await supabase
+                    .from('themes')
+                    .select('*')
+                    .eq('slug', 'default')
+                    .single();
+                
+                if (!defaultError && defaultTheme) {
+                    return { success: true, data: defaultTheme };
+                }
+            }
+            throw error;
+        }
+
+        return { success: true, data: data };
+    } catch (e) {
+        console.error('Get active theme error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Tạo theme mới
+ */
+async function supabaseCreateTheme(themeData) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // ✅ SECURITY: Kiểm tra session
+        const session = typeof getSession === 'function' ? getSession() : (() => {
+            try {
+                const sessionStr = localStorage.getItem('user_session');
+                return sessionStr ? JSON.parse(sessionStr) : null;
+            } catch (e) {
+                return null;
+            }
+        })();
+        
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Chỉ ADMIN mới có quyền
+        if (session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ ADMIN mới có quyền quản lý themes' };
+        }
+
+        // ✅ SECURITY: Kiểm tra permission
+        if (typeof hasPermission === 'function' && !hasPermission(session, 'manage_themes')) {
+            return { success: false, message: 'Bạn không có quyền quản lý themes' };
+        }
+
+        if (!themeData.name || !themeData.slug) {
+            return { success: false, message: 'Tên theme và slug là bắt buộc' };
+        }
+
+        const theme = {
+            name: themeData.name.trim(),
+            slug: themeData.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+            description: themeData.description || null,
+            primary_color: themeData.primary_color || '#3B82F6',
+            secondary_color: themeData.secondary_color || '#6366F1',
+            accent_color: themeData.accent_color || '#8B5CF6',
+            background_color: themeData.background_color || '#FFFFFF',
+            text_color: themeData.text_color || '#1F2937',
+            background_gradient: themeData.background_gradient || null,
+            background_image_url: themeData.background_image_url || null,
+            background_pattern: themeData.background_pattern || 'none',
+            logo_url: themeData.logo_url || null,
+            icon_emoji: themeData.icon_emoji || null,
+            icon_fontawesome: themeData.icon_fontawesome || null,
+            start_date: themeData.start_date || null,
+            end_date: themeData.end_date || null,
+            is_active: false,
+            is_system: false,
+            created_by: session.username
+        };
+
+        const { data, error } = await supabase
+            .from('themes')
+            .insert(theme)
+            .select()
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data, message: 'Đã tạo theme thành công' };
+    } catch (e) {
+        console.error('Create theme error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Cập nhật theme
+ */
+async function supabaseUpdateTheme(themeId, themeData) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // ✅ SECURITY: Kiểm tra session
+        const session = typeof getSession === 'function' ? getSession() : (() => {
+            try {
+                const sessionStr = localStorage.getItem('user_session');
+                return sessionStr ? JSON.parse(sessionStr) : null;
+            } catch (e) {
+                return null;
+            }
+        })();
+        
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Chỉ ADMIN
+        if (session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ ADMIN mới có quyền quản lý themes' };
+        }
+
+        if (typeof hasPermission === 'function' && !hasPermission(session, 'manage_themes')) {
+            return { success: false, message: 'Bạn không có quyền quản lý themes' };
+        }
+
+        // Kiểm tra theme có tồn tại không
+        const { data: existingTheme, error: fetchError } = await supabase
+            .from('themes')
+            .select('*')
+            .eq('id', themeId)
+            .single();
+
+        if (fetchError || !existingTheme) {
+            return { success: false, message: 'Không tìm thấy theme' };
+        }
+
+        // Không cho phép sửa theme system (trừ admin)
+        if (existingTheme.is_system && session.username !== 'admin') {
+            return { success: false, message: 'Không thể sửa theme mặc định của hệ thống' };
+        }
+
+        const updateData = {
+            name: themeData.name ? themeData.name.trim() : existingTheme.name,
+            description: themeData.description !== undefined ? themeData.description : existingTheme.description,
+            primary_color: themeData.primary_color || existingTheme.primary_color,
+            secondary_color: themeData.secondary_color || existingTheme.secondary_color,
+            accent_color: themeData.accent_color || existingTheme.accent_color,
+            background_color: themeData.background_color || existingTheme.background_color,
+            text_color: themeData.text_color || existingTheme.text_color,
+            background_gradient: themeData.background_gradient !== undefined ? themeData.background_gradient : existingTheme.background_gradient,
+            background_image_url: themeData.background_image_url !== undefined ? themeData.background_image_url : existingTheme.background_image_url,
+            background_pattern: themeData.background_pattern || existingTheme.background_pattern,
+            logo_url: themeData.logo_url !== undefined ? themeData.logo_url : existingTheme.logo_url,
+            icon_emoji: themeData.icon_emoji !== undefined ? themeData.icon_emoji : existingTheme.icon_emoji,
+            icon_fontawesome: themeData.icon_fontawesome !== undefined ? themeData.icon_fontawesome : existingTheme.icon_fontawesome,
+            start_date: themeData.start_date !== undefined ? themeData.start_date : existingTheme.start_date,
+            end_date: themeData.end_date !== undefined ? themeData.end_date : existingTheme.end_date,
+            updated_at: new Date().toISOString()
+        };
+
+        // Chỉ cho phép update slug nếu không phải system theme
+        if (themeData.slug && !existingTheme.is_system) {
+            updateData.slug = themeData.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+        }
+
+        const { data, error } = await supabase
+            .from('themes')
+            .update(updateData)
+            .eq('id', themeId)
+            .select()
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, data: data, message: 'Đã cập nhật theme thành công' };
+    } catch (e) {
+        console.error('Update theme error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Xóa theme
+ */
+async function supabaseDeleteTheme(themeId) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // ✅ SECURITY: Kiểm tra session
+        const session = typeof getSession === 'function' ? getSession() : (() => {
+            try {
+                const sessionStr = localStorage.getItem('user_session');
+                return sessionStr ? JSON.parse(sessionStr) : null;
+            } catch (e) {
+                return null;
+            }
+        })();
+        
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Chỉ ADMIN
+        if (session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ ADMIN mới có quyền quản lý themes' };
+        }
+
+        if (typeof hasPermission === 'function' && !hasPermission(session, 'manage_themes')) {
+            return { success: false, message: 'Bạn không có quyền quản lý themes' };
+        }
+
+        // Kiểm tra theme có tồn tại không
+        const { data: existingTheme, error: fetchError } = await supabase
+            .from('themes')
+            .select('*')
+            .eq('id', themeId)
+            .single();
+
+        if (fetchError || !existingTheme) {
+            return { success: false, message: 'Không tìm thấy theme' };
+        }
+
+        // Không cho phép xóa theme system hoặc theme đang active
+        if (existingTheme.is_system) {
+            return { success: false, message: 'Không thể xóa theme mặc định của hệ thống' };
+        }
+
+        if (existingTheme.is_active) {
+            return { success: false, message: 'Không thể xóa theme đang được sử dụng. Vui lòng kích hoạt theme khác trước.' };
+        }
+
+        const { error } = await supabase
+            .from('themes')
+            .delete()
+            .eq('id', themeId);
+
+        if (error) {
+            throw error;
+        }
+
+        return { success: true, message: 'Đã xóa theme thành công' };
+    } catch (e) {
+        console.error('Delete theme error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Kích hoạt theme (chỉ có 1 theme active tại 1 thời điểm)
+ */
+async function supabaseActivateTheme(themeId) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+
+        // ✅ SECURITY: Kiểm tra session
+        const session = typeof getSession === 'function' ? getSession() : (() => {
+            try {
+                const sessionStr = localStorage.getItem('user_session');
+                return sessionStr ? JSON.parse(sessionStr) : null;
+            } catch (e) {
+                return null;
+            }
+        })();
+        
+        if (!session || !session.username) {
+            return { success: false, message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' };
+        }
+
+        // ✅ SECURITY: Chỉ ADMIN
+        if (session.role !== 'ADMIN') {
+            return { success: false, message: 'Chỉ ADMIN mới có quyền quản lý themes' };
+        }
+
+        if (typeof hasPermission === 'function' && !hasPermission(session, 'manage_themes')) {
+            return { success: false, message: 'Bạn không có quyền quản lý themes' };
+        }
+
+        // Kiểm tra theme có tồn tại không
+        const { data: existingTheme, error: fetchError } = await supabase
+            .from('themes')
+            .select('*')
+            .eq('id', themeId)
+            .single();
+
+        if (fetchError || !existingTheme) {
+            return { success: false, message: 'Không tìm thấy theme' };
+        }
+
+        // Bắt đầu transaction: Tắt tất cả themes, sau đó bật theme được chọn
+        // 1. Tắt tất cả themes hiện tại
+        const { error: deactivateError } = await supabase
+            .from('themes')
+            .update({ is_active: false })
+            .eq('is_active', true);
+
+        if (deactivateError) {
+            throw deactivateError;
+        }
+
+        // 2. Kích hoạt theme được chọn
+        const { data, error: activateError } = await supabase
+            .from('themes')
+            .update({ is_active: true, updated_at: new Date().toISOString() })
+            .eq('id', themeId)
+            .select()
+            .single();
+
+        if (activateError) {
+            throw activateError;
+        }
+
+        return { success: true, data: data, message: 'Đã kích hoạt theme thành công' };
+    } catch (e) {
+        console.error('Activate theme error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+// ======================================================
 // DASHBOARD & MTD REPORTS API - Báo cáo tổng hợp
 // ======================================================
 
