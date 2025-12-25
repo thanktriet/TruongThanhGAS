@@ -251,11 +251,13 @@ function renderThemes(themes) {
 
     console.log('[Themes] ✅ Rendering', themes.length, 'theme cards');
     if (emptyDiv) emptyDiv.classList.add('hidden');
-    
-    // IMPORTANT: Keep loading div structure intact - don't remove it when rendering
-    // We'll only replace the content between loading/empty divs
+    // Hide loading div but don't remove it
+    const loadingDiv = document.getElementById('themes-loading');
+    if (loadingDiv) {
+        loadingDiv.classList.add('hidden');
+    }
 
-    // Build HTML string and set innerHTML once (simpler and faster)
+    // Build HTML string for theme cards only (don't include loading/empty divs)
     const html = themes.map(theme => {
         const isActive = theme.is_active;
         const isSystem = theme.is_system;
@@ -351,7 +353,21 @@ function renderThemes(themes) {
     }).join('');
     
     console.log('[Themes] ✅ Theme cards HTML generated (' + html.length + ' chars), setting innerHTML');
-    listDiv.innerHTML = html;
+    
+    // Clear existing theme cards but preserve loading and empty divs
+    // Find and remove all theme cards (they are divs with class containing 'bg-white rounded-xl')
+    const existingCards = Array.from(listDiv.children).filter(child => {
+        return child.id !== 'themes-loading' && child.id !== 'themes-empty';
+    });
+    existingCards.forEach(card => card.remove());
+    
+    // Insert theme cards HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    while (tempDiv.firstChild) {
+        listDiv.appendChild(tempDiv.firstChild);
+    }
+    
     console.log('[Themes] ✅ Themes rendered successfully');
 }
 

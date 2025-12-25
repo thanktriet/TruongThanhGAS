@@ -65,12 +65,14 @@ function applyTheme(theme) {
     root.style.setProperty('--theme-background', theme.background_color || '#FFFFFF');
     root.style.setProperty('--theme-text', theme.text_color || '#1F2937');
 
-    // Apply background to both body and dashboard-view container
+    // Apply background to body, dashboard-view, and main container
     const body = document.body;
     const dashboardView = document.getElementById('dashboard-view');
+    const mainElement = dashboardView ? dashboardView.querySelector('main') : null;
     
     // Reset background styles first
     const resetBackground = (element) => {
+        if (!element) return;
         element.style.background = '';
         element.style.backgroundColor = '';
         element.style.backgroundImage = '';
@@ -78,11 +80,18 @@ function applyTheme(theme) {
         element.style.backgroundPosition = '';
         element.style.backgroundAttachment = '';
         element.style.backgroundRepeat = '';
+        // Remove bg-gray-100 class if exists
+        if (element.classList) {
+            element.classList.remove('bg-gray-100');
+        }
     };
     
     resetBackground(body);
     if (dashboardView) {
         resetBackground(dashboardView);
+    }
+    if (mainElement) {
+        resetBackground(mainElement);
     }
     
     // Build background string with base color/gradient
@@ -130,7 +139,7 @@ function applyTheme(theme) {
         }
     }
     
-    // Apply the final background to both body and dashboard-view
+    // Apply the final background to body, dashboard-view, and main element
     if (backgroundValue) {
         // Apply to body
         body.style.background = backgroundValue;
@@ -141,6 +150,13 @@ function applyTheme(theme) {
             dashboardView.style.background = backgroundValue;
             dashboardView.style.backgroundAttachment = 'fixed';
             console.log('[Theme] Applied background to dashboard-view');
+        }
+        
+        // Apply to main element if exists (this is what users actually see)
+        if (mainElement) {
+            mainElement.style.background = backgroundValue;
+            mainElement.style.backgroundAttachment = 'fixed';
+            console.log('[Theme] Applied background to main element');
         }
         
         // Set background size for patterns
@@ -156,12 +172,18 @@ function applyTheme(theme) {
             if (dashboardView) {
                 dashboardView.style.backgroundSize = bgSize;
             }
+            if (mainElement) {
+                mainElement.style.backgroundSize = bgSize;
+            }
         }
         
         console.log('[Theme] Final background value:', backgroundValue);
         console.log('[Theme] Body computed style:', window.getComputedStyle(body).background);
         if (dashboardView) {
             console.log('[Theme] Dashboard-view computed style:', window.getComputedStyle(dashboardView).background);
+        }
+        if (mainElement) {
+            console.log('[Theme] Main element computed style:', window.getComputedStyle(mainElement).background);
         }
     }
 
