@@ -35,6 +35,22 @@
                             <span id="detail-customer-name" class="font-bold ml-2 text-gray-800"></span>
                         </div>
                         <div>
+                            <span class="text-gray-600">Số điện thoại:</span>
+                            <span id="detail-customer-phone" class="font-bold ml-2 text-gray-800">-</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Email:</span>
+                            <span id="detail-customer-email" class="font-bold ml-2 text-gray-800">-</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Số CCCD/CMND:</span>
+                            <span id="detail-customer-cccd" class="font-bold ml-2 text-gray-800">-</span>
+                        </div>
+                        <div class="md:col-span-2">
+                            <span class="text-gray-600">Địa chỉ:</span>
+                            <span id="detail-customer-address" class="font-bold ml-2 text-gray-800">-</span>
+                        </div>
+                        <div>
                             <span class="text-gray-600">Loại xe:</span>
                             <span id="detail-car-model" class="font-bold ml-2 text-gray-800"></span>
                         </div>
@@ -88,6 +104,14 @@
                         <div class="md:col-span-2">
                             <span class="text-gray-600">Số tiền tính lãi:</span>
                             <span id="detail-principal-amount" class="font-bold ml-2 text-blue-600 text-lg"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Lãi suất (%/năm):</span>
+                            <span id="detail-interest-rate" class="font-bold ml-2 text-gray-800">8.0%</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Số ngày trễ (nếu có):</span>
+                            <span id="detail-delayed-days-preview" class="font-bold ml-2 text-orange-600">-</span>
                         </div>
                     </div>
                 </div>
@@ -265,6 +289,16 @@ async function openCocDetailModal(requestId) {
         console.log('[COC Detail] Request data:', requestData);
         document.getElementById('detail-contract-code').textContent = requestData.contract_code || '-';
         document.getElementById('detail-customer-name').textContent = requestData.customer_name || '-';
+        
+        // Thông tin khách hàng (từ orders.customers nếu có)
+        // Lưu ý: Nếu order_id là NULL thì orders sẽ là NULL, không phải object rỗng
+        const order = requestData.orders || null;
+        const customer = (order && order.customers) ? order.customers : null;
+        document.getElementById('detail-customer-phone').textContent = (customer && customer.phone) ? customer.phone : '-';
+        document.getElementById('detail-customer-email').textContent = (customer && customer.email) ? customer.email : '-';
+        document.getElementById('detail-customer-cccd').textContent = (customer && customer.cccd) ? customer.cccd : '-';
+        document.getElementById('detail-customer-address').textContent = (customer && customer.address) ? customer.address : '-';
+        
         document.getElementById('detail-car-model').textContent = requestData.car_model || '-';
         document.getElementById('detail-car-version').textContent = requestData.car_version || '-';
         document.getElementById('detail-car-color').textContent = requestData.car_color || '-';
@@ -286,7 +320,25 @@ async function openCocDetailModal(requestId) {
         document.getElementById('detail-payment-method').textContent = paymentMethod;
         
         document.getElementById('detail-guarantee-bank-coc').textContent = requestData.guarantee_bank_coc || '-';
-        document.getElementById('detail-principal-amount').textContent = formatCurrency(requestData.principal_amount);
+        document.getElementById('detail-principal-amount').textContent = formatCurrency(requestData.principal_amount || requestData.import_price || 0);
+        
+        // Lãi suất và số ngày trễ (preview)
+        const interestRate = requestData.interest_rate || 8.0;
+        document.getElementById('detail-interest-rate').textContent = `${interestRate}%`;
+        
+        // Tính số ngày trễ nếu đã có actual_issue_date
+        let delayedDaysPreview = '-';
+        if (requestData.actual_issue_date && requestData.request_date) {
+            if (typeof window.calculateDelayedBusinessDays === 'function') {
+                const delayedDays = window.calculateDelayedBusinessDays(requestData.request_date, requestData.actual_issue_date);
+                delayedDaysPreview = delayedDays > 0 ? `${delayedDays} ngày làm việc` : '0 ngày';
+            }
+        } else if (requestData.business_days_delayed !== undefined) {
+            delayedDaysPreview = requestData.business_days_delayed > 0 
+                ? `${requestData.business_days_delayed} ngày làm việc` 
+                : '0 ngày';
+        }
+        document.getElementById('detail-delayed-days-preview').textContent = delayedDaysPreview;
         
         // Fill issue info (if issued)
         if (requestData.status === 'issued' || requestData.status === 'closed') {
