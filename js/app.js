@@ -1908,6 +1908,7 @@ function getRoleBadgeColor(role) {
         'BKS': 'bg-orange-100 text-orange-700 border-orange-200',
         'GDKD': 'bg-blue-100 text-blue-700 border-blue-200',
         'TPKD': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+        'SALEADMIN': 'bg-cyan-100 text-cyan-700 border-cyan-200',
         'TVBH': 'bg-green-100 text-green-700 border-green-200',
         'KETOAN': 'bg-pink-100 text-pink-700 border-pink-200'
     };
@@ -2077,7 +2078,7 @@ async function openEditUserModal(encodedUsername) {
                 <div>
                     <label class="text-xs font-semibold text-gray-500">Vai trò</label>
                     <select id="swal-role" class="swal2-input">
-                        ${['TVBH','TPKD','GDKD','BKS','BGD','KETOAN','ADMIN'].map(role => `<option value="${role}" ${target.role === role ? 'selected' : ''}>${role}</option>`).join('')}
+                        ${['TVBH','SALEADMIN','TPKD','GDKD','BKS','BGD','KETOAN','ADMIN'].map(role => `<option value="${role}" ${target.role === role ? 'selected' : ''}>${role}</option>`).join('')}
                     </select>
                 </div>
                 <div>

@@ -287,23 +287,33 @@ async function openCocDetailModal(requestId) {
         
         // Fill basic info
         console.log('[COC Detail] Request data:', requestData);
-        document.getElementById('detail-contract-code').textContent = requestData.contract_code || '-';
-        document.getElementById('detail-customer-name').textContent = requestData.customer_name || '-';
         
-        // Thông tin khách hàng (từ orders.customers nếu có, nếu không thì để '-')
-        // Lưu ý: Nếu order_id là NULL thì orders sẽ là NULL, không phải object rỗng
+        // Lấy order và customer nếu có
         const order = requestData.orders || null;
         const customer = (order && order.customers) ? order.customers : null;
-        // Lấy từ customer nếu có, nếu không thì để '-'
+        
+        // Mã đơn hàng - từ coc_requests hoặc từ order nếu có
+        const contractCode = requestData.contract_code || (order && order.contract_code) || '-';
+        document.getElementById('detail-contract-code').textContent = contractCode;
+        
+        // Tên khách hàng - từ coc_requests hoặc từ customer nếu có
+        const customerName = requestData.customer_name || (customer && customer.name) || '-';
+        document.getElementById('detail-customer-name').textContent = customerName;
+        
+        // Thông tin khách hàng (từ orders.customers nếu có, nếu không thì để '-')
         document.getElementById('detail-customer-phone').textContent = (customer && customer.phone) ? customer.phone : '-';
         document.getElementById('detail-customer-email').textContent = (customer && customer.email) ? customer.email : '-';
         document.getElementById('detail-customer-cccd').textContent = (customer && customer.cccd) ? customer.cccd : '-';
         document.getElementById('detail-customer-address').textContent = (customer && customer.address) ? customer.address : '-';
         
-        // Thông tin xe - lấy trực tiếp từ coc_requests (luôn có)
-        document.getElementById('detail-car-model').textContent = requestData.car_model || '-';
-        document.getElementById('detail-car-version').textContent = requestData.car_version || '-';
-        document.getElementById('detail-car-color').textContent = requestData.car_color || '-';
+        // Thông tin xe - ưu tiên lấy từ coc_requests, nếu không có thì lấy từ orders
+        const carModel = requestData.car_model || (order && order.car_model) || '-';
+        const carVersion = requestData.car_version || (order && order.car_version) || '-';
+        const carColor = requestData.car_color || (order && order.car_color) || '-';
+        
+        document.getElementById('detail-car-model').textContent = carModel;
+        document.getElementById('detail-car-version').textContent = carVersion;
+        document.getElementById('detail-car-color').textContent = carColor;
         document.getElementById('detail-vin-number').textContent = requestData.vin_number || '-';
         document.getElementById('detail-requester').textContent = requestData.requester || '-';
         document.getElementById('detail-request-date').textContent = formatDate(requestData.request_date);
