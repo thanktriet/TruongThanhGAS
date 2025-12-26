@@ -4,77 +4,134 @@
         <p class="text-xs text-slate-400 mt-1">Xin chào, <span id="user-fullname" class="font-bold text-white">User</span></p>
         <span id="user-role" class="text-[10px] bg-blue-600 px-2 py-0.5 rounded mt-2 inline-block">ROLE</span>
     </div>
-    <nav class="flex-1 overflow-y-auto py-4 space-y-1 min-h-0">
-        <button onclick="switchTab('create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 active" id="nav-create">
-            <i class="fa-solid fa-file-circle-plus"></i> Tạo Tờ Trình
-        </button>
-        <button onclick="switchTab('my-requests')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3" id="nav-my-requests">
-            <i class="fa-solid fa-folder-open"></i> Quản lý tờ trình của tôi
-        </button>
-        <button onclick="switchTab('approval')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3" id="nav-approval">
-            <i class="fa-solid fa-list-check"></i> Duyệt Đơn
-        </button>
+    <nav class="flex-1 overflow-y-auto py-4 space-y-4 min-h-0">
         
-        <!-- Menu cho TVBH -->
-        <button onclick="switchTab('order-create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-order-create" data-role="TVBH">
-            <i class="fa-solid fa-file-circle-plus"></i> Nhập Đơn Hàng
-        </button>
-        <button onclick="switchTab('my-orders')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-my-orders" data-role="TVBH">
-            <i class="fa-solid fa-list"></i> Quản Lý Đơn Hàng
-        </button>
-        <button onclick="switchTab('daily-report')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-daily-report" data-role="TVBH">
-            <i class="fa-solid fa-calendar-day"></i> Báo Cáo Ngày
-        </button>
-        <button onclick="switchTab('hdmb-create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-hdmb-create" data-role="TVBH">
-            <i class="fa-solid fa-file-contract"></i> Tạo HĐMB
-        </button>
-        <button onclick="switchTab('thoa-thuan-create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-thoa-thuan-create" data-role="TVBH">
-            <i class="fa-solid fa-handshake"></i> Tạo Thỏa Thuận
-        </button>
-        <button onclick="switchTab('de-nghi-create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-de-nghi-create" data-role="TVBH">
-            <i class="fa-solid fa-file-invoice-dollar"></i> Tạo Đề Nghị Giải Ngân
-        </button>
-        <button onclick="switchTab('document-files')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-document-files">
-            <i class="fa-solid fa-folder-open"></i> Tài Liệu Đã Tạo
-        </button>
-        <button onclick="switchTab('coc-create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-coc-create" data-role="TVBH">
-            <i class="fa-solid fa-certificate"></i> Đề nghị cấp COC
-        </button>
-        <button onclick="switchTab('coc-requests')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-coc-requests">
-            <i class="fa-solid fa-list-check"></i> Quản lý COC
-        </button>
+        <!-- Category: Tờ Trình & Duyệt -->
+        <div class="menu-category">
+            <div class="category-header px-6 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Tờ Trình & Duyệt
+            </div>
+            <div class="space-y-1">
+                <button onclick="switchTab('create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 active" id="nav-create">
+                    <i class="fa-solid fa-file-circle-plus"></i> Tạo Tờ Trình
+                </button>
+                <button onclick="switchTab('my-requests')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3" id="nav-my-requests">
+                    <i class="fa-solid fa-folder-open"></i> Quản lý tờ trình của tôi
+                </button>
+                <button onclick="switchTab('approval')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3" id="nav-approval">
+                    <i class="fa-solid fa-list-check"></i> Duyệt Đơn
+                </button>
+            </div>
+        </div>
+
+        <!-- Category: Đơn Hàng -->
+        <div class="menu-category">
+            <div class="category-header px-6 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Đơn Hàng
+            </div>
+            <div class="space-y-1">
+                <button onclick="switchTab('order-create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-order-create" data-role="TVBH">
+                    <i class="fa-solid fa-file-circle-plus"></i> Nhập Đơn Hàng
+                </button>
+                <button onclick="switchTab('my-orders')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-my-orders" data-role="TVBH">
+                    <i class="fa-solid fa-list"></i> Quản Lý Đơn Hàng
+                </button>
+                <button onclick="switchTab('orders-admin')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-orders-admin" data-role="SALEADMIN">
+                    <i class="fa-solid fa-clipboard-list"></i> Quản Lý Đơn Hàng (Admin)
+                </button>
+            </div>
+        </div>
+
+        <!-- Category: Báo Cáo -->
+        <div class="menu-category">
+            <div class="category-header px-6 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Báo Cáo
+            </div>
+            <div class="space-y-1">
+                <button onclick="switchTab('daily-report')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-daily-report" data-role="TVBH">
+                    <i class="fa-solid fa-calendar-day"></i> Báo Cáo Ngày
+                </button>
+                <button onclick="switchTab('reports-dashboard')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-reports-dashboard">
+                    <i class="fa-solid fa-chart-line"></i> Dashboard Báo Cáo
+                </button>
+                <button onclick="switchTab('reports-mtd-detail')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-reports-mtd-detail">
+                    <i class="fa-solid fa-table"></i> Báo Cáo MTD Chi Tiết
+                </button>
+            </div>
+        </div>
+
+        <!-- Category: Tài Liệu -->
+        <div class="menu-category">
+            <div class="category-header px-6 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Tài Liệu
+            </div>
+            <div class="space-y-1">
+                <button onclick="switchTab('hdmb-create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-hdmb-create" data-role="TVBH">
+                    <i class="fa-solid fa-file-contract"></i> Tạo HĐMB
+                </button>
+                <button onclick="switchTab('thoa-thuan-create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-thoa-thuan-create" data-role="TVBH">
+                    <i class="fa-solid fa-handshake"></i> Tạo Thỏa Thuận
+                </button>
+                <button onclick="switchTab('de-nghi-create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-de-nghi-create" data-role="TVBH">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> Tạo Đề Nghị Giải Ngân
+                </button>
+                <button onclick="switchTab('document-files')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-document-files">
+                    <i class="fa-solid fa-folder-open"></i> Tài Liệu Đã Tạo
+                </button>
+            </div>
+        </div>
+
+        <!-- Category: COC -->
+        <div class="menu-category">
+            <div class="category-header px-6 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                COC
+            </div>
+            <div class="space-y-1">
+                <button onclick="switchTab('coc-create')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-coc-create" data-role="TVBH">
+                    <i class="fa-solid fa-certificate"></i> Đề nghị cấp COC
+                </button>
+                <button onclick="switchTab('coc-requests')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-coc-requests">
+                    <i class="fa-solid fa-list-check"></i> Quản lý COC
+                </button>
+            </div>
+        </div>
+
+        <!-- Category: Hệ Thống -->
+        <div class="menu-category">
+            <div class="category-header px-6 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Hệ Thống
+            </div>
+            <div class="space-y-1">
+                <button onclick="switchTab('users')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-users">
+                    <i class="fa-solid fa-users-gear"></i> Quản lý User
+                </button>
+                <button onclick="switchTab('car-models')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-car-models">
+                    <i class="fa-solid fa-car"></i> Quản Lý Dòng Xe
+                </button>
+                <button onclick="switchTab('sales-policies')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-sales-policies">
+                    <i class="fa-solid fa-file-contract"></i> Quản Lý CSBH
+                </button>
+                <button onclick="switchTab('tvbh-targets')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-tvbh-targets">
+                    <i class="fa-solid fa-bullseye"></i> Chỉ Tiêu TVBH
+                </button>
+                <button onclick="switchTab('themes')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-themes">
+                    <i class="fa-solid fa-palette"></i> Quản Lý Themes
+                </button>
+            </div>
+        </div>
+
+        <!-- Category: Cá Nhân -->
+        <div class="menu-category">
+            <div class="category-header px-6 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Cá Nhân
+            </div>
+            <div class="space-y-1">
+                <button onclick="switchTab('profile')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-profile">
+                    <i class="fa-solid fa-id-badge"></i> Hồ sơ cá nhân
+                </button>
+            </div>
+        </div>
         
-        <!-- Menu cho SALEADMIN -->
-        <button onclick="switchTab('orders-admin')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-orders-admin" data-role="SALEADMIN">
-            <i class="fa-solid fa-clipboard-list"></i> Quản Lý Đơn Hàng (Admin)
-        </button>
-        
-        <!-- Menu cho Admin, GDKD, BKS, BGD -->
-        <button onclick="switchTab('reports-dashboard')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-reports-dashboard">
-            <i class="fa-solid fa-chart-line"></i> Dashboard Báo Cáo
-        </button>
-        <button onclick="switchTab('reports-mtd-detail')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-reports-mtd-detail">
-            <i class="fa-solid fa-table"></i> Báo Cáo MTD Chi Tiết
-        </button>
-        
-        <button onclick="switchTab('profile')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-profile">
-            <i class="fa-solid fa-id-badge"></i> Hồ sơ cá nhân
-        </button>
-        <button onclick="switchTab('users')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-users">
-            <i class="fa-solid fa-users-gear"></i> Quản lý User
-        </button>
-        <button onclick="switchTab('car-models')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-car-models">
-            <i class="fa-solid fa-car"></i> Quản Lý Dòng Xe
-        </button>
-        <button onclick="switchTab('sales-policies')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-sales-policies">
-            <i class="fa-solid fa-file-contract"></i> Quản Lý CSBH
-        </button>
-        <button onclick="switchTab('tvbh-targets')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-tvbh-targets">
-            <i class="fa-solid fa-bullseye"></i> Chỉ Tiêu TVBH
-        </button>
-        <button onclick="switchTab('themes')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition flex items-center gap-3 hidden" id="nav-themes">
-            <i class="fa-solid fa-palette"></i> Quản Lý Themes
-        </button>
     </nav>
     <div class="p-4 border-t border-slate-700 flex-shrink-0">
         <button onclick="logout()" class="w-full bg-slate-800 hover:bg-red-600 py-2 rounded transition flex items-center justify-center gap-2"><i class="fa-solid fa-sign-out-alt"></i> Đăng xuất</button>
