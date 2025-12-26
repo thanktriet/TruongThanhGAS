@@ -129,12 +129,22 @@ function applyTheme(theme) {
         });
     }
     
-    // Apply theme colors to active nav items
-    const activeNavItems = document.querySelectorAll('.nav-item.active');
-    activeNavItems.forEach(item => {
-        item.style.backgroundColor = primaryColor;
-        item.style.borderLeftColor = secondaryColor;
-    });
+    // Apply theme colors to active nav items - only items WITH active class
+    // This ensures active items are highlighted
+    setTimeout(() => {
+        const allNavItems = document.querySelectorAll('.nav-item');
+        allNavItems.forEach(item => {
+            if (item.classList.contains('active')) {
+                // Active item: highlight với primary color
+                item.style.backgroundColor = primaryColor;
+                item.style.borderLeft = `4px solid ${secondaryColor}`;
+            } else {
+                // Non-active item: reset background (clear any previous theme color)
+                item.style.backgroundColor = '';
+                item.style.borderLeft = '';
+            }
+        });
+    }, 100);
     
     // Create dynamic style element to apply theme to common elements
     let themeStyleElement = document.getElementById('dynamic-theme-styles');
@@ -165,10 +175,16 @@ function applyTheme(theme) {
             background-color: ${primaryColor} !important;
         }
         
-        /* Active nav items */
+        /* Active nav items - highlight items WITH active class */
         .nav-item.active {
             background-color: ${primaryColor} !important;
-            border-left-color: ${secondaryColor} !important;
+            border-left: 4px solid ${secondaryColor} !important;
+        }
+        
+        /* Non-active nav items - ensure no highlight */
+        .nav-item:not(.active) {
+            background-color: transparent !important;
+            border-left: none !important;
         }
         
         /* Primary buttons - all variants */
