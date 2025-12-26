@@ -64,7 +64,7 @@
                         </div>
                         <div>
                             <span class="text-gray-600">Số khung (VIN):</span>
-                            <span id="detail-vin-number" class="font-bold ml-2 text-gray-800"></span>
+                            <span id="detail-vin-number" class="font-bold ml-2 text-gray-800">-</span>
                         </div>
                         <div>
                             <span class="text-gray-600">Người đề nghị:</span>
@@ -95,7 +95,6 @@
                         <div>
                             <span class="text-gray-600">Phương thức thanh toán:</span>
                             <span id="detail-payment-method" class="font-bold ml-2 text-gray-800">-</span>
-                            <span class="text-xs text-gray-500 ml-2">(Từ đơn hàng)</span>
                         </div>
                         <div>
                             <span class="text-gray-600">Ngân hàng bảo lãnh COC:</span>
@@ -142,19 +141,21 @@
                         <div class="md:col-span-2">
                             <span class="text-gray-600">Ảnh COC:</span>
                             <div id="detail-coc-image" class="mt-2">
-                                <a id="detail-coc-image-link" href="#" target="_blank" class="text-blue-600 hover:underline inline-flex items-center">
+                                <a id="detail-coc-image-link" href="#" target="_blank" class="text-blue-600 hover:underline inline-flex items-center hidden">
                                     <i class="fa-solid fa-image mr-2"></i>
-                                    <span id="detail-coc-image-text">Xem ảnh COC</span>
+                                    <span>Xem ảnh COC</span>
                                 </a>
+                                <span class="text-gray-400">-</span>
                             </div>
                         </div>
                         <div class="md:col-span-2">
                             <span class="text-gray-600">Biên bản bàn giao:</span>
                             <div id="detail-handover-doc" class="mt-2">
-                                <a id="detail-handover-doc-link" href="#" target="_blank" class="text-blue-600 hover:underline inline-flex items-center">
+                                <a id="detail-handover-doc-link" href="#" target="_blank" class="text-blue-600 hover:underline inline-flex items-center hidden">
                                     <i class="fa-solid fa-file-pdf mr-2"></i>
-                                    <span id="detail-handover-doc-text">Xem biên bản bàn giao</span>
+                                    <span>Xem biên bản bàn giao</span>
                                 </a>
+                                <span class="text-gray-400">-</span>
                             </div>
                         </div>
                     </div>
@@ -174,10 +175,11 @@
                         <div class="md:col-span-2">
                             <span class="text-gray-600">File giải ngân:</span>
                             <div id="detail-disbursement-file" class="mt-2">
-                                <a id="detail-disbursement-file-link" href="#" target="_blank" class="text-blue-600 hover:underline inline-flex items-center">
+                                <a id="detail-disbursement-file-link" href="#" target="_blank" class="text-blue-600 hover:underline inline-flex items-center hidden">
                                     <i class="fa-solid fa-file-upload mr-2"></i>
-                                    <span id="detail-disbursement-file-text">Xem file giải ngân</span>
+                                    <span>Xem file giải ngân</span>
                                 </a>
+                                <span class="text-gray-400">-</span>
                             </div>
                         </div>
                     </div>
@@ -225,15 +227,10 @@
 </div>
 
 <script>
-// Helper: Escape HTML
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+// ======================================================
+// UTILITY FUNCTIONS
+// ======================================================
 
-// Helper: Format date
 function formatDate(dateString) {
     if (!dateString) return '-';
     try {
@@ -243,25 +240,331 @@ function formatDate(dateString) {
             day: '2-digit'
         });
     } catch (e) {
-        return dateString;
+        return String(dateString || '-');
     }
 }
 
-// Helper: Format currency
 function formatCurrency(amount) {
-    if (!amount && amount !== 0) return '-';
-    return parseFloat(amount).toLocaleString('vi-VN') + ' VNĐ';
+    if (amount === null || amount === undefined) return '-';
+    const num = parseFloat(amount);
+    if (isNaN(num)) return '-';
+    return num.toLocaleString('vi-VN') + ' VNĐ';
 }
 
-// COC Status mapping
-const COC_STATUS_DETAIL = {
-    'pending': { label: 'Đang chờ', class: 'bg-yellow-100 text-yellow-800' },
-    'issued': { label: 'Đã cấp', class: 'bg-blue-100 text-blue-800' },
-    'disbursed': { label: 'Đã giải ngân', class: 'bg-orange-100 text-orange-800' },
-    'closed': { label: 'Đã đóng', class: 'bg-green-100 text-green-800' }
-};
+function getValue(data, ...paths) {
+    for (const path of paths) {
+        const keys = path.split('.');
+        let value = data;
+        for (const key of keys) {
+            if (value && typeof value === 'object' && key in value) {
+                value = value[key];
+            } else {
+                value = null;
+                break;
+            }
+        }
+        if (value !== null && value !== undefined && value !== '') {
+            return value;
+        }
+    }
+    return null;
+}
 
-// Open modal
+function setElementText(id, value, defaultValue = '-') {
+    const el = document.getElementById(id);
+    if (el) {
+        el.textContent = value !== null && value !== undefined && value !== '' ? String(value) : defaultValue;
+    }
+}
+
+// ======================================================
+// DATA EXTRACTION FUNCTIONS
+// ======================================================
+
+/**
+ * Extract request information from COC request data
+ * Priority: coc_requests > orders > customers
+ */
+function extractRequestInfo(requestData) {
+    const order = requestData.orders || null;
+    const customer = order?.customers || null;
+
+    return {
+        // Contract & Customer
+        contractCode: getValue(requestData, 'contract_code', 'orders.contract_code') || '-',
+        customerName: getValue(requestData, 'customer_name', 'orders.customers.name') || '-',
+        customerPhone: getValue(requestData, 'orders.customers.phone') || '-',
+        customerEmail: getValue(requestData, 'orders.customers.email') || '-',
+        customerCccd: getValue(requestData, 'orders.customers.cccd') || '-',
+        customerAddress: getValue(requestData, 'orders.customers.address') || '-',
+        
+        // Car Info
+        carModel: getValue(requestData, 'car_model', 'orders.car_model') || '-',
+        carVersion: getValue(requestData, 'car_version', 'orders.car_version') || '-',
+        carColor: getValue(requestData, 'car_color', 'orders.car_color') || '-',
+        vinNumber: getValue(requestData, 'vin_number') || '-',
+        
+        // Requester
+        requester: getRequesterDisplay(requestData.requester),
+        
+        // Request Date
+        requestDate: formatDate(requestData.request_date)
+    };
+}
+
+/**
+ * Extract financial information
+ */
+function extractFinancialInfo(requestData) {
+    const order = requestData.orders || null;
+    
+    return {
+        poNumber: requestData.po_number || '-',
+        importPrice: formatCurrency(requestData.import_price),
+        paymentMethod: getValue(requestData, 'payment_method', 'orders.payment_method') || '-',
+        guaranteeBank: requestData.guarantee_bank_coc || '-',
+        principalAmount: formatCurrency(requestData.principal_amount || requestData.import_price || 0),
+        interestRate: `${requestData.interest_rate || 8.0}%`,
+        delayedDaysPreview: calculateDelayedDaysPreview(requestData)
+    };
+}
+
+/**
+ * Extract issue information (if issued/disbursed/closed)
+ */
+function extractIssueInfo(requestData) {
+    return {
+        issuer: requestData.issuer || '-',
+        actualIssueDate: formatDate(requestData.actual_issue_date),
+        delayedDays: requestData.business_days_delayed > 0 
+            ? `${requestData.business_days_delayed} ngày làm việc`
+            : '0 ngày',
+        interestAmount: formatCurrency(requestData.interest_amount || 0),
+        cocImageUrl: requestData.coc_image_url || null,
+        handoverDocUrl: requestData.handover_document_url || null
+    };
+}
+
+/**
+ * Extract disbursement information (if closed)
+ */
+function extractDisbursementInfo(requestData) {
+    return {
+        accountant: requestData.accountant || '-',
+        disbursementFileUrl: requestData.disbursement_file_url || null
+    };
+}
+
+/**
+ * Get requester display name (with fullname if available)
+ */
+function getRequesterDisplay(requester) {
+    if (!requester) return '-';
+    
+    // Try to get fullname from cached users
+    if (typeof window !== 'undefined' && window.cachedUsers && Array.isArray(window.cachedUsers)) {
+        const user = window.cachedUsers.find(u => u.username === requester);
+        if (user && user.fullname) {
+            return `${user.fullname} (${requester})`;
+        }
+    }
+    
+    return requester;
+}
+
+/**
+ * Calculate delayed days preview
+ */
+function calculateDelayedDaysPreview(requestData) {
+    if (requestData.actual_issue_date && requestData.request_date) {
+        if (typeof window.calculateDelayedBusinessDays === 'function') {
+            const days = window.calculateDelayedBusinessDays(requestData.request_date, requestData.actual_issue_date);
+            return days > 0 ? `${days} ngày làm việc` : '0 ngày';
+        }
+    }
+    
+    if (requestData.business_days_delayed !== undefined) {
+        return requestData.business_days_delayed > 0 
+            ? `${requestData.business_days_delayed} ngày làm việc` 
+            : '0 ngày';
+    }
+    
+    return '-';
+}
+
+// ======================================================
+// RENDER FUNCTIONS
+// ======================================================
+
+/**
+ * Render request information section
+ */
+function renderRequestInfo(info) {
+    setElementText('detail-contract-code', info.contractCode);
+    setElementText('detail-customer-name', info.customerName);
+    setElementText('detail-customer-phone', info.customerPhone);
+    setElementText('detail-customer-email', info.customerEmail);
+    setElementText('detail-customer-cccd', info.customerCccd);
+    setElementText('detail-customer-address', info.customerAddress);
+    setElementText('detail-car-model', info.carModel);
+    setElementText('detail-car-version', info.carVersion);
+    setElementText('detail-car-color', info.carColor);
+    setElementText('detail-vin-number', info.vinNumber);
+    setElementText('detail-requester', info.requester);
+    setElementText('detail-request-date', info.requestDate);
+}
+
+/**
+ * Render financial information section
+ */
+function renderFinancialInfo(info) {
+    setElementText('detail-po-number', info.poNumber);
+    setElementText('detail-import-price', info.importPrice);
+    setElementText('detail-payment-method', info.paymentMethod);
+    setElementText('detail-guarantee-bank-coc', info.guaranteeBank);
+    setElementText('detail-principal-amount', info.principalAmount);
+    setElementText('detail-interest-rate', info.interestRate);
+    setElementText('detail-delayed-days-preview', info.delayedDaysPreview);
+}
+
+/**
+ * Render issue information section
+ */
+function renderIssueInfo(info) {
+    setElementText('detail-issuer', info.issuer);
+    setElementText('detail-actual-issue-date', info.actualIssueDate);
+    setElementText('detail-delayed-days', info.delayedDays);
+    setElementText('detail-interest-amount', info.interestAmount);
+    
+    // COC Image
+    const cocImageLink = document.getElementById('detail-coc-image-link');
+    const cocImageContainer = document.getElementById('detail-coc-image');
+    if (info.cocImageUrl && cocImageLink) {
+        cocImageLink.href = info.cocImageUrl;
+        cocImageLink.classList.remove('hidden');
+        cocImageContainer.querySelector('.text-gray-400')?.classList.add('hidden');
+    } else {
+        cocImageLink?.classList.add('hidden');
+        cocImageContainer.querySelector('.text-gray-400')?.classList.remove('hidden');
+    }
+    
+    // Handover Document
+    const handoverDocLink = document.getElementById('detail-handover-doc-link');
+    const handoverDocContainer = document.getElementById('detail-handover-doc');
+    if (info.handoverDocUrl && handoverDocLink) {
+        handoverDocLink.href = info.handoverDocUrl;
+        handoverDocLink.classList.remove('hidden');
+        handoverDocContainer.querySelector('.text-gray-400')?.classList.add('hidden');
+    } else {
+        handoverDocLink?.classList.add('hidden');
+        handoverDocContainer.querySelector('.text-gray-400')?.classList.remove('hidden');
+    }
+}
+
+/**
+ * Render disbursement information section
+ */
+function renderDisbursementInfo(info) {
+    setElementText('detail-accountant', info.accountant);
+    
+    // Disbursement File
+    const fileLink = document.getElementById('detail-disbursement-file-link');
+    const fileContainer = document.getElementById('detail-disbursement-file');
+    if (info.disbursementFileUrl && fileLink) {
+        fileLink.href = info.disbursementFileUrl;
+        fileLink.classList.remove('hidden');
+        fileContainer.querySelector('.text-gray-400')?.classList.add('hidden');
+    } else {
+        fileLink?.classList.add('hidden');
+        fileContainer.querySelector('.text-gray-400')?.classList.remove('hidden');
+    }
+}
+
+/**
+ * Render status
+ */
+function renderStatus(status) {
+    const statusMap = {
+        'pending': { label: 'Đang chờ', class: 'bg-yellow-100 text-yellow-800' },
+        'issued': { label: 'Đã cấp', class: 'bg-blue-100 text-blue-800' },
+        'disbursed': { label: 'Đã giải ngân', class: 'bg-orange-100 text-orange-800' },
+        'closed': { label: 'Đã đóng', class: 'bg-green-100 text-green-800' }
+    };
+    
+    const statusInfo = statusMap[status] || statusMap.pending;
+    const badge = document.getElementById('detail-status-badge');
+    const label = document.getElementById('detail-status-label');
+    
+    if (badge) {
+        badge.textContent = statusInfo.label;
+        badge.className = `px-4 py-2 rounded-full text-sm font-bold ${statusInfo.class}`;
+    }
+    
+    if (label) {
+        label.textContent = `Trạng thái hiện tại: ${statusInfo.label}`;
+    }
+}
+
+/**
+ * Render notes
+ */
+function renderNotes(notes) {
+    const section = document.getElementById('detail-notes-section');
+    const notesEl = document.getElementById('detail-notes');
+    
+    if (notes && notes.trim()) {
+        if (section) section.classList.remove('hidden');
+        if (notesEl) notesEl.textContent = notes;
+    } else {
+        if (section) section.classList.add('hidden');
+    }
+}
+
+// ======================================================
+// MAIN FUNCTIONS
+// ======================================================
+
+/**
+ * Fetch COC request data
+ */
+async function fetchCocRequestData(requestId) {
+    // Try to find in cached data first
+    if (typeof window.allCocRequests !== 'undefined' && Array.isArray(window.allCocRequests)) {
+        const cached = window.allCocRequests.find(r => r.id === requestId);
+        if (cached) {
+            console.log('[COC Detail] Found in cache');
+            return cached;
+        }
+    }
+    
+    // Fetch from API
+    console.log('[COC Detail] Fetching from API...');
+    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+    if (!session || !session.username) {
+        throw new Error('Phiên đăng nhập hết hạn');
+    }
+    
+    const result = await window.callAPI({
+        action: 'get_coc_requests',
+        username: session.username,
+        role: session.role
+    });
+    
+    if (!result.success || !result.data) {
+        throw new Error(result.message || 'Không thể tải dữ liệu');
+    }
+    
+    const requestData = result.data.find(r => r.id === requestId);
+    if (!requestData) {
+        throw new Error('Không tìm thấy đề nghị COC');
+    }
+    
+    return requestData;
+}
+
+/**
+ * Open COC detail modal
+ */
 async function openCocDetailModal(requestId) {
     const modal = document.getElementById('modal-coc-detail');
     const loadingDiv = document.getElementById('coc-detail-loading');
@@ -275,251 +578,78 @@ async function openCocDetailModal(requestId) {
     errorDiv.classList.add('hidden');
     
     try {
-        // Find request data from allCocRequests
-        let requestData = null;
-        if (typeof window.allCocRequests !== 'undefined' && Array.isArray(window.allCocRequests)) {
-            requestData = window.allCocRequests.find(r => r.id === requestId);
-        }
+        // Fetch data
+        const requestData = await fetchCocRequestData(requestId);
         
-        if (!requestData) {
-            throw new Error('Không tìm thấy thông tin đề nghị COC');
-        }
-        
-        // Fill basic info
         console.log('[COC Detail] Request data:', requestData);
-        console.log('[COC Detail] Car info from requestData:', {
-            car_model: requestData.car_model,
-            car_version: requestData.car_version,
-            car_color: requestData.car_color,
-            vin_number: requestData.vin_number
-        });
-        console.log('[COC Detail] Requester:', requestData.requester);
         
-        // Lấy order và customer nếu có
-        const order = requestData.orders || null;
-        const customer = (order && order.customers) ? order.customers : null;
+        // Extract and render data
+        const requestInfo = extractRequestInfo(requestData);
+        const financialInfo = extractFinancialInfo(requestData);
         
-        console.log('[COC Detail] Order:', order);
-        console.log('[COC Detail] Customer:', customer);
+        renderRequestInfo(requestInfo);
+        renderFinancialInfo(financialInfo);
+        renderStatus(requestData.status);
+        renderNotes(requestData.notes);
         
-        // Mã đơn hàng - từ coc_requests hoặc từ order nếu có
-        const contractCode = requestData.contract_code || (order && order.contract_code) || '-';
-        document.getElementById('detail-contract-code').textContent = contractCode || '-';
-        
-        // Tên khách hàng - từ coc_requests hoặc từ customer nếu có
-        const customerName = requestData.customer_name || (customer && customer.name) || '-';
-        document.getElementById('detail-customer-name').textContent = customerName || '-';
-        
-        // Thông tin khách hàng (từ orders.customers nếu có, nếu không thì để '-')
-        document.getElementById('detail-customer-phone').textContent = (customer && customer.phone) ? customer.phone : '-';
-        document.getElementById('detail-customer-email').textContent = (customer && customer.email) ? customer.email : '-';
-        document.getElementById('detail-customer-cccd').textContent = (customer && customer.cccd) ? customer.cccd : '-';
-        document.getElementById('detail-customer-address').textContent = (customer && customer.address) ? customer.address : '-';
-        
-        // Thông tin xe - ưu tiên lấy từ coc_requests, nếu không có thì lấy từ orders
-        const carModel = requestData.car_model ? String(requestData.car_model).trim() : ((order && order.car_model) ? String(order.car_model).trim() : '-');
-        const carVersion = requestData.car_version ? String(requestData.car_version).trim() : ((order && order.car_version) ? String(order.car_version).trim() : '-');
-        const carColor = requestData.car_color ? String(requestData.car_color).trim() : ((order && order.car_color) ? String(order.car_color).trim() : '-');
-        const vinNumber = requestData.vin_number ? String(requestData.vin_number).trim() : '-';
-        
-        console.log('[COC Detail] Final car info:', { carModel, carVersion, carColor, vinNumber });
-        
-        // Người đề nghị - tìm fullname từ cached users nếu có
-        let requesterDisplay = requestData.requester || '-';
-        if (requestData.requester) {
-            // Thử lấy từ cachedUsers nếu có
-            const cachedUsers = (typeof window !== 'undefined' && window.cachedUsers) ? window.cachedUsers : [];
-            const requesterUser = cachedUsers.find(u => u.username === requestData.requester);
-            if (requesterUser && requesterUser.fullname) {
-                requesterDisplay = `${requesterUser.fullname} (${requestData.requester})`;
-            } else {
-                requesterDisplay = requestData.requester;
-            }
-        }
-        console.log('[COC Detail] Requester display:', requesterDisplay);
-        
-        // Set các giá trị trực tiếp như các fields khác
-        document.getElementById('detail-car-model').textContent = carModel || '-';
-        document.getElementById('detail-car-version').textContent = carVersion || '-';
-        document.getElementById('detail-car-color').textContent = carColor || '-';
-        document.getElementById('detail-vin-number').textContent = vinNumber || '-';
-        document.getElementById('detail-requester').textContent = requesterDisplay;
-        
-        const requestDateEl = document.getElementById('detail-request-date');
-        if (requestDateEl) {
-            requestDateEl.textContent = formatDate(requestData.request_date) || '-';
-        }
-        
-        // Fill financial info
-        document.getElementById('detail-po-number').textContent = requestData.po_number || '-';
-        document.getElementById('detail-import-price').textContent = formatCurrency(requestData.import_price);
-        
-        // Payment method: Lấy từ coc_requests (đã lưu trực tiếp) hoặc từ orders nếu chưa có
-        let paymentMethod = requestData.payment_method || '-';
-        if (!paymentMethod || paymentMethod === '-') {
-            if (requestData.orders && requestData.orders.payment_method) {
-                paymentMethod = requestData.orders.payment_method;
-            }
-        }
-        document.getElementById('detail-payment-method').textContent = paymentMethod;
-        
-        document.getElementById('detail-guarantee-bank-coc').textContent = requestData.guarantee_bank_coc || '-';
-        document.getElementById('detail-principal-amount').textContent = formatCurrency(requestData.principal_amount || requestData.import_price || 0);
-        
-        // Lãi suất và số ngày trễ (preview)
-        const interestRate = requestData.interest_rate || 8.0;
-        document.getElementById('detail-interest-rate').textContent = `${interestRate}%`;
-        
-        // Tính số ngày trễ nếu đã có actual_issue_date
-        let delayedDaysPreview = '-';
-        if (requestData.actual_issue_date && requestData.request_date) {
-            if (typeof window.calculateDelayedBusinessDays === 'function') {
-                const delayedDays = window.calculateDelayedBusinessDays(requestData.request_date, requestData.actual_issue_date);
-                delayedDaysPreview = delayedDays > 0 ? `${delayedDays} ngày làm việc` : '0 ngày';
-            }
-        } else if (requestData.business_days_delayed !== undefined) {
-            delayedDaysPreview = requestData.business_days_delayed > 0 
-                ? `${requestData.business_days_delayed} ngày làm việc` 
-                : '0 ngày';
-        }
-        document.getElementById('detail-delayed-days-preview').textContent = delayedDaysPreview;
-        
-        // Fill issue info (if issued, disbursed, or closed - hiển thị kể cả sau khi giải ngân)
-        if (requestData.status === 'issued' || requestData.status === 'disbursed' || requestData.status === 'closed') {
+        // Show issue section if issued/disbursed/closed
+        if (['issued', 'disbursed', 'closed'].includes(requestData.status)) {
             const issueSection = document.getElementById('detail-issue-section');
-            issueSection.classList.remove('hidden');
-            
-            document.getElementById('detail-issuer').textContent = requestData.issuer || '-';
-            document.getElementById('detail-actual-issue-date').textContent = formatDate(requestData.actual_issue_date);
-            document.getElementById('detail-delayed-days').textContent = 
-                requestData.business_days_delayed > 0 
-                    ? `${requestData.business_days_delayed} ngày làm việc`
-                    : '0 ngày';
-            document.getElementById('detail-interest-amount').textContent = formatCurrency(requestData.interest_amount || 0);
-            
-            // COC image
-            const cocImageDiv = document.getElementById('detail-coc-image');
-            const cocImageLink = document.getElementById('detail-coc-image-link');
-            if (requestData.coc_image_url) {
-                cocImageLink.href = requestData.coc_image_url;
-                cocImageLink.classList.remove('hidden');
-                cocImageDiv.classList.remove('hidden');
-            } else {
-                cocImageDiv.classList.add('hidden');
-            }
-            
-            // Handover document
-            const handoverDocDiv = document.getElementById('detail-handover-doc');
-            const handoverDocLink = document.getElementById('detail-handover-doc-link');
-            if (requestData.handover_document_url) {
-                handoverDocLink.href = requestData.handover_document_url;
-                handoverDocLink.classList.remove('hidden');
-                handoverDocDiv.classList.remove('hidden');
-            } else {
-                handoverDocDiv.classList.add('hidden');
+            if (issueSection) {
+                issueSection.classList.remove('hidden');
+                const issueInfo = extractIssueInfo(requestData);
+                renderIssueInfo(issueInfo);
             }
         } else {
-            document.getElementById('detail-issue-section').classList.add('hidden');
+            const issueSection = document.getElementById('detail-issue-section');
+            if (issueSection) issueSection.classList.add('hidden');
         }
         
-        // Fill disburse info (if closed)
+        // Show disbursement section if closed
         if (requestData.status === 'closed') {
             const disburseSection = document.getElementById('detail-disburse-section');
-            disburseSection.classList.remove('hidden');
-            
-            document.getElementById('detail-accountant').textContent = requestData.accountant || '-';
-            
-            // Disbursement file
-            const disburseFileDiv = document.getElementById('detail-disbursement-file');
-            const disburseFileLink = document.getElementById('detail-disbursement-file-link');
-            if (requestData.disbursement_file_url) {
-                disburseFileLink.href = requestData.disbursement_file_url;
-                disburseFileLink.classList.remove('hidden');
-                disburseFileDiv.classList.remove('hidden');
-            } else {
-                disburseFileDiv.classList.add('hidden');
+            if (disburseSection) {
+                disburseSection.classList.remove('hidden');
+                const disburseInfo = extractDisbursementInfo(requestData);
+                renderDisbursementInfo(disburseInfo);
             }
         } else {
-            document.getElementById('detail-disburse-section').classList.add('hidden');
+            const disburseSection = document.getElementById('detail-disburse-section');
+            if (disburseSection) disburseSection.classList.add('hidden');
         }
         
-        // Fill status
-        const statusInfo = COC_STATUS_DETAIL[requestData.status] || COC_STATUS_DETAIL.pending;
-        const statusBadge = document.getElementById('detail-status-badge');
-        statusBadge.textContent = statusInfo.label;
-        statusBadge.className = `px-4 py-2 rounded-full text-sm font-bold ${statusInfo.class}`;
-        document.getElementById('detail-status-label').textContent = 
-            `Trạng thái hiện tại: ${statusInfo.label}`;
-        
-        // Fill notes
-        if (requestData.notes) {
-            document.getElementById('detail-notes-section').classList.remove('hidden');
-            document.getElementById('detail-notes').textContent = requestData.notes;
-        } else {
-            document.getElementById('detail-notes-section').classList.add('hidden');
-        }
-        
-        // Hide loading, show body
+        // Show content
         loadingDiv.classList.add('hidden');
         bodyDiv.classList.remove('hidden');
         
-        // Re-set values after modal is visible to ensure proper rendering
-        // Use requestAnimationFrame to ensure DOM is fully rendered
-        requestAnimationFrame(() => {
-            // Re-fetch elements and set values again after modal is visible
-            const carModelEl = document.getElementById('detail-car-model');
-            const carVersionEl = document.getElementById('detail-car-version');
-            const carColorEl = document.getElementById('detail-car-color');
-            const vinNumberEl = document.getElementById('detail-vin-number');
-            const requesterEl = document.getElementById('detail-requester');
-            
-            if (carModelEl) {
-                carModelEl.textContent = carModel || '-';
-                carModelEl.innerText = carModel || '-';
-            }
-            if (carVersionEl) {
-                carVersionEl.textContent = carVersion || '-';
-                carVersionEl.innerText = carVersion || '-';
-            }
-            if (carColorEl) {
-                carColorEl.textContent = carColor || '-';
-                carColorEl.innerText = carColor || '-';
-            }
-            if (vinNumberEl) {
-                vinNumberEl.textContent = vinNumber || '-';
-                vinNumberEl.innerText = vinNumber || '-';
-            }
-            if (requesterEl) {
-                requesterEl.textContent = requesterDisplay;
-                requesterEl.innerText = requesterDisplay;
-            }
-            
-            console.log('[COC Detail] After modal visible - Re-set values:', {
-                carModel: carModelEl ? carModelEl.textContent : 'NOT FOUND',
-                carVersion: carVersionEl ? carVersionEl.textContent : 'NOT FOUND',
-                carColor: carColorEl ? carColorEl.textContent : 'NOT FOUND',
-                requester: requesterEl ? requesterEl.textContent : 'NOT FOUND'
-            });
-        });
-        
     } catch (error) {
-        console.error('Error loading COC detail:', error);
+        console.error('[COC Detail] Error:', error);
         loadingDiv.classList.add('hidden');
         errorDiv.classList.remove('hidden');
-        document.getElementById('coc-detail-error-message').textContent = error.message || 'Không thể tải thông tin chi tiết';
+        const errorMsg = document.getElementById('coc-detail-error-message');
+        if (errorMsg) {
+            errorMsg.textContent = error.message || 'Không thể tải thông tin chi tiết';
+        }
     }
 }
 
-// Close modal
+/**
+ * Close COC detail modal
+ */
 function closeCocDetailModal() {
-    document.getElementById('modal-coc-detail').classList.add('hidden');
+    const modal = document.getElementById('modal-coc-detail');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
 }
 
-// Expose functions to window
+// ======================================================
+// EXPOSE FUNCTIONS
+// ======================================================
+
 if (typeof window !== 'undefined') {
     window.openCocDetailModal = openCocDetailModal;
     window.closeCocDetailModal = closeCocDetailModal;
     console.log('✅ COC detail modal functions exposed to window');
 }
 </script>
-
