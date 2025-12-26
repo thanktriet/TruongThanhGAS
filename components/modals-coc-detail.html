@@ -324,23 +324,6 @@ async function openCocDetailModal(requestId) {
         
         console.log('[COC Detail] Final car info:', { carModel, carVersion, carColor, vinNumber });
         
-        // Set textContent - kiểm tra element tồn tại
-        const carModelEl = document.getElementById('detail-car-model');
-        const carVersionEl = document.getElementById('detail-car-version');
-        const carColorEl = document.getElementById('detail-car-color');
-        const vinNumberEl = document.getElementById('detail-vin-number');
-        const requesterEl = document.getElementById('detail-requester');
-        const requestDateEl = document.getElementById('detail-request-date');
-        
-        console.log('[COC Detail] Elements found:', {
-            carModelEl: !!carModelEl,
-            carVersionEl: !!carVersionEl,
-            carColorEl: !!carColorEl,
-            vinNumberEl: !!vinNumberEl,
-            requesterEl: !!requesterEl,
-            requestDateEl: !!requestDateEl
-        });
-        
         // Người đề nghị - tìm fullname từ cached users nếu có
         let requesterDisplay = requestData.requester || '-';
         if (requestData.requester) {
@@ -355,51 +338,14 @@ async function openCocDetailModal(requestId) {
         }
         console.log('[COC Detail] Requester display:', requesterDisplay);
         
-        // Function to set field values - sẽ được gọi sau khi modal visible
-        // Re-fetch elements to ensure we have correct references
-        const setFieldValues = () => {
-            const carModelElRef = document.getElementById('detail-car-model');
-            const carVersionElRef = document.getElementById('detail-car-version');
-            const carColorElRef = document.getElementById('detail-car-color');
-            const vinNumberElRef = document.getElementById('detail-vin-number');
-            const requesterElRef = document.getElementById('detail-requester');
-            
-            if (carModelElRef) {
-                carModelElRef.textContent = carModel || '-';
-                console.log('[COC Detail] Set car-model to:', carModel, 'Element now contains:', carModelElRef.textContent);
-            } else {
-                console.error('[COC Detail] Element detail-car-model not found!');
-            }
-            
-            if (carVersionElRef) {
-                carVersionElRef.textContent = carVersion || '-';
-                console.log('[COC Detail] Set car-version to:', carVersion, 'Element now contains:', carVersionElRef.textContent);
-            } else {
-                console.error('[COC Detail] Element detail-car-version not found!');
-            }
-            
-            if (carColorElRef) {
-                carColorElRef.textContent = carColor || '-';
-                console.log('[COC Detail] Set car-color to:', carColor, 'Element now contains:', carColorElRef.textContent);
-            } else {
-                console.error('[COC Detail] Element detail-car-color not found!');
-            }
-            
-            if (vinNumberElRef) {
-                vinNumberElRef.textContent = vinNumber || '-';
-            }
-            
-            if (requesterElRef) {
-                requesterElRef.textContent = requesterDisplay;
-                console.log('[COC Detail] Set requester to:', requesterDisplay, 'Element now contains:', requesterElRef.textContent);
-            } else {
-                console.error('[COC Detail] Element detail-requester not found!');
-            }
-        };
+        // Set các giá trị trực tiếp như các fields khác
+        document.getElementById('detail-car-model').textContent = carModel || '-';
+        document.getElementById('detail-car-version').textContent = carVersion || '-';
+        document.getElementById('detail-car-color').textContent = carColor || '-';
+        document.getElementById('detail-vin-number').textContent = vinNumber || '-';
+        document.getElementById('detail-requester').textContent = requesterDisplay;
         
-        // Set values now (before modal visible)
-        setFieldValues();
-        
+        const requestDateEl = document.getElementById('detail-request-date');
         if (requestDateEl) {
             requestDateEl.textContent = formatDate(requestData.request_date) || '-';
         }
@@ -520,23 +466,40 @@ async function openCocDetailModal(requestId) {
         // Re-set values after modal is visible to ensure proper rendering
         // Use requestAnimationFrame to ensure DOM is fully rendered
         requestAnimationFrame(() => {
-            setFieldValues();
+            // Re-fetch elements and set values again after modal is visible
+            const carModelEl = document.getElementById('detail-car-model');
+            const carVersionEl = document.getElementById('detail-car-version');
+            const carColorEl = document.getElementById('detail-car-color');
+            const vinNumberEl = document.getElementById('detail-vin-number');
+            const requesterEl = document.getElementById('detail-requester');
             
-            // Double check after a small delay
-            setTimeout(() => {
-                const carModelElCheck = document.getElementById('detail-car-model');
-                const carVersionElCheck = document.getElementById('detail-car-version');
-                const carColorElCheck = document.getElementById('detail-car-color');
-                const requesterElCheck = document.getElementById('detail-requester');
-                
-                console.log('[COC Detail] After modal visible - Final element contents:', {
-                    carModel: carModelElCheck ? carModelElCheck.textContent : 'NOT FOUND',
-                    carVersion: carVersionElCheck ? carVersionElCheck.textContent : 'NOT FOUND',
-                    carColor: carColorElCheck ? carColorElCheck.textContent : 'NOT FOUND',
-                    requester: requesterElCheck ? requesterElCheck.textContent : 'NOT FOUND',
-                    carModelVisible: carModelElCheck ? window.getComputedStyle(carModelElCheck).display !== 'none' : false
-                });
-            }, 50);
+            if (carModelEl) {
+                carModelEl.textContent = carModel || '-';
+                carModelEl.innerText = carModel || '-';
+            }
+            if (carVersionEl) {
+                carVersionEl.textContent = carVersion || '-';
+                carVersionEl.innerText = carVersion || '-';
+            }
+            if (carColorEl) {
+                carColorEl.textContent = carColor || '-';
+                carColorEl.innerText = carColor || '-';
+            }
+            if (vinNumberEl) {
+                vinNumberEl.textContent = vinNumber || '-';
+                vinNumberEl.innerText = vinNumber || '-';
+            }
+            if (requesterEl) {
+                requesterEl.textContent = requesterDisplay;
+                requesterEl.innerText = requesterDisplay;
+            }
+            
+            console.log('[COC Detail] After modal visible - Re-set values:', {
+                carModel: carModelEl ? carModelEl.textContent : 'NOT FOUND',
+                carVersion: carVersionEl ? carVersionEl.textContent : 'NOT FOUND',
+                carColor: carColorEl ? carColorEl.textContent : 'NOT FOUND',
+                requester: requesterEl ? requesterEl.textContent : 'NOT FOUND'
+            });
         });
         
     } catch (error) {
