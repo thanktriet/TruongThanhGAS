@@ -10,6 +10,17 @@ let approvalFilters = { search: '', status: 'all' };
 let myRequestsData = [];
 let myRequestsFilters = { search: '', status: 'all' };
 
+// Expose cachedUsers to window for use in app.js
+if (typeof window !== 'undefined') {
+    // Create a getter/setter to maintain reference to the same array
+    Object.defineProperty(window, 'cachedUsers', {
+        get: function() { return cachedUsers; },
+        set: function(val) { cachedUsers = val; },
+        enumerable: true,
+        configurable: true
+    });
+}
+
 // Session timeout: 2 giờ (2 * 60 * 60 * 1000 ms)
 const SESSION_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 giờ
 

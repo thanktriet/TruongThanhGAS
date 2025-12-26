@@ -290,15 +290,17 @@ async function openCocDetailModal(requestId) {
         document.getElementById('detail-contract-code').textContent = requestData.contract_code || '-';
         document.getElementById('detail-customer-name').textContent = requestData.customer_name || '-';
         
-        // Thông tin khách hàng (từ orders.customers nếu có)
+        // Thông tin khách hàng (từ orders.customers nếu có, nếu không thì để '-')
         // Lưu ý: Nếu order_id là NULL thì orders sẽ là NULL, không phải object rỗng
         const order = requestData.orders || null;
         const customer = (order && order.customers) ? order.customers : null;
+        // Lấy từ customer nếu có, nếu không thì để '-'
         document.getElementById('detail-customer-phone').textContent = (customer && customer.phone) ? customer.phone : '-';
         document.getElementById('detail-customer-email').textContent = (customer && customer.email) ? customer.email : '-';
         document.getElementById('detail-customer-cccd').textContent = (customer && customer.cccd) ? customer.cccd : '-';
         document.getElementById('detail-customer-address').textContent = (customer && customer.address) ? customer.address : '-';
         
+        // Thông tin xe - lấy trực tiếp từ coc_requests (luôn có)
         document.getElementById('detail-car-model').textContent = requestData.car_model || '-';
         document.getElementById('detail-car-version').textContent = requestData.car_version || '-';
         document.getElementById('detail-car-color').textContent = requestData.car_color || '-';
@@ -340,8 +342,8 @@ async function openCocDetailModal(requestId) {
         }
         document.getElementById('detail-delayed-days-preview').textContent = delayedDaysPreview;
         
-        // Fill issue info (if issued)
-        if (requestData.status === 'issued' || requestData.status === 'closed') {
+        // Fill issue info (if issued, disbursed, or closed - hiển thị kể cả sau khi giải ngân)
+        if (requestData.status === 'issued' || requestData.status === 'disbursed' || requestData.status === 'closed') {
             const issueSection = document.getElementById('detail-issue-section');
             issueSection.classList.remove('hidden');
             
@@ -351,7 +353,7 @@ async function openCocDetailModal(requestId) {
                 requestData.business_days_delayed > 0 
                     ? `${requestData.business_days_delayed} ngày làm việc`
                     : '0 ngày';
-            document.getElementById('detail-interest-amount').textContent = formatCurrency(requestData.interest_amount);
+            document.getElementById('detail-interest-amount').textContent = formatCurrency(requestData.interest_amount || 0);
             
             // COC image
             const cocImageDiv = document.getElementById('detail-coc-image');

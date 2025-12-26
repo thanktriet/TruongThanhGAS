@@ -33,6 +33,20 @@
             padding-bottom: 0.5rem;
         }
         
+        /* Input Fields Styling - Ensure borders are visible */
+        .input, input[type="text"], input[type="email"], input[type="tel"], 
+        input[type="password"], input[type="number"], input[type="date"], 
+        input[type="search"], select, textarea {
+            border: 1px solid #d1d5db !important;
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+        }
+        .input:focus, input:focus, select:focus, textarea:focus {
+            border-color: #2563eb !important;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        
         /* Custom Scrollbar cho Modal */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }

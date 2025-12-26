@@ -1777,7 +1777,8 @@ async function handleProfileUpdate(e) {
 // ===================================
 
 let allCachedUsers = []; // Store all users for filtering
-let cachedUsers = []; // Keep for backward compatibility
+// Note: cachedUsers is declared in utils.js - we reference it from there
+// Import cachedUsers from global scope (defined in utils.js)
 
 async function loadUserManagement() {
     const container = $('user-list-container');
@@ -1794,7 +1795,9 @@ async function loadUserManagement() {
         const res = await callAPI({ action: 'list_users', username: session.username, role: session.role });
         if (res.success) {
             allCachedUsers = res.users || [];
-            cachedUsers = allCachedUsers;
+            if (typeof window !== 'undefined') {
+                window.cachedUsers = allCachedUsers;
+            }
             updateUserStats(allCachedUsers);
             container.innerHTML = renderUserTable(allCachedUsers);
             // Reset filters
@@ -2056,7 +2059,8 @@ async function handleCreateUser(e) {
 
 async function openEditUserModal(encodedUsername) {
     const username = decodeURIComponent(encodedUsername);
-    const target = cachedUsers.find(u => u.username === username);
+    const usersList = (typeof window !== 'undefined' && window.cachedUsers) ? window.cachedUsers : [];
+    const target = usersList.find(u => u.username === username);
     if (!target) {
         Swal.fire('Lỗi', 'Không tìm thấy người dùng', 'error');
         return;
@@ -2326,6 +2330,25 @@ async function saveProductivityBonus(id) {
                 box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); 
             }
         `;
-        document.head.appendChild(style);
+            document.head.appendChild(style);
     }
 })();
+
+// ===================================
+// EXPOSE FUNCTIONS TO WINDOW
+// ===================================
+// Expose navigation and loading functions to window for use by navigation.js and inline handlers
+if (typeof window !== 'undefined') {
+    window.loadProfile = loadProfile;
+    window.loadApprovalList = loadApprovalList;
+    window.loadMyRequests = loadMyRequests;
+    window.loadUserManagement = loadUserManagement;
+    window.filterUsers = filterUsers;
+    console.log('[app.js] Functions exposed to window:', {
+        loadProfile: typeof loadProfile,
+        loadApprovalList: typeof loadApprovalList,
+        loadMyRequests: typeof loadMyRequests,
+        loadUserManagement: typeof loadUserManagement,
+        filterUsers: typeof filterUsers
+    });
+}
