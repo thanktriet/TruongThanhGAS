@@ -104,11 +104,12 @@ function applyTheme(theme) {
     root.style.setProperty('--theme-background', theme.background_color || '#FFFFFF');
     root.style.setProperty('--theme-text', theme.text_color || '#1F2937');
     
-    // Apply theme colors to sidebar (if exists) - use primary color
+    // Apply theme colors to sidebar (if exists) - keep dark color, don't use theme color
     const sidebar = document.querySelector('aside, #sidebar-container aside');
     if (sidebar) {
-        sidebar.style.backgroundColor = primaryColor;
-        console.log('[Theme] Applied primary color to sidebar:', primaryColor);
+        // Giữ màu tối cho sidebar, không apply theme color
+        sidebar.style.backgroundColor = '#1e293b'; // slate-800 - màu tối
+        console.log('[Theme] Keeping sidebar dark color (slate-800)');
         
         // Also update hover colors for nav items in sidebar
         const navItems = sidebar.querySelectorAll('.nav-item');
@@ -169,10 +170,10 @@ function applyTheme(theme) {
             --theme-accent: ${accentColor};
         }
         
-        /* Sidebar theming */
+        /* Sidebar theming - keep dark color */
         aside.bg-slate-900,
         #sidebar-container aside {
-            background-color: ${primaryColor} !important;
+            background-color: #1e293b !important; /* slate-800 - màu tối */
         }
         
         /* Active nav items - highlight items WITH active class */
