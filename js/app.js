@@ -1776,79 +1776,241 @@ async function handleProfileUpdate(e) {
 // USER MANAGEMENT (ADMIN)
 // ===================================
 
+let allCachedUsers = []; // Store all users for filtering
+let cachedUsers = []; // Keep for backward compatibility
+
 async function loadUserManagement() {
     const container = $('user-list-container');
     if (!container) return;
     const session = getSession();
     if (!session || session.role !== 'ADMIN') {
-        container.innerHTML = '<div class="text-center text-red-500 py-6">Chỉ ADMIN mới được truy cập chức năng này.</div>';
+        container.innerHTML = '<div class="text-center text-red-500 py-8"><i class="fa-solid fa-lock text-2xl mb-2"></i><p>Chỉ ADMIN mới được truy cập chức năng này.</p></div>';
         return;
     }
 
-    container.innerHTML = '<div class="text-center text-gray-500 py-6"><i class="fa-solid fa-spinner fa-spin text-xl mb-2"></i><p>Đang tải danh sách...</p></div>';
+    container.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><p>Đang tải danh sách...</p></div>';
 
     try {
         const res = await callAPI({ action: 'list_users', username: session.username, role: session.role });
         if (res.success) {
-            cachedUsers = res.users || [];
-            container.innerHTML = renderUserTable(cachedUsers);
+            allCachedUsers = res.users || [];
+            cachedUsers = allCachedUsers;
+            updateUserStats(allCachedUsers);
+            container.innerHTML = renderUserTable(allCachedUsers);
+            // Reset filters
+            const searchInput = document.getElementById('user-search-input');
+            const roleFilter = document.getElementById('user-filter-role');
+            const statusFilter = document.getElementById('user-filter-status');
+            if (searchInput) searchInput.value = '';
+            if (roleFilter) roleFilter.value = '';
+            if (statusFilter) statusFilter.value = '';
         } else {
-            container.innerHTML = `<div class="text-center text-red-500 py-6">${res.message || 'Không thể tải danh sách người dùng.'}</div>`;
+            container.innerHTML = `<div class="text-center text-red-500 py-8"><i class="fa-solid fa-exclamation-circle text-2xl mb-2"></i><p>${res.message || 'Không thể tải danh sách người dùng.'}</p></div>`;
         }
     } catch (error) {
         console.error(error);
-        container.innerHTML = '<div class="text-center text-red-500 py-6">Lỗi kết nối đến server.</div>';
+        container.innerHTML = '<div class="text-center text-red-500 py-8"><i class="fa-solid fa-exclamation-triangle text-2xl mb-2"></i><p>Lỗi kết nối đến server.</p></div>';
     }
+}
+
+function updateUserStats(users) {
+    const statsContainer = document.getElementById('user-stats-container');
+    if (!statsContainer) return;
+    
+    const total = users.length;
+    const active = users.filter(u => u.active).length;
+    const inactive = total - active;
+    const roles = [...new Set(users.map(u => u.role))].length;
+    
+    statsContainer.innerHTML = `
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md p-5 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-blue-100 text-sm font-medium">Tổng số người dùng</p>
+                    <p class="text-3xl font-bold mt-1">${total}</p>
+                </div>
+                <i class="fa-solid fa-users text-4xl text-blue-200"></i>
+            </div>
+        </div>
+        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md p-5 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-green-100 text-sm font-medium">Đang hoạt động</p>
+                    <p class="text-3xl font-bold mt-1">${active}</p>
+                </div>
+                <i class="fa-solid fa-user-check text-4xl text-green-200"></i>
+            </div>
+        </div>
+        <div class="bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl shadow-md p-5 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-100 text-sm font-medium">Bị khóa</p>
+                    <p class="text-3xl font-bold mt-1">${inactive}</p>
+                </div>
+                <i class="fa-solid fa-user-lock text-4xl text-gray-200"></i>
+            </div>
+        </div>
+        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md p-5 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-purple-100 text-sm font-medium">Số vai trò</p>
+                    <p class="text-3xl font-bold mt-1">${roles}</p>
+                </div>
+                <i class="fa-solid fa-user-tag text-4xl text-purple-200"></i>
+            </div>
+        </div>
+    `;
+}
+
+function filterUsers() {
+    const searchInput = document.getElementById('user-search-input');
+    const roleFilter = document.getElementById('user-filter-role');
+    const statusFilter = document.getElementById('user-filter-status');
+    
+    if (!searchInput || !roleFilter || !statusFilter) return;
+    
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const selectedRole = roleFilter.value;
+    const selectedStatus = statusFilter.value;
+    
+    let filtered = allCachedUsers.filter(user => {
+        // Search filter
+        const matchesSearch = !searchTerm || 
+            user.username.toLowerCase().includes(searchTerm) ||
+            (user.fullname && user.fullname.toLowerCase().includes(searchTerm)) ||
+            (user.email && user.email.toLowerCase().includes(searchTerm)) ||
+            (user.phone && user.phone.includes(searchTerm));
+        
+        // Role filter
+        const matchesRole = !selectedRole || user.role === selectedRole;
+        
+        // Status filter
+        const matchesStatus = !selectedStatus || 
+            (selectedStatus === 'active' && user.active) ||
+            (selectedStatus === 'inactive' && !user.active);
+        
+        return matchesSearch && matchesRole && matchesStatus;
+    });
+    
+    const container = $('user-list-container');
+    if (container) {
+        container.innerHTML = renderUserTable(filtered);
+    }
+}
+
+function getRoleBadgeColor(role) {
+    const colors = {
+        'ADMIN': 'bg-purple-100 text-purple-700 border-purple-200',
+        'BGD': 'bg-red-100 text-red-700 border-red-200',
+        'BKS': 'bg-orange-100 text-orange-700 border-orange-200',
+        'GDKD': 'bg-blue-100 text-blue-700 border-blue-200',
+        'TPKD': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+        'TVBH': 'bg-green-100 text-green-700 border-green-200',
+        'KETOAN': 'bg-pink-100 text-pink-700 border-pink-200'
+    };
+    return colors[role] || 'bg-gray-100 text-gray-700 border-gray-200';
 }
 
 function renderUserTable(users) {
     if (!users.length) {
-        return '<div class="text-center text-gray-500 py-6">Chưa có người dùng nào.</div>';
+        return `
+            <div class="text-center py-12">
+                <i class="fa-solid fa-users-slash text-4xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 text-lg font-medium">Không tìm thấy người dùng nào</p>
+                <p class="text-gray-400 text-sm mt-2">Thử thay đổi bộ lọc hoặc tạo người dùng mới</p>
+            </div>
+        `;
     }
 
     let rows = users.map(user => {
         const encoded = encodeURIComponent(user.username);
+        const roleColor = getRoleBadgeColor(user.role);
         return `
-            <tr class="border-b hover:bg-gray-50 text-sm">
-                <td class="py-2 px-3 font-mono">${user.username}</td>
-                <td class="py-2 px-3">${user.fullname || ''}</td>
-                <td class="py-2 px-3 font-bold">${user.role || ''}</td>
-                <td class="py-2 px-3">${user.email || ''}</td>
-                <td class="py-2 px-3">${user.phone || ''}</td>
-                <td class="py-2 px-3">${user.group || ''}</td>
-                <td class="py-2 px-3">
-                    <span class="px-2 py-1 text-xs rounded ${user.active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}">
-                        ${user.active ? 'Đang hoạt động' : 'Bị khóa'}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
+                <td class="py-3 px-4">
+                    <div class="font-mono font-semibold text-gray-900">${user.username}</div>
+                </td>
+                <td class="py-3 px-4">
+                    <div class="font-medium text-gray-800">${user.fullname || '<span class="text-gray-400">-</span>'}</div>
+                </td>
+                <td class="py-3 px-4">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${roleColor}">
+                        ${user.role || '-'}
                     </span>
                 </td>
-                <td class="py-2 px-3 space-x-2">
-                    <button onclick="openEditUserModal('${encoded}')" class="text-blue-600 hover:text-blue-800 text-xs font-semibold">Sửa</button>
-                    <button onclick="openUserPermissionsModal('${user.username}')" class="text-purple-600 hover:text-purple-800 text-xs font-semibold">
-                        <i class="fa-solid fa-key mr-1"></i>Quyền
-                    </button>
-                    <button onclick="resetUserPasswordPrompt('${encoded}')" class="text-red-600 hover:text-red-800 text-xs font-semibold">Reset MK</button>
+                <td class="py-3 px-4">
+                    <div class="text-sm text-gray-600">${user.email || '<span class="text-gray-400">-</span>'}</div>
+                </td>
+                <td class="py-3 px-4">
+                    <div class="text-sm text-gray-600">${user.phone || '<span class="text-gray-400">-</span>'}</div>
+                </td>
+                <td class="py-3 px-4">
+                    <div class="text-sm text-gray-600">${user.group || '<span class="text-gray-400">-</span>'}</div>
+                </td>
+                <td class="py-3 px-4">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                        user.active 
+                            ? 'bg-green-100 text-green-700 border border-green-200' 
+                            : 'bg-gray-100 text-gray-600 border border-gray-200'
+                    }">
+                        <i class="fa-solid ${user.active ? 'fa-check-circle' : 'fa-times-circle'} mr-1.5"></i>
+                        ${user.active ? 'Hoạt động' : 'Bị khóa'}
+                    </span>
+                </td>
+                <td class="py-3 px-4">
+                    <div class="flex items-center gap-2">
+                        <button 
+                            onclick="openEditUserModal('${encoded}')" 
+                            class="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
+                            title="Sửa thông tin"
+                        >
+                            <i class="fa-solid fa-edit"></i>
+                            <span class="hidden sm:inline">Sửa</span>
+                        </button>
+                        <button 
+                            onclick="openUserPermissionsModal('${user.username}')" 
+                            class="px-3 py-1.5 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
+                            title="Quản lý quyền"
+                        >
+                            <i class="fa-solid fa-key"></i>
+                            <span class="hidden sm:inline">Quyền</span>
+                        </button>
+                        <button 
+                            onclick="resetUserPasswordPrompt('${encoded}')" 
+                            class="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
+                            title="Reset mật khẩu"
+                        >
+                            <i class="fa-solid fa-key"></i>
+                            <span class="hidden sm:inline">Reset</span>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
     }).join('');
 
     return `
-        <div class="overflow-x-auto">
-            <table class="min-w-full text-left">
-                <thead class="bg-gray-100 text-xs uppercase text-gray-500">
+        <div class="overflow-x-auto rounded-lg border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
                     <tr>
-                        <th class="py-2 px-3">Username</th>
-                        <th class="py-2 px-3">Họ tên</th>
-                        <th class="py-2 px-3">Vai trò</th>
-                        <th class="py-2 px-3">Email</th>
-                        <th class="py-2 px-3">SĐT</th>
-                        <th class="py-2 px-3">Nhóm</th>
-                        <th class="py-2 px-3">Trạng thái</th>
-                        <th class="py-2 px-3">Hành động</th>
+                        <th class="py-3 px-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Username</th>
+                        <th class="py-3 px-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Họ tên</th>
+                        <th class="py-3 px-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Vai trò</th>
+                        <th class="py-3 px-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Email</th>
+                        <th class="py-3 px-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">SĐT</th>
+                        <th class="py-3 px-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nhóm</th>
+                        <th class="py-3 px-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Trạng thái</th>
+                        <th class="py-3 px-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Hành động</th>
                     </tr>
                 </thead>
-                <tbody>${rows}</tbody>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    ${rows}
+                </tbody>
             </table>
+        </div>
+        <div class="mt-4 text-sm text-gray-600 text-center">
+            Hiển thị <span class="font-semibold">${users.length}</span> người dùng
         </div>
     `;
 }
