@@ -228,35 +228,61 @@
 
 <script>
 // ======================================================
-// UTILITY FUNCTIONS
+// UTILITY FUNCTIONS - Safe null/undefined handling
 // ======================================================
 
 function formatDate(dateString) {
-    if (!dateString) return '-';
+    if (dateString === null || dateString === undefined || dateString === '') {
+        return '-';
+    }
     try {
-        return new Date(dateString).toLocaleDateString('vi-VN', {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            console.warn('[COC Detail] Invalid date:', dateString);
+            return '-';
+        }
+        return date.toLocaleDateString('vi-VN', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit'
         });
     } catch (e) {
-        return String(dateString || '-');
+        console.warn('[COC Detail] Date format error:', e, dateString);
+        return '-';
     }
 }
 
 function formatCurrency(amount) {
-    if (amount === null || amount === undefined) return '-';
-    const num = parseFloat(amount);
-    if (isNaN(num)) return '-';
-    return num.toLocaleString('vi-VN') + ' VNĐ';
+    if (amount === null || amount === undefined || amount === '') {
+        return '-';
+    }
+    try {
+        const num = parseFloat(amount);
+        if (isNaN(num)) {
+            console.warn('[COC Detail] Invalid currency amount:', amount);
+            return '-';
+        }
+        return num.toLocaleString('vi-VN') + ' VNĐ';
+    } catch (e) {
+        console.warn('[COC Detail] Currency format error:', e, amount);
+        return '-';
+    }
 }
 
 function getValue(data, ...paths) {
+    if (!data || typeof data !== 'object') {
+        return null;
+    }
     for (const path of paths) {
+        if (!path || typeof path !== 'string') continue;
         const keys = path.split('.');
         let value = data;
         for (const key of keys) {
-            if (value && typeof value === 'object' && key in value) {
+            if (value === null || value === undefined) {
+                value = null;
+                break;
+            }
+            if (typeof value === 'object' && key in value) {
                 value = value[key];
             } else {
                 value = null;
@@ -271,9 +297,22 @@ function getValue(data, ...paths) {
 }
 
 function setElementText(id, value, defaultValue = '-') {
+    if (!id || typeof id !== 'string') {
+        console.warn('[COC Detail] Invalid element ID:', id);
+        return false;
+    }
     const el = document.getElementById(id);
-    if (el) {
-        el.textContent = value !== null && value !== undefined && value !== '' ? String(value) : defaultValue;
+    if (!el) {
+        console.warn('[COC Detail] Element not found:', id);
+        return false;
+    }
+    try {
+        const displayValue = (value !== null && value !== undefined && value !== '') ? String(value) : defaultValue;
+        el.textContent = displayValue;
+        return true;
+    } catch (e) {
+        console.warn('[COC Detail] Error setting text for element:', id, e);
+        return false;
     }
 }
 
@@ -286,29 +325,51 @@ function setElementText(id, value, defaultValue = '-') {
  * Priority: coc_requests > orders > customers
  */
 function extractRequestInfo(requestData) {
-    const order = requestData.orders || null;
-    const customer = order?.customers || null;
+    if (!requestData || typeof requestData !== 'object') {
+        console.warn('[COC Detail] Invalid requestData in extractRequestInfo');
+        return null;
+    }
+    
+    const order = (requestData.orders && typeof requestData.orders === 'object') ? requestData.orders : null;
+    const customer = (order && order.customers && typeof order.customers === 'object') ? order.customers : null;
+
+    const contractCode = getValue(requestData, 'contract_code', 'orders.contract_code');
+    const customerName = getValue(requestData, 'customer_name', 'orders.customers.name');
+    const carModel = getValue(requestData, 'car_model', 'orders.car_model');
+    const carVersion = getValue(requestData, 'car_version', 'orders.car_version');
+    const carColor = getValue(requestData, 'car_color', 'orders.car_color');
+    const vinNumber = getValue(requestData, 'vin_number');
+    const requester = (requestData.requester) ? getRequesterDisplay(requestData.requester) : '-';
+    const requestDate = formatDate(requestData.request_date);
+    
+    // Warn for missing critical data
+    if (!contractCode || contractCode === '-') {
+        console.warn('[COC Detail] Missing contract_code');
+    }
+    if (!customerName || customerName === '-') {
+        console.warn('[COC Detail] Missing customer_name');
+    }
 
     return {
         // Contract & Customer
-        contractCode: getValue(requestData, 'contract_code', 'orders.contract_code') || '-',
-        customerName: getValue(requestData, 'customer_name', 'orders.customers.name') || '-',
+        contractCode: contractCode || '-',
+        customerName: customerName || '-',
         customerPhone: getValue(requestData, 'orders.customers.phone') || '-',
         customerEmail: getValue(requestData, 'orders.customers.email') || '-',
         customerCccd: getValue(requestData, 'orders.customers.cccd') || '-',
         customerAddress: getValue(requestData, 'orders.customers.address') || '-',
         
         // Car Info
-        carModel: getValue(requestData, 'car_model', 'orders.car_model') || '-',
-        carVersion: getValue(requestData, 'car_version', 'orders.car_version') || '-',
-        carColor: getValue(requestData, 'car_color', 'orders.car_color') || '-',
-        vinNumber: getValue(requestData, 'vin_number') || '-',
+        carModel: carModel || '-',
+        carVersion: carVersion || '-',
+        carColor: carColor || '-',
+        vinNumber: vinNumber || '-',
         
         // Requester
-        requester: getRequesterDisplay(requestData.requester),
+        requester: requester,
         
         // Request Date
-        requestDate: formatDate(requestData.request_date)
+        requestDate: requestDate
     };
 }
 
@@ -316,15 +377,28 @@ function extractRequestInfo(requestData) {
  * Extract financial information
  */
 function extractFinancialInfo(requestData) {
-    const order = requestData.orders || null;
+    if (!requestData || typeof requestData !== 'object') {
+        console.warn('[COC Detail] Invalid requestData in extractFinancialInfo');
+        return null;
+    }
+    
+    const order = (requestData.orders && typeof requestData.orders === 'object') ? requestData.orders : null;
+    
+    const paymentMethod = getValue(requestData, 'payment_method', 'orders.payment_method');
+    const interestRate = (requestData.interest_rate !== null && requestData.interest_rate !== undefined) 
+        ? parseFloat(requestData.interest_rate) 
+        : 8.0;
+    const principalAmount = (requestData.principal_amount !== null && requestData.principal_amount !== undefined)
+        ? requestData.principal_amount
+        : (requestData.import_price !== null && requestData.import_price !== undefined ? requestData.import_price : 0);
     
     return {
-        poNumber: requestData.po_number || '-',
+        poNumber: (requestData.po_number) ? String(requestData.po_number) : '-',
         importPrice: formatCurrency(requestData.import_price),
-        paymentMethod: getValue(requestData, 'payment_method', 'orders.payment_method') || '-',
-        guaranteeBank: requestData.guarantee_bank_coc || '-',
-        principalAmount: formatCurrency(requestData.principal_amount || requestData.import_price || 0),
-        interestRate: `${requestData.interest_rate || 8.0}%`,
+        paymentMethod: paymentMethod || '-',
+        guaranteeBank: (requestData.guarantee_bank_coc) ? String(requestData.guarantee_bank_coc) : '-',
+        principalAmount: formatCurrency(principalAmount),
+        interestRate: `${interestRate}%`,
         delayedDaysPreview: calculateDelayedDaysPreview(requestData)
     };
 }
@@ -333,15 +407,27 @@ function extractFinancialInfo(requestData) {
  * Extract issue information (if issued/disbursed/closed)
  */
 function extractIssueInfo(requestData) {
+    if (!requestData || typeof requestData !== 'object') {
+        console.warn('[COC Detail] Invalid requestData in extractIssueInfo');
+        return null;
+    }
+    
+    const businessDaysDelayed = (requestData.business_days_delayed !== null && requestData.business_days_delayed !== undefined)
+        ? parseFloat(requestData.business_days_delayed)
+        : 0;
+    const interestAmount = (requestData.interest_amount !== null && requestData.interest_amount !== undefined)
+        ? requestData.interest_amount
+        : 0;
+    
     return {
-        issuer: requestData.issuer || '-',
+        issuer: (requestData.issuer) ? String(requestData.issuer) : '-',
         actualIssueDate: formatDate(requestData.actual_issue_date),
-        delayedDays: requestData.business_days_delayed > 0 
-            ? `${requestData.business_days_delayed} ngày làm việc`
+        delayedDays: (businessDaysDelayed > 0) 
+            ? `${businessDaysDelayed} ngày làm việc`
             : '0 ngày',
-        interestAmount: formatCurrency(requestData.interest_amount || 0),
-        cocImageUrl: requestData.coc_image_url || null,
-        handoverDocUrl: requestData.handover_document_url || null
+        interestAmount: formatCurrency(interestAmount),
+        cocImageUrl: (requestData.coc_image_url && typeof requestData.coc_image_url === 'string') ? requestData.coc_image_url : null,
+        handoverDocUrl: (requestData.handover_document_url && typeof requestData.handover_document_url === 'string') ? requestData.handover_document_url : null
     };
 }
 
@@ -349,9 +435,16 @@ function extractIssueInfo(requestData) {
  * Extract disbursement information (if closed)
  */
 function extractDisbursementInfo(requestData) {
+    if (!requestData || typeof requestData !== 'object') {
+        console.warn('[COC Detail] Invalid requestData in extractDisbursementInfo');
+        return null;
+    }
+    
     return {
-        accountant: requestData.accountant || '-',
-        disbursementFileUrl: requestData.disbursement_file_url || null
+        accountant: (requestData.accountant) ? String(requestData.accountant) : '-',
+        disbursementFileUrl: (requestData.disbursement_file_url && typeof requestData.disbursement_file_url === 'string') 
+            ? requestData.disbursement_file_url 
+            : null
     };
 }
 
@@ -359,13 +452,19 @@ function extractDisbursementInfo(requestData) {
  * Get requester display name (with fullname if available)
  */
 function getRequesterDisplay(requester) {
-    if (!requester) return '-';
+    if (!requester || typeof requester !== 'string') {
+        return '-';
+    }
     
     // Try to get fullname from cached users
     if (typeof window !== 'undefined' && window.cachedUsers && Array.isArray(window.cachedUsers)) {
-        const user = window.cachedUsers.find(u => u.username === requester);
-        if (user && user.fullname) {
-            return `${user.fullname} (${requester})`;
+        try {
+            const user = window.cachedUsers.find(u => u && u.username === requester);
+            if (user && user.fullname && typeof user.fullname === 'string') {
+                return `${user.fullname} (${requester})`;
+            }
+        } catch (e) {
+            console.warn('[COC Detail] Error finding requester user:', e);
         }
     }
     
@@ -376,17 +475,30 @@ function getRequesterDisplay(requester) {
  * Calculate delayed days preview
  */
 function calculateDelayedDaysPreview(requestData) {
+    if (!requestData || typeof requestData !== 'object') {
+        return '-';
+    }
+    
+    // Try to calculate from dates if both are available
     if (requestData.actual_issue_date && requestData.request_date) {
-        if (typeof window.calculateDelayedBusinessDays === 'function') {
-            const days = window.calculateDelayedBusinessDays(requestData.request_date, requestData.actual_issue_date);
-            return days > 0 ? `${days} ngày làm việc` : '0 ngày';
+        if (typeof window !== 'undefined' && typeof window.calculateDelayedBusinessDays === 'function') {
+            try {
+                const days = window.calculateDelayedBusinessDays(requestData.request_date, requestData.actual_issue_date);
+                if (typeof days === 'number' && !isNaN(days)) {
+                    return days > 0 ? `${days} ngày làm việc` : '0 ngày';
+                }
+            } catch (e) {
+                console.warn('[COC Detail] Error calculating delayed days:', e);
+            }
         }
     }
     
-    if (requestData.business_days_delayed !== undefined) {
-        return requestData.business_days_delayed > 0 
-            ? `${requestData.business_days_delayed} ngày làm việc` 
-            : '0 ngày';
+    // Fallback to stored value
+    if (requestData.business_days_delayed !== null && requestData.business_days_delayed !== undefined) {
+        const days = parseFloat(requestData.business_days_delayed);
+        if (!isNaN(days)) {
+            return days > 0 ? `${days} ngày làm việc` : '0 ngày';
+        }
     }
     
     return '-';
@@ -400,6 +512,11 @@ function calculateDelayedDaysPreview(requestData) {
  * Render request information section
  */
 function renderRequestInfo(info) {
+    if (!info || typeof info !== 'object') {
+        console.warn('[COC Detail] Invalid info in renderRequestInfo');
+        return;
+    }
+    
     setElementText('detail-contract-code', info.contractCode);
     setElementText('detail-customer-name', info.customerName);
     setElementText('detail-customer-phone', info.customerPhone);
@@ -418,6 +535,11 @@ function renderRequestInfo(info) {
  * Render financial information section
  */
 function renderFinancialInfo(info) {
+    if (!info || typeof info !== 'object') {
+        console.warn('[COC Detail] Invalid info in renderFinancialInfo');
+        return;
+    }
+    
     setElementText('detail-po-number', info.poNumber);
     setElementText('detail-import-price', info.importPrice);
     setElementText('detail-payment-method', info.paymentMethod);
@@ -431,33 +553,50 @@ function renderFinancialInfo(info) {
  * Render issue information section
  */
 function renderIssueInfo(info) {
+    if (!info || typeof info !== 'object') {
+        console.warn('[COC Detail] Invalid info in renderIssueInfo');
+        return;
+    }
+    
     setElementText('detail-issuer', info.issuer);
     setElementText('detail-actual-issue-date', info.actualIssueDate);
     setElementText('detail-delayed-days', info.delayedDays);
     setElementText('detail-interest-amount', info.interestAmount);
     
     // COC Image
-    const cocImageLink = document.getElementById('detail-coc-image-link');
-    const cocImageContainer = document.getElementById('detail-coc-image');
-    if (info.cocImageUrl && cocImageLink) {
-        cocImageLink.href = info.cocImageUrl;
-        cocImageLink.classList.remove('hidden');
-        cocImageContainer.querySelector('.text-gray-400')?.classList.add('hidden');
-    } else {
-        cocImageLink?.classList.add('hidden');
-        cocImageContainer.querySelector('.text-gray-400')?.classList.remove('hidden');
+    try {
+        const cocImageLink = document.getElementById('detail-coc-image-link');
+        const cocImageContainer = document.getElementById('detail-coc-image');
+        if (info.cocImageUrl && typeof info.cocImageUrl === 'string' && cocImageLink && cocImageContainer) {
+            cocImageLink.href = info.cocImageUrl;
+            cocImageLink.classList.remove('hidden');
+            const placeholder = cocImageContainer.querySelector('.text-gray-400');
+            if (placeholder) placeholder.classList.add('hidden');
+        } else {
+            if (cocImageLink) cocImageLink.classList.add('hidden');
+            const placeholder = cocImageContainer ? cocImageContainer.querySelector('.text-gray-400') : null;
+            if (placeholder) placeholder.classList.remove('hidden');
+        }
+    } catch (e) {
+        console.warn('[COC Detail] Error rendering COC image:', e);
     }
     
     // Handover Document
-    const handoverDocLink = document.getElementById('detail-handover-doc-link');
-    const handoverDocContainer = document.getElementById('detail-handover-doc');
-    if (info.handoverDocUrl && handoverDocLink) {
-        handoverDocLink.href = info.handoverDocUrl;
-        handoverDocLink.classList.remove('hidden');
-        handoverDocContainer.querySelector('.text-gray-400')?.classList.add('hidden');
-    } else {
-        handoverDocLink?.classList.add('hidden');
-        handoverDocContainer.querySelector('.text-gray-400')?.classList.remove('hidden');
+    try {
+        const handoverDocLink = document.getElementById('detail-handover-doc-link');
+        const handoverDocContainer = document.getElementById('detail-handover-doc');
+        if (info.handoverDocUrl && typeof info.handoverDocUrl === 'string' && handoverDocLink && handoverDocContainer) {
+            handoverDocLink.href = info.handoverDocUrl;
+            handoverDocLink.classList.remove('hidden');
+            const placeholder = handoverDocContainer.querySelector('.text-gray-400');
+            if (placeholder) placeholder.classList.add('hidden');
+        } else {
+            if (handoverDocLink) handoverDocLink.classList.add('hidden');
+            const placeholder = handoverDocContainer ? handoverDocContainer.querySelector('.text-gray-400') : null;
+            if (placeholder) placeholder.classList.remove('hidden');
+        }
+    } catch (e) {
+        console.warn('[COC Detail] Error rendering handover document:', e);
     }
 }
 
@@ -465,18 +604,29 @@ function renderIssueInfo(info) {
  * Render disbursement information section
  */
 function renderDisbursementInfo(info) {
+    if (!info || typeof info !== 'object') {
+        console.warn('[COC Detail] Invalid info in renderDisbursementInfo');
+        return;
+    }
+    
     setElementText('detail-accountant', info.accountant);
     
     // Disbursement File
-    const fileLink = document.getElementById('detail-disbursement-file-link');
-    const fileContainer = document.getElementById('detail-disbursement-file');
-    if (info.disbursementFileUrl && fileLink) {
-        fileLink.href = info.disbursementFileUrl;
-        fileLink.classList.remove('hidden');
-        fileContainer.querySelector('.text-gray-400')?.classList.add('hidden');
-    } else {
-        fileLink?.classList.add('hidden');
-        fileContainer.querySelector('.text-gray-400')?.classList.remove('hidden');
+    try {
+        const fileLink = document.getElementById('detail-disbursement-file-link');
+        const fileContainer = document.getElementById('detail-disbursement-file');
+        if (info.disbursementFileUrl && typeof info.disbursementFileUrl === 'string' && fileLink && fileContainer) {
+            fileLink.href = info.disbursementFileUrl;
+            fileLink.classList.remove('hidden');
+            const placeholder = fileContainer.querySelector('.text-gray-400');
+            if (placeholder) placeholder.classList.add('hidden');
+        } else {
+            if (fileLink) fileLink.classList.add('hidden');
+            const placeholder = fileContainer ? fileContainer.querySelector('.text-gray-400') : null;
+            if (placeholder) placeholder.classList.remove('hidden');
+        }
+    } catch (e) {
+        console.warn('[COC Detail] Error rendering disbursement file:', e);
     }
 }
 
@@ -491,17 +641,36 @@ function renderStatus(status) {
         'closed': { label: 'Đã đóng', class: 'bg-green-100 text-green-800' }
     };
     
-    const statusInfo = statusMap[status] || statusMap.pending;
+    const validStatus = (status && typeof status === 'string' && status in statusMap) ? status : 'pending';
+    const statusInfo = statusMap[validStatus];
+    
+    if (!statusInfo) {
+        console.warn('[COC Detail] Invalid status:', status);
+        return;
+    }
+    
     const badge = document.getElementById('detail-status-badge');
     const label = document.getElementById('detail-status-label');
     
-    if (badge) {
-        badge.textContent = statusInfo.label;
-        badge.className = `px-4 py-2 rounded-full text-sm font-bold ${statusInfo.class}`;
+    if (!badge) {
+        console.warn('[COC Detail] Status badge element not found');
+    } else {
+        try {
+            badge.textContent = statusInfo.label;
+            badge.className = `px-4 py-2 rounded-full text-sm font-bold ${statusInfo.class}`;
+        } catch (e) {
+            console.warn('[COC Detail] Error rendering status badge:', e);
+        }
     }
     
-    if (label) {
-        label.textContent = `Trạng thái hiện tại: ${statusInfo.label}`;
+    if (!label) {
+        console.warn('[COC Detail] Status label element not found');
+    } else {
+        try {
+            label.textContent = `Trạng thái hiện tại: ${statusInfo.label}`;
+        } catch (e) {
+            console.warn('[COC Detail] Error rendering status label:', e);
+        }
     }
 }
 
@@ -512,11 +681,24 @@ function renderNotes(notes) {
     const section = document.getElementById('detail-notes-section');
     const notesEl = document.getElementById('detail-notes');
     
-    if (notes && notes.trim()) {
-        if (section) section.classList.remove('hidden');
-        if (notesEl) notesEl.textContent = notes;
-    } else {
-        if (section) section.classList.add('hidden');
+    if (!section) {
+        console.warn('[COC Detail] Notes section element not found');
+        return;
+    }
+    
+    try {
+        if (notes && typeof notes === 'string' && notes.trim()) {
+            section.classList.remove('hidden');
+            if (notesEl) {
+                notesEl.textContent = notes;
+            } else {
+                console.warn('[COC Detail] Notes element not found');
+            }
+        } else {
+            section.classList.add('hidden');
+        }
+    } catch (e) {
+        console.warn('[COC Detail] Error rendering notes:', e);
     }
 }
 
@@ -528,33 +710,76 @@ function renderNotes(notes) {
  * Fetch COC request data
  */
 async function fetchCocRequestData(requestId) {
+    // Validate requestId
+    if (!requestId) {
+        throw new Error('Request ID không hợp lệ');
+    }
+    
     // Try to find in cached data first
-    if (typeof window.allCocRequests !== 'undefined' && Array.isArray(window.allCocRequests)) {
-        const cached = window.allCocRequests.find(r => r.id === requestId);
-        if (cached) {
-            console.log('[COC Detail] Found in cache');
-            return cached;
+    if (typeof window !== 'undefined' && window.allCocRequests && Array.isArray(window.allCocRequests)) {
+        try {
+            const cached = window.allCocRequests.find(r => r && r.id === requestId);
+            if (cached) {
+                console.log('[COC Detail] Found in cache');
+                return cached;
+            }
+        } catch (e) {
+            console.warn('[COC Detail] Error accessing cached data:', e);
         }
     }
     
     // Fetch from API
     console.log('[COC Detail] Fetching from API...');
-    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
-    if (!session || !session.username) {
+    
+    // Check session
+    let session = null;
+    try {
+        const sessionStr = localStorage.getItem('user_session');
+        if (!sessionStr) {
+            throw new Error('Phiên đăng nhập hết hạn');
+        }
+        session = JSON.parse(sessionStr);
+    } catch (e) {
+        console.warn('[COC Detail] Session parse error:', e);
         throw new Error('Phiên đăng nhập hết hạn');
     }
     
-    const result = await window.callAPI({
-        action: 'get_coc_requests',
-        username: session.username,
-        role: session.role
-    });
-    
-    if (!result.success || !result.data) {
-        throw new Error(result.message || 'Không thể tải dữ liệu');
+    if (!session || typeof session !== 'object' || !session.username || typeof session.username !== 'string') {
+        throw new Error('Phiên đăng nhập hết hạn');
     }
     
-    const requestData = result.data.find(r => r.id === requestId);
+    // Check API availability
+    if (typeof window === 'undefined' || typeof window.callAPI !== 'function') {
+        throw new Error('API không khả dụng');
+    }
+    
+    // Call API
+    let result = null;
+    try {
+        result = await window.callAPI({
+            action: 'get_coc_requests',
+            username: session.username,
+            role: session.role || null
+        });
+    } catch (e) {
+        console.error('[COC Detail] API call error:', e);
+        throw new Error('Lỗi kết nối đến server');
+    }
+    
+    if (!result || typeof result !== 'object') {
+        throw new Error('Phản hồi từ server không hợp lệ');
+    }
+    
+    if (!result.success) {
+        const errorMsg = (result.message && typeof result.message === 'string') ? result.message : 'Không thể tải dữ liệu';
+        throw new Error(errorMsg);
+    }
+    
+    if (!result.data || !Array.isArray(result.data)) {
+        throw new Error('Dữ liệu không hợp lệ');
+    }
+    
+    const requestData = result.data.find(r => r && r.id === requestId);
     if (!requestData) {
         throw new Error('Không tìm thấy đề nghị COC');
     }
@@ -566,20 +791,51 @@ async function fetchCocRequestData(requestId) {
  * Open COC detail modal
  */
 async function openCocDetailModal(requestId) {
+    // Validate requestId
+    if (!requestId) {
+        console.error('[COC Detail] Invalid requestId:', requestId);
+        return;
+    }
+    
+    // Get DOM elements
     const modal = document.getElementById('modal-coc-detail');
     const loadingDiv = document.getElementById('coc-detail-loading');
     const bodyDiv = document.getElementById('coc-detail-body');
     const errorDiv = document.getElementById('coc-detail-error');
     
+    // Validate DOM elements
+    if (!modal) {
+        console.error('[COC Detail] Modal element not found');
+        return;
+    }
+    if (!loadingDiv) {
+        console.warn('[COC Detail] Loading div not found');
+    }
+    if (!bodyDiv) {
+        console.warn('[COC Detail] Body div not found');
+    }
+    if (!errorDiv) {
+        console.warn('[COC Detail] Error div not found');
+    }
+    
     // Show modal and loading
-    modal.classList.remove('hidden');
-    loadingDiv.classList.remove('hidden');
-    bodyDiv.classList.add('hidden');
-    errorDiv.classList.add('hidden');
+    try {
+        modal.classList.remove('hidden');
+        if (loadingDiv) loadingDiv.classList.remove('hidden');
+        if (bodyDiv) bodyDiv.classList.add('hidden');
+        if (errorDiv) errorDiv.classList.add('hidden');
+    } catch (e) {
+        console.error('[COC Detail] Error showing modal:', e);
+        return;
+    }
     
     try {
         // Fetch data
         const requestData = await fetchCocRequestData(requestId);
+        
+        if (!requestData || typeof requestData !== 'object') {
+            throw new Error('Dữ liệu không hợp lệ');
+        }
         
         console.log('[COC Detail] Request data:', requestData);
         
@@ -587,48 +843,126 @@ async function openCocDetailModal(requestId) {
         const requestInfo = extractRequestInfo(requestData);
         const financialInfo = extractFinancialInfo(requestData);
         
-        renderRequestInfo(requestInfo);
-        renderFinancialInfo(financialInfo);
-        renderStatus(requestData.status);
+        if (requestInfo) {
+            renderRequestInfo(requestInfo);
+        } else {
+            console.warn('[COC Detail] Failed to extract request info');
+        }
+        
+        if (financialInfo) {
+            renderFinancialInfo(financialInfo);
+        } else {
+            console.warn('[COC Detail] Failed to extract financial info');
+        }
+        
+        // Render status
+        const status = (requestData.status && typeof requestData.status === 'string') ? requestData.status : 'pending';
+        renderStatus(status);
+        
+        // Render notes
         renderNotes(requestData.notes);
         
         // Show issue section if issued/disbursed/closed
-        if (['issued', 'disbursed', 'closed'].includes(requestData.status)) {
+        const validStatuses = ['issued', 'disbursed', 'closed'];
+        if (validStatuses.includes(status)) {
             const issueSection = document.getElementById('detail-issue-section');
             if (issueSection) {
-                issueSection.classList.remove('hidden');
-                const issueInfo = extractIssueInfo(requestData);
-                renderIssueInfo(issueInfo);
+                try {
+                    issueSection.classList.remove('hidden');
+                    const issueInfo = extractIssueInfo(requestData);
+                    if (issueInfo) {
+                        renderIssueInfo(issueInfo);
+                    } else {
+                        console.warn('[COC Detail] Failed to extract issue info');
+                    }
+                } catch (e) {
+                    console.warn('[COC Detail] Error showing issue section:', e);
+                }
+            } else {
+                console.warn('[COC Detail] Issue section element not found');
             }
         } else {
             const issueSection = document.getElementById('detail-issue-section');
-            if (issueSection) issueSection.classList.add('hidden');
+            if (issueSection) {
+                try {
+                    issueSection.classList.add('hidden');
+                } catch (e) {
+                    console.warn('[COC Detail] Error hiding issue section:', e);
+                }
+            }
         }
         
         // Show disbursement section if closed
-        if (requestData.status === 'closed') {
+        if (status === 'closed') {
             const disburseSection = document.getElementById('detail-disburse-section');
             if (disburseSection) {
-                disburseSection.classList.remove('hidden');
-                const disburseInfo = extractDisbursementInfo(requestData);
-                renderDisbursementInfo(disburseInfo);
+                try {
+                    disburseSection.classList.remove('hidden');
+                    const disburseInfo = extractDisbursementInfo(requestData);
+                    if (disburseInfo) {
+                        renderDisbursementInfo(disburseInfo);
+                    } else {
+                        console.warn('[COC Detail] Failed to extract disbursement info');
+                    }
+                } catch (e) {
+                    console.warn('[COC Detail] Error showing disbursement section:', e);
+                }
+            } else {
+                console.warn('[COC Detail] Disbursement section element not found');
             }
         } else {
             const disburseSection = document.getElementById('detail-disburse-section');
-            if (disburseSection) disburseSection.classList.add('hidden');
+            if (disburseSection) {
+                try {
+                    disburseSection.classList.add('hidden');
+                } catch (e) {
+                    console.warn('[COC Detail] Error hiding disbursement section:', e);
+                }
+            }
         }
         
         // Show content
-        loadingDiv.classList.add('hidden');
-        bodyDiv.classList.remove('hidden');
+        if (loadingDiv) {
+            try {
+                loadingDiv.classList.add('hidden');
+            } catch (e) {
+                console.warn('[COC Detail] Error hiding loading:', e);
+            }
+        }
+        if (bodyDiv) {
+            try {
+                bodyDiv.classList.remove('hidden');
+            } catch (e) {
+                console.warn('[COC Detail] Error showing body:', e);
+            }
+        }
         
     } catch (error) {
         console.error('[COC Detail] Error:', error);
-        loadingDiv.classList.add('hidden');
-        errorDiv.classList.remove('hidden');
-        const errorMsg = document.getElementById('coc-detail-error-message');
-        if (errorMsg) {
-            errorMsg.textContent = error.message || 'Không thể tải thông tin chi tiết';
+        
+        // Show error state
+        if (loadingDiv) {
+            try {
+                loadingDiv.classList.add('hidden');
+            } catch (e) {
+                console.warn('[COC Detail] Error hiding loading on error:', e);
+            }
+        }
+        if (errorDiv) {
+            try {
+                errorDiv.classList.remove('hidden');
+                const errorMsg = document.getElementById('coc-detail-error-message');
+                if (errorMsg) {
+                    const errorText = (error && error.message && typeof error.message === 'string') 
+                        ? error.message 
+                        : 'Không thể tải thông tin chi tiết';
+                    errorMsg.textContent = errorText;
+                } else {
+                    console.warn('[COC Detail] Error message element not found');
+                }
+            } catch (e) {
+                console.warn('[COC Detail] Error showing error state:', e);
+            }
         }
     }
 }
@@ -637,9 +971,15 @@ async function openCocDetailModal(requestId) {
  * Close COC detail modal
  */
 function closeCocDetailModal() {
-    const modal = document.getElementById('modal-coc-detail');
-    if (modal) {
-        modal.classList.add('hidden');
+    try {
+        const modal = document.getElementById('modal-coc-detail');
+        if (modal) {
+            modal.classList.add('hidden');
+        } else {
+            console.warn('[COC Detail] Modal element not found when closing');
+        }
+    } catch (e) {
+        console.error('[COC Detail] Error closing modal:', e);
     }
 }
 
@@ -648,8 +988,14 @@ function closeCocDetailModal() {
 // ======================================================
 
 if (typeof window !== 'undefined') {
-    window.openCocDetailModal = openCocDetailModal;
-    window.closeCocDetailModal = closeCocDetailModal;
-    console.log('✅ COC detail modal functions exposed to window');
+    try {
+        window.openCocDetailModal = openCocDetailModal;
+        window.closeCocDetailModal = closeCocDetailModal;
+        console.log('✅ COC detail modal functions exposed to window');
+    } catch (e) {
+        console.error('[COC Detail] Error exposing functions to window:', e);
+    }
+} else {
+    console.error('[COC Detail] window is undefined, cannot expose functions');
 }
 </script>
