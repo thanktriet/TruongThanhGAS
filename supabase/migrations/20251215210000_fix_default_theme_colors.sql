@@ -3,6 +3,7 @@
 -- Description: Sửa màu sắc theme mặc định để chữ dễ nhìn hơn
 
 -- Update theme mặc định với màu sắc tương phản tốt
+-- Cập nhật cả theme có slug = 'default' hoặc is_system = true và name = 'Mặc định'
 UPDATE themes
 SET 
     primary_color = '#3B82F6',      -- Blue - dễ nhìn
@@ -12,8 +13,9 @@ SET
     text_color = '#1F2937',         -- Dark gray - dễ đọc trên nền trắng
     background_gradient = NULL,     -- Không dùng gradient cho mặc định
     background_pattern = 'none',    -- Không dùng pattern
+    description = 'Theme mặc định của hệ thống với màu sắc dễ nhìn, tương phản tốt',
     updated_at = NOW()
-WHERE is_system = true AND name = 'Mặc định';
+WHERE (is_system = true AND name = 'Mặc định') OR slug = 'default';
 
 -- Nếu không tìm thấy theme "Mặc định", tạo mới
 INSERT INTO themes (

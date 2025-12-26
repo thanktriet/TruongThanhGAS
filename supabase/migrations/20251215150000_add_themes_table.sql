@@ -103,16 +103,23 @@ INSERT INTO themes (
   created_by
 ) VALUES (
   'Mặc định',
-  'Theme mặc định của hệ thống',
+  'Theme mặc định của hệ thống với màu sắc dễ nhìn, tương phản tốt',
   'default',
-  '#3B82F6',
-  '#6366F1',
-  '#8B5CF6',
-  '#FFFFFF',
-  '#1F2937',
+  '#3B82F6',      -- Blue - dễ nhìn
+  '#2563EB',      -- Darker blue
+  '#60A5FA',      -- Light blue
+  '#FFFFFF',      -- White background
+  '#1F2937',      -- Dark gray text - dễ đọc
   '🎨',
   true,
   true,
   'admin'
-) ON CONFLICT (slug) DO NOTHING;
+) ON CONFLICT (slug) DO UPDATE SET
+  primary_color = '#3B82F6',
+  secondary_color = '#2563EB',
+  accent_color = '#60A5FA',
+  background_color = '#FFFFFF',
+  text_color = '#1F2937',
+  description = 'Theme mặc định của hệ thống với màu sắc dễ nhìn, tương phản tốt',
+  updated_at = NOW();
 
