@@ -287,18 +287,28 @@ async function openCocDetailModal(requestId) {
         
         // Fill basic info
         console.log('[COC Detail] Request data:', requestData);
+        console.log('[COC Detail] Car info from requestData:', {
+            car_model: requestData.car_model,
+            car_version: requestData.car_version,
+            car_color: requestData.car_color,
+            vin_number: requestData.vin_number
+        });
+        console.log('[COC Detail] Requester:', requestData.requester);
         
         // Lấy order và customer nếu có
         const order = requestData.orders || null;
         const customer = (order && order.customers) ? order.customers : null;
         
+        console.log('[COC Detail] Order:', order);
+        console.log('[COC Detail] Customer:', customer);
+        
         // Mã đơn hàng - từ coc_requests hoặc từ order nếu có
         const contractCode = requestData.contract_code || (order && order.contract_code) || '-';
-        document.getElementById('detail-contract-code').textContent = contractCode;
+        document.getElementById('detail-contract-code').textContent = contractCode || '-';
         
         // Tên khách hàng - từ coc_requests hoặc từ customer nếu có
         const customerName = requestData.customer_name || (customer && customer.name) || '-';
-        document.getElementById('detail-customer-name').textContent = customerName;
+        document.getElementById('detail-customer-name').textContent = customerName || '-';
         
         // Thông tin khách hàng (từ orders.customers nếu có, nếu không thì để '-')
         document.getElementById('detail-customer-phone').textContent = (customer && customer.phone) ? customer.phone : '-';
@@ -307,16 +317,79 @@ async function openCocDetailModal(requestId) {
         document.getElementById('detail-customer-address').textContent = (customer && customer.address) ? customer.address : '-';
         
         // Thông tin xe - ưu tiên lấy từ coc_requests, nếu không có thì lấy từ orders
-        const carModel = requestData.car_model || (order && order.car_model) || '-';
-        const carVersion = requestData.car_version || (order && order.car_version) || '-';
-        const carColor = requestData.car_color || (order && order.car_color) || '-';
+        const carModel = requestData.car_model ? String(requestData.car_model).trim() : ((order && order.car_model) ? String(order.car_model).trim() : '-');
+        const carVersion = requestData.car_version ? String(requestData.car_version).trim() : ((order && order.car_version) ? String(order.car_version).trim() : '-');
+        const carColor = requestData.car_color ? String(requestData.car_color).trim() : ((order && order.car_color) ? String(order.car_color).trim() : '-');
+        const vinNumber = requestData.vin_number ? String(requestData.vin_number).trim() : '-';
         
-        document.getElementById('detail-car-model').textContent = carModel;
-        document.getElementById('detail-car-version').textContent = carVersion;
-        document.getElementById('detail-car-color').textContent = carColor;
-        document.getElementById('detail-vin-number').textContent = requestData.vin_number || '-';
-        document.getElementById('detail-requester').textContent = requestData.requester || '-';
-        document.getElementById('detail-request-date').textContent = formatDate(requestData.request_date);
+        console.log('[COC Detail] Final car info:', { carModel, carVersion, carColor, vinNumber });
+        
+        // Set textContent - kiểm tra element tồn tại
+        const carModelEl = document.getElementById('detail-car-model');
+        const carVersionEl = document.getElementById('detail-car-version');
+        const carColorEl = document.getElementById('detail-car-color');
+        const vinNumberEl = document.getElementById('detail-vin-number');
+        const requesterEl = document.getElementById('detail-requester');
+        const requestDateEl = document.getElementById('detail-request-date');
+        
+        console.log('[COC Detail] Elements found:', {
+            carModelEl: !!carModelEl,
+            carVersionEl: !!carVersionEl,
+            carColorEl: !!carColorEl,
+            vinNumberEl: !!vinNumberEl,
+            requesterEl: !!requesterEl,
+            requestDateEl: !!requestDateEl
+        });
+        
+        if (carModelEl) {
+            carModelEl.textContent = carModel || '-';
+            console.log('[COC Detail] Set car-model to:', carModel);
+        } else {
+            console.error('[COC Detail] Element detail-car-model not found!');
+        }
+        
+        if (carVersionEl) {
+            carVersionEl.textContent = carVersion || '-';
+            console.log('[COC Detail] Set car-version to:', carVersion);
+        } else {
+            console.error('[COC Detail] Element detail-car-version not found!');
+        }
+        
+        if (carColorEl) {
+            carColorEl.textContent = carColor || '-';
+            console.log('[COC Detail] Set car-color to:', carColor);
+        } else {
+            console.error('[COC Detail] Element detail-car-color not found!');
+        }
+        
+        if (vinNumberEl) {
+            vinNumberEl.textContent = vinNumber || '-';
+        }
+        
+        // Người đề nghị - tìm fullname từ cached users nếu có
+        let requesterDisplay = requestData.requester || '-';
+        if (requestData.requester) {
+            // Thử lấy từ cachedUsers nếu có
+            const cachedUsers = (typeof window !== 'undefined' && window.cachedUsers) ? window.cachedUsers : [];
+            const requesterUser = cachedUsers.find(u => u.username === requestData.requester);
+            if (requesterUser && requesterUser.fullname) {
+                requesterDisplay = `${requesterUser.fullname} (${requestData.requester})`;
+            } else {
+                requesterDisplay = requestData.requester;
+            }
+        }
+        console.log('[COC Detail] Requester display:', requesterDisplay);
+        
+        if (requesterEl) {
+            requesterEl.textContent = requesterDisplay;
+            console.log('[COC Detail] Set requester to:', requesterDisplay);
+        } else {
+            console.error('[COC Detail] Element detail-requester not found!');
+        }
+        
+        if (requestDateEl) {
+            requestDateEl.textContent = formatDate(requestData.request_date) || '-';
+        }
         
         // Fill financial info
         document.getElementById('detail-po-number').textContent = requestData.po_number || '-';
