@@ -313,6 +313,7 @@
 
     /**
      * Safe DOM element setter
+     * Uses multiple strategies to ensure value is set and persists
      */
     function setText(id, value) {
         try {
@@ -323,32 +324,42 @@
             }
             const displayValue = safeString(value);
             
-            // Force clear first to ensure clean state
-            el.textContent = '';
-            el.innerText = '';
-            
-            // Set new value using multiple methods to ensure it sticks
+            // Strategy 1: Use textContent (standard method)
             el.textContent = displayValue;
-            el.innerText = displayValue;
             
-            // Force a reflow to ensure browser updates
+            // Strategy 2: Also set innerText (for compatibility)
+            if (el.innerText !== displayValue) {
+                el.innerText = displayValue;
+            }
+            
+            // Strategy 3: Use innerHTML as fallback if textContent didn't work
+            // But escape HTML to prevent XSS
+            if (el.textContent !== displayValue && el.innerText !== displayValue) {
+                // Escape HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.textContent = displayValue;
+                el.innerHTML = tempDiv.innerHTML;
+            }
+            
+            // Force browser reflow
             void el.offsetHeight;
             
-            // Verify it was set correctly
-            const actualValue = el.textContent || el.innerText;
-            if (actualValue !== displayValue) {
-                console.warn(`[COC Detail] Warning: ${id} value mismatch. Expected: "${displayValue}", Got: "${actualValue}"`);
-                // Try one more time with innerHTML as last resort
-                el.innerHTML = '';
-                el.textContent = displayValue;
+            // Final verification - if still not set, log warning
+            const finalValue = el.textContent || el.innerText || '';
+            if (finalValue !== displayValue && displayValue !== '-') {
+                console.error(`[COC Detail] FAILED to set ${id}. Expected: "${displayValue}", Got: "${finalValue}"`);
+                // Last resort: try direct property assignment
+                try {
+                    el.nodeValue = displayValue;
+                    el.data = displayValue;
+                } catch (e) {
+                    // Ignore errors
+                }
+            } else if (displayValue !== '-') {
+                console.log(`[COC Detail] ✓ Set ${id} to:`, displayValue);
             }
             
-            // Only log if value is not default '-'
-            if (displayValue !== '-') {
-                console.log(`[COC Detail] Set ${id} to:`, displayValue, '(verified:', actualValue === displayValue, ')');
-            }
-            
-            return true;
+            return finalValue === displayValue || displayValue === '-';
         } catch (e) {
             console.error(`[COC Detail] Error setting ${id}:`, e);
             return false;
