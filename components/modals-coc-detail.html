@@ -834,7 +834,7 @@
                     disburseSection?.classList.add('hidden');
                 }
 
-                // Final verification
+                // Final verification and re-set if needed
                 setTimeout(() => {
                     const contractCodeEl = document.getElementById('detail-contract-code');
                     const customerNameEl = document.getElementById('detail-customer-name');
@@ -843,7 +843,25 @@
                     console.log('  - detail-contract-code textContent:', contractCodeEl?.textContent);
                     console.log('  - detail-customer-name textContent:', customerNameEl?.textContent);
                     console.log('  - detail-requester textContent:', requesterEl?.textContent);
-                }, 50);
+                    
+                    // If values are missing, re-set them
+                    if (contractCodeEl && (!contractCodeEl.textContent || contractCodeEl.textContent.trim() === '' || contractCodeEl.textContent === '-')) {
+                        console.warn('[COC Detail] Re-setting contractCode because it was empty');
+                        contractCodeEl.textContent = displayData.requestInfo.contractCode;
+                    }
+                    if (customerNameEl && (!customerNameEl.textContent || customerNameEl.textContent.trim() === '' || customerNameEl.textContent === '-')) {
+                        console.warn('[COC Detail] Re-setting customerName because it was empty');
+                        customerNameEl.textContent = displayData.requestInfo.customerName;
+                    }
+                    if (requesterEl && (!requesterEl.textContent || requesterEl.textContent.trim() === '' || requesterEl.textContent === '-')) {
+                        console.warn('[COC Detail] Re-setting requester because it was empty');
+                        requesterEl.textContent = displayData.requestInfo.requester;
+                    }
+                    
+                    // Re-render everything one more time as final safety net
+                    renderRequestInfo(displayData.requestInfo);
+                    renderFinancialInfo(displayData.financialInfo);
+                }, 100);
 
                 console.log('[COC Detail] All rendering completed');
             });
