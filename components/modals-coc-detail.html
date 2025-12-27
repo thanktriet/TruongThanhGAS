@@ -322,11 +322,21 @@
                 return false;
             }
             const displayValue = safeString(value);
+            
+            // Use both textContent and innerText to ensure compatibility
             el.textContent = displayValue;
+            el.innerText = displayValue;
+            
             // Only log if value is not default '-'
             if (displayValue !== '-') {
                 console.log(`[COC Detail] Set ${id} to:`, displayValue);
             }
+            
+            // Verify it was set correctly
+            if (el.textContent !== displayValue) {
+                console.warn(`[COC Detail] Warning: ${id} textContent mismatch. Expected: "${displayValue}", Got: "${el.textContent}"`);
+            }
+            
             return true;
         } catch (e) {
             console.error(`[COC Detail] Error setting ${id}:`, e);
