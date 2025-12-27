@@ -324,42 +324,43 @@
             }
             const displayValue = safeString(value);
             
-            // Strategy 1: Use textContent (standard method)
-            el.textContent = displayValue;
-            
-            // Strategy 2: Also set innerText (for compatibility)
-            if (el.innerText !== displayValue) {
-                el.innerText = displayValue;
+            // Skip if value is default '-' and element is already empty (don't override empty with '-')
+            if (displayValue === '-' && (!el.textContent || el.textContent.trim() === '')) {
+                return true; // Already empty, no need to set '-'
             }
             
-            // Strategy 3: Use innerHTML as fallback if textContent didn't work
-            // But escape HTML to prevent XSS
-            if (el.textContent !== displayValue && el.innerText !== displayValue) {
-                // Escape HTML
+            // Strategy 1: Clear first to ensure clean state
+            el.textContent = '';
+            el.innerText = '';
+            
+            // Strategy 2: Set textContent (primary method)
+            el.textContent = displayValue;
+            
+            // Strategy 3: Also set innerText (for compatibility)
+            el.innerText = displayValue;
+            
+            // Strategy 4: If still not working, use innerHTML (but only if needed)
+            const actualValue = el.textContent || el.innerText || '';
+            if (actualValue !== displayValue && displayValue !== '-') {
+                // Escape HTML to prevent XSS
                 const tempDiv = document.createElement('div');
                 tempDiv.textContent = displayValue;
                 el.innerHTML = tempDiv.innerHTML;
             }
             
-            // Force browser reflow
+            // Force browser reflow to ensure update
             void el.offsetHeight;
             
-            // Final verification - if still not set, log warning
+            // Final verification
             const finalValue = el.textContent || el.innerText || '';
             if (finalValue !== displayValue && displayValue !== '-') {
-                console.error(`[COC Detail] FAILED to set ${id}. Expected: "${displayValue}", Got: "${finalValue}"`);
-                // Last resort: try direct property assignment
-                try {
-                    el.nodeValue = displayValue;
-                    el.data = displayValue;
-                } catch (e) {
-                    // Ignore errors
-                }
+                console.error(`[COC Detail] ⚠ FAILED to set ${id}. Expected: "${displayValue}", Got: "${finalValue}"`);
+                return false;
             } else if (displayValue !== '-') {
-                console.log(`[COC Detail] ✓ Set ${id} to:`, displayValue);
+                console.log(`[COC Detail] ✓ Set ${id} to:`, displayValue, '(verified:', finalValue === displayValue, ')');
             }
             
-            return finalValue === displayValue || displayValue === '-';
+            return true;
         } catch (e) {
             console.error(`[COC Detail] Error setting ${id}:`, e);
             return false;
