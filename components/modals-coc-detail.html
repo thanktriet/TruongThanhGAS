@@ -586,16 +586,31 @@
 
     /**
      * Render financial information
+     * Use direct textContent assignment like order detail modal for simplicity
      */
     function renderFinancialInfo(info) {
         if (!info) return;
-        setText('detail-po-number', info.poNumber);
-        setText('detail-import-price', info.importPrice);
-        setText('detail-payment-method', info.paymentMethod);
-        setText('detail-guarantee-bank-coc', info.guaranteeBank);
-        setText('detail-principal-amount', info.principalAmount);
-        setText('detail-interest-rate', info.interestRate);
-        setText('detail-delayed-days-preview', info.delayedDaysPreview);
+        
+        const poNumberEl = document.getElementById('detail-po-number');
+        if (poNumberEl) poNumberEl.textContent = info.poNumber || '-';
+        
+        const importPriceEl = document.getElementById('detail-import-price');
+        if (importPriceEl) importPriceEl.textContent = info.importPrice || '-';
+        
+        const paymentMethodEl = document.getElementById('detail-payment-method');
+        if (paymentMethodEl) paymentMethodEl.textContent = info.paymentMethod || '-';
+        
+        const guaranteeBankEl = document.getElementById('detail-guarantee-bank-coc');
+        if (guaranteeBankEl) guaranteeBankEl.textContent = info.guaranteeBank || '-';
+        
+        const principalAmountEl = document.getElementById('detail-principal-amount');
+        if (principalAmountEl) principalAmountEl.textContent = info.principalAmount || '-';
+        
+        const interestRateEl = document.getElementById('detail-interest-rate');
+        if (interestRateEl) interestRateEl.textContent = info.interestRate || '-';
+        
+        const delayedDaysEl = document.getElementById('detail-delayed-days-preview');
+        if (delayedDaysEl) delayedDaysEl.textContent = info.delayedDaysPreview || '-';
     }
 
     /**
