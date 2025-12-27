@@ -338,22 +338,61 @@
             return null;
         }
 
-        const order = rawData.orders ?? null;
-        const customer = order?.customers ?? null;
+        // Log raw data structure for debugging
+        console.log('[COC Detail] Raw data structure:', {
+            hasOrders: !!rawData.orders,
+            ordersType: Array.isArray(rawData.orders) ? 'array' : typeof rawData.orders,
+            hasCustomers: !!(rawData.orders?.customers),
+            contractCode: rawData.contract_code,
+            customerName: rawData.customer_name,
+            carModel: rawData.car_model,
+            requester: rawData.requester
+        });
 
-        // Request Info
+        // Handle orders - could be object, array, or null
+        let order = null;
+        if (rawData.orders) {
+            if (Array.isArray(rawData.orders) && rawData.orders.length > 0) {
+                order = rawData.orders[0]; // Take first order if array
+            } else if (typeof rawData.orders === 'object') {
+                order = rawData.orders;
+            }
+        }
+
+        // Handle customers - could be object, array, or null
+        let customer = null;
+        if (order?.customers) {
+            if (Array.isArray(order.customers) && order.customers.length > 0) {
+                customer = order.customers[0]; // Take first customer if array
+            } else if (typeof order.customers === 'object') {
+                customer = order.customers;
+            }
+        }
+
+        // Request Info - prioritize direct fields, then nested ones
         const requestInfo = {
-            contractCode: safeString(safeGet(rawData, 'contract_code', 'orders.contract_code')),
-            customerName: safeString(safeGet(rawData, 'customer_name', 'orders.customers.name')),
+            // Contract code: directly from coc_requests
+            contractCode: safeString(rawData.contract_code),
+            
+            // Customer name: directly from coc_requests, fallback to customers.name
+            customerName: safeString(rawData.customer_name || customer?.name),
+            
+            // Customer details: from customers object
             customerPhone: safeString(customer?.phone),
             customerEmail: safeString(customer?.email),
             customerCccd: safeString(customer?.cccd),
             customerAddress: safeString(customer?.address),
-            carModel: safeString(safeGet(rawData, 'car_model', 'orders.car_model')),
-            carVersion: safeString(safeGet(rawData, 'car_version', 'orders.car_version')),
-            carColor: safeString(safeGet(rawData, 'car_color', 'orders.car_color')),
+            
+            // Car info: directly from coc_requests (these fields exist in coc_requests table)
+            carModel: safeString(rawData.car_model),
+            carVersion: safeString(rawData.car_version),
+            carColor: safeString(rawData.car_color),
             vinNumber: safeString(rawData.vin_number),
+            
+            // Requester: directly from coc_requests
             requester: getRequesterName(rawData.requester),
+            
+            // Request date: directly from coc_requests
             requestDate: formatDate(rawData.request_date)
         };
 
@@ -361,7 +400,8 @@
         const financialInfo = {
             poNumber: safeString(rawData.po_number),
             importPrice: formatCurrency(rawData.import_price),
-            paymentMethod: safeString(safeGet(rawData, 'payment_method', 'orders.payment_method')),
+            // Payment method: from orders if available, otherwise null (coc_requests doesn't have this field directly)
+            paymentMethod: safeString(order?.payment_method),
             guaranteeBank: safeString(rawData.guarantee_bank_coc),
             principalAmount: formatCurrency(rawData.principal_amount ?? rawData.import_price ?? 0),
             interestRate: `${safeNumber(rawData.interest_rate, 8.0)}%`,
@@ -670,6 +710,7 @@
         try {
             // Fetch and transform data
             const rawData = await fetchCocRequestData(requestId);
+            console.log('[COC Detail] Fetched raw data:', rawData);
             const displayData = transformCocData(rawData);
 
             if (!displayData) {
