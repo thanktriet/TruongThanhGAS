@@ -323,18 +323,29 @@
             }
             const displayValue = safeString(value);
             
-            // Use both textContent and innerText to ensure compatibility
+            // Force clear first to ensure clean state
+            el.textContent = '';
+            el.innerText = '';
+            
+            // Set new value using multiple methods to ensure it sticks
             el.textContent = displayValue;
             el.innerText = displayValue;
             
-            // Only log if value is not default '-'
-            if (displayValue !== '-') {
-                console.log(`[COC Detail] Set ${id} to:`, displayValue);
-            }
+            // Force a reflow to ensure browser updates
+            void el.offsetHeight;
             
             // Verify it was set correctly
-            if (el.textContent !== displayValue) {
-                console.warn(`[COC Detail] Warning: ${id} textContent mismatch. Expected: "${displayValue}", Got: "${el.textContent}"`);
+            const actualValue = el.textContent || el.innerText;
+            if (actualValue !== displayValue) {
+                console.warn(`[COC Detail] Warning: ${id} value mismatch. Expected: "${displayValue}", Got: "${actualValue}"`);
+                // Try one more time with innerHTML as last resort
+                el.innerHTML = '';
+                el.textContent = displayValue;
+            }
+            
+            // Only log if value is not default '-'
+            if (displayValue !== '-') {
+                console.log(`[COC Detail] Set ${id} to:`, displayValue, '(verified:', actualValue === displayValue, ')');
             }
             
             return true;
