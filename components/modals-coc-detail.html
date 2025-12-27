@@ -789,14 +789,28 @@
                 disburseSection?.classList.add('hidden');
             }
 
-            // Show content
-            if (loadingDiv) loadingDiv.classList.add('hidden');
-            if (bodyDiv) {
-                bodyDiv.classList.remove('hidden');
-                console.log('[COC Detail] Body div is now visible');
-            } else {
-                console.error('[COC Detail] Body div not found!');
-            }
+                // Show content
+                if (loadingDiv) loadingDiv.classList.add('hidden');
+                if (bodyDiv) {
+                    bodyDiv.classList.remove('hidden');
+                    console.log('[COC Detail] Body div is now visible');
+                    
+                    // Verify elements have content
+                    setTimeout(() => {
+                        const contractCodeEl = document.getElementById('detail-contract-code');
+                        const customerNameEl = document.getElementById('detail-customer-name');
+                        const requesterEl = document.getElementById('detail-requester');
+                        console.log('[COC Detail] Verification after 100ms:');
+                        console.log('  - detail-contract-code textContent:', contractCodeEl?.textContent);
+                        console.log('  - detail-customer-name textContent:', customerNameEl?.textContent);
+                        console.log('  - detail-requester textContent:', requesterEl?.textContent);
+                        console.log('  - bodyDiv.classList:', bodyDiv.classList.toString());
+                        console.log('  - modal.classList:', modal.classList.toString());
+                        console.log('  - modal.style.display:', modal.style.display);
+                    }, 100);
+                } else {
+                    console.error('[COC Detail] Body div not found!');
+                }
             
             // Double-check rendering after showing body (in case of timing issues)
             requestAnimationFrame(() => {
