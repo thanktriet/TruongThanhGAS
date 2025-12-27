@@ -535,6 +535,7 @@
 
     /**
      * Render all request information
+     * Use direct textContent assignment like order detail modal for simplicity
      */
     function renderRequestInfo(info) {
         if (!info) {
@@ -542,18 +543,44 @@
             return;
         }
         console.log('[COC Detail] renderRequestInfo called with:', info);
-        setText('detail-contract-code', info.contractCode);
-        setText('detail-customer-name', info.customerName);
-        setText('detail-customer-phone', info.customerPhone);
-        setText('detail-customer-email', info.customerEmail);
-        setText('detail-customer-cccd', info.customerCccd);
-        setText('detail-customer-address', info.customerAddress);
-        setText('detail-car-model', info.carModel);
-        setText('detail-car-version', info.carVersion);
-        setText('detail-car-color', info.carColor);
-        setText('detail-vin-number', info.vinNumber);
-        setText('detail-requester', info.requester);
-        setText('detail-request-date', info.requestDate);
+        
+        // Use direct textContent assignment like order detail modal
+        const contractCodeEl = document.getElementById('detail-contract-code');
+        if (contractCodeEl) contractCodeEl.textContent = info.contractCode || '-';
+        
+        const customerNameEl = document.getElementById('detail-customer-name');
+        if (customerNameEl) customerNameEl.textContent = info.customerName || '-';
+        
+        const customerPhoneEl = document.getElementById('detail-customer-phone');
+        if (customerPhoneEl) customerPhoneEl.textContent = info.customerPhone || '-';
+        
+        const customerEmailEl = document.getElementById('detail-customer-email');
+        if (customerEmailEl) customerEmailEl.textContent = info.customerEmail || '-';
+        
+        const customerCccdEl = document.getElementById('detail-customer-cccd');
+        if (customerCccdEl) customerCccdEl.textContent = info.customerCccd || '-';
+        
+        const customerAddressEl = document.getElementById('detail-customer-address');
+        if (customerAddressEl) customerAddressEl.textContent = info.customerAddress || '-';
+        
+        const carModelEl = document.getElementById('detail-car-model');
+        if (carModelEl) carModelEl.textContent = info.carModel || '-';
+        
+        const carVersionEl = document.getElementById('detail-car-version');
+        if (carVersionEl) carVersionEl.textContent = info.carVersion || '-';
+        
+        const carColorEl = document.getElementById('detail-car-color');
+        if (carColorEl) carColorEl.textContent = info.carColor || '-';
+        
+        const vinNumberEl = document.getElementById('detail-vin-number');
+        if (vinNumberEl) vinNumberEl.textContent = info.vinNumber || '-';
+        
+        const requesterEl = document.getElementById('detail-requester');
+        if (requesterEl) requesterEl.textContent = info.requester || '-';
+        
+        const requestDateEl = document.getElementById('detail-request-date');
+        if (requestDateEl) requestDateEl.textContent = info.requestDate || '-';
+        
         console.log('[COC Detail] renderRequestInfo completed');
     }
 
