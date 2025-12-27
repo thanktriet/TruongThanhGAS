@@ -315,15 +315,23 @@
      * Safe DOM element setter
      */
     function setText(id, value) {
-        const el = document.getElementById(id);
-        if (!el) {
-            console.warn('[COC Detail] Element not found:', id);
+        try {
+            const el = document.getElementById(id);
+            if (!el) {
+                console.warn('[COC Detail] Element not found:', id);
+                return false;
+            }
+            const displayValue = safeString(value);
+            el.textContent = displayValue;
+            // Only log if value is not default '-'
+            if (displayValue !== '-') {
+                console.log(`[COC Detail] Set ${id} to:`, displayValue);
+            }
+            return true;
+        } catch (e) {
+            console.error(`[COC Detail] Error setting ${id}:`, e);
             return false;
         }
-        const displayValue = safeString(value);
-        el.textContent = displayValue;
-        console.log(`[COC Detail] Set ${id} to:`, displayValue);
-        return true;
     }
 
     // ======================================================
@@ -725,8 +733,8 @@
             }
 
             console.log('[COC Detail] Display data:', displayData);
-            console.log('[COC Detail] Request info to render:', displayData.requestInfo);
-            console.log('[COC Detail] Financial info to render:', displayData.financialInfo);
+            console.log('[COC Detail] Request info to render:', JSON.stringify(displayData.requestInfo, null, 2));
+            console.log('[COC Detail] Financial info to render:', JSON.stringify(displayData.financialInfo, null, 2));
 
             // Check if DOM elements exist
             const testEl = document.getElementById('detail-contract-code');
@@ -735,10 +743,33 @@
             console.log('[COC Detail] bodyDiv classList:', bodyDiv?.classList.toString());
 
             // Render all sections first (even if hidden)
-            renderRequestInfo(displayData.requestInfo);
-            renderFinancialInfo(displayData.financialInfo);
-            renderStatus(displayData.status);
-            renderNotes(displayData.notes);
+            try {
+                console.log('[COC Detail] About to call renderRequestInfo');
+                renderRequestInfo(displayData.requestInfo);
+                console.log('[COC Detail] renderRequestInfo completed successfully');
+            } catch (e) {
+                console.error('[COC Detail] Error in renderRequestInfo:', e);
+            }
+            
+            try {
+                console.log('[COC Detail] About to call renderFinancialInfo');
+                renderFinancialInfo(displayData.financialInfo);
+                console.log('[COC Detail] renderFinancialInfo completed successfully');
+            } catch (e) {
+                console.error('[COC Detail] Error in renderFinancialInfo:', e);
+            }
+            
+            try {
+                renderStatus(displayData.status);
+            } catch (e) {
+                console.error('[COC Detail] Error in renderStatus:', e);
+            }
+            
+            try {
+                renderNotes(displayData.notes);
+            } catch (e) {
+                console.error('[COC Detail] Error in renderNotes:', e);
+            }
 
             // Render issue section if applicable
             const issueSection = document.getElementById('detail-issue-section');
@@ -770,8 +801,13 @@
             // Double-check rendering after showing body (in case of timing issues)
             requestAnimationFrame(() => {
                 console.log('[COC Detail] Re-rendering after body shown');
-                renderRequestInfo(displayData.requestInfo);
-                renderFinancialInfo(displayData.financialInfo);
+                try {
+                    renderRequestInfo(displayData.requestInfo);
+                    renderFinancialInfo(displayData.financialInfo);
+                    console.log('[COC Detail] Re-rendering completed successfully');
+                } catch (e) {
+                    console.error('[COC Detail] Error in re-rendering:', e);
+                }
                 console.log('[COC Detail] All rendering completed');
             });
 
