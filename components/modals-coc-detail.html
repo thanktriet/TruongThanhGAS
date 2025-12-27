@@ -320,7 +320,9 @@
             console.warn('[COC Detail] Element not found:', id);
             return false;
         }
-        el.textContent = safeString(value);
+        const displayValue = safeString(value);
+        el.textContent = displayValue;
+        console.log(`[COC Detail] Set ${id} to:`, displayValue);
         return true;
     }
 
@@ -494,7 +496,11 @@
      * Render all request information
      */
     function renderRequestInfo(info) {
-        if (!info) return;
+        if (!info) {
+            console.warn('[COC Detail] renderRequestInfo: info is null/undefined');
+            return;
+        }
+        console.log('[COC Detail] renderRequestInfo called with:', info);
         setText('detail-contract-code', info.contractCode);
         setText('detail-customer-name', info.customerName);
         setText('detail-customer-phone', info.customerPhone);
@@ -507,6 +513,7 @@
         setText('detail-vin-number', info.vinNumber);
         setText('detail-requester', info.requester);
         setText('detail-request-date', info.requestDate);
+        console.log('[COC Detail] renderRequestInfo completed');
     }
 
     /**
@@ -718,8 +725,16 @@
             }
 
             console.log('[COC Detail] Display data:', displayData);
+            console.log('[COC Detail] Request info to render:', displayData.requestInfo);
+            console.log('[COC Detail] Financial info to render:', displayData.financialInfo);
 
-            // Render all sections
+            // Check if DOM elements exist
+            const testEl = document.getElementById('detail-contract-code');
+            console.log('[COC Detail] DOM element check - detail-contract-code exists:', !!testEl);
+            console.log('[COC Detail] bodyDiv exists:', !!bodyDiv);
+            console.log('[COC Detail] bodyDiv classList:', bodyDiv?.classList.toString());
+
+            // Render all sections first (even if hidden)
             renderRequestInfo(displayData.requestInfo);
             renderFinancialInfo(displayData.financialInfo);
             renderStatus(displayData.status);
@@ -744,8 +759,22 @@
             }
 
             // Show content
-            loadingDiv?.classList.add('hidden');
-            bodyDiv?.classList.remove('hidden');
+            if (loadingDiv) loadingDiv.classList.add('hidden');
+            if (bodyDiv) {
+                bodyDiv.classList.remove('hidden');
+                console.log('[COC Detail] Body div is now visible');
+            } else {
+                console.error('[COC Detail] Body div not found!');
+            }
+            
+            // Double-check rendering after showing body (in case of timing issues)
+            requestAnimationFrame(() => {
+                console.log('[COC Detail] Re-rendering after body shown');
+                renderRequestInfo(displayData.requestInfo);
+                renderFinancialInfo(displayData.financialInfo);
+                console.log('[COC Detail] All rendering completed');
+            });
+
 
         } catch (error) {
             console.error('[COC Detail] Error:', error);
