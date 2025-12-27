@@ -753,86 +753,76 @@
             console.log('[COC Detail] bodyDiv exists:', !!bodyDiv);
             console.log('[COC Detail] bodyDiv classList:', bodyDiv?.classList.toString());
 
-            // Render all sections first (even if hidden)
-            try {
-                console.log('[COC Detail] About to call renderRequestInfo');
-                renderRequestInfo(displayData.requestInfo);
-                console.log('[COC Detail] renderRequestInfo completed successfully');
-            } catch (e) {
-                console.error('[COC Detail] Error in renderRequestInfo:', e);
-            }
-            
-            try {
-                console.log('[COC Detail] About to call renderFinancialInfo');
-                renderFinancialInfo(displayData.financialInfo);
-                console.log('[COC Detail] renderFinancialInfo completed successfully');
-            } catch (e) {
-                console.error('[COC Detail] Error in renderFinancialInfo:', e);
-            }
-            
-            try {
-                renderStatus(displayData.status);
-            } catch (e) {
-                console.error('[COC Detail] Error in renderStatus:', e);
-            }
-            
-            try {
-                renderNotes(displayData.notes);
-            } catch (e) {
-                console.error('[COC Detail] Error in renderNotes:', e);
-            }
-
-            // Render issue section if applicable
-            const issueSection = document.getElementById('detail-issue-section');
-            if (displayData.issueInfo) {
-                issueSection?.classList.remove('hidden');
-                renderIssueInfo(displayData.issueInfo);
+            // Show content FIRST, then render (to ensure DOM is ready)
+            if (loadingDiv) loadingDiv.classList.add('hidden');
+            if (bodyDiv) {
+                bodyDiv.classList.remove('hidden');
+                console.log('[COC Detail] Body div is now visible');
             } else {
-                issueSection?.classList.add('hidden');
+                console.error('[COC Detail] Body div not found!');
+                return;
             }
 
-            // Render disbursement section if closed
-            const disburseSection = document.getElementById('detail-disburse-section');
-            if (displayData.disbursementInfo) {
-                disburseSection?.classList.remove('hidden');
-                renderDisbursementInfo(displayData.disbursementInfo);
-            } else {
-                disburseSection?.classList.add('hidden');
-            }
-
-                // Show content
-                if (loadingDiv) loadingDiv.classList.add('hidden');
-                if (bodyDiv) {
-                    bodyDiv.classList.remove('hidden');
-                    console.log('[COC Detail] Body div is now visible');
-                    
-                    // Verify elements have content
-                    setTimeout(() => {
-                        const contractCodeEl = document.getElementById('detail-contract-code');
-                        const customerNameEl = document.getElementById('detail-customer-name');
-                        const requesterEl = document.getElementById('detail-requester');
-                        console.log('[COC Detail] Verification after 100ms:');
-                        console.log('  - detail-contract-code textContent:', contractCodeEl?.textContent);
-                        console.log('  - detail-customer-name textContent:', customerNameEl?.textContent);
-                        console.log('  - detail-requester textContent:', requesterEl?.textContent);
-                        console.log('  - bodyDiv.classList:', bodyDiv.classList.toString());
-                        console.log('  - modal.classList:', modal.classList.toString());
-                        console.log('  - modal.style.display:', modal.style.display);
-                    }, 100);
-                } else {
-                    console.error('[COC Detail] Body div not found!');
-                }
-            
-            // Double-check rendering after showing body (in case of timing issues)
+            // Render all sections AFTER body is visible
+            // Use requestAnimationFrame to ensure DOM is fully ready
             requestAnimationFrame(() => {
-                console.log('[COC Detail] Re-rendering after body shown');
                 try {
+                    console.log('[COC Detail] About to call renderRequestInfo');
                     renderRequestInfo(displayData.requestInfo);
-                    renderFinancialInfo(displayData.financialInfo);
-                    console.log('[COC Detail] Re-rendering completed successfully');
+                    console.log('[COC Detail] renderRequestInfo completed successfully');
                 } catch (e) {
-                    console.error('[COC Detail] Error in re-rendering:', e);
+                    console.error('[COC Detail] Error in renderRequestInfo:', e);
                 }
+                
+                try {
+                    console.log('[COC Detail] About to call renderFinancialInfo');
+                    renderFinancialInfo(displayData.financialInfo);
+                    console.log('[COC Detail] renderFinancialInfo completed successfully');
+                } catch (e) {
+                    console.error('[COC Detail] Error in renderFinancialInfo:', e);
+                }
+                
+                try {
+                    renderStatus(displayData.status);
+                } catch (e) {
+                    console.error('[COC Detail] Error in renderStatus:', e);
+                }
+                
+                try {
+                    renderNotes(displayData.notes);
+                } catch (e) {
+                    console.error('[COC Detail] Error in renderNotes:', e);
+                }
+
+                // Render issue section if applicable
+                const issueSection = document.getElementById('detail-issue-section');
+                if (displayData.issueInfo) {
+                    issueSection?.classList.remove('hidden');
+                    renderIssueInfo(displayData.issueInfo);
+                } else {
+                    issueSection?.classList.add('hidden');
+                }
+
+                // Render disbursement section if closed
+                const disburseSection = document.getElementById('detail-disburse-section');
+                if (displayData.disbursementInfo) {
+                    disburseSection?.classList.remove('hidden');
+                    renderDisbursementInfo(displayData.disbursementInfo);
+                } else {
+                    disburseSection?.classList.add('hidden');
+                }
+
+                // Final verification
+                setTimeout(() => {
+                    const contractCodeEl = document.getElementById('detail-contract-code');
+                    const customerNameEl = document.getElementById('detail-customer-name');
+                    const requesterEl = document.getElementById('detail-requester');
+                    console.log('[COC Detail] Final verification after 50ms:');
+                    console.log('  - detail-contract-code textContent:', contractCodeEl?.textContent);
+                    console.log('  - detail-customer-name textContent:', customerNameEl?.textContent);
+                    console.log('  - detail-requester textContent:', requesterEl?.textContent);
+                }, 50);
+
                 console.log('[COC Detail] All rendering completed');
             });
 
