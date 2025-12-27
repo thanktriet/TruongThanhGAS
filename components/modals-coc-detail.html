@@ -877,50 +877,6 @@
                     disburseSection?.classList.add('hidden');
                 }
 
-                // Final verification and re-set if needed
-                setTimeout(() => {
-                    const contractCodeEl = document.getElementById('detail-contract-code');
-                    const customerNameEl = document.getElementById('detail-customer-name');
-                    const requesterEl = document.getElementById('detail-requester');
-                    console.log('[COC Detail] Final verification after 50ms:');
-                    console.log('  - detail-contract-code textContent:', contractCodeEl?.textContent);
-                    console.log('  - detail-customer-name textContent:', customerNameEl?.textContent);
-                    console.log('  - detail-requester textContent:', requesterEl?.textContent);
-                    
-                    // If values are missing, re-set them with multiple attempts
-                    if (contractCodeEl && (!contractCodeEl.textContent || contractCodeEl.textContent.trim() === '' || contractCodeEl.textContent === '-')) {
-                        console.warn('[COC Detail] Re-setting contractCode because it was empty/missing');
-                        const value = displayData.requestInfo.contractCode;
-                        contractCodeEl.textContent = value;
-                        contractCodeEl.innerText = value;
-                        contractCodeEl.innerHTML = value;
-                    }
-                    if (customerNameEl && (!customerNameEl.textContent || customerNameEl.textContent.trim() === '' || customerNameEl.textContent === '-')) {
-                        console.warn('[COC Detail] Re-setting customerName because it was empty/missing');
-                        const value = displayData.requestInfo.customerName;
-                        customerNameEl.textContent = value;
-                        customerNameEl.innerText = value;
-                        customerNameEl.innerHTML = value;
-                    }
-                    if (requesterEl && (!requesterEl.textContent || requesterEl.textContent.trim() === '' || requesterEl.textContent === '-')) {
-                        console.warn('[COC Detail] Re-setting requester because it was empty/missing');
-                        const value = displayData.requestInfo.requester;
-                        requesterEl.textContent = value;
-                        requesterEl.innerText = value;
-                        requesterEl.innerHTML = value;
-                    }
-                    
-                    // Re-render everything one more time as final safety net
-                    renderRequestInfo(displayData.requestInfo);
-                    renderFinancialInfo(displayData.financialInfo);
-                    
-                    // One more check after 200ms
-                    setTimeout(() => {
-                        renderRequestInfo(displayData.requestInfo);
-                        renderFinancialInfo(displayData.financialInfo);
-                        console.log('[COC Detail] Final re-render completed at 200ms');
-                    }, 200);
-                }, 100);
 
                 console.log('[COC Detail] All rendering completed');
             });
