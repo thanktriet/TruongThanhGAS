@@ -905,13 +905,102 @@
     }
 
     // ======================================================
+    // DEBUG FUNCTION - Expose for browser console testing
+    // ======================================================
+    
+    /**
+     * Debug function to check element state
+     * Run this in browser console: window.debugCocDetailModal()
+     */
+    function debugCocDetailModal() {
+        console.log('=== COC Detail Modal Debug ===');
+        
+        const elements = [
+            'detail-contract-code',
+            'detail-customer-name',
+            'detail-customer-phone',
+            'detail-requester',
+            'detail-car-model',
+            'detail-request-date'
+        ];
+        
+        elements.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                console.log(`\n[${id}]`);
+                console.log('  - Element:', el);
+                console.log('  - textContent:', el.textContent);
+                console.log('  - innerText:', el.innerText);
+                console.log('  - innerHTML:', el.innerHTML);
+                console.log('  - nodeValue:', el.nodeValue);
+                console.log('  - firstChild:', el.firstChild);
+                console.log('  - childNodes:', el.childNodes);
+                console.log('  - parentElement:', el.parentElement);
+                console.log('  - classList:', el.classList.toString());
+                console.log('  - style.display:', el.style.display);
+                console.log('  - Computed display:', window.getComputedStyle(el).display);
+                console.log('  - Computed visibility:', window.getComputedStyle(el).visibility);
+                console.log('  - Computed opacity:', window.getComputedStyle(el).opacity);
+                console.log('  - Computed color:', window.getComputedStyle(el).color);
+                console.log('  - offsetWidth:', el.offsetWidth);
+                console.log('  - offsetHeight:', el.offsetHeight);
+            } else {
+                console.warn(`[${id}] Element not found!`);
+            }
+        });
+        
+        const modal = document.getElementById('modal-coc-detail');
+        const bodyDiv = document.getElementById('coc-detail-body');
+        console.log('\n[Modal]');
+        console.log('  - Modal exists:', !!modal);
+        console.log('  - Modal classList:', modal?.classList.toString());
+        console.log('  - Modal display:', modal ? window.getComputedStyle(modal).display : 'N/A');
+        console.log('\n[Body Div]');
+        console.log('  - BodyDiv exists:', !!bodyDiv);
+        console.log('  - BodyDiv classList:', bodyDiv?.classList.toString());
+        console.log('  - BodyDiv display:', bodyDiv ? window.getComputedStyle(bodyDiv).display : 'N/A');
+        
+        console.log('\n=== End Debug ===');
+    }
+    
+    /**
+     * Force set all values for debugging
+     * Run this in browser console: window.forceSetCocDetailValues()
+     */
+    function forceSetCocDetailValues() {
+        console.log('=== Force Setting COC Detail Values ===');
+        
+        const testValues = {
+            'detail-contract-code': 'TEST-CONTRACT-CODE',
+            'detail-customer-name': 'TEST CUSTOMER NAME',
+            'detail-requester': 'TEST-USER',
+            'detail-car-model': 'TEST CAR MODEL'
+        };
+        
+        Object.entries(testValues).forEach(([id, value]) => {
+            const el = document.getElementById(id);
+            if (el) {
+                console.log(`Setting ${id} to: ${value}`);
+                el.textContent = value;
+                el.innerText = value;
+                el.innerHTML = value;
+                console.log(`  After set - textContent: ${el.textContent}`);
+            }
+        });
+        
+        console.log('=== End Force Set ===');
+    }
+
+    // ======================================================
     // EXPOSE TO WINDOW
     // ======================================================
 
     if (typeof window !== 'undefined') {
         window.openCocDetailModal = openCocDetailModal;
         window.closeCocDetailModal = closeCocDetailModal;
-        console.log('✅ COC detail modal functions exposed');
+        window.debugCocDetailModal = debugCocDetailModal;
+        window.forceSetCocDetailValues = forceSetCocDetailValues;
+        console.log('✅ COC detail modal functions exposed (including debug functions)');
     }
 
 })();
