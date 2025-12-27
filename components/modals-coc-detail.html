@@ -981,14 +981,46 @@
             const el = document.getElementById(id);
             if (el) {
                 console.log(`Setting ${id} to: ${value}`);
+                // Try multiple methods
                 el.textContent = value;
                 el.innerText = value;
-                el.innerHTML = value;
+                // Also check computed styles
+                const computed = window.getComputedStyle(el);
+                console.log(`  - font-size: ${computed.fontSize}`);
+                console.log(`  - line-height: ${computed.lineHeight}`);
+                console.log(`  - text-indent: ${computed.textIndent}`);
+                console.log(`  - width: ${computed.width}`);
+                console.log(`  - height: ${computed.height}`);
                 console.log(`  After set - textContent: ${el.textContent}`);
             }
         });
         
         console.log('=== End Force Set ===');
+    }
+    
+    /**
+     * Check if elements are being reset by MutationObserver
+     */
+    function checkForMutationObservers() {
+        console.log('=== Checking for Mutation Observers ===');
+        const contractCodeEl = document.getElementById('detail-contract-code');
+        if (contractCodeEl) {
+            // Try to detect if something is watching this element
+            const originalSet = Object.getOwnPropertyDescriptor(Element.prototype, 'textContent')?.set;
+            if (originalSet) {
+                console.log('textContent setter exists');
+            }
+            
+            // Check parent for observers
+            let parent = contractCodeEl.parentElement;
+            let level = 0;
+            while (parent && level < 5) {
+                console.log(`Parent level ${level}:`, parent.tagName, parent.id || parent.className);
+                parent = parent.parentElement;
+                level++;
+            }
+        }
+        console.log('=== End Mutation Check ===');
     }
 
     // ======================================================
@@ -1000,6 +1032,7 @@
         window.closeCocDetailModal = closeCocDetailModal;
         window.debugCocDetailModal = debugCocDetailModal;
         window.forceSetCocDetailValues = forceSetCocDetailValues;
+        window.checkForMutationObservers = checkForMutationObservers;
         console.log('✅ COC detail modal functions exposed (including debug functions)');
     }
 
