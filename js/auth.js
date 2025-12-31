@@ -67,14 +67,35 @@ function checkSession() {
             const navApproval = $('nav-approval');
             if (typeof hasPermission === 'function' && hasPermission(user, 'approve_request')) {
                 navApproval?.classList.remove('hidden');
-                if (typeof switchTab === 'function') {
-                    switchTab('approval');
-                }
             } else if (user.role === 'SALE' || user.role === 'TVBH') {
                 navApproval?.classList.add('hidden');
             } else {
                 navApproval?.classList.remove('hidden');
-                if (typeof switchTab === 'function') {
+            }
+            
+            // Khôi phục tab từ localStorage hoặc dùng tab mặc định
+            if (typeof switchTab === 'function') {
+                try {
+                    const savedTab = localStorage.getItem('current_tab');
+                    // Đợi một chút để đảm bảo components đã load xong
+                    setTimeout(() => {
+                        if (savedTab) {
+                            // Kiểm tra xem tab element có tồn tại không
+                            const tabElement = document.getElementById(`tab-${savedTab}`);
+                            if (tabElement) {
+                                console.log('[Auth] Restoring saved tab:', savedTab);
+                                switchTab(savedTab);
+                            } else {
+                                console.log('[Auth] Saved tab not found, using default');
+                                switchTab('approval');
+                            }
+                        } else {
+                            // Tab mặc định
+                            switchTab('approval');
+                        }
+                    }, 200);
+                } catch (e) {
+                    console.warn('[Auth] Could not restore tab from localStorage:', e);
                     switchTab('approval');
                 }
             }

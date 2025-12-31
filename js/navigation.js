@@ -19,6 +19,14 @@ function switchTab(id) {
     // Update mobile bottom nav active state
     updateMobileBottomNav(id);
     
+    // Lưu tab hiện tại vào localStorage để khôi phục khi refresh
+    try {
+        localStorage.setItem('current_tab', id);
+        console.log('[Navigation] Saved current tab to localStorage:', id);
+    } catch (e) {
+        console.warn('[Navigation] Could not save tab to localStorage:', e);
+    }
+    
     if (id === 'approval') loadApprovalList();
     if (id === 'my-requests') loadMyRequests();
     if (id === 'profile') loadProfile();
