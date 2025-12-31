@@ -342,6 +342,39 @@ async function initializeApp() {
             checkSession();
         }
         
+        // Khôi phục tab từ localStorage sau khi components đã load xong
+        if (typeof switchTab === 'function') {
+            try {
+                const savedTab = localStorage.getItem('current_tab');
+                // Đợi thêm một chút để đảm bảo tất cả components đã render xong
+                setTimeout(() => {
+                    if (savedTab) {
+                        // Kiểm tra xem tab element có tồn tại không
+                        const tabElement = document.getElementById(`tab-${savedTab}`);
+                        const navElement = document.getElementById(`nav-${savedTab}`);
+                        if (tabElement) {
+                            console.log('[Components] Restoring saved tab:', savedTab);
+                            switchTab(savedTab);
+                        } else {
+                            console.log('[Components] Saved tab element not found, using default');
+                            // Tab mặc định dựa trên role
+                            const defaultTab = 'create';
+                            switchTab(defaultTab);
+                        }
+                    } else {
+                        // Tab mặc định
+                        console.log('[Components] No saved tab found, using default');
+                        const defaultTab = 'create';
+                        switchTab(defaultTab);
+                    }
+                }, 300); // Tăng timeout lên 300ms để đảm bảo components đã render
+            } catch (e) {
+                console.warn('[Components] Could not restore tab from localStorage:', e);
+                const defaultTab = 'create';
+                switchTab(defaultTab);
+            }
+        }
+        
         // Then initialize app functions after components are loaded
         if (typeof loadTPKDUsers === 'function') {
             loadTPKDUsers();
