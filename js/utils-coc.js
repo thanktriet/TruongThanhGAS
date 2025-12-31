@@ -88,8 +88,11 @@ function calculateInterest(principalAmount, delayedBusinessDays, interestRate = 
         return 0;
     }
     
-    // Lãi suất hàng ngày = (interestRate / 100) / 365
-    const dailyRate = (interestRate / 100) / 365;
+    // Tính lãi theo business days (ngày làm việc)
+    // 1 năm có khoảng 260 business days (52 tuần × 5 ngày làm việc)
+    // Lãi suất hàng ngày làm việc = (interestRate / 100) / 260
+    const BUSINESS_DAYS_PER_YEAR = 260;
+    const dailyRate = (interestRate / 100) / BUSINESS_DAYS_PER_YEAR;
     const interest = principal * dailyRate * delayedBusinessDays;
     
     // Làm tròn đến hàng đơn vị
