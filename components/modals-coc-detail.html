@@ -658,16 +658,23 @@
     function renderIssueInfo(info) {
         if (!info) return;
         
-        setText('detail-issuer', info.issuer);
-        setText('detail-actual-issue-date', info.actualIssueDate);
-        setText('detail-delayed-days', info.delayedDays);
-        setText('detail-interest-amount', info.interestAmount);
+        const issuerEl = document.getElementById('coc-detail-issuer');
+        if (issuerEl) issuerEl.textContent = info.issuer || '-';
+        
+        const actualIssueDateEl = document.getElementById('coc-detail-actual-issue-date');
+        if (actualIssueDateEl) actualIssueDateEl.textContent = info.actualIssueDate || '-';
+        
+        const delayedDaysEl = document.getElementById('coc-detail-delayed-days');
+        if (delayedDaysEl) delayedDaysEl.textContent = info.delayedDays || '-';
+        
+        const interestAmountEl = document.getElementById('coc-detail-interest-amount');
+        if (interestAmountEl) interestAmountEl.textContent = info.interestAmount || '-';
         
         // COC Image
-        renderFileLink('detail-coc-image-link', 'detail-coc-image', info.cocImageUrl);
+        renderFileLink('coc-detail-coc-image-link', 'coc-detail-coc-image', info.cocImageUrl);
         
         // Handover Document
-        renderFileLink('detail-handover-doc-link', 'detail-handover-doc', info.handoverDocUrl);
+        renderFileLink('coc-detail-handover-doc-link', 'coc-detail-handover-doc', info.handoverDocUrl);
     }
 
     /**
@@ -676,8 +683,10 @@
     function renderDisbursementInfo(info) {
         if (!info) return;
         
-        setText('detail-accountant', info.accountant);
-        renderFileLink('detail-disbursement-file-link', 'detail-disbursement-file', info.disbursementFileUrl);
+        const accountantEl = document.getElementById('coc-detail-accountant');
+        if (accountantEl) accountantEl.textContent = info.accountant || '-';
+        
+        renderFileLink('coc-detail-disbursement-file-link', 'coc-detail-disbursement-file', info.disbursementFileUrl);
     }
 
     /**
