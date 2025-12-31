@@ -818,7 +818,31 @@
             console.log('[COC Detail] bodyDiv exists:', !!bodyDiv);
             console.log('[COC Detail] bodyDiv classList:', bodyDiv?.classList.toString());
 
-            // Show content FIRST, then render (to ensure DOM is ready)
+            // Render data directly like order detail modal (render BEFORE showing content)
+            renderRequestInfo(displayData.requestInfo);
+            renderFinancialInfo(displayData.financialInfo);
+            renderStatus(displayData.status);
+            renderNotes(displayData.notes);
+
+            // Render issue section if applicable
+            const issueSection = document.getElementById('detail-issue-section');
+            if (displayData.issueInfo) {
+                issueSection?.classList.remove('hidden');
+                renderIssueInfo(displayData.issueInfo);
+            } else {
+                issueSection?.classList.add('hidden');
+            }
+
+            // Render disbursement section if closed
+            const disburseSection = document.getElementById('detail-disburse-section');
+            if (displayData.disbursementInfo) {
+                disburseSection?.classList.remove('hidden');
+                renderDisbursementInfo(displayData.disbursementInfo);
+            } else {
+                disburseSection?.classList.add('hidden');
+            }
+
+            // Show content after rendering (like order detail modal)
             if (loadingDiv) loadingDiv.classList.add('hidden');
             if (bodyDiv) {
                 bodyDiv.classList.remove('hidden');
@@ -828,58 +852,7 @@
                 return;
             }
 
-            // Render all sections AFTER body is visible
-            // Use requestAnimationFrame to ensure DOM is fully ready
-            requestAnimationFrame(() => {
-                try {
-                    console.log('[COC Detail] About to call renderRequestInfo');
-                    renderRequestInfo(displayData.requestInfo);
-                    console.log('[COC Detail] renderRequestInfo completed successfully');
-                } catch (e) {
-                    console.error('[COC Detail] Error in renderRequestInfo:', e);
-                }
-                
-                try {
-                    console.log('[COC Detail] About to call renderFinancialInfo');
-                    renderFinancialInfo(displayData.financialInfo);
-                    console.log('[COC Detail] renderFinancialInfo completed successfully');
-                } catch (e) {
-                    console.error('[COC Detail] Error in renderFinancialInfo:', e);
-                }
-                
-                try {
-                    renderStatus(displayData.status);
-                } catch (e) {
-                    console.error('[COC Detail] Error in renderStatus:', e);
-                }
-                
-                try {
-                    renderNotes(displayData.notes);
-                } catch (e) {
-                    console.error('[COC Detail] Error in renderNotes:', e);
-                }
-
-                // Render issue section if applicable
-                const issueSection = document.getElementById('detail-issue-section');
-                if (displayData.issueInfo) {
-                    issueSection?.classList.remove('hidden');
-                    renderIssueInfo(displayData.issueInfo);
-                } else {
-                    issueSection?.classList.add('hidden');
-                }
-
-                // Render disbursement section if closed
-                const disburseSection = document.getElementById('detail-disburse-section');
-                if (displayData.disbursementInfo) {
-                    disburseSection?.classList.remove('hidden');
-                    renderDisbursementInfo(displayData.disbursementInfo);
-                } else {
-                    disburseSection?.classList.add('hidden');
-                }
-
-
-                console.log('[COC Detail] All rendering completed');
-            });
+            console.log('[COC Detail] All rendering completed');
 
 
         } catch (error) {
