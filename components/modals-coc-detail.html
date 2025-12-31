@@ -834,22 +834,7 @@
             console.log('[COC Detail] Request info to render:', JSON.stringify(displayData.requestInfo, null, 2));
             console.log('[COC Detail] Financial info to render:', JSON.stringify(displayData.financialInfo, null, 2));
 
-            // Check if DOM elements exist
-            const testEl = document.getElementById('detail-contract-code');
-            console.log('[COC Detail] DOM element check - detail-contract-code exists:', !!testEl);
-            console.log('[COC Detail] bodyDiv exists:', !!bodyDiv);
-            console.log('[COC Detail] bodyDiv classList:', bodyDiv?.classList.toString());
-
-            // Show content first (like order detail modal shows content after render)
-            if (loadingDiv) loadingDiv.classList.add('hidden');
-            if (bodyDiv) {
-                bodyDiv.classList.remove('hidden');
-            } else {
-                console.error('[COC Detail] Body div not found!');
-                return;
-            }
-
-            // Render data directly like order detail modal (render AFTER showing content)
+            // Render data FIRST (like order detail modal - renderOrderDetail is called before showing content)
             renderRequestInfo(displayData.requestInfo);
             renderFinancialInfo(displayData.financialInfo);
             renderStatus(displayData.status);
@@ -871,6 +856,15 @@
                 renderDisbursementInfo(displayData.disbursementInfo);
             } else {
                 disburseSection?.classList.add('hidden');
+            }
+
+            // Show content AFTER rendering (like order detail modal)
+            if (loadingDiv) loadingDiv.classList.add('hidden');
+            if (bodyDiv) {
+                bodyDiv.classList.remove('hidden');
+            } else {
+                console.error('[COC Detail] Body div not found!');
+                return;
             }
 
             console.log('[COC Detail] All rendering completed');
