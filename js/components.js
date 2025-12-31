@@ -336,12 +336,15 @@ async function initializeApp() {
         // Wait a bit more to ensure DOM is fully updated
         await new Promise(resolve => setTimeout(resolve, 150));
         
+        // Check session FIRST before loading other components
+        // This prevents login view from flashing
+        if (typeof checkSession === 'function') {
+            checkSession();
+        }
+        
         // Then initialize app functions after components are loaded
         if (typeof loadTPKDUsers === 'function') {
             loadTPKDUsers();
-        }
-        if (typeof checkSession === 'function') {
-            checkSession();
         }
         if (typeof addGiftRow === 'function') {
             addGiftRow('gift-list-manual');

@@ -154,7 +154,10 @@ function checkSession() {
         }
         
         if (loginView) loginView.classList.add('hidden');
-        if (loginContainer) loginContainer.style.display = 'none';
+        if (loginContainer) {
+            loginContainer.style.display = 'none';
+            loginContainer.classList.add('hidden');
+        }
         dash?.classList.remove('hidden');
         dash?.classList.add('flex');
     } else {
@@ -167,7 +170,10 @@ function showLogin() {
     const loginView = $('login-view') || loginContainer?.querySelector('#login-view');
     const dash = $('dashboard-view');
     if (loginView) loginView.classList.remove('hidden');
-    if (loginContainer) loginContainer.style.display = 'block';
+    if (loginContainer) {
+        loginContainer.style.display = 'block';
+        loginContainer.classList.remove('hidden');
+    }
     dash?.classList.add('hidden');
     dash?.classList.remove('flex');
 }
