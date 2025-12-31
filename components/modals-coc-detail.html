@@ -543,13 +543,26 @@
             return;
         }
         console.log('[COC Detail] renderRequestInfo called with:', info);
+        console.log('[COC Detail] Values to render:', {
+            contractCode: info.contractCode,
+            customerName: info.customerName,
+            carModel: info.carModel,
+            requester: info.requester,
+            requestDate: info.requestDate
+        });
         
         // Use direct textContent assignment like order detail modal
         const contractCodeEl = document.getElementById('detail-contract-code');
-        if (contractCodeEl) contractCodeEl.textContent = info.contractCode || '-';
+        if (contractCodeEl) {
+            contractCodeEl.textContent = info.contractCode || '-';
+            console.log('[COC Detail] Set contractCode to:', contractCodeEl.textContent);
+        }
         
         const customerNameEl = document.getElementById('detail-customer-name');
-        if (customerNameEl) customerNameEl.textContent = info.customerName || '-';
+        if (customerNameEl) {
+            customerNameEl.textContent = info.customerName || '-';
+            console.log('[COC Detail] Set customerName to:', customerNameEl.textContent);
+        }
         
         const customerPhoneEl = document.getElementById('detail-customer-phone');
         if (customerPhoneEl) customerPhoneEl.textContent = info.customerPhone || '-';
@@ -564,7 +577,10 @@
         if (customerAddressEl) customerAddressEl.textContent = info.customerAddress || '-';
         
         const carModelEl = document.getElementById('detail-car-model');
-        if (carModelEl) carModelEl.textContent = info.carModel || '-';
+        if (carModelEl) {
+            carModelEl.textContent = info.carModel || '-';
+            console.log('[COC Detail] Set carModel to:', carModelEl.textContent);
+        }
         
         const carVersionEl = document.getElementById('detail-car-version');
         if (carVersionEl) carVersionEl.textContent = info.carVersion || '-';
@@ -576,10 +592,16 @@
         if (vinNumberEl) vinNumberEl.textContent = info.vinNumber || '-';
         
         const requesterEl = document.getElementById('detail-requester');
-        if (requesterEl) requesterEl.textContent = info.requester || '-';
+        if (requesterEl) {
+            requesterEl.textContent = info.requester || '-';
+            console.log('[COC Detail] Set requester to:', requesterEl.textContent);
+        }
         
         const requestDateEl = document.getElementById('detail-request-date');
-        if (requestDateEl) requestDateEl.textContent = info.requestDate || '-';
+        if (requestDateEl) {
+            requestDateEl.textContent = info.requestDate || '-';
+            console.log('[COC Detail] Set requestDate to:', requestDateEl.textContent);
+        }
         
         console.log('[COC Detail] renderRequestInfo completed');
     }
@@ -818,7 +840,16 @@
             console.log('[COC Detail] bodyDiv exists:', !!bodyDiv);
             console.log('[COC Detail] bodyDiv classList:', bodyDiv?.classList.toString());
 
-            // Render data directly like order detail modal (render BEFORE showing content)
+            // Show content first (like order detail modal shows content after render)
+            if (loadingDiv) loadingDiv.classList.add('hidden');
+            if (bodyDiv) {
+                bodyDiv.classList.remove('hidden');
+            } else {
+                console.error('[COC Detail] Body div not found!');
+                return;
+            }
+
+            // Render data directly like order detail modal (render AFTER showing content)
             renderRequestInfo(displayData.requestInfo);
             renderFinancialInfo(displayData.financialInfo);
             renderStatus(displayData.status);
@@ -840,16 +871,6 @@
                 renderDisbursementInfo(displayData.disbursementInfo);
             } else {
                 disburseSection?.classList.add('hidden');
-            }
-
-            // Show content after rendering (like order detail modal)
-            if (loadingDiv) loadingDiv.classList.add('hidden');
-            if (bodyDiv) {
-                bodyDiv.classList.remove('hidden');
-                console.log('[COC Detail] Body div is now visible');
-            } else {
-                console.error('[COC Detail] Body div not found!');
-                return;
             }
 
             console.log('[COC Detail] All rendering completed');
