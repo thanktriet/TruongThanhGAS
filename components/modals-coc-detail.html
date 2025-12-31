@@ -552,55 +552,84 @@
         });
         
         // Use direct textContent assignment like order detail modal
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            if (!text || text === '-') return text || '-';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
         const contractCodeEl = document.getElementById('detail-contract-code');
         if (contractCodeEl) {
             contractCodeEl.textContent = info.contractCode || '-';
-            console.log('[COC Detail] Set contractCode to:', contractCodeEl.textContent);
+            contractCodeEl.innerHTML = escapeHtml(info.contractCode || '-');
         }
         
         const customerNameEl = document.getElementById('detail-customer-name');
         if (customerNameEl) {
             customerNameEl.textContent = info.customerName || '-';
-            console.log('[COC Detail] Set customerName to:', customerNameEl.textContent);
+            customerNameEl.innerHTML = escapeHtml(info.customerName || '-');
         }
         
         const customerPhoneEl = document.getElementById('detail-customer-phone');
-        if (customerPhoneEl) customerPhoneEl.textContent = info.customerPhone || '-';
+        if (customerPhoneEl) {
+            customerPhoneEl.textContent = info.customerPhone || '-';
+            customerPhoneEl.innerHTML = escapeHtml(info.customerPhone || '-');
+        }
         
         const customerEmailEl = document.getElementById('detail-customer-email');
-        if (customerEmailEl) customerEmailEl.textContent = info.customerEmail || '-';
+        if (customerEmailEl) {
+            customerEmailEl.textContent = info.customerEmail || '-';
+            customerEmailEl.innerHTML = escapeHtml(info.customerEmail || '-');
+        }
         
         const customerCccdEl = document.getElementById('detail-customer-cccd');
-        if (customerCccdEl) customerCccdEl.textContent = info.customerCccd || '-';
+        if (customerCccdEl) {
+            customerCccdEl.textContent = info.customerCccd || '-';
+            customerCccdEl.innerHTML = escapeHtml(info.customerCccd || '-');
+        }
         
         const customerAddressEl = document.getElementById('detail-customer-address');
-        if (customerAddressEl) customerAddressEl.textContent = info.customerAddress || '-';
+        if (customerAddressEl) {
+            customerAddressEl.textContent = info.customerAddress || '-';
+            customerAddressEl.innerHTML = escapeHtml(info.customerAddress || '-');
+        }
         
         const carModelEl = document.getElementById('detail-car-model');
         if (carModelEl) {
             carModelEl.textContent = info.carModel || '-';
-            console.log('[COC Detail] Set carModel to:', carModelEl.textContent);
+            carModelEl.innerHTML = escapeHtml(info.carModel || '-');
         }
         
         const carVersionEl = document.getElementById('detail-car-version');
-        if (carVersionEl) carVersionEl.textContent = info.carVersion || '-';
+        if (carVersionEl) {
+            carVersionEl.textContent = info.carVersion || '-';
+            carVersionEl.innerHTML = escapeHtml(info.carVersion || '-');
+        }
         
         const carColorEl = document.getElementById('detail-car-color');
-        if (carColorEl) carColorEl.textContent = info.carColor || '-';
+        if (carColorEl) {
+            carColorEl.textContent = info.carColor || '-';
+            carColorEl.innerHTML = escapeHtml(info.carColor || '-');
+        }
         
         const vinNumberEl = document.getElementById('detail-vin-number');
-        if (vinNumberEl) vinNumberEl.textContent = info.vinNumber || '-';
+        if (vinNumberEl) {
+            vinNumberEl.textContent = info.vinNumber || '-';
+            vinNumberEl.innerHTML = escapeHtml(info.vinNumber || '-');
+        }
         
         const requesterEl = document.getElementById('detail-requester');
         if (requesterEl) {
             requesterEl.textContent = info.requester || '-';
-            console.log('[COC Detail] Set requester to:', requesterEl.textContent);
+            requesterEl.innerHTML = escapeHtml(info.requester || '-');
         }
         
         const requestDateEl = document.getElementById('detail-request-date');
         if (requestDateEl) {
             requestDateEl.textContent = info.requestDate || '-';
-            console.log('[COC Detail] Set requestDate to:', requestDateEl.textContent);
+            requestDateEl.innerHTML = escapeHtml(info.requestDate || '-');
         }
         
         console.log('[COC Detail] renderRequestInfo completed');
