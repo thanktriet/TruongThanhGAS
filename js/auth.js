@@ -16,7 +16,12 @@ function checkSession() {
             if (loginContainer) loginContainer.style.display = 'block';
             dash?.classList.add('hidden');
             dash?.classList.remove('flex');
-            // Hiển thị modal đổi mật khẩu
+            // ⚠️ Đảm bảo user đã có login_time để tránh session timeout
+            if (!user.login_time) {
+                user.login_time = new Date().toISOString();
+                localStorage.setItem('user_session', JSON.stringify(user));
+            }
+            // Hiển thị modal đổi mật khẩu (session đã được đảm bảo)
             showChangePasswordModal(user, true);
             return;
         }
@@ -188,17 +193,20 @@ async function handleLogin(e) {
     try {
         const res = await callAPI({ action: 'login', username, password });
         if (res.success && res.user) {
+            // ⚠️ QUAN TRỌNG: Lưu session TRƯỚC KHI hiển thị modal đổi mật khẩu
+            // để tránh mất session khi user đổi mật khẩu
+            const userWithTime = {
+                ...res.user,
+                login_time: new Date().toISOString()
+            };
+            localStorage.setItem('user_session', JSON.stringify(userWithTime));
+            
             // Kiểm tra nếu cần đổi mật khẩu
             if (res.user.need_change_pass) {
-                // Hiển thị modal yêu cầu đổi mật khẩu
+                // Hiển thị modal yêu cầu đổi mật khẩu (session đã được lưu ở trên)
                 await showChangePasswordModal(res.user, true);
             } else {
-                // Đăng nhập bình thường - thêm login_time để track session timeout
-                const userWithTime = {
-                    ...res.user,
-                    login_time: new Date().toISOString()
-                };
-                localStorage.setItem('user_session', JSON.stringify(userWithTime));
+                // Đăng nhập bình thường (session đã được lưu ở trên)
                 
                 // Hiển thị thông báo đăng nhập thành công
                 await Swal.fire({
