@@ -329,8 +329,17 @@ async function assignContractCode(orderId) {
 // Format date
 function formatDate(dateString) {
     if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN');
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            console.warn('[formatDate] Invalid date:', dateString);
+            return '-';
+        }
+        return date.toLocaleDateString('vi-VN');
+    } catch (e) {
+        console.warn('[formatDate] Date format error:', e, 'value:', dateString);
+        return '-';
+    }
 }
 
 // Auto load when tab is shown

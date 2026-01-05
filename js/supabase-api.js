@@ -73,8 +73,17 @@ async function hashPassword(str) {
 
 function formatDate(d) {
     if (!d) return '';
-    const date = new Date(d);
-    return date.toLocaleDateString('vi-VN');
+    try {
+        const date = new Date(d);
+        if (isNaN(date.getTime())) {
+            console.warn('[formatDate] Invalid date:', d);
+            return '-';
+        }
+        return date.toLocaleDateString('vi-VN');
+    } catch (e) {
+        console.warn('[formatDate] Date format error:', e, 'value:', d);
+        return '-';
+    }
 }
 
 function parseVND(str) {
