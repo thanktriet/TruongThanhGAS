@@ -15,9 +15,14 @@ function formatDate(dateString) {
     if (!dateString) return '-';
     try {
         const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            console.warn('[formatDate] Invalid date:', dateString);
+            return '-';
+        }
         return date.toLocaleDateString('vi-VN');
     } catch (e) {
-        return dateString;
+        console.warn('[formatDate] Date format error:', e, 'value:', dateString);
+        return '-';
     }
 }
 

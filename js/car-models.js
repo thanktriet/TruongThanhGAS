@@ -308,9 +308,13 @@ function escapeHtml(text) {
 }
 
 function formatDate(dateString) {
-    if (!dateString) return '';
+    if (!dateString) return '-';
     try {
         const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            console.warn('[formatDate] Invalid date:', dateString);
+            return '-';
+        }
         return date.toLocaleDateString('vi-VN', { 
             year: 'numeric', 
             month: '2-digit', 
@@ -319,7 +323,8 @@ function formatDate(dateString) {
             minute: '2-digit'
         });
     } catch (e) {
-        return dateString;
+        console.warn('[formatDate] Date format error:', e, 'value:', dateString);
+        return '-';
     }
 }
 

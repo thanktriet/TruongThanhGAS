@@ -489,13 +489,19 @@ function escapeHtml(text) {
 function formatDate(dateString) {
     if (!dateString) return '-';
     try {
-        return new Date(dateString + 'T00:00:00').toLocaleDateString('vi-VN', {
+        const date = new Date(dateString + 'T00:00:00');
+        if (isNaN(date.getTime())) {
+            console.warn('[formatDate] Invalid date:', dateString);
+            return '-';
+        }
+        return date.toLocaleDateString('vi-VN', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit'
         });
     } catch (e) {
-        return dateString;
+        console.warn('[formatDate] Date format error:', e, 'value:', dateString);
+        return '-';
     }
 }
 
