@@ -72,11 +72,19 @@ async function hashPassword(str) {
 }
 
 function formatDate(d) {
-    if (!d) return '';
+    if (!d) return '-';
     try {
-        const date = new Date(d);
+        // Xử lý format date từ PostgreSQL (YYYY-MM-DD HH:mm:ss.sss+TZ)
+        // Convert sang ISO format nếu cần
+        let dateStr = String(d);
+        // Nếu là format PostgreSQL timestamp (có khoảng trắng và timezone +00)
+        if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(dateStr)) {
+            // Convert "YYYY-MM-DD HH:mm:ss.sss+TZ" -> "YYYY-MM-DDTHH:mm:ss.sssZ"
+            dateStr = dateStr.replace(' ', 'T').replace(/([+-]\d{2})$/, 'Z');
+        }
+        const date = new Date(dateStr);
         if (isNaN(date.getTime())) {
-            console.warn('[formatDate] Invalid date:', d);
+            console.warn('[formatDate] Invalid date:', d, 'parsed as:', dateStr);
             return '-';
         }
         return date.toLocaleDateString('vi-VN');
