@@ -74,22 +74,33 @@ async function hashPassword(str) {
 function formatDate(d) {
     if (!d) return '-';
     try {
-        // Xử lý format date từ PostgreSQL (YYYY-MM-DD HH:mm:ss.sss+TZ)
-        // Convert sang ISO format nếu cần
-        let dateStr = String(d);
-        // Nếu là format PostgreSQL timestamp (có khoảng trắng và timezone +00)
-        if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(dateStr)) {
-            // Convert "YYYY-MM-DD HH:mm:ss.sss+TZ" -> "YYYY-MM-DDTHH:mm:ss.sssZ"
-            dateStr = dateStr.replace(' ', 'T').replace(/([+-]\d{2})$/, 'Z');
+        let date;
+        
+        // Nếu đã là Date object, dùng trực tiếp
+        if (d instanceof Date) {
+            date = d;
+        } else {
+            // Convert sang string và parse
+            let dateStr = String(d);
+            
+            // Xử lý format date từ PostgreSQL (YYYY-MM-DD HH:mm:ss.sss+TZ)
+            // Nếu là format PostgreSQL timestamp (có khoảng trắng và timezone)
+            if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(dateStr)) {
+                // Convert "YYYY-MM-DD HH:mm:ss.sss+TZ" -> "YYYY-MM-DDTHH:mm:ss.sssZ"
+                dateStr = dateStr.replace(' ', 'T').replace(/([+-]\d{2})$/, 'Z');
+            }
+            
+            date = new Date(dateStr);
         }
-        const date = new Date(dateStr);
+        
         if (isNaN(date.getTime())) {
-            console.warn('[formatDate] Invalid date:', d, 'parsed as:', dateStr);
+            console.warn('[formatDate] Invalid date:', d, 'type:', typeof d);
             return '-';
         }
+        
         return date.toLocaleDateString('vi-VN');
     } catch (e) {
-        console.warn('[formatDate] Date format error:', e, 'value:', d);
+        console.warn('[formatDate] Date format error:', e, 'value:', d, 'type:', typeof d);
         return '-';
     }
 }
