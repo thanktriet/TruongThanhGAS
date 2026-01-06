@@ -3434,7 +3434,7 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
             const stats = dailyStats[user.username] || { khtn: 0, hopDong: 0, xhd: 0, doanhThu: 0 };
             dailyData.push([
                 user.group || '',
-                user.username,
+                user.fullname,
                 stats.khtn,
                 stats.hopDong,
                 stats.xhd,
@@ -3535,7 +3535,7 @@ async function supabaseGetDashboardData(filterDate = null, filterMonth = null) {
 
             mtdStatsArray.push({
                 nhom: user.group || '',
-                tvbh: user.username,
+                tvbh: user.fullname,
                 khtn: { actual: stats.khtn, target: targets.khtn, percent: calcPercent(stats.khtn, targets.khtn) },
                 hopDong: { actual: stats.hopDong, target: targets.hopDong, percent: calcPercent(stats.hopDong, targets.hopDong) },
                 xhd: { actual: stats.xhd, target: targets.xhd, percent: calcPercent(stats.xhd, targets.xhd) },
