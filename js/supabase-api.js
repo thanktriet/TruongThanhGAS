@@ -134,7 +134,7 @@ async function supabaseLogin(username, password) {
         const { data, error } = await supabase
             .from('users')
             .select('*')
-            .eq('username', username.toLowerCase())
+            .ilike('username', username)
             .eq('active', true)
             .single();
 
