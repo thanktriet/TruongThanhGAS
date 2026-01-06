@@ -231,10 +231,15 @@
       if (navigator.vibrate) navigator.vibrate(100);
     }
 
+    // Tìm đoạn này trong file index.html của bạn và thay thế:
     let html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { 
         fps: 20, 
-        qrbox: {width: 250, height: 150}, // Chỉnh khung hình chữ nhật cho số VIN
-        aspectRatio: 1.0 
+        qrbox: {width: 250, height: 150}, 
+        aspectRatio: 1.0,
+        // THÊM DÒNG DƯỚI ĐÂY ĐỂ CHỌN CAMERA SAU MẶC ĐỊNH
+        videoConstraints: {
+            facingMode: { ideal: "environment" } 
+        }
     });
     html5QrcodeScanner.render(onScanSuccess);
 
