@@ -183,6 +183,20 @@
             document.getElementById('f5').value = item.c5;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+
+        async function callApi(params) {
+        try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(params) // Không thêm headers phức tạp nếu không cần thiết
+                });
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error("Lỗi kết nối:", error);
+                alert("Không thể kết nối với Server GAS!");
+            }
+        }
     </script>
 </body>
 </html>
