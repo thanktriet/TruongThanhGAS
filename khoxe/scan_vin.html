@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>VFTT - HỆ THỐNG QUẢN LÝ KHO XE</title>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+  <style>
+    :root {
+      --primary-color: #007bff;
+      --accent-color: #00f2fe;
+      --bg-dark: #0f172a;
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      background: radial-gradient(circle at top right, #1e293b, #0f172a);
+      color: #f8fafc;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* Hiệu ứng Glassmorphism */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    .navbar {
+      background: rgba(15, 23, 42, 0.8) !important;
+      backdrop-filter: blur(5px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .navbar-brand {
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: linear-gradient(to right, #fff, var(--accent-color));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Tùy chỉnh vùng Camera Scan */
+    #qr-reader {
+      border: none !important;
+      border-radius: 15px;
+      overflow: hidden;
+    }
+
+    #qr-reader__dashboard_section_csr button {
+      background-color: var(--primary-color) !important;
+      color: white !important;
+      border: none !important;
+      padding: 8px 20px !important;
+      border-radius: 50px !important;
+      text-transform: uppercase;
+      font-size: 12px;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    #qr-reader__scan_region {
+        background: #000;
+    }
+
+    /* Custom Input & Select */
+    .form-control, .form-select {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--glass-border);
+      color: #fff;
+      border-radius: 12px;
+      padding: 12px 15px;
+    }
+
+    .form-control:focus, .form-select:focus {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--accent-color);
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
+      color: #fff;
+    }
+
+    .input-group-text {
+      background: var(--primary-color);
+      border: none;
+      color: white;
+      border-radius: 12px 0 0 12px;
+    }
+
+    /* Button Gửi */
+    .btn-submit {
+      background: linear-gradient(45deg, #007bff, #00f2fe);
+      border: none;
+      border-radius: 12px;
+      padding: 15px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: 0.4s;
+      color: white;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(0, 123, 255, 0.4);
+      filter: brightness(1.1);
+    }
+
+    #qr-reader-results {
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    /* Hiệu ứng quét */
+    .scan-label {
+        color: var(--accent-color);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+        display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar sticky-top navbar-dark animate__animated animate__fadeInDown">
+    <div class="container-fluid justify-content-center">
+      <a class="navbar-brand" href="#">
+        <i class="bi bi-shield-check-fill me-2"></i>VFTT SMART STORAGE
+      </a>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 col-md-8">
+        
+        <div class="glass-card p-3 mb-4 animate__animated animate__zoomIn">
+          <span class="scan-label text-center"><i class="bi bi-camera-fill me-1"></i> Camera Scanner</span>
+          <div id="qr-reader"></div>
+          <div id="qr-reader-results" class="mt-3 text-center"></div>
+        </div>
+
+        <div class="glass-card p-4 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+          <h5 class="mb-4 text-center fw-bold" style="color: var(--accent-color);">THÔNG TIN KIỂM KÊ</h5>
+          
+          <form id="InventoryForm">
+            <div class="mb-3">
+                <label class="form-label small text-secondary">Số VIN / Mã QR</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-qr-code"></i></span>
+                  <input type="text" class="form-control" id="productCode" name="productCode" placeholder="Quét mã để tự điền..." required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small text-secondary">Phiên bản / Tên xe</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-car-front-fill"></i></span>
+                  <input type="text" class="form-control" id="productName" name="product_name" placeholder="Ví dụ: VF8 Plus">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-6 mb-3">
+                    <label class="form-label small text-secondary">Trạng thái</label>
+                    <select class="form-select" id="productCategory" name="product_category">
+                        <option value="Tồn kho" selected>Tồn kho</option>
+                        <option value="Rút Xe">Rút Xe</option>
+                        <option value="Giao Xe">Giao Xe</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+                <div class="col-6 mb-3">
+                    <label class="form-label small text-secondary">Vị trí kho</label>
+                    <select class="form-select" id="position" name="position">
+                        <option value="100 HTV" selected>100 HTV</option>
+                        <option value="LQK">LQK</option>
+                        <option value="Rạch Giá">Rạch Giá</option>
+                        <option value="Phú Quốc">Phú Quốc</option>
+                        <option value="XDV">XDV</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label small text-secondary">Ghi chú thêm</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-pencil-square"></i></span>
+                  <input type="text" class="form-control" id="note" name="note" placeholder="...">
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn-submit w-100">
+                <i class="bi bi-cloud-arrow-up-fill me-2"></i> Xác nhận lưu kho
+            </button>
+          </form>
+        </div>
+
+        <p class="text-center mt-4 text-secondary small">VFTT Digital Transformation © 2026</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    // --- CẤU HÌNH WEB APP URL ---
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwX625O2YBZxVS4m732QscuA1of2_2DCwoPOLaaPcEJK7J13YaJCPx75XQjEj1TYuZ4PA/exec"; 
+
+    // 1. Quét mã QR
+    function onScanSuccess(decodedText, decodedResult) {
+      document.getElementById("productCode").value = decodedText;
+      
+      // Hiệu ứng thông báo nhỏ khi quét xong
+      const resultDiv = document.getElementById('qr-reader-results');
+      resultDiv.innerHTML = `<span class="badge bg-success animate__animated animate__bounceIn">Đã nhận diện: ${decodedText}</span>`;
+      
+      // Rung điện thoại nếu trình duyệt hỗ trợ
+      if (navigator.vibrate) navigator.vibrate(100);
+    }
+
+    let html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { 
+        fps: 20, 
+        qrbox: {width: 250, height: 150}, // Chỉnh khung hình chữ nhật cho số VIN
+        aspectRatio: 1.0 
+    });
+    html5QrcodeScanner.render(onScanSuccess);
+
+    // 2. Gửi dữ liệu
+    const form = document.getElementById('InventoryForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Đang đồng bộ...`;
+
+      const formData = {
+        productCode: document.getElementById('productCode').value,
+        product_name: document.getElementById('productName').value,
+        product_category: document.getElementById('productCategory').value,
+        position: document.getElementById('position').value,
+        note: document.getElementById('note').value
+      };
+
+      fetch(WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        cache: "no-cache",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      })
+      .then(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Thành công!',
+          text: 'Dữ liệu xe đã được cập nhật vào hệ thống.',
+          background: '#1e293b',
+          color: '#fff',
+          confirmButtonColor: '#007bff'
+        });
+        form.reset();
+        document.getElementById('qr-reader-results').innerHTML = '';
+      })
+      .catch(err => {
+        Swal.fire({ icon: 'error', title: 'Lỗi kết nối', text: err });
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="bi bi-cloud-arrow-up-fill me-2"></i> Xác nhận lưu kho`;
+      });
+    });
+  </script>
+</body>
+</html>
