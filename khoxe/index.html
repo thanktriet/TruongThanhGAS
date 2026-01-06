@@ -185,16 +185,21 @@
         }
 
         async function callApi(params) {
-        try {
+            try {
+                // Sử dụng URL đã deploy /exec
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    body: JSON.stringify(params) // Không thêm headers phức tạp nếu không cần thiết
+                    // KHÔNG thêm headers: { 'Content-Type': 'application/json' }
+                    body: JSON.stringify(params) 
                 });
+        
+                // GAS sẽ redirect, fetch sẽ tự động theo dõi redirect này
+                if (!response.ok) throw new Error('Network response was not ok');
+                
                 const data = await response.json();
                 return data;
             } catch (error) {
-                console.error("Lỗi kết nối:", error);
-                alert("Không thể kết nối với Server GAS!");
+                console.error("Lỗi CORS hoặc kết nối:", error);
             }
         }
     </script>
