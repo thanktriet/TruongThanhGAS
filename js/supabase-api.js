@@ -2666,7 +2666,7 @@ async function supabaseCreateSalesPolicy(policyData) {
             return { success: false, message: 'Chỉ ADMIN mới có quyền tạo chính sách bán hàng' };
         }
 
-  pú      // ✅ SECURITY: Kiểm tra permission nếu có hàm hasPermission
+        // ✅ SECURITY: Kiểm tra permission nếu có hàm hasPermission
         if (typeof hasPermission === 'function' && !hasPermission(session, 'manage_sales_policies')) {
             return { success: false, message: 'Bạn không có quyền quản lý chính sách bán hàng' };
         }
