@@ -3,238 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VinFast Trương Thành Smart Inventory</title>
+    <title>VinFast Inventory Premium</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap');
         
-        :root {
-            --vf-blue: #003087; /* VinFast Blue */
-            --vf-gray: #f8fafc;
-        }
-
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: var(--vf-gray);
+            background-color: #f8fafc;
             color: #1e293b;
-            letter-spacing: -0.01em;
         }
 
-        h1, h2, h3, .font-heading { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
+        .font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        /* Hiệu ứng bo góc và đổ bóng mượt */
+        .card-custom {
+            @apply bg-white rounded-[24px] shadow-sm border border-slate-100;
         }
 
-        /* Hiệu ứng kính mờ cho Header */
-        .glass-header {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-        }
-
-        /* Bo góc mượt mà kiểu iOS/Modern Web */
-        .card-premium {
-            background: #ffffff;
-            border-radius: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
-            border: 1px solid #f1f5f9;
-        }
-
-        /* Badge trạng thái rõ ràng hơn */
+        /* Badge trạng thái */
         .badge {
-            padding: 6px 12px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+            @apply px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1;
         }
 
-        /* Tối ưu hóa bảng */
-        .v-table th {
-            font-size: 11px;
-            font-weight: 800;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 16px;
+        /* Tối ưu bảng dữ liệu */
+        th { @apply p-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest sticky top-0 z-20 border-b border-slate-100; }
+        
+        .filter-input { 
+            @apply w-full p-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all; 
         }
 
-        .v-table td {
-            padding: 16px;
-            vertical-align: middle;
-        }
+        /* Hiệu ứng cho dòng trong bảng */
+        tr { @apply border-b border-slate-50 transition-all duration-150; }
+        tr:hover { @apply bg-blue-50/30; }
 
-        /* Tăng kích thước vùng bấm cho nút */
-        .btn-action {
-            width: 36px;
-            height: 36px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            transition: all 0.2s;
-        }
-
-        /* Input đẹp hơn */
-        .input-field {
-            @apply w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none transition-all duration-200 text-sm;
-        }
-        .input-field:focus {
-            @apply bg-white border-blue-500 ring-4 ring-blue-500/10;
+        /* Định dạng Input form */
+        .form-input {
+            @apply w-full p-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all;
         }
     </style>
 </head>
 <body>
 
     <div id="loginPage" class="fixed inset-0 bg-[#0f172a] flex items-center justify-center z-[100] p-6">
-        <div class="card-premium p-10 w-full max-w-[400px] text-center">
+        <div class="card-custom p-10 w-full max-w-[400px] text-center shadow-2xl">
             <div class="mb-8">
-                <div class="w-16 h-16 bg-blue-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-xl shadow-blue-500/40">
-                    <i class="fas fa-key text-white text-2xl"></i>
+                <div class="w-20 h-20 bg-blue-600 rounded-[28px] mx-auto mb-6 flex items-center justify-center shadow-xl shadow-blue-500/30">
+                    <i class="fas fa-key text-white text-3xl"></i>
                 </div>
-                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">KHO XE VINFAST</h2>
-                <p class="text-slate-400 text-sm mt-1">Hệ thống quản lý nội bộ</p>
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight font-heading uppercase">Quản Lý Kho Xe</h2>
+                <p class="text-slate-400 text-sm mt-1">Hệ thống kho nội bộ</p>
             </div>
             <div class="space-y-4">
-                <input type="text" id="userInput" placeholder="Tên đăng nhập" class="input-field">
-                <input type="password" id="passInput" placeholder="Mật khẩu" class="input-field">
-                <button onclick="handleLogin()" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]">
-                    ĐĂNG NHẬP NGAY
+                <input type="text" id="userInput" placeholder="Tên đăng nhập" class="form-input text-center font-bold">
+                <input type="password" id="passInput" placeholder="Mật khẩu" class="form-input text-center font-bold">
+                <button onclick="handleLogin()" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
+                    ĐĂNG NHẬP
                 </button>
             </div>
-            <p id="loginMsg" class="text-red-500 text-xs mt-6 font-semibold hidden"></p>
+            <p id="loginMsg" class="text-red-500 text-xs mt-6 font-bold hidden"></p>
         </div>
     </div>
 
     <div id="mainApp" class="hidden min-h-screen">
-        <nav class="glass-header sticky top-0 z-50 px-8 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <img src="/assets/images/logo.jpg" class="h-6" alt="VinFast">
-                <div class="h-6 w-[1px] bg-slate-200 mx-2"></div>
-                <h1 class="font-heading text-lg font-extrabold tracking-tighter text-slate-800">INVENTORY</h1>
+        <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 px-8 py-4 flex justify-between items-center border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg">
+                    <i class="fas fa-car-side"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading text-lg font-black tracking-tighter text-slate-800 leading-none">VF-STORE</h1>
+                    <span class="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Inventory Management</span>
+                </div>
             </div>
             <div class="flex items-center gap-6">
-                <div class="bg-slate-100 px-4 py-2 rounded-2xl flex items-center gap-3 border border-slate-200">
-                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span id="displayUser" class="text-xs font-bold text-slate-600"></span>
+                <div class="text-right">
+                    <p id="displayUser" class="text-[11px] font-black text-slate-800 uppercase"></p>
+                    <button onclick="logout()" class="text-[10px] font-bold text-red-500 hover:underline uppercase">Thoát hệ thống</button>
                 </div>
-                <button onclick="logout()" class="text-slate-400 hover:text-red-500 transition-colors">
-                    <i class="fas fa-power-off"></i>
-                </button>
             </div>
         </nav>
 
-        <main class="max-w-[1600px] mx-auto p-8 space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="card-premium p-6 flex items-center gap-5">
-                    <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
-                        <i class="fas fa-car-side"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase">Tổng tồn kho</p>
-                        <h4 id="statTotal" class="text-2xl font-black text-slate-800">--</h4>
-                    </div>
+        <main class="max-w-[1600px] mx-auto p-6 space-y-6">
+            
+            <div class="card-custom p-8 border-t-4 border-t-blue-600">
+                <div class="flex items-center gap-2 mb-6 text-slate-800">
+                    <i class="fas fa-edit"></i>
+                    <h3 class="font-heading text-sm font-black uppercase">Cập nhật thông tin xe</h3>
                 </div>
-                <div class="card-premium p-6 flex items-center gap-5 border-l-4 border-l-blue-500">
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase">Kho Rạch Giá</p>
-                        <h4 id="statRG" class="text-2xl font-black text-slate-800">--</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-6">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 ml-1">SỐ KHUNG (VIN)</label>
+                        <input id="f0" class="form-input font-mono font-bold text-blue-700 uppercase" placeholder="Nhập VIN...">
                     </div>
-                </div>
-                <div class="card-premium p-6 flex items-center gap-5 border-l-4 border-l-purple-500">
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase">Kho Phú Quốc</p>
-                        <h4 id="statPQ" class="text-2xl font-black text-slate-800">--</h4>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 ml-1">DÒNG XE</label>
+                        <input id="f1" class="form-input font-semibold" placeholder="VD: VF 8 Plus">
                     </div>
-                </div>
-                <div class="card-premium p-6 flex items-center gap-5">
-                    <div class="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600">
-                        <i class="fas fa-exclamation-circle"></i>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 ml-1">MÀU SẮC</label>
+                        <input id="f2" class="form-input font-semibold text-slate-600" placeholder="Màu sơn">
                     </div>
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase">Lệch thực tế</p>
-                        <h4 id="statMismatch" class="text-2xl font-black text-rose-600">--</h4>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 ml-1">GIÁ XE (VNĐ)</label>
+                        <input id="f4" type="number" class="form-input font-black text-blue-900" placeholder="0">
                     </div>
-                </div>
-            </div>
-
-            <div class="card-premium p-8 border-t-4 border-t-blue-600">
-                <h3 class="font-heading text-sm font-extrabold text-slate-800 mb-6 flex items-center gap-2">
-                    <i class="fas fa-plus-circle text-blue-600"></i> CẬP NHẬT THÔNG TIN XE
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-extrabold text-slate-500 ml-1">SỐ KHUNG (VIN)</label>
-                        <input id="f0" class="input-field font-mono font-bold text-blue-700" placeholder="Nhập số khung...">
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-extrabold text-slate-500 ml-1">DÒNG XE</label>
-                        <input id="f1" class="input-field" placeholder="VD: VF 8 Plus">
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-extrabold text-slate-500 ml-1">MÀU SẮC</label>
-                        <input id="f2" class="input-field" placeholder="Màu sơn xe">
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-extrabold text-slate-500 ml-1">VỊ TRÍ KHO</label>
-                        <select id="f5" class="input-field font-bold text-blue-600 cursor-pointer">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 ml-1">VỊ TRÍ KHO</label>
+                        <select id="f5" class="form-input font-bold text-blue-600">
                             <option value="Rạch Giá">📍 Rạch Giá</option>
                             <option value="Phú Quốc">📍 Phú Quốc</option>
                         </select>
                     </div>
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-extrabold text-slate-500 ml-1">TRẠNG THÁI</label>
-                        <select id="f6" class="input-field cursor-pointer">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 ml-1">TRẠNG THÁI</label>
+                        <select id="f6" class="form-input font-bold">
                             <option value="Còn hàng">Còn hàng</option>
-                            <option value="Đã cọc">Đã cọc</option>
+                            <option value="Đã ghép">Đã ghép</option>
                             <option value="Đã bán">Đã bán</option>
                         </select>
                     </div>
                     <div class="flex items-end">
-                        <button onclick="saveItem()" class="w-full bg-slate-900 hover:bg-black text-white py-3 rounded-xl font-bold transition-all active:scale-95 shadow-lg">LƯU XE</button>
+                        <button onclick="saveItem()" class="w-full bg-slate-900 text-white h-[46px] rounded-2xl font-bold hover:bg-black transition-all shadow-lg shadow-slate-200 active:scale-95">LƯU XE</button>
                     </div>
                 </div>
             </div>
 
-            <div class="card-premium overflow-hidden border border-slate-200">
-                <div class="overflow-x-auto max-h-[60vh]">
-                    <table class="v-table w-full text-left border-collapse">
+            <div class="card-custom overflow-hidden">
+                <div class="overflow-x-auto max-h-[70vh]">
+                    <table class="w-full text-left border-collapse">
                         <thead>
                             <tr>
                                 <th>Số Khung (VIN)</th>
-                                <th>Thông tin chi tiết</th>
-                                <th>Màu sắc</th>
-                                <th class="text-center">Vị trí</th>
-                                <th class="text-center">Đối soát</th>
-                                <th class="text-center">Trạng thái</th>
+                                <th>Dòng Xe</th>
+                                <th>Màu Sắc</th>
+                                <th>Giá Xe</th>
+                                <th class="text-center">Kho</th>
+                                <th class="text-center">Đối Soát</th>
+                                <th class="text-center">Trạng Thái</th>
                                 <th class="text-right pr-8">#</th>
                             </tr>
-                            <tr class="bg-slate-50/50">
-                                <td class="p-3"><input type="text" onkeyup="filterData()" class="filter-input search-box" data-col="c0" placeholder="Lọc VIN..."></td>
-                                <td class="p-3"><input type="text" onkeyup="filterData()" class="filter-input search-box" data-col="c1" placeholder="Dòng xe/Năm..."></td>
-                                <td class="p-3"><input type="text" onkeyup="filterData()" class="filter-input search-box" data-col="c2" placeholder="Màu xe..."></td>
-                                <td class="p-3">
+                            <tr class="bg-slate-50/50 border-b">
+                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-input search-box" data-col="c0" placeholder="Tìm VIN..."></td>
+                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-input search-box" data-col="c1" placeholder="Tìm tên..."></td>
+                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-input search-box" data-col="c2" placeholder="Tìm màu..."></td>
+                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-input search-box" data-col="c4" placeholder="Tìm giá..."></td>
+                                <td class="p-2">
                                     <select onchange="filterData()" class="filter-input search-box" data-col="c5">
-                                        <option value="">Tất cả kho</option>
+                                        <option value="">Tất cả</option>
                                         <option value="Rạch Giá">Rạch Giá</option>
                                         <option value="Phú Quốc">Phú Quốc</option>
                                     </select>
                                 </td>
-                                <td class="p-3">
+                                <td class="p-2">
                                     <select onchange="filterData()" class="filter-input search-box" data-col="match">
                                         <option value="">Tất cả</option>
-                                        <option value="Có">Khớp</option>
-                                        <option value="Không">Chưa khớp</option>
+                                        <option value="Có">Khớp (Có)</option>
+                                        <option value="Không">Lệch (Không)</option>
                                     </select>
                                 </td>
-                                <td class="p-3"><input type="text" onkeyup="filterData()" class="filter-input search-box" data-col="c6" placeholder="Trạng thái..."></td>
+                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-input search-box" data-col="c6" placeholder="Trạng thái..."></td>
                                 <td></td>
                             </tr>
                         </thead>
-                        <tbody id="tableBody" class="divide-y divide-slate-100 bg-white">
+                        <tbody id="tableBody" class="text-[13px] font-medium">
                             </tbody>
                     </table>
                 </div>
@@ -243,7 +176,8 @@
     </main>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxhex6ID8BzU2_Rwwxfs95OofEzN1lh1bEEAcsjiaf6RpZfmFkEqfKnW00vXYb4CEVI/exec";
+        // --- CẤU HÌNH ---
+        const API_URL = "THAY_URL_WEBAPP_GAS_CỦA_BẠN_VÀO_ĐÂY";
         let allData = [];
 
         window.onload = () => { if(localStorage.getItem('vf_token')) showApp(); };
@@ -255,8 +189,7 @@
             const msg = document.getElementById('loginMsg');
             
             if(!user || !pass) return;
-            btn.innerText = "ĐANG XỬ LÝ...";
-            btn.disabled = true;
+            btn.innerText = "XÁC THỰC..."; btn.disabled = true;
 
             try {
                 const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'login', user, pass }) });
@@ -266,17 +199,16 @@
                     localStorage.setItem('vf_user', user);
                     showApp();
                 } else {
-                    msg.innerText = "Tài khoản hoặc mật khẩu không chính xác!";
-                    msg.classList.remove('hidden');
+                    msg.innerText = "Tài khoản hoặc mật khẩu không đúng!"; msg.classList.remove('hidden');
                 }
             } catch (e) { alert("Lỗi kết nối API!"); }
-            finally { btn.innerText = "ĐĂNG NHẬP NGAY"; btn.disabled = false; }
+            finally { btn.innerText = "ĐĂNG NHẬP"; btn.disabled = false; }
         }
 
         function showApp() {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            document.getElementById('displayUser').innerText = localStorage.getItem('vf_user').toUpperCase();
+            document.getElementById('displayUser').innerText = localStorage.getItem('vf_user');
             loadData();
         }
 
@@ -284,77 +216,50 @@
 
         async function loadData() {
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '<tr><td colspan="7" class="p-20 text-center text-slate-400 font-medium">Đang đồng bộ dữ liệu...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="p-20 text-center text-slate-400 font-bold tracking-widest uppercase text-[10px]">Đang đồng bộ dữ liệu...</td></tr>';
             try {
                 const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getVehicles' }) });
                 allData = await response.json();
-                updateStats(allData);
                 renderTable(allData);
-            } catch (e) { tbody.innerHTML = '<tr><td colspan="7" class="p-20 text-center text-red-500 font-bold">Lỗi tải dữ liệu. Hãy kiểm tra AppScript!</td></tr>'; }
-        }
-
-        function updateStats(data) {
-            document.getElementById('statTotal').innerText = data.length;
-            document.getElementById('statRG').innerText = data.filter(i => i.c5 === 'Rạch Giá').length;
-            document.getElementById('statPQ').innerText = data.filter(i => i.c5 === 'Phú Quốc').length;
-            document.getElementById('statMismatch').innerText = data.filter(i => i.match === 'Không').length;
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="8" class="p-20 text-center text-red-500 font-black">LỖI KẾT NỐI SERVER!</td></tr>'; }
         }
 
         function renderTable(data) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
-            
             data.forEach(item => {
-                // 1. Logic đối soát (Khớp/Lệch)
-                const matchClass = item.match === 'Có' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700';
+                // Định dạng tiền tệ
+                const priceFormat = item.c4 ? Number(item.c4).toLocaleString('vi-VN') + " ₫" : "---";
                 
-                // 2. Logic màu sắc theo Kho
-                const khoClass = item.c5 === 'Rạch Giá' ? 'text-blue-600 bg-blue-50 border-blue-100' : 'text-purple-600 bg-purple-50 border-purple-100';
-        
-                // 3. LOGIC MÀU SẮC TRẠNG THÁI (MỚI)
+                // Màu sắc đối soát
+                const matchClass = item.match === 'Có' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100';
+                
+                // Màu sắc kho
+                const khoClass = item.c5 === 'Rạch Giá' ? 'text-blue-600' : 'text-purple-600';
+
+                // MÀU SẮC TRẠNG THÁI (YÊU CẦU)
                 let statusClass = "";
-                if (item.c6 === 'Còn hàng') {
-                    statusClass = "bg-emerald-500 text-white shadow-sm"; // Xanh lá
-                } else if (item.c6 === 'Đã ghép' || item.c6 === 'Đã cọc') {
-                    statusClass = "bg-amber-400 text-amber-900 shadow-sm"; // Vàng
-                } else if (item.c6 === 'Đã bán') {
-                    statusClass = "bg-rose-600 text-white shadow-sm"; // Đỏ
-                } else {
-                    statusClass = "bg-slate-100 text-slate-500"; // Mặc định (Xám)
-                }
-        
+                if (item.c6 === 'Còn hàng') statusClass = "bg-emerald-500 text-white shadow-md shadow-emerald-100";
+                else if (item.c6 === 'Đã ghép') statusClass = "bg-amber-400 text-amber-950 font-black";
+                else if (item.c6 === 'Đã bán') statusClass = "bg-rose-600 text-white shadow-md shadow-rose-100";
+                else statusClass = "bg-slate-100 text-slate-500";
+
                 tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50/80 transition-all group border-b border-slate-100">
-                        <td class="p-4 font-mono font-black text-blue-700 text-xs tracking-wider">${item.c0}</td>
+                    <tr>
+                        <td class="p-4 font-mono font-black text-blue-700 text-xs">${item.c0}</td>
                         <td class="p-4">
                             <div class="font-bold text-slate-800">${item.c1}</div>
-                            <div class="text-[10px] text-slate-400 font-bold uppercase">Sản xuất ${item.c3}</div>
+                            <div class="text-[9px] text-slate-400 font-bold uppercase">Năm SX: ${item.c3 || '---'}</div>
                         </td>
-                        <td class="p-4">
-                            <span class="font-bold text-slate-600 text-sm italic">${item.c2}</span>
-                        </td>
-                        <td class="p-4 text-center font-black ${khoClass} text-[11px] uppercase rounded-lg">
-                            ${item.c5}
-                        </td>
-                        <td class="p-4 text-center">
-                            <span class="badge ${matchClass}">
-                                ${item.match === 'Có' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'} 
-                                ${item.match}
-                            </span>
-                        </td>
-                        <td class="p-4 text-center">
-                            <span class="badge ${statusClass} min-w-[80px] justify-center">
-                                ${item.c6}
-                            </span>
-                        </td>
+                        <td class="p-4 font-bold text-slate-600 italic underline underline-offset-4 decoration-slate-100">${item.c2 || '---'}</td>
+                        <td class="p-4 font-black text-blue-900">${priceFormat}</td>
+                        <td class="p-4 text-center font-black ${khoClass} text-[10px] uppercase">${item.c5}</td>
+                        <td class="p-4 text-center"><span class="badge ${matchClass}"><i class="fas ${item.match==='Có'?'fa-check-circle':'fa-times-circle'} text-[10px]"></i> ${item.match}</span></td>
+                        <td class="p-4 text-center"><span class="badge ${statusClass} min-w-[90px]">${item.c6}</span></td>
                         <td class="p-4 text-right pr-6">
                             <div class="flex justify-end gap-2">
-                                <button onclick="editItem('${item.c0}')" class="btn-action bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white">
-                                    <i class="fas fa-edit text-xs"></i>
-                                </button>
-                                <button onclick="deleteItem('${item.c0}')" class="btn-action bg-red-50 text-red-400 hover:bg-red-600 hover:text-white">
-                                    <i class="fas fa-trash-alt text-xs"></i>
-                                </button>
+                                <button onclick="editItem('${item.c0}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all"><i class="fas fa-edit text-xs"></i></button>
+                                <button onclick="deleteItem('${item.c0}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:bg-rose-600 hover:text-white transition-all"><i class="fas fa-trash-alt text-xs"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -366,19 +271,28 @@
             const filters = Array.from(document.querySelectorAll('.search-box')).map(el => ({ col: el.dataset.col, val: el.value.toLowerCase().trim() }));
             const filtered = allData.filter(item => filters.every(f => !f.val || String(item[f.col]).toLowerCase().includes(f.val)));
             renderTable(filtered);
-            updateStats(filtered);
         }
 
         async function saveItem() {
             const vin = document.getElementById('f0').value.trim();
-            if(!vin) return;
-            const data = [vin, document.getElementById('f1').value, document.getElementById('f2').value, "", "", document.getElementById('f5').value, document.getElementById('f6').value, ""];
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'save', data: data }) });
+            if(!vin) return alert("Cần nhập Số Khung!");
+            // Tạo mảng theo đúng index: 0:VIN, 1:Tên, 2:Màu, 3:Năm, 4:Giá, 5:Kho, 6:Trạng thái, 7:Ghi chú
+            const arr = [
+                vin, 
+                document.getElementById('f1').value, 
+                document.getElementById('f2').value, 
+                "", // NSX tạm để trống hoặc lấy thêm input
+                document.getElementById('f4').value, 
+                document.getElementById('f5').value, 
+                document.getElementById('f6').value, 
+                ""
+            ];
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'save', data: arr }) });
             location.reload();
         }
 
         async function deleteItem(vin) {
-            if(!confirm("Xác nhận gỡ xe "+vin+" khỏi kho quản lý?")) return;
+            if(!confirm("Gỡ xe "+vin+" khỏi kho?")) return;
             await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', vin: vin }) });
             loadData();
         }
@@ -388,6 +302,7 @@
             document.getElementById('f0').value = item.c0;
             document.getElementById('f1').value = item.c1;
             document.getElementById('f2').value = item.c2;
+            document.getElementById('f4').value = item.c4;
             document.getElementById('f5').value = item.c5;
             document.getElementById('f6').value = item.c6;
             window.scrollTo({ top: 0, behavior: 'smooth' });
