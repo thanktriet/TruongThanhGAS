@@ -35,9 +35,28 @@ width:100%;padding:8px 10px;font-size:12px;border-radius:12px;
 border:1px solid var(--border)
 }
 
-.st-available{background:#16a34a;color:#fff}
-.st-paired{background:#f59e0b;color:#78350f}
-.st-sold{background:#dc2626;color:#fff}
+.st-available{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;box-shadow:0 2px 8px rgba(22,163,74,.3)}
+.st-paired{background:linear-gradient(135deg,#f59e0b,#d97706);color:#78350f;box-shadow:0 2px 8px rgba(245,158,11,.3)}
+.st-sold{background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;box-shadow:0 2px 8px rgba(220,38,38,.3)}
+
+.card-premium{background:#fff;border-radius:24px;border:1px solid #e5e7eb;box-shadow:0 20px 40px rgba(0,0,0,.08);border-top:4px solid #2563eb}
+.animate-fade{animation:fadeIn .3s ease-in-out}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .premium-input { padding: 12px; font-size: 16px; } /* Prevent zoom on iOS */
+    nav { padding: 1rem; }
+    main { padding: 1rem; }
+    .card { margin: 0.5rem; }
+}
+
+/* Custom scrollbar */
+.scrollbar-thin::-webkit-scrollbar { width: 6px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: #f1f5f9; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
 </head>
 
@@ -78,8 +97,12 @@ border:1px solid var(--border)
     </div>
 
     <div class="flex bg-slate-100 p-1.5 rounded-xl ml-6">
-      <button id="tabStock" onclick="switchTab('stock')" class="tab-active px-5 py-2 rounded-lg text-xs font-black">TỒN KHO</button>
-      <button id="tabFinder" onclick="switchTab('finder')" class="tab-inactive px-5 py-2 rounded-lg text-xs font-black">TRA CỨU</button>
+      <button id="tabStock" onclick="switchTab('stock')" class="tab-active px-5 py-2 rounded-lg text-xs font-black">
+        <i class="fas fa-warehouse mr-2"></i>TỒN KHO
+      </button>
+      <button id="tabFinder" onclick="switchTab('finder')" class="tab-inactive px-5 py-2 rounded-lg text-xs font-black">
+        <i class="fas fa-search-location mr-2"></i>TRA CỨU
+      </button>
     </div>
   </div>
 
@@ -89,6 +112,14 @@ border:1px solid var(--border)
 </nav>
 
 <main class="max-w-[1750px] mx-auto p-8 space-y-10">
+
+<!-- Add export button -->
+<div class="flex justify-between items-center">
+    <h2 class="text-xl font-black text-slate-800">Quản lý kho xe VF</h2>
+    <button onclick="exportToExcel()" class="px-6 py-3 bg-green-600 text-white rounded-xl font-black hover:bg-green-700 transition-all shadow-lg">
+        <i class="fas fa-file-excel mr-2"></i>Xuất Excel
+    </button>
+</div>
 
 <!-- ================= KPI ================= -->
 <div class="grid md:grid-cols-4 gap-8">
@@ -102,23 +133,59 @@ border:1px solid var(--border)
 <section id="sectionStock" class="space-y-8">
 
 <!-- FORM -->
-<div class="bg-slate-900 p-8 rounded-3xl grid md:grid-cols-7 gap-5">
-  <input id="f0" class="premium-input bg-slate-800 text-white" placeholder="VIN">
-  <input id="f1" class="premium-input bg-slate-800 text-white" placeholder="Dòng xe">
-  <input id="f2" class="premium-input bg-slate-800 text-white" placeholder="Màu">
-  <input id="f4" type="number" class="premium-input bg-slate-800 text-blue-400 font-black" placeholder="Giá">
-  <select id="f5" class="premium-input bg-slate-800 text-white"><option>Rạch Giá</option><option>Phú Quốc</option></select>
-  <select id="f6" class="premium-input bg-slate-800 text-white"><option>Còn hàng</option><option>Đã ghép</option><option>Đã bán</option></select>
-  <button onclick="saveItem()" class="bg-blue-600 rounded-xl text-white font-black">Lưu</button>
+<div class="bg-gradient-to-r from-slate-900 to-slate-800 p-8 rounded-3xl grid md:grid-cols-7 gap-5 shadow-2xl">
+  <div class="md:col-span-2">
+    <label class="text-white text-xs font-bold mb-2 block uppercase tracking-wider">VIN/Số khung</label>
+    <input id="f0" class="premium-input bg-slate-800 text-white border-2 border-slate-700 focus:border-blue-400" placeholder="VD: VF5ABC123456">
+  </div>
+  <div class="md:col-span-2">
+    <label class="text-white text-xs font-bold mb-2 block uppercase tracking-wider">Dòng xe</label>
+    <input id="f1" class="premium-input bg-slate-800 text-white border-2 border-slate-700 focus:border-blue-400" placeholder="VF 5 Plus, VF 6, VF 7...">
+  </div>
+  <div>
+    <label class="text-white text-xs font-bold mb-2 block uppercase tracking-wider">Màu sắc</label>
+    <input id="f2" class="premium-input bg-slate-800 text-white border-2 border-slate-700 focus:border-blue-400" placeholder="Trắng, Đen, Xanh...">
+  </div>
+  <div>
+    <label class="text-white text-xs font-bold mb-2 block uppercase tracking-wider">Giá bán (VNĐ)</label>
+    <input id="f4" type="number" class="premium-input bg-slate-800 text-blue-400 font-black border-2 border-slate-700 focus:border-blue-400" placeholder="650000000">
+  </div>
+  <div>
+    <label class="text-white text-xs font-bold mb-2 block uppercase tracking-wider">Kho</label>
+    <select id="f5" class="premium-input bg-slate-800 text-white border-2 border-slate-700 focus:border-blue-400">
+        <option value="Rạch Giá">🏭 Rạch Giá</option>
+        <option value="Phú Quốc">🏝️ Phú Quốc</option>
+    </select>
+  </div>
+  <div>
+    <label class="text-white text-xs font-bold mb-2 block uppercase tracking-wider">Trạng thái</label>
+    <select id="f6" class="premium-input bg-slate-800 text-white border-2 border-slate-700 focus:border-blue-400">
+        <option value="Còn hàng">✅ Còn hàng</option>
+        <option value="Đã ghép">🔗 Đã ghép</option>
+        <option value="Đã bán">💰 Đã bán</option>
+    </select>
+  </div>
+  <div class="flex items-end">
+    <button onclick="saveItem()" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-xl text-white font-black py-4 px-6 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5">
+        <i class="fas fa-save mr-2"></i>Lưu
+    </button>
+  </div>
 </div>
 
 <!-- TABLE -->
-<div class="card overflow-hidden">
-<div class="overflow-x-auto max-h-[65vh]">
+<div class="card overflow-hidden shadow-xl">
+<div class="overflow-x-auto max-h-[70vh] scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
 <table class="w-full text-sm">
-<thead>
-<tr class="bg-slate-50 text-xs uppercase text-slate-400">
-<th>VIN</th><th>Dòng</th><th>Màu</th><th>Giá</th><th>Kho</th><th>Đối soát</th><th>Trạng thái</th><th></th>
+<thead class="sticky top-0 bg-slate-50 z-10">
+<tr class="text-xs uppercase text-slate-400 border-b-2 border-slate-200">
+<th class="p-4 text-left font-black">VIN</th>
+<th class="p-4 text-left font-black">Thông tin xe</th>
+<th class="p-4 text-left font-black">Màu sắc</th>
+<th class="p-4 text-right font-black">Giá bán</th>
+<th class="p-4 text-center font-black">Kho</th>
+<th class="p-4 text-center font-black">Đối soát</th>
+<th class="p-4 text-center font-black">Trạng thái</th>
+<th class="p-4 text-center font-black">Thao tác</th>
 </tr>
 <tr class="bg-white">
 <td><input data-col="c0" onkeyup="filterData()" class="filter-input search-box" placeholder="VIN"></td>
@@ -131,11 +198,32 @@ border:1px solid var(--border)
 <td></td>
 </tr>
 </thead>
-<tbody id="tableBody"></tbody>
+<tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
 </table>
 </div>
 </div>
 
+</section>
+
+<!-- ================= FINDER ================= -->
+<section id="sectionFinder" class="hidden space-y-8">
+    <div class="card p-8">
+        <h3 class="text-lg font-black mb-6 flex items-center gap-3">
+            <i class="fas fa-search-location text-blue-600"></i>
+            Tra cứu vị trí thực tế
+        </h3>
+
+        <div class="flex gap-4 mb-6">
+            <input id="finderInput" class="premium-input flex-1" placeholder="Nhập VIN hoặc mã xe...">
+            <button onclick="searchFinder()" class="px-8 py-4 bg-blue-600 text-white rounded-xl font-black hover:bg-blue-700 transition-all">
+                <i class="fas fa-search mr-2"></i>Tìm kiếm
+            </button>
+        </div>
+
+        <div id="finderResults" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Kết quả sẽ hiển thị ở đây -->
+        </div>
+    </div>
 </section>
 
 </main>
@@ -180,30 +268,53 @@ border:1px solid var(--border)
         function switchTab(tab) {
             const stock = document.getElementById('sectionStock');
             const finder = document.getElementById('sectionFinder');
-            const btn1 = document.getElementById('tab1Btn');
-            const btn2 = document.getElementById('tab2Btn');
+            const btnStock = document.getElementById('tabStock');
+            const btnFinder = document.getElementById('tabFinder');
 
             if (tab === 'stock') {
-                stock.classList.remove('hidden'); finder.classList.add('hidden');
-                btn1.className = 'tab-active px-6 py-2 rounded-xl text-xs font-black transition-all';
-                btn2.className = 'tab-inactive px-6 py-2 rounded-xl text-xs font-black transition-all';
+                stock.classList.remove('hidden');
+                finder.classList.add('hidden');
+                btnStock.className = 'tab-active px-5 py-2 rounded-lg text-xs font-black';
+                btnFinder.className = 'tab-inactive px-5 py-2 rounded-lg text-xs font-black';
                 loadData();
             } else {
-                stock.classList.add('hidden'); finder.classList.remove('hidden');
-                btn1.className = 'tab-inactive px-6 py-2 rounded-xl text-xs font-black transition-all';
-                btn2.className = 'tab-active px-6 py-2 rounded-xl text-xs font-black transition-all';
+                stock.classList.add('hidden');
+                finder.classList.remove('hidden');
+                btnStock.className = 'tab-inactive px-5 py-2 rounded-lg text-xs font-black';
+                btnFinder.className = 'tab-active px-5 py-2 rounded-lg text-xs font-black';
             }
         }
 
         async function loadData() {
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '<tr><td colspan="8" class="p-20 text-center text-slate-300 font-black uppercase tracking-[0.2em] text-[10px] animate-pulse">Đang đồng bộ dữ liệu kho xe...</td></tr>';
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="p-20 text-center">
+                        <div class="inline-flex items-center gap-3 text-blue-600">
+                            <i class="fas fa-spinner fa-spin text-xl"></i>
+                            <span class="font-black uppercase tracking-[0.2em] text-xs animate-pulse">Đang đồng bộ dữ liệu kho xe...</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
             try {
                 const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getVehicles' }) });
                 allData = await response.json();
                 updateDashboardStats(allData);
                 renderTable(allData);
-            } catch (e) { tbody.innerHTML = '<tr><td colspan="8" class="p-20 text-center text-red-500 font-black">LỖI KẾT NỐI API!</td></tr>'; }
+            } catch (e) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="p-20 text-center text-red-500">
+                            <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                            <div class="font-black uppercase tracking-[0.2em] text-xs">Lỗi kết nối API!</div>
+                            <button onclick="loadData()" class="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg text-xs font-black hover:bg-red-700">
+                                Thử lại
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
         }
 
         function updateDashboardStats(data) {
@@ -282,13 +393,7 @@ border:1px solid var(--border)
             } catch (e) { container.innerHTML = '<p class="text-center col-span-full text-red-500 font-bold uppercase">Lỗi API Finder</p>'; }
         }
 
-        // Các hàm saveItem, filterData, deleteItem... giữ nguyên logic API của bạn
-        function filterData() {
-            const filters = Array.from(document.querySelectorAll('.search-box')).map(el => ({ col: el.dataset.col, val: el.value.toLowerCase().trim() }));
-            const filtered = allData.filter(item => filters.every(f => !f.val || String(item[f.col]).toLowerCase().includes(f.val)));
-            renderTable(filtered);
-            updateDashboardStats(filtered);
-        }
+        // Các hàm saveItem, deleteItem... giữ nguyên logic API của bạn
 
         async function saveItem() {
             const vin = document.getElementById('f0').value.trim();
@@ -333,6 +438,23 @@ border:1px solid var(--border)
         
             renderTable(filtered);
             updateDashboardStats(filtered);
+        }
+
+        function exportToExcel() {
+            // Simple CSV export (có thể nâng cấp thành Excel proper)
+            const headers = ['VIN', 'Dòng xe', 'Màu', 'NSX', 'Giá', 'Kho', 'Trạng thái', 'Đối soát'];
+            const csv = [
+                headers.join(','),
+                ...allData.map(item => [
+                    item.c0, item.c1, item.c2, item.c3 || '', item.c4 || '', item.c5, item.c6, item.match
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `kho-xe-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
         }
 
     </script>
