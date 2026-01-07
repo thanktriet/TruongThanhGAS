@@ -121,6 +121,7 @@ function deleteVehicle(vin) {
 
 /**
  * Hàm tra cứu xe trong bãi thực tế
+ * Cấu trúc sheet: timestamp | Productname | Tình trạng | Ghi Chú | Vị Trí Kho | Số VIN
  */
 function findVehicleInActualStock(query) {
   const actualSheet = SS.getSheetByName(ACTUAL_SHEET);
@@ -135,19 +136,19 @@ function findVehicleInActualStock(query) {
   // Duyệt từ dòng 2 (bỏ header)
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    const vin = String(row[5] || "").trim().toUpperCase(); // Cột F (index 5)
+    const vin = String(row[5] || "").trim().toUpperCase(); // Cột F (index 5) - Số VIN
 
-    // Tìm theo VIN hoặc model (cột D - index 3)
-    const model = String(row[3] || "").trim().toUpperCase();
+    // Tìm theo VIN hoặc Productname (cột B - index 1)
+    const productName = String(row[1] || "").trim().toUpperCase();
 
-    if (vin.includes(queryUpper) || model.includes(queryUpper)) {
+    if (vin.includes(queryUpper) || productName.includes(queryUpper)) {
       results.push({
-        timestamp: row[0] || '', // Cột A - Thời gian
-        status: row[1] || '',    // Cột B - Trạng thái
-        vin: vin,                // Cột F - VIN
-        model: row[3] || '',     // Cột D - Model
-        location: row[6] || '',  // Cột G - Vị trí
-        note: row[7] || ''       // Cột H - Ghi chú
+        timestamp: row[0] || '', // Cột A - timestamp
+        model: row[1] || '',     // Cột B - Productname
+        status: row[2] || '',    // Cột C - Tình trạng
+        note: row[3] || '',      // Cột D - Ghi Chú
+        location: row[4] || '',  // Cột E - Vị Trí Kho
+        vin: vin                 // Cột F - Số VIN
       });
     }
   }
