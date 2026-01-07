@@ -117,7 +117,7 @@ border:1px solid var(--border)
 <div class="flex justify-between items-center">
     <h2 class="text-xl font-black text-slate-800">Quản lý kho xe VF</h2>
     <button onclick="exportToExcel()" class="px-6 py-3 bg-green-600 text-white rounded-xl font-black hover:bg-green-700 transition-all shadow-lg">
-        <i class="fas fa-file-excel mr-2"></i>Xuất Excel
+        <i class="fas fa-file-excel mr-2"></i>Xuất .xls
     </button>
 </div>
 
@@ -360,28 +360,54 @@ border:1px solid var(--border)
             const query = document.getElementById('finderInput').value.trim();
             const container = document.getElementById('finderResults');
             if(!query) return;
+
             container.innerHTML = '<div class="col-span-full text-center py-20 text-blue-600 animate-pulse font-black uppercase tracking-widest text-xs">Đang lục tìm bãi thực tế...</div>';
+
             try {
-                // Ta gọi hàm riêng getDetailedActualStock ở Backend (bản API của bạn)
-                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'finder', query: query }) });
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'finder', query: query })
+                });
                 const res = await response.json();
+
                 container.innerHTML = '';
-                if(res.data.length === 0) {
+
+                // Kiểm tra response thành công
+                if (res.success === false) {
+                    container.innerHTML = `<div class="col-span-full text-center py-20 text-red-400 font-bold uppercase italic">${res.message || 'Lỗi tìm kiếm'}</div>`;
+                    return;
+                }
+
+                // Kiểm tra có dữ liệu không
+                if (!res.data || res.data.length === 0) {
                     container.innerHTML = '<div class="col-span-full text-center py-20 text-red-400 font-bold uppercase italic">Không tìm thấy xe này trong báo cáo bãi.</div>';
                     return;
                 }
+
+                // Hiển thị kết quả
                 res.data.forEach(item => {
+                    const timestamp = item.timestamp ? new Date(item.timestamp).toLocaleString('vi-VN') : 'N/A';
+                    const statusClass = item.status === 'available' ? 'bg-green-100 text-green-700' :
+                                      item.status === 'paired' ? 'bg-yellow-100 text-yellow-700' :
+                                      'bg-blue-100 text-blue-700';
+
                     container.innerHTML += `
                         <div class="card-premium p-7 border-t-8 border-t-blue-600 animate-fade">
                             <div class="flex justify-between items-start mb-6">
-                                <div class="text-[9px] font-black text-slate-400 uppercase leading-relaxed tracking-widest">Thời gian ghi nhận:<br><span class="text-slate-800">${item.timestamp}</span></div>
-                                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">${item.status}</span>
+                                <div class="text-[9px] font-black text-slate-400 uppercase leading-relaxed tracking-widest">
+                                    Thời gian ghi nhận:<br><span class="text-slate-800">${timestamp}</span>
+                                </div>
+                                <span class="${statusClass} px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                                    ${item.status || 'N/A'}
+                                </span>
                             </div>
-                            <h3 class="font-black text-blue-600 text-2xl tracking-tighter mb-1">${item.vin}</h3>
-                            <p class="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest text-[10px]">${item.model}</p>
+                            <h3 class="font-black text-blue-600 text-2xl tracking-tighter mb-1">${item.vin || 'N/A'}</h3>
+                            <p class="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest text-[10px]">${item.model || 'N/A'}</p>
                             <div class="bg-blue-600 text-white p-5 rounded-3xl shadow-lg shadow-blue-200">
                                 <p class="text-[9px] font-bold uppercase opacity-60 mb-1">Vị trí bãi chính xác</p>
-                                <p class="text-xl font-black italic tracking-tighter"><i class="fas fa-location-crosshairs mr-2"></i>${item.location || 'N/A'}</p>
+                                <p class="text-xl font-black italic tracking-tighter">
+                                    <i class="fas fa-location-crosshairs mr-2"></i>${item.location || 'N/A'}
+                                </p>
                             </div>
                             <div class="mt-6 pt-6 border-t border-dashed border-slate-200">
                                 <p class="text-[9px] font-black text-slate-400 uppercase mb-2">Ghi chú thủ kho</p>
@@ -390,7 +416,11 @@ border:1px solid var(--border)
                         </div>
                     `;
                 });
-            } catch (e) { container.innerHTML = '<p class="text-center col-span-full text-red-500 font-bold uppercase">Lỗi API Finder</p>'; }
+
+            } catch (e) {
+                console.error('Finder API Error:', e);
+                container.innerHTML = '<div class="col-span-full text-center py-20 text-red-500 font-bold uppercase">Lỗi kết nối API Finder</div>';
+            }
         }
 
         // Các hàm saveItem, deleteItem... giữ nguyên logic API của bạn
@@ -441,19 +471,33 @@ border:1px solid var(--border)
         }
 
         function exportToExcel() {
-            // Simple CSV export (có thể nâng cấp thành Excel proper)
+            // Xuất file Excel (.xls) format
             const headers = ['VIN', 'Dòng xe', 'Màu', 'NSX', 'Giá', 'Kho', 'Trạng thái', 'Đối soát'];
-            const csv = [
-                headers.join(','),
-                ...allData.map(item => [
-                    item.c0, item.c1, item.c2, item.c3 || '', item.c4 || '', item.c5, item.c6, item.match
-                ].join(','))
-            ].join('\n');
+            let csvContent = headers.join('\t') + '\n'; // Tab-separated for Excel
 
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            allData.forEach(item => {
+                const row = [
+                    item.c0,
+                    item.c1,
+                    item.c2,
+                    item.c3 || '',
+                    item.c4 || '',
+                    item.c5,
+                    item.c6,
+                    item.match
+                ];
+                csvContent += row.join('\t') + '\n';
+            });
+
+            // Tạo BOM để Excel hiểu UTF-8
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], {
+                type: 'application/vnd.ms-excel;charset=utf-8;'
+            });
+
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `kho-xe-${new Date().toISOString().split('T')[0]}.csv`;
+            link.download = `kho-xe-${new Date().toISOString().split('T')[0]}.xls`;
             link.click();
         }
 
