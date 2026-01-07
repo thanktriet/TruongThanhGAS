@@ -117,6 +117,18 @@
             to { opacity:1; transform:none; }
         }
         .animate-fade { animation: fadeUp .6s ease both; }
+        .filter-input {
+            background: white;
+            font-size: 12px;
+            border-radius: 14px;
+            border: 1px solid #e5e7eb;
+            transition: .25s;
+        }
+        .filter-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+        }
+
     </style>
 </head>
 
@@ -208,6 +220,68 @@
         </button>
     </div>
 </div>
+<thead>
+    <tr>
+        <th>Số khung</th>
+        <th>Dòng xe</th>
+        <th>Màu sắc</th>
+        <th>Giá</th>
+        <th class="text-center">Kho</th>
+        <th class="text-center">Đối soát</th>
+        <th class="text-center">Trạng thái</th>
+        <th></th>
+    </tr>
+
+    <!-- FILTER ROW -->
+    <tr class="bg-slate-50 border-b">
+        <td class="p-2">
+            <input onkeyup="filterData()" data-col="c0"
+                   class="filter-input search-box"
+                   placeholder="VIN...">
+        </td>
+        <td class="p-2">
+            <input onkeyup="filterData()" data-col="c1"
+                   class="filter-input search-box"
+                   placeholder="Dòng xe...">
+        </td>
+        <td class="p-2">
+            <input onkeyup="filterData()" data-col="c2"
+                   class="filter-input search-box"
+                   placeholder="Màu sắc...">
+        </td>
+        <td class="p-2">
+            <input onkeyup="filterData()" data-col="c4"
+                   class="filter-input search-box"
+                   placeholder="Giá...">
+        </td>
+        <td class="p-2">
+            <select onchange="filterData()" data-col="c5"
+                    class="filter-input search-box">
+                <option value="">Tất cả</option>
+                <option value="Rạch Giá">Rạch Giá</option>
+                <option value="Phú Quốc">Phú Quốc</option>
+            </select>
+        </td>
+        <td class="p-2">
+            <select onchange="filterData()" data-col="match"
+                    class="filter-input search-box">
+                <option value="">Tất cả</option>
+                <option value="Có">Khớp</option>
+                <option value="Không">Lệch</option>
+            </select>
+        </td>
+        <td class="p-2">
+            <select onchange="filterData()" data-col="c6"
+                    class="filter-input search-box">
+                <option value="">Tất cả</option>
+                <option value="Còn hàng">Còn hàng</option>
+                <option value="Đã ghép">Đã ghép</option>
+                <option value="Đã bán">Đã bán</option>
+            </select>
+        </td>
+        <td></td>
+    </tr>
+</thead>
 
 <!-- TABLE -->
 <div class="card-premium overflow-hidden">
@@ -400,6 +474,27 @@
             document.getElementById('f6').value = item.c6;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+    function filterData() {
+            const filters = Array.from(
+                document.querySelectorAll('.search-box')
+            ).map(el => ({
+                col: el.dataset.col,
+                val: el.value.toLowerCase().trim()
+            }));
+        
+            const filtered = allData.filter(item =>
+                filters.every(f =>
+                    !f.val ||
+                    String(item[f.col] || '')
+                        .toLowerCase()
+                        .includes(f.val)
+                )
+            );
+        
+            renderTable(filtered);
+            updateDashboardStats(filtered);
+        }
+
     </script>
 
 </body>
