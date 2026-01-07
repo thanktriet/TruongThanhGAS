@@ -1,302 +1,142 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VF SMART Inventory Hub</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VF SMART Inventory Hub</title>
 
-    <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<!-- Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
 
-    <style>
-        :root {
-            --vf-blue: #2563eb;
-            --vf-dark: #0f172a;
-            --vf-bg: #f8fafc;
-            --vf-border: #e5e7eb;
-            --vf-success: #16a34a;
-            --vf-warning: #f59e0b;
-            --vf-danger: #dc2626;
-        }
+<style>
+:root{
+  --blue:#2563eb;--dark:#020617;--border:#e5e7eb;
+}
+body{font-family:Inter;background:#f8fafc;color:#0f172a}
+.font-heading{font-family:'Plus Jakarta Sans'}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
-            color: #0f172a;
-        }
+.card{background:#fff;border-radius:28px;border:1px solid var(--border);
+box-shadow:0 12px 30px rgba(0,0,0,.06)}
+.tab-active{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff}
+.tab-inactive{color:#64748b}
 
-        .font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
+.premium-input{
+width:100%;padding:14px;border-radius:18px;border:1px solid var(--border);
+background:#f9fafb;font-size:14px;font-weight:500
+}
+.filter-input{
+width:100%;padding:8px 10px;font-size:12px;border-radius:12px;
+border:1px solid var(--border)
+}
 
-        /* Card */
-        .card-premium {
-            background: #fff;
-            border-radius: 28px;
-            border: 1px solid var(--vf-border);
-            box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 12px 30px rgba(0,0,0,.06);
-            transition: all .35s cubic-bezier(.4,0,.2,1);
-        }
-        .card-premium:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(37,99,235,.12), 0 30px 60px rgba(15,23,42,.12);
-        }
-
-        /* Tabs */
-        .tab-active {
-            background: linear-gradient(135deg,#2563eb,#1d4ed8);
-            color: white;
-            box-shadow: 0 10px 30px rgba(37,99,235,.35);
-        }
-        .tab-inactive {
-            color: #64748b;
-        }
-
-        /* Status */
-        .st-available { background: linear-gradient(135deg,#22c55e,#16a34a); color:white; }
-        .st-paired { background: linear-gradient(135deg,#fde68a,#f59e0b); color:#78350f; }
-        .st-sold { background: linear-gradient(135deg,#f43f5e,#dc2626); color:white; }
-
-        /* Inputs */
-        .premium-input {
-            width:100%;
-            padding:14px;
-            border-radius:18px;
-            border:1px solid var(--vf-border);
-            background:#f9fafb;
-            font-size:14px;
-            font-weight:500;
-            outline:none;
-            transition:.25s;
-        }
-        .premium-input:focus {
-            background:white;
-            border-color:#2563eb;
-            box-shadow:0 0 0 4px rgba(37,99,235,.15);
-            transform:scale(1.02);
-        }
-
-        /* Dark Form */
-        .dark-form {
-            background: radial-gradient(1200px circle at top left,#1e293b,#020617);
-            color:white;
-            border-radius:32px;
-            padding:32px;
-            box-shadow:0 40px 80px rgba(0,0,0,.4);
-        }
-
-        /* Table */
-        th {
-            background:#f9fafb;
-            font-size:10px;
-            letter-spacing:.18em;
-            text-transform:uppercase;
-            color:#64748b;
-            padding:16px;
-            border-bottom:1px solid var(--vf-border);
-        }
-        tr:hover {
-            background:linear-gradient(90deg,rgba(37,99,235,.06),transparent);
-        }
-
-        .filter-input {
-            width:100%;
-            padding:8px 10px;
-            font-size:12px;
-            border-radius:12px;
-            border:1px solid var(--vf-border);
-            background:white;
-        }
-
-        @keyframes fadeUp {
-            from { opacity:0; transform:translateY(20px); }
-            to { opacity:1; transform:none; }
-        }
-        .animate-fade { animation: fadeUp .6s ease both; }
-        .filter-input {
-            background: white;
-            font-size: 12px;
-            border-radius: 14px;
-            border: 1px solid #e5e7eb;
-            transition: .25s;
-        }
-        .filter-input:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37,99,235,.15);
-        }
-
-    </style>
+.st-available{background:#16a34a;color:#fff}
+.st-paired{background:#f59e0b;color:#78350f}
+.st-sold{background:#dc2626;color:#fff}
+</style>
 </head>
 
 <body class="min-h-screen">
 
-<!-- LOGIN -->
+<!-- ================= LOGIN ================= -->
 <div id="loginPage" class="fixed inset-0 bg-[#020617] flex items-center justify-center z-50">
-    <div class="bg-white p-10 rounded-[40px] w-full max-w-[420px] shadow-2xl text-center animate-fade">
-        <div class="w-24 h-24 mx-auto mb-6 rounded-[30px] bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white text-4xl shadow-xl">
-            <i class="fas fa-key"></i>
-        </div>
-        <h2 class="font-heading text-3xl font-black">VF SMART</h2>
-        <p class="text-slate-400 text-sm mb-8">Xác thực hệ thống kho xe</p>
-
-        <input id="userInput" class="premium-input text-center font-bold mb-4" placeholder="Username">
-        <input id="passInput" type="password" class="premium-input text-center font-bold mb-6" placeholder="Password">
-
-        <button onclick="handleLogin()" id="loginBtn"
-            class="w-full py-4 rounded-2xl font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-700 text-white shadow-xl">
-            Đăng nhập
-        </button>
-        <p id="loginMsg" class="hidden text-red-500 text-xs mt-4 font-bold"></p>
+  <div class="bg-white p-10 rounded-[40px] w-full max-w-[420px] text-center shadow-2xl">
+    <div class="w-20 h-20 mx-auto mb-6 rounded-3xl bg-blue-600 flex items-center justify-center text-white text-3xl">
+      <i class="fas fa-key"></i>
     </div>
+    <h2 class="font-heading text-3xl font-black">VF SMART</h2>
+    <p class="text-slate-400 text-sm mb-6">Xác thực hệ thống kho</p>
+
+    <input id="userInput" class="premium-input text-center font-bold mb-4" placeholder="Username">
+    <input id="passInput" type="password" class="premium-input text-center font-bold mb-6" placeholder="Password">
+
+    <button onclick="handleLogin()" id="loginBtn"
+      class="w-full py-4 rounded-2xl font-black bg-blue-600 hover:bg-blue-700 text-white">
+      Đăng nhập
+    </button>
+    <p id="loginMsg" class="hidden text-red-500 text-xs mt-4 font-bold"></p>
+  </div>
 </div>
 
-<!-- APP -->
+<!-- ================= APP ================= -->
 <div id="mainApp" class="hidden">
 
 <!-- NAV -->
-<nav class="bg-white/70 backdrop-blur-xl sticky top-0 z-40 border-b border-slate-200 px-10 py-5 flex justify-between items-center">
-    <div class="flex items-center gap-6">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-xl">
-            <i class="fas fa-warehouse"></i>
-        </div>
-        <div>
-            <h1 class="font-heading text-xl font-black">VF SMART</h1>
-            <span id="displayUser" class="text-[10px] font-bold text-blue-600 uppercase tracking-widest"></span>
-        </div>
-        <div class="flex bg-slate-100 p-1.5 rounded-2xl ml-6">
-            <button id="tab1Btn" onclick="switchTab('stock')" class="tab-active px-6 py-2 rounded-xl text-xs font-black">TỒN KHO</button>
-            <button id="tab2Btn" onclick="switchTab('finder')" class="tab-inactive px-6 py-2 rounded-xl text-xs font-black">TRA CỨU</button>
-        </div>
+<nav class="bg-white sticky top-0 z-40 border-b px-10 py-5 flex justify-between items-center">
+  <div class="flex items-center gap-5">
+    <div class="w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center text-white">
+      <i class="fas fa-warehouse"></i>
     </div>
-    <button onclick="logout()" class="w-10 h-10 rounded-xl hover:bg-red-50 hover:text-red-600 text-slate-400">
-        <i class="fas fa-power-off"></i>
-    </button>
+    <div>
+      <h1 class="font-heading font-black">VF SMART</h1>
+      <span id="displayUser" class="text-[10px] text-blue-600 font-bold uppercase"></span>
+    </div>
+
+    <div class="flex bg-slate-100 p-1.5 rounded-xl ml-6">
+      <button id="tabStock" onclick="switchTab('stock')" class="tab-active px-5 py-2 rounded-lg text-xs font-black">TỒN KHO</button>
+      <button id="tabFinder" onclick="switchTab('finder')" class="tab-inactive px-5 py-2 rounded-lg text-xs font-black">TRA CỨU</button>
+    </div>
+  </div>
+
+  <button onclick="logout()" class="text-slate-400 hover:text-red-600">
+    <i class="fas fa-power-off"></i>
+  </button>
 </nav>
 
 <main class="max-w-[1750px] mx-auto p-8 space-y-10">
 
-<!-- KPI -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-    <div class="card-premium p-8 relative">
-        <i class="fas fa-car absolute right-6 top-6 text-blue-100 text-6xl"></i>
-        <span class="text-xs font-bold text-slate-400 uppercase">Tổng xe</span>
-        <h2 id="totalCount" class="text-5xl font-black mt-3">0</h2>
-    </div>
-    <div class="card-premium p-8 relative">
-        <i class="fas fa-warehouse absolute right-6 top-6 text-cyan-100 text-6xl"></i>
-        <span class="text-xs font-bold text-slate-400 uppercase">Kho Rạch Giá</span>
-        <h2 id="rgCount" class="text-5xl font-black mt-3 text-cyan-600">0</h2>
-    </div>
-    <div class="card-premium p-8 relative">
-        <i class="fas fa-island-tropical absolute right-6 top-6 text-purple-100 text-6xl"></i>
-        <span class="text-xs font-bold text-slate-400 uppercase">Kho Phú Quốc</span>
-        <h2 id="pqCount" class="text-5xl font-black mt-3 text-purple-600">0</h2>
-    </div>
-    <div class="card-premium p-8 bg-rose-50">
-        <span class="text-xs font-bold text-rose-400 uppercase">Chưa khớp</span>
-        <h2 id="mismatchCount" class="text-5xl font-black mt-3 text-rose-600">0</h2>
-    </div>
+<!-- ================= KPI ================= -->
+<div class="grid md:grid-cols-4 gap-8">
+  <div class="card p-8"><span class="text-xs text-slate-400">Tổng xe</span><h2 id="totalCount" class="text-4xl font-black">0</h2></div>
+  <div class="card p-8"><span class="text-xs text-slate-400">Kho Rạch Giá</span><h2 id="rgCount" class="text-4xl font-black text-blue-600">0</h2></div>
+  <div class="card p-8"><span class="text-xs text-slate-400">Kho Phú Quốc</span><h2 id="pqCount" class="text-4xl font-black text-purple-600">0</h2></div>
+  <div class="card p-8 bg-rose-50"><span class="text-xs text-rose-400">Lệch kho</span><h2 id="mismatchCount" class="text-4xl font-black text-rose-600">0</h2></div>
 </div>
+
+<!-- ================= STOCK ================= -->
+<section id="sectionStock" class="space-y-8">
 
 <!-- FORM -->
-<div class="dark-form">
-    <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-6 items-end">
-        <input id="f0" class="premium-input bg-slate-800 text-white font-mono uppercase" placeholder="VIN">
-        <input id="f1" class="premium-input bg-slate-800 text-white" placeholder="Dòng xe">
-        <input id="f2" class="premium-input bg-slate-800 text-white" placeholder="Màu sắc">
-        <input id="f4" type="number" class="premium-input bg-slate-800 text-blue-400 font-black" placeholder="Giá">
-        <select id="f5" class="premium-input bg-slate-800 text-white">
-            <option>Rạch Giá</option><option>Phú Quốc</option>
-        </select>
-        <select id="f6" class="premium-input bg-slate-800 text-white">
-            <option>Còn hàng</option><option>Đã ghép</option><option>Đã bán</option>
-        </select>
-        <button onclick="saveItem()" class="h-[52px] rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase shadow-xl">
-            Lưu xe
-        </button>
-    </div>
+<div class="bg-slate-900 p-8 rounded-3xl grid md:grid-cols-7 gap-5">
+  <input id="f0" class="premium-input bg-slate-800 text-white" placeholder="VIN">
+  <input id="f1" class="premium-input bg-slate-800 text-white" placeholder="Dòng xe">
+  <input id="f2" class="premium-input bg-slate-800 text-white" placeholder="Màu">
+  <input id="f4" type="number" class="premium-input bg-slate-800 text-blue-400 font-black" placeholder="Giá">
+  <select id="f5" class="premium-input bg-slate-800 text-white"><option>Rạch Giá</option><option>Phú Quốc</option></select>
+  <select id="f6" class="premium-input bg-slate-800 text-white"><option>Còn hàng</option><option>Đã ghép</option><option>Đã bán</option></select>
+  <button onclick="saveItem()" class="bg-blue-600 rounded-xl text-white font-black">Lưu</button>
 </div>
-<thead>
-    <tr>
-        <th>Số khung</th>
-        <th>Dòng xe</th>
-        <th>Màu sắc</th>
-        <th>Giá</th>
-        <th class="text-center">Kho</th>
-        <th class="text-center">Đối soát</th>
-        <th class="text-center">Trạng thái</th>
-        <th></th>
-    </tr>
-
-    <!-- FILTER ROW -->
-    <tr class="bg-slate-50 border-b">
-        <td class="p-2">
-            <input onkeyup="filterData()" data-col="c0"
-                   class="filter-input search-box"
-                   placeholder="VIN...">
-        </td>
-        <td class="p-2">
-            <input onkeyup="filterData()" data-col="c1"
-                   class="filter-input search-box"
-                   placeholder="Dòng xe...">
-        </td>
-        <td class="p-2">
-            <input onkeyup="filterData()" data-col="c2"
-                   class="filter-input search-box"
-                   placeholder="Màu sắc...">
-        </td>
-        <td class="p-2">
-            <input onkeyup="filterData()" data-col="c4"
-                   class="filter-input search-box"
-                   placeholder="Giá...">
-        </td>
-        <td class="p-2">
-            <select onchange="filterData()" data-col="c5"
-                    class="filter-input search-box">
-                <option value="">Tất cả</option>
-                <option value="Rạch Giá">Rạch Giá</option>
-                <option value="Phú Quốc">Phú Quốc</option>
-            </select>
-        </td>
-        <td class="p-2">
-            <select onchange="filterData()" data-col="match"
-                    class="filter-input search-box">
-                <option value="">Tất cả</option>
-                <option value="Có">Khớp</option>
-                <option value="Không">Lệch</option>
-            </select>
-        </td>
-        <td class="p-2">
-            <select onchange="filterData()" data-col="c6"
-                    class="filter-input search-box">
-                <option value="">Tất cả</option>
-                <option value="Còn hàng">Còn hàng</option>
-                <option value="Đã ghép">Đã ghép</option>
-                <option value="Đã bán">Đã bán</option>
-            </select>
-        </td>
-        <td></td>
-    </tr>
-</thead>
 
 <!-- TABLE -->
-<div class="card-premium overflow-hidden">
-    <div class="overflow-x-auto max-h-[70vh]">
-        <table class="w-full">
-            <thead>
-                <tr>
-                    <th>Số khung</th><th>Dòng xe</th><th>Màu</th><th>Giá</th>
-                    <th>Kho</th><th>Đối soát</th><th>Trạng thái</th><th></th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-    </div>
+<div class="card overflow-hidden">
+<div class="overflow-x-auto max-h-[65vh]">
+<table class="w-full text-sm">
+<thead>
+<tr class="bg-slate-50 text-xs uppercase text-slate-400">
+<th>VIN</th><th>Dòng</th><th>Màu</th><th>Giá</th><th>Kho</th><th>Đối soát</th><th>Trạng thái</th><th></th>
+</tr>
+<tr class="bg-white">
+<td><input data-col="c0" onkeyup="filterData()" class="filter-input search-box" placeholder="VIN"></td>
+<td><input data-col="c1" onkeyup="filterData()" class="filter-input search-box"></td>
+<td><input data-col="c2" onkeyup="filterData()" class="filter-input search-box"></td>
+<td><input data-col="c4" onkeyup="filterData()" class="filter-input search-box"></td>
+<td><select data-col="c5" onchange="filterData()" class="filter-input search-box"><option value="">All</option><option>Rạch Giá</option><option>Phú Quốc</option></select></td>
+<td><select data-col="match" onchange="filterData()" class="filter-input search-box"><option value="">All</option><option>Có</option><option>Không</option></select></td>
+<td><select data-col="c6" onchange="filterData()" class="filter-input search-box"><option value="">All</option><option>Còn hàng</option><option>Đã ghép</option><option>Đã bán</option></select></td>
+<td></td>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
 </div>
+</div>
+
+</section>
 
 </main>
 </div>
