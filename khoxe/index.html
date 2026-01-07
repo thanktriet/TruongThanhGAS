@@ -386,46 +386,14 @@ border:1px solid var(--border)
 
                 // Hiển thị kết quả
                 res.data.forEach(item => {
-                    // Xử lý timestamp an toàn
-                    let timestamp = 'N/A';
-                    if (item.timestamp) {
-                        try {
-                            // Thử parse như date object
-                            let dateObj = new Date(item.timestamp);
-
-                            // Nếu invalid, thử parse như string
-                            if (isNaN(dateObj.getTime())) {
-                                // Có thể là string format dd/mm/yyyy hoặc mm/dd/yyyy
-                                const dateStr = String(item.timestamp).trim();
-                                // Thử format dd/mm/yyyy hh:mm:ss
-                                if (dateStr.match(/^\d{1,2}\/\d{1,2}\/\d{4}/)) {
-                                    const parts = dateStr.split(' ');
-                                    const dateParts = parts[0].split('/');
-                                    // Giả sử format dd/mm/yyyy
-                                    dateObj = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
-                                    if (parts[1]) {
-                                        const timeParts = parts[1].split(':');
-                                        dateObj.setHours(timeParts[0] || 0, timeParts[1] || 0, timeParts[2] || 0);
-                                    }
-                                } else {
-                                    // Thử parse trực tiếp
-                                    dateObj = new Date(dateStr);
-                                }
-                            }
-
-                            // Kiểm tra lại validity
-                            if (!isNaN(dateObj.getTime())) {
-                                timestamp = dateObj.toLocaleString('vi-VN');
-                            }
-                        } catch (e) {
-                            console.warn('Error parsing timestamp:', item.timestamp, e);
-                            timestamp = String(item.timestamp); // Hiển thị original nếu parse fail
-                        }
-                    }
+                    // Timestamp đã được format từ backend (dd/mm/yyyy hh:mm:ss)
+                    const timestamp = item.timestamp || 'N/A';
 
                     const statusClass = item.status === 'available' ? 'bg-green-100 text-green-700' :
                                       item.status === 'paired' ? 'bg-yellow-100 text-yellow-700' :
                                       item.status === 'sold' ? 'bg-red-100 text-red-700' :
+                                      item.status === 'Có' ? 'bg-green-100 text-green-700' :
+                                      item.status === 'Đã bán' ? 'bg-red-100 text-red-700' :
                                       'bg-blue-100 text-blue-700';
 
                     container.innerHTML += `

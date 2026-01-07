@@ -142,13 +142,48 @@ function findVehicleInActualStock(query) {
     const productName = String(row[1] || "").trim().toUpperCase();
 
     if (vin.includes(queryUpper) || productName.includes(queryUpper)) {
+      // Xử lý timestamp an toàn
+      let formattedTimestamp = '';
+      try {
+        const rawTimestamp = row[0];
+        if (rawTimestamp) {
+          let dateObj;
+          // Nếu là Date object
+          if (rawTimestamp instanceof Date) {
+            dateObj = rawTimestamp;
+          } else {
+            // Nếu là string hoặc number
+            dateObj = new Date(rawTimestamp);
+          }
+
+          // Kiểm tra validity
+          if (!isNaN(dateObj.getTime())) {
+            // Format theo dd/mm/yyyy hh:mm:ss
+            const day = dateObj.getDate().toString().padStart(2, '0');
+            const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+            const year = dateObj.getFullYear();
+            const hours = dateObj.getHours().toString().padStart(2, '0');
+            const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+            const seconds = dateObj.getSeconds().toString().padStart(2, '0');
+
+            formattedTimestamp = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+          } else {
+            // Nếu không parse được, dùng string gốc
+            formattedTimestamp = String(rawTimestamp);
+          }
+        }
+      } catch (e) {
+        console.error('Error formatting timestamp:', row[0], e);
+        formattedTimestamp = String(row[0] || '');
+      }
+
       results.push({
-        timestamp: row[0] || '', // Cột A - timestamp
-        model: row[1] || '',     // Cột B - Productname
-        status: row[2] || '',    // Cột C - Tình trạng
-        note: row[3] || '',      // Cột D - Ghi Chú
-        location: row[4] || '',  // Cột E - Vị Trí Kho
-        vin: vin                 // Cột F - Số VIN
+        timestamp: formattedTimestamp, // Timestamp đã format
+        model: row[1] || '',           // Cột B - Productname
+        status: row[2] || '',          // Cột C - Tình trạng
+        note: row[3] || '',            // Cột D - Ghi Chú
+        location: row[4] || '',        // Cột E - Vị Trí Kho
+        vin: vin                       // Cột F - Số VIN
       });
     }
   }
