@@ -3,155 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VinFast Inventory Premium Control</title>
+    <title>VinFast Inventory System v2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         
-        :root {
-            --vf-blue: #003087;
-            --glass: rgba(255, 255, 255, 0.9);
-        }
-
         body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f4f7fa;
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #f8fafc;
             color: #1e293b;
         }
 
-        .font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
+        /* Hiệu ứng mượt cho các bảng và thẻ */
+        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+        .card-premium { @apply bg-white rounded-[32px] shadow-sm border border-slate-100 transition-all duration-300; }
+        .card-premium:hover { @apply shadow-xl shadow-slate-200/50 translate-y-[-2px]; }
 
-        /* Hiệu ứng Đăng nhập */
-        #loginPage {
-            background: radial-gradient(circle at top right, #1e293b, #0f172a);
-            position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
-        }
+        /* Trạng thái màu sắc theo yêu cầu */
+        .st-available { @apply bg-emerald-500 text-white shadow-lg shadow-emerald-100; } /* Còn hàng - Xanh lá */
+        .st-paired { @apply bg-amber-400 text-amber-950 font-bold; } /* Đã ghép - Vàng */
+        .st-sold { @apply bg-rose-600 text-white shadow-lg shadow-rose-100; } /* Đã bán - Đỏ */
 
-        .card-premium {
-            @apply bg-white rounded-[32px] shadow-xl border border-slate-100 transition-all duration-300;
-        }
+        /* Header bảng cố định */
+        th { @apply p-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest sticky top-0 z-20 border-b border-slate-100; }
+        
+        .filter-box { @apply w-full p-2 bg-white border border-slate-200 rounded-xl text-[11px] outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all; }
 
-        .card-premium:hover { @apply shadow-2xl translate-y-[-2px]; }
-
-        /* Trạng thái Màu sắc chuẩn yêu cầu */
-        .status-available { @apply bg-emerald-500 text-white shadow-lg shadow-emerald-100; } /* Còn hàng - Xanh lá */
-        .status-paired { @apply bg-amber-400 text-amber-950 font-black; } /* Đã ghép - Vàng */
-        .status-sold { @apply bg-rose-600 text-white shadow-lg shadow-rose-100; } /* Đã bán - Đỏ */
-
-        /* Bảng dữ liệu mượt mà */
-        th { @apply p-4 bg-slate-50/80 text-slate-500 text-[10px] font-black uppercase tracking-widest sticky top-0 z-20 border-b border-slate-100; backdrop-filter: blur(8px); }
-        tr { @apply border-b border-slate-50 transition-colors duration-150; }
-        tr:hover { @apply bg-blue-50/40; }
-
-        .filter-input { 
-            @apply w-full p-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all; 
-        }
-
-        .form-input {
+        /* Input thiết kế hiện đại */
+        .input-modern {
             @apply w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium;
         }
 
-        /* Tùy chỉnh thanh cuộn */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        /* Animation cho Login */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.5s ease-out forwards; }
     </style>
 </head>
 <body class="min-h-screen">
 
-    <div id="loginPage" class="p-6">
-        <div class="bg-white p-10 rounded-[40px] shadow-2xl w-full max-w-[420px] text-center border border-white/20">
-            <div class="mb-10">
-                <div class="w-20 h-20 bg-blue-600 rounded-[28px] mx-auto mb-6 flex items-center justify-center shadow-2xl shadow-blue-500/40">
-                    <i class="fas fa-fingerprint text-white text-3xl"></i>
+    <div id="loginPage" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-[100] p-6">
+        <div class="bg-white p-10 rounded-[40px] shadow-2xl w-full max-w-[420px] animate-fade">
+            <div class="text-center mb-10">
+                <div class="w-20 h-20 bg-blue-600 rounded-[30px] mx-auto mb-6 flex items-center justify-center shadow-2xl shadow-blue-500/30">
+                    <i class="fas fa-shield-halved text-white text-3xl"></i>
                 </div>
-                <h2 class="text-3xl font-black text-slate-900 tracking-tighter font-heading uppercase">VinFast Trương Thành Kiên Giang </h2>
-                <p class="text-slate-400 text-sm mt-2">Hệ thống quản lý kho nội bộ</p>
+                <h2 class="text-3xl font-extrabold text-slate-900 tracking-tighter uppercase">Hệ Thống Kho</h2>
+                <p class="text-slate-400 text-sm mt-2">Vui lòng xác thực quyền truy cập</p>
             </div>
-            <div class="space-y-4 text-left">
-                <input type="text" id="userInput" placeholder="Tên đăng nhập" class="form-input text-lg text-center font-bold">
-                <input type="password" id="passInput" placeholder="Mật khẩu" class="form-input text-lg text-center font-bold">
-                <button onclick="handleLogin()" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 mt-4 rounded-2xl font-black shadow-xl shadow-blue-500/20 active:scale-95 transition-all uppercase tracking-widest">Đăng nhập</button>
+            <div class="space-y-5">
+                <input type="text" id="userInput" placeholder="Tên đăng nhập" class="input-modern text-center font-bold">
+                <input type="password" id="passInput" placeholder="Mật khẩu" class="input-modern text-center font-bold">
+                <button onclick="handleLogin()" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 mt-2 rounded-2xl font-black shadow-xl shadow-blue-500/20 active:scale-95 transition-all uppercase tracking-widest">Đăng nhập</button>
             </div>
-            <p id="loginMsg" class="text-red-500 text-xs mt-6 font-bold hidden"></p>
+            <p id="loginMsg" class="text-red-500 text-xs mt-6 font-bold text-center hidden"></p>
         </div>
     </div>
 
     <div id="mainApp" class="hidden">
-        <nav class="bg-white/90 backdrop-blur-md sticky top-0 z-50 px-8 py-4 flex justify-between items-center border-b border-slate-100 shadow-sm">
+        <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 px-8 py-4 flex justify-between items-center border-b border-slate-100 shadow-sm">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl">
-                    <i class="fas fa-cubes text-xl"></i>
+                    <i class="fas fa-layer-group text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="font-heading text-xl font-black tracking-tighter text-slate-800 leading-none">VINFAST SMART STOCK</h1>
+                    <h1 class="text-xl font-extrabold tracking-tighter text-slate-800 leading-none uppercase">Inventory Smart Hub</h1>
                     <span id="displayUser" class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1 block"></span>
                 </div>
             </div>
-            <button onclick="logout()" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-red-500 transition-all border border-transparent hover:border-red-100">
+            <button onclick="logout()" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all">
                 <i class="fas fa-power-off"></i>
             </button>
         </nav>
 
-        <main class="max-w-[1700px] mx-auto p-6 space-y-6">
+        <main class="max-w-[1750px] mx-auto p-6 space-y-8">
             
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="card-premium p-6 border-l-[6px] border-l-blue-600 flex flex-col justify-between">
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Tổng xe quản lý</span>
-                    <h2 id="totalCount" class="text-4xl font-black text-slate-900 font-heading mt-2">0</h2>
+                <div class="card-premium p-6 border-l-[6px] border-l-blue-600">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tổng xe trong kho</span>
+                    <h2 id="st_Total" class="text-4xl font-extrabold text-slate-900 mt-2">0</h2>
                 </div>
                 <div class="card-premium p-6 border-l-[6px] border-l-cyan-500">
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Kho Rạch Giá</span>
-                    <h2 id="rgCount" class="text-4xl font-black text-slate-900 font-heading mt-2">0</h2>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kho Rạch Giá</span>
+                    <h2 id="st_RG" class="text-4xl font-extrabold text-slate-900 mt-2">0</h2>
                 </div>
                 <div class="card-premium p-6 border-l-[6px] border-l-purple-500">
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Kho Phú Quốc</span>
-                    <h2 id="pqCount" class="text-4xl font-black text-slate-900 font-heading mt-2">0</h2>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kho Phú Quốc</span>
+                    <h2 id="st_PQ" class="text-4xl font-extrabold text-slate-900 mt-2">0</h2>
                 </div>
                 <div class="card-premium p-6 bg-rose-50 border-none">
-                    <span class="text-[9px] font-black text-rose-400 uppercase tracking-[0.2em]">Lệch tồn bãi</span>
-                    <h2 id="mismatchCount" class="text-4xl font-black text-rose-600 font-heading mt-2">0</h2>
+                    <span class="text-[10px] font-black text-rose-400 uppercase tracking-widest">Lệch tồn bãi</span>
+                    <h2 id="st_Mismatch" class="text-4xl font-extrabold text-rose-600 mt-2">0</h2>
                 </div>
             </div>
 
-            <div class="bg-slate-900 p-8 rounded-[32px] shadow-2xl shadow-slate-200 text-white">
-                <div class="flex items-center gap-2 mb-8">
+            <div class="bg-slate-900 p-8 rounded-[35px] shadow-2xl shadow-slate-200 text-white">
+                <div class="flex items-center gap-3 mb-8">
                     <div class="w-2 h-6 bg-blue-500 rounded-full"></div>
-                    <h3 class="font-heading text-xs font-black uppercase tracking-widest text-slate-400">Thông tin xe mới</h3>
+                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-400">Cập nhật dữ liệu</h3>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-6 items-end">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-6 items-end">
                     <div class="space-y-1">
                         <label class="text-[9px] font-black text-slate-500 ml-2 uppercase">Số khung (A)</label>
-                        <input id="f0" class="form-input !bg-slate-800 !border-slate-700 !text-white font-mono font-bold uppercase" placeholder="VIN...">
+                        <input id="f0" class="input-modern !bg-slate-800 !border-slate-700 !text-white font-mono uppercase" placeholder="VIN...">
                     </div>
                     <div class="space-y-1">
                         <label class="text-[9px] font-black text-slate-500 ml-2 uppercase">Dòng xe (B)</label>
-                        <input id="f1" class="form-input !bg-slate-800 !border-slate-700 !text-white" placeholder="Tên xe...">
+                        <input id="f1" class="input-modern !bg-slate-800 !border-slate-700 !text-white" placeholder="Tên xe...">
                     </div>
                     <div class="space-y-1">
                         <label class="text-[9px] font-black text-slate-500 ml-2 uppercase">Màu sắc (C)</label>
-                        <input id="f2" class="form-input !bg-slate-800 !border-slate-700 !text-white" placeholder="Màu sơn...">
+                        <input id="f2" class="input-modern !bg-slate-800 !border-slate-700 !text-white" placeholder="Màu sơn...">
                     </div>
                     <div class="space-y-1">
                         <label class="text-[9px] font-black text-slate-500 ml-2 uppercase">Giá xe (E)</label>
-                        <input id="f4" type="number" class="form-input !bg-slate-800 !border-slate-700 !text-blue-400 font-black" placeholder="VND">
+                        <input id="f4" type="number" class="input-modern !bg-slate-800 !border-slate-700 !text-blue-400 font-black" placeholder="VND">
                     </div>
                     <div class="space-y-1">
                         <label class="text-[9px] font-black text-slate-500 ml-2 uppercase">Vị trí (F)</label>
-                        <select id="f5" class="form-input !bg-slate-800 !border-slate-700 !text-white font-bold">
+                        <select id="f5" class="input-modern !bg-slate-800 !border-slate-700 !text-white font-bold">
                             <option value="Rạch Giá">Rạch Giá</option>
                             <option value="Phú Quốc">Phú Quốc</option>
                         </select>
                     </div>
                     <div class="space-y-1">
                         <label class="text-[9px] font-black text-slate-500 ml-2 uppercase">Trạng thái (G)</label>
-                        <select id="f6" class="form-input !bg-slate-800 !border-slate-700 !text-white font-bold">
+                        <select id="f6" class="input-modern !bg-slate-800 !border-slate-700 !text-white font-bold">
                             <option value="Còn hàng">Còn hàng</option>
-                            <option value="Đã ghép">Đã Ghép</option>
-                            <option value="Đã bán">Đã Bán</option>
+                            <option value="Đã Ghép">Đã Ghép</option>
+                            <option value="Đã Bán">Đã Bán</option>
                         </select>
                     </div>
-                    <button onclick="saveItem()" class="w-full bg-blue-600 hover:bg-blue-700 text-white h-[50px] rounded-2xl font-black shadow-lg shadow-blue-900/40 active:scale-95 transition-all uppercase tracking-widest text-[10px]">Lưu kho</button>
+                    <button onclick="saveItem()" class="w-full bg-blue-600 hover:bg-blue-700 text-white h-[50px] rounded-2xl font-black shadow-lg shadow-blue-900/40 active:scale-95 transition-all uppercase tracking-widest text-[10px]">Lưu dữ liệu</button>
                 </div>
             </div>
 
@@ -160,28 +143,35 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr>
-                                <th>Số Khung</th><th>Dòng Xe</th><th>Màu Sắc</th><th>Giá Xe</th><th class="text-center">Kho</th><th class="text-center">Đối Soát</th><th class="text-center">Trạng Thái</th><th class="text-right pr-10">#</th>
+                                <th>Số Khung (A)</th>
+                                <th>Dòng Xe (B-D)</th>
+                                <th>Màu Sắc (C)</th>
+                                <th>Giá Xe (E)</th>
+                                <th class="text-center">Vị trí (F)</th>
+                                <th class="text-center">Đối Soát</th>
+                                <th class="text-center">Trạng Thái (G)</th>
+                                <th class="text-right pr-10">#</th>
                             </tr>
                             <tr class="bg-slate-50/50 border-b">
-                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-input search-box font-mono" data-col="c0" placeholder="VIN..."></td>
-                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-input search-box" data-col="c1" placeholder="Dòng xe..."></td>
-                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-input search-box" data-col="c2" placeholder="Màu sắc..."></td>
-                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-input search-box" data-col="c4" placeholder="Giá..."></td>
+                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-box search-box" data-col="c0" placeholder="Lọc VIN..."></td>
+                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-box search-box" data-col="c1" placeholder="Dòng xe..."></td>
+                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-box search-box" data-col="c2" placeholder="Màu sắc..."></td>
+                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-box search-box" data-col="c4" placeholder="Giá..."></td>
                                 <td class="p-2">
-                                    <select onchange="filterData()" class="filter-input search-box" data-col="c5">
+                                    <select onchange="filterData()" class="filter-box search-box" data-col="c5">
                                         <option value="">Tất cả</option>
                                         <option value="Rạch Giá">Rạch Giá</option>
                                         <option value="Phú Quốc">Phú Quốc</option>
                                     </select>
                                 </td>
                                 <td class="p-2">
-                                    <select onchange="filterData()" class="filter-input search-box" data-col="match">
+                                    <select onchange="filterData()" class="filter-box search-box" data-col="match">
                                         <option value="">Tất cả</option>
-                                        <option value="Có">Khớp (Có)</option>
-                                        <option value="Không">Lệch (Không)</option>
+                                        <option value="Có">Khớp</option>
+                                        <option value="Không">Lệch</option>
                                     </select>
                                 </td>
-                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-input search-box" data-col="c6" placeholder="Trạng thái..."></td>
+                                <td class="p-2"><input type="text" onkeyup="filterData()" class="filter-box search-box" data-col="c6" placeholder="Trạng thái..."></td>
                                 <td></td>
                             </tr>
                         </thead>
@@ -194,12 +184,18 @@
     </main>
 
     <script>
-        // CẬP NHẬT URL WEB APP CỦA BẠN VÀO ĐÂY
+        // QUAN TRỌNG: THAY URL WEB APP CỦA BẠN VÀO ĐÂY
         const API_URL = "https://script.google.com/macros/s/AKfycbxhex6ID8BzU2_Rwwxfs95OofEzN1lh1bEEAcsjiaf6RpZfmFkEqfKnW00vXYb4CEVI/exec";
         let allData = [];
 
-        window.onload = () => { if(localStorage.getItem('vf_token')) showApp(); };
+        // 1. Kiểm tra session
+        window.onload = () => {
+            if(localStorage.getItem('vf_token')) {
+                showApp();
+            }
+        };
 
+        // 2. Hàm đăng nhập (Xử lý lỗi kết nối)
         async function handleLogin() {
             const user = document.getElementById('userInput').value;
             const pass = document.getElementById('passInput').value;
@@ -207,80 +203,106 @@
             const msg = document.getElementById('loginMsg');
             
             if(!user || !pass) return;
-            btn.innerText = "ĐANG XÁC THỰC..."; btn.disabled = true;
+            btn.innerText = "ĐANG XỬ LÝ..."; btn.disabled = true;
 
             try {
-                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'login', user, pass }) });
-                const res = await response.json();
+                const response = await fetch(API_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', // Dùng no-cors nếu vẫn lỗi CORS, nhưng tốt nhất là deploy đúng Anyone
+                    body: JSON.stringify({ action: 'login', user, pass }) 
+                });
+                
+                // Vì Web App Script trả về JSON, ta nên dùng mode cors tiêu chuẩn
+                // Nếu fetch báo lỗi CORS, hãy đảm bảo bản deploy là "Anyone"
+                const actualResponse = await fetch(API_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'login', user, pass }) 
+                });
+                
+                const res = await actualResponse.json();
                 if(res.success) {
                     localStorage.setItem('vf_token', res.token);
                     localStorage.setItem('vf_user', user);
                     showApp();
                 } else {
-                    msg.innerText = "❌ Thông tin không hợp lệ"; msg.classList.remove('hidden');
+                    msg.innerText = "❌ Thông tin đăng nhập không chính xác!";
+                    msg.classList.remove('hidden');
                 }
-            } catch (e) { alert("Lỗi API!"); }
-            finally { btn.innerText = "ĐĂNG NHẬP"; btn.disabled = false; }
+            } catch (e) {
+                alert("Lỗi kết nối API. Hãy kiểm tra Deploy bản 'Anyone' và URL chính xác.");
+                console.error(e);
+            } finally {
+                btn.innerText = "ĐĂNG NHẬP"; btn.disabled = false;
+            }
         }
 
         function showApp() {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            document.getElementById('displayUser').innerText = "Account: " + localStorage.getItem('vf_user').toUpperCase();
+            document.getElementById('displayUser').innerText = "Tài khoản: " + localStorage.getItem('vf_user');
             loadData();
         }
 
         function logout() { localStorage.clear(); location.reload(); }
 
+        // 3. Tải dữ liệu & Render bảng
         async function loadData() {
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '<tr><td colspan="8" class="p-20 text-center text-slate-300 font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Syncing Database...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="p-20 text-center text-slate-300 font-black animate-pulse uppercase tracking-[0.2em] text-[10px]">Đang đồng bộ dữ liệu...</td></tr>';
             try {
-                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getVehicles' }) });
+                const response = await fetch(API_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'getVehicles' }) 
+                });
                 allData = await response.json();
                 updateDashboardStats(allData);
                 renderTable(allData);
-            } catch (e) { tbody.innerHTML = '<tr><td colspan="8" class="p-20 text-center text-red-500 font-black uppercase">Kết nối API thất bại!</td></tr>'; }
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="8" class="p-20 text-center text-red-500 font-black uppercase">Kết nối thất bại. Kiểm tra API URL!</td></tr>';
+            }
         }
 
         function updateDashboardStats(data) {
-            document.getElementById('totalCount').innerText = data.length;
-            document.getElementById('rgCount').innerText = data.filter(i => i.c5 === 'Rạch Giá').length;
-            document.getElementById('pqCount').innerText = data.filter(i => i.c5 === 'Phú Quốc').length;
-            document.getElementById('mismatchCount').innerText = data.filter(i => i.match === 'Không').length;
+            document.getElementById('st_Total').innerText = data.length;
+            document.getElementById('st_RG').innerText = data.filter(i => i.c5 === 'Rạch Giá').length;
+            document.getElementById('st_PQ').innerText = data.filter(i => i.c5 === 'Phú Quốc').length;
+            document.getElementById('st_Mismatch').innerText = data.filter(i => i.match === 'Không').length;
         }
 
         function renderTable(data) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             data.forEach(item => {
-                const price = item.c4 ? Number(item.c4).toLocaleString('vi-VN') + " ₫" : "---";
-                const matchClass = item.match === 'Có' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100';
-                const khoClass = item.c5 === 'Rạch Giá' ? 'text-blue-600' : 'text-purple-600';
+                const priceDisplay = item.c4 ? Number(item.c4).toLocaleString('vi-VN') + " ₫" : "---";
+                const matchClass = item.match === 'Có' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100';
+                const khoColor = item.c5 === 'Rạch Giá' ? 'text-blue-600' : 'text-purple-600';
 
-                // MÀU SẮC TRẠNG THÁI YÊU CẦU
                 let statusClass = "";
-                if (item.c6 === 'Còn hàng') statusClass = "status-available";
-                else if (item.c6 === 'Đã ghép' || item.c6 === 'Đã cọc') statusClass = "status-paired";
-                else if (item.c6 === 'Đã bán') statusClass = "status-sold";
+                if (item.c6 === 'Còn hàng') statusClass = "st-available";
+                else if (item.c6 === 'Đã Ghép') statusClass = "st-paired";
+                else if (item.c6 === 'Đã Bán') statusClass = "st-sold";
                 else statusClass = "bg-slate-100 text-slate-500";
 
                 tbody.innerHTML += `
                     <tr>
-                        <td class="p-4 font-mono font-black text-blue-700 text-xs tracking-wider uppercase">${item.c0}</td>
+                        <td class="p-4 font-mono font-bold text-blue-700 text-xs tracking-widest uppercase">${item.c0}</td>
                         <td class="p-4">
                             <div class="font-black text-slate-800">${item.c1}</div>
-                            <div class="text-[9px] text-slate-400 font-black uppercase">SX: ${item.c3 || '---'}</div>
+                            <div class="text-[9px] text-slate-400 font-bold uppercase">Năm SX: ${item.c3 || '---'}</div>
                         </td>
-                        <td class="p-4"><span class="font-bold text-slate-500 italic decoration-slate-100 decoration-2 underline underline-offset-4">${item.c2 || '---'}</span></td>
-                        <td class="p-4 font-black text-blue-900">${price}</td>
-                        <td class="p-4 text-center font-black ${khoClass} text-[10px] uppercase">${item.c5}</td>
-                        <td class="p-4 text-center"><span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase border ${matchClass}">${item.match}</span></td>
-                        <td class="p-4 text-center"><span class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase ${statusClass} shadow-sm inline-block min-w-[90px]">${item.c6}</span></td>
+                        <td class="p-4 font-bold text-slate-500 italic underline underline-offset-4 decoration-slate-100">${item.c2 || '---'}</td>
+                        <td class="p-4 font-black text-slate-900">${priceDisplay}</td>
+                        <td class="p-4 text-center font-black ${khoColor} text-[10px] uppercase">${item.c5}</td>
+                        <td class="p-4 text-center">
+                            <span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase border ${matchClass}">${item.match}</span>
+                        </td>
+                        <td class="p-4 text-center">
+                            <span class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase ${statusClass} shadow-sm inline-block min-w-[90px]">${item.c6}</span>
+                        </td>
                         <td class="p-4 text-right pr-6">
                             <div class="flex justify-end gap-2">
-                                <button onclick="editItem('${item.c0}')" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-sm"><i class="fas fa-edit text-xs"></i></button>
-                                <button onclick="deleteItem('${item.c0}')" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-rose-600 hover:text-white transition-all shadow-sm"><i class="fas fa-trash-alt text-xs"></i></button>
+                                <button onclick="editItem('${item.c0}')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all"><i class="fas fa-edit text-xs"></i></button>
+                                <button onclick="deleteItem('${item.c0}')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-rose-600 hover:text-white transition-all"><i class="fas fa-trash-alt text-xs"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -288,6 +310,7 @@
             });
         }
 
+        // 4. Các chức năng lọc & Lưu trữ
         function filterData() {
             const filters = Array.from(document.querySelectorAll('.search-box')).map(el => ({ col: el.dataset.col, val: el.value.toLowerCase().trim() }));
             const filtered = allData.filter(item => filters.every(f => !f.val || String(item[f.col]).toLowerCase().includes(f.val)));
@@ -298,16 +321,24 @@
         async function saveItem() {
             const vin = document.getElementById('f0').value.trim();
             if(!vin) return alert("Cần nhập Số Khung!");
-            // Index map: 0:VIN, 1:Tên, 2:Màu, 3:Năm, 4:Giá, 5:Kho, 6:Trạng thái
             const arr = [vin, document.getElementById('f1').value, document.getElementById('f2').value, "", document.getElementById('f4').value, document.getElementById('f5').value, document.getElementById('f6').value, ""];
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'save', data: arr }) });
-            location.reload();
+            
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'save', data: arr }) });
+                location.reload();
+            } catch (e) {
+                alert("Lỗi lưu dữ liệu. Hãy kiểm tra kết nối API.");
+            }
         }
 
         async function deleteItem(vin) {
-            if(!confirm("Gỡ xe "+vin+"?")) return;
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', vin: vin }) });
-            loadData();
+            if(!confirm("Bạn chắc chắn muốn xóa xe " + vin + "?")) return;
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', vin: vin }) });
+                loadData();
+            } catch (e) {
+                alert("Lỗi xóa dữ liệu.");
+            }
         }
 
         function editItem(vin) {
