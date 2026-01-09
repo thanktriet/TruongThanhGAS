@@ -236,6 +236,7 @@ function renderCarModels() {
                         id="doanhThu-${modelId}" 
                         class="input" 
                         min="0" 
+                        max="9999999999999"  <!-- Cho phép nhập đến 13 số -->
                         value="0"
                         data-model="${modelName}"
                         data-field="doanhThu"
@@ -285,9 +286,13 @@ async function handleSubmitDailyReport(event) {
         
         if (!hopDongInput || !xhdInput || !doanhThuInput) return;
         
+        function unformatMoney(str) {
+            return str.replace(/\./g, '');
+        }
+
         const hopDong = parseFloat(hopDongInput.value) || 0;
         const xhd = parseFloat(xhdInput.value) || 0;
-        const doanhThu = parseFloat(doanhThuInput.value) || 0;
+        const doanhThu = parseFloat(unformatMoney(doanhThuInput.value)) || 0;
 
         if (hopDong > 0 || xhd > 0 || doanhThu > 0) {
             carModels.push({
