@@ -166,7 +166,11 @@ async function loadTodayReport() {
                     
                     if (hopDongInput) hopDongInput.value = model.hopDong || 0;
                     if (xhdInput) xhdInput.value = model.xhd || 0;
-                    if (doanhThuInput) doanhThuInput.value = model.doanhThu || 0;
+                    if (doanhThuInput) {
+                        const raw = model.doanhThu || 0;
+                        doanhThuInput.value = raw.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    }
+
                 });
             }
         } else {
@@ -232,11 +236,10 @@ function renderCarModels() {
                 <div>
                     <label class="label">Doanh thu (VNĐ)</label>
                     <input 
-                        type="number" 
+                        type="text"
                         id="doanhThu-${modelId}" 
-                        class="input" 
-                        min="0" 
-                        max="9999999999999"
+                        class="input"
+                        inputmode="numeric"
                         value="0"
                         data-model="${modelName}"
                         data-field="doanhThu"
@@ -340,12 +343,17 @@ async function handleSubmitDailyReport(event) {
 
 // Format money input
 function formatMoneyInput(input) {
-    // Remove non-numeric characters for storage but keep formatting for display
-    const value = input.value.replace(/[^0-9]/g, '');
-    if (value) {
-        input.value = parseInt(value);
+    let value = input.value.replace(/\D/g, '');
+
+    if (value === '') {
+        input.value = '0';
+        return;
     }
+
+    // format VNĐ: 1.234.567.890
+    input.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
+
 
 // Expose functions globally
 if (typeof window !== 'undefined') {
