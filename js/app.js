@@ -2353,19 +2353,3 @@ if (typeof window !== 'undefined') {
         filterUsers: typeof filterUsers
     });
 }
-// Gọi Fullname
-window.userFullnameMap = {};
-
-async function loadUserFullnameMap() {
-    const { data: users } = await supabase
-        .from('users')
-        .select('username, fullname')
-        .eq('active', true);
-        
-    users.forEach(user => {
-        window.userFullnameMap[user.username.toLowerCase()] = user.fullname;
-    });
-}
-
-// Gọi khi app start
-loadUserFullnameMap();
