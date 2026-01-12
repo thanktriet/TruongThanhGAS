@@ -397,8 +397,8 @@ async function supabaseGetPendingList(username, role) {
                 const isMyRequest = String(row.requester).toLowerCase() === usernameLower;
                 const isAssignedToMe = String(row.approver_step0 || '').toLowerCase() === usernameLower;
                 show = isMyRequest || isAssignedToMe;
-            } else if (role === 'ADMIN' || role === 'GDKD' || role === 'BKS' || role === 'BGD' || role === 'KETOAN') {
-                // Admin, GĐKD, BKS, BGĐ, KT: xem được tất cả tờ trình
+            } else if (role === 'ADMIN' || role === 'SALEADMIN' || role === 'GDKD' || role === 'BKS' || role === 'BGD' || role === 'KETOAN') {
+                // Admin, SaleAdmin, GĐKD, BKS, BGĐ, KT: xem được tất cả tờ trình
                 show = true;
             } else {
                 // TVBH/SALE: chỉ xem tờ trình của mình
@@ -4081,9 +4081,9 @@ async function supabaseUpsertTvbhTarget(targetData) {
             return { success: false, message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' };
         }
 
-        // ✅ SECURITY: Chỉ ADMIN mới có quyền quản lý chỉ tiêu
-        if (session.role !== 'ADMIN') {
-            return { success: false, message: 'Chỉ ADMIN mới có quyền quản lý chỉ tiêu TVBH' };
+        // ✅ SECURITY: ADMIN và TPKD mới có quyền quản lý chỉ tiêu
+        if (session.role !== 'ADMIN' && session.role !== 'TPKD') {
+            return { success: false, message: 'Chỉ ADMIN và TPKD mới có quyền quản lý chỉ tiêu TVBH' };
         }
 
         if (!targetData.tvbh || !targetData.month) {
