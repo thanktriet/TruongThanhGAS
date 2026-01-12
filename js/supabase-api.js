@@ -783,12 +783,19 @@ async function supabaseGetRequestDetail(id, username) {
         // Sẽ kiểm tra ở frontend trước khi gọi function này
         // Function này chỉ trả về data, không kiểm tra quyền chi tiết
 
+        
         // Lấy fullname của requester
-        const { data: userData } = await supabase
+        const { data: userData, error: userError } = await supabase
             .from('users')
             .select('fullname')
-            .eq('username', approval.requester)
+            .ilike('username', approval.requester) // ← Thay eq() thành ilike()
+            .eq('active', true) // ← Thêm điều kiện active để đảm bảo user còn hoạt động
             .single();
+        
+        // Xử lý error tốt hơn
+        if (userError && userError.code !== 'PGRST116') { // PGRST116 = no rows returned
+            console.warn('Error fetching user data for requester:', approval.requester, userError);
+        }
 
         const item = {
             id: approval.id,
