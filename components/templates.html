@@ -270,7 +270,7 @@
                         <div>
                             <p class="text-xs text-gray-500">Người tạo</p>
                             <p class="text-sm font-semibold text-blue-700">
-                                {{requester_fullname}}
+                                {{requester}
                             </p>
                     </div>
                     <div class="text-right">
@@ -564,13 +564,5 @@
                 </div>
             </div>
         </div>
-                                        <script>
-                                    // Fallback nếu API không trả về
-                                    const requester = '{{requester}}';
-                                    const fullname = window.userFullnameMap[requester.toLowerCase()];
-                                    if (fullname && !'{{requester_fullname}}') {
-                                        this.textContent = fullname;
-                                    }
-                                </script>
     </template>
 
