@@ -201,7 +201,8 @@ function renderAdminOrders(orders) {
                             </div>
                         ` : ''}
                         <div class="md:col-span-2">
-                            <span class="font-medium">Ngày tạo:</span> ${formatDate(order.created_at)}
+                            <span class="font-medium">Ngày tạo:</span> 
+                            ${order.created_at ? new Date(order.created_at).toLocaleString('vi-VN') : '-'}
                         </div>
                     </div>
                 </div>
