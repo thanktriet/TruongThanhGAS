@@ -429,13 +429,64 @@ function renderMtdDetailTable(data) {
  * Format doanh thu thành viết tắt (Triệu/Tỷ)
  */
 function formatDoanhThuShort(amount) {
-    if (!amount || amount === 0) return '0';
+    // Parse amount thành number nếu là string
+    let numAmount = amount;
+    if (typeof amount === 'string') {
+        // Remove tất cả ký tự không phải số và dấu chấm/phẩy
+        // Xử lý format Việt Nam: 1.234.567,89 hoặc 1,234,567.89
+        const cleaned = amount.replace(/[^0-9.,]/g, '');
+        // Nếu có cả dấu chấm và phẩy, dấu phẩy cuối cùng là phần thập phân
+        if (cleaned.includes(',') && cleaned.includes('.')) {
+            // Format VN: 1.234.567,89 -> 1234567.89
+            numAmount = parseFloat(cleaned.replace(/\./g, '').replace(',', '.'));
+        } else if (cleaned.includes(',')) {
+            // Chỉ có phẩy: có thể là format VN hoặc US
+            // Nếu có nhiều hơn 1 phẩy thì là format VN (phẩy là phần thập phân)
+            const commaCount = (cleaned.match(/,/g) || []).length;
+            if (commaCount === 1) {
+                // Có thể là format VN (1,5) hoặc US (1,234)
+                // Nếu sau phẩy có 3 số thì là US format
+                const parts = cleaned.split(',');
+                if (parts[1] && parts[1].length === 3) {
+                    // US format: 1,234 -> 1234
+                    numAmount = parseFloat(cleaned.replace(/,/g, ''));
+                } else {
+                    // VN format: 1,5 -> 1.5
+                    numAmount = parseFloat(cleaned.replace(',', '.'));
+                }
+            } else {
+                // Format VN: 1,234,567 -> 1234567
+                numAmount = parseFloat(cleaned.replace(/,/g, ''));
+            }
+        } else if (cleaned.includes('.')) {
+            // Chỉ có chấm: có thể là format VN (1.234.567) hoặc US (1.234)
+            const dotCount = (cleaned.match(/\./g) || []).length;
+            if (dotCount > 1) {
+                // Format VN: 1.234.567 -> 1234567
+                numAmount = parseFloat(cleaned.replace(/\./g, ''));
+            } else {
+                // Format US: 1.234 -> 1234 hoặc 1.5 -> 1.5
+                // Nếu sau chấm có 3 số thì là US format (thousands separator)
+                const parts = cleaned.split('.');
+                if (parts[1] && parts[1].length === 3) {
+                    numAmount = parseFloat(cleaned.replace(/\./g, ''));
+                } else {
+                    numAmount = parseFloat(cleaned);
+                }
+            }
+        } else {
+            // Chỉ có số
+            numAmount = parseFloat(cleaned);
+        }
+    }
+    
+    if (!numAmount || numAmount === 0 || isNaN(numAmount)) return '0';
     
     const ty = 1000000000; // 1 tỷ
     const trieu = 1000000; // 1 triệu
     
-    if (amount >= ty) {
-        const tyValue = amount / ty;
+    if (numAmount >= ty) {
+        const tyValue = numAmount / ty;
         // Nếu là số nguyên thì không hiển thị số thập phân
         if (tyValue % 1 === 0) {
             return `${tyValue} Tỷ`;
@@ -443,8 +494,8 @@ function formatDoanhThuShort(amount) {
             // Hiển thị 1 chữ số thập phân
             return `${tyValue.toFixed(1).replace('.', ',')} Tỷ`;
         }
-    } else if (amount >= trieu) {
-        const trieuValue = amount / trieu;
+    } else if (numAmount >= trieu) {
+        const trieuValue = numAmount / trieu;
         // Nếu là số nguyên thì không hiển thị số thập phân
         if (trieuValue % 1 === 0) {
             return `${trieuValue} Triệu`;
@@ -454,7 +505,7 @@ function formatDoanhThuShort(amount) {
         }
     } else {
         // Nhỏ hơn 1 triệu thì hiển thị đầy đủ
-        return amount.toLocaleString('vi-VN');
+        return Math.round(numAmount).toLocaleString('vi-VN');
     }
 }
 
