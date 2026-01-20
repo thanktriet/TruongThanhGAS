@@ -176,7 +176,7 @@ function createMobileMenuItemsFallback() {
     }
     
     // Reports
-    if (role === 'ADMIN' || permissions.view_reports || ['ADMIN', 'GDKD', 'BKS', 'BGD'].includes(role)) {
+    if (role === 'ADMIN' || permissions.view_reports || permissions.view_dashboard || ['ADMIN', 'GDKD', 'BKS', 'BGD', 'TPKD', 'SALEADMIN', 'KETOAN'].includes(role)) {
         menuItems.push({
             id: 'reports-dashboard',
             icon: 'fa-chart-line',

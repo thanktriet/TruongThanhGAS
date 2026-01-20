@@ -125,7 +125,7 @@ function checkSession() {
             if (typeof hasPermission === 'function' && hasPermission(user, 'view_dashboard')) {
                 $('nav-reports-dashboard')?.classList.remove('hidden');
                 $('nav-reports-mtd-detail')?.classList.remove('hidden');
-            } else if (['ADMIN', 'GDKD', 'BKS', 'BGD'].includes(user.role)) {
+            } else if (['ADMIN', 'GDKD', 'BKS', 'BGD', 'TPKD', 'SALEADMIN', 'KETOAN'].includes(user.role)) {
                 $('nav-reports-dashboard')?.classList.remove('hidden');
                 $('nav-reports-mtd-detail')?.classList.remove('hidden');
             } else {
