@@ -38,6 +38,24 @@
                 </div>
             </div>
 
+            <!-- View Toggle -->
+            <div class="mb-4 flex gap-2">
+                <button 
+                    id="mtd-view-detail-btn"
+                    onclick="switchMtdView('detail')" 
+                    class="px-4 py-2 rounded-lg font-medium transition bg-orange-600 text-white"
+                >
+                    <i class="fa-solid fa-table mr-2"></i>Chi tiết
+                </button>
+                <button 
+                    id="mtd-view-group-btn"
+                    onclick="switchMtdView('group')" 
+                    class="px-4 py-2 rounded-lg font-medium transition bg-gray-200 text-gray-700 hover:bg-gray-300"
+                >
+                    <i class="fa-solid fa-layer-group mr-2"></i>Tổng hợp theo nhóm
+                </button>
+            </div>
+
             <!-- Loading -->
             <div id="mtd-loading" class="text-center py-8 hidden">
                 <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
@@ -56,6 +74,49 @@
 </div>
 
 <script>
+let currentMtdView = 'detail'; // 'detail' hoặc 'group'
+let mtdDetailData = null; // Lưu dữ liệu để dùng cho cả 2 view
+
+/**
+ * Switch giữa view chi tiết và tổng hợp theo nhóm
+ */
+function switchMtdView(view) {
+    currentMtdView = view;
+    
+    // Update button styles
+    const detailBtn = document.getElementById('mtd-view-detail-btn');
+    const groupBtn = document.getElementById('mtd-view-group-btn');
+    
+    if (view === 'detail') {
+        if (detailBtn) {
+            detailBtn.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+            detailBtn.classList.add('bg-orange-600', 'text-white');
+        }
+        if (groupBtn) {
+            groupBtn.classList.remove('bg-orange-600', 'text-white');
+            groupBtn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+        }
+    } else {
+        if (groupBtn) {
+            groupBtn.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+            groupBtn.classList.add('bg-orange-600', 'text-white');
+        }
+        if (detailBtn) {
+            detailBtn.classList.remove('bg-orange-600', 'text-white');
+            detailBtn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+        }
+    }
+    
+    // Re-render với view mới
+    if (mtdDetailData) {
+        if (view === 'detail') {
+            renderMtdDetailTable(mtdDetailData);
+        } else {
+            renderMtdGroupSummary(mtdDetailData);
+        }
+    }
+}
+
 async function loadMtdDetailReport() {
     const filters = {
         filterMonth: document.getElementById('mtd-month-filter').value || null,
@@ -87,9 +148,16 @@ async function loadMtdDetailReport() {
                 populateSelect('mtd-car-filter', result.data.carModels, filters.carModel);
             }
 
-            // Render table
-            if (result.data.mtdDetail && result.data.mtdDetail.length > 0) {
-                renderMtdDetailTable(result.data.mtdDetail);
+            // Lưu dữ liệu để dùng cho cả 2 view
+            mtdDetailData = result.data.mtdDetail;
+            
+            // Render theo view hiện tại
+            if (mtdDetailData && mtdDetailData.length > 0) {
+                if (currentMtdView === 'detail') {
+                    renderMtdDetailTable(mtdDetailData);
+                } else {
+                    renderMtdGroupSummary(mtdDetailData);
+                }
             } else {
                 document.getElementById('mtd-content').innerHTML = `
                     <div class="text-center py-12 text-gray-500">
@@ -357,6 +425,251 @@ function renderMtdDetailTable(data) {
     container.innerHTML = html;
 }
 
+/**
+ * Render tổng hợp theo nhóm
+ */
+function renderMtdGroupSummary(data) {
+    if (!data || data.length === 0) {
+        document.getElementById('mtd-content').innerHTML = '<p class="text-center text-gray-500 py-8">Không có dữ liệu</p>';
+        return;
+    }
+
+    const headers = data[0] || [];
+    const rows = data.slice(1) || [];
+    
+    // Parse headers để lấy danh sách dòng xe
+    const carModels = [];
+    for (let i = 2; i < headers.length; i += 3) {
+        const header = headers[i];
+        if (header) {
+            // Extract car model từ header "Ký HĐ (VF8)" -> "VF8"
+            const match = header.match(/\(([^)]+)\)/);
+            if (match && match[1]) {
+                carModels.push(match[1]);
+            }
+        }
+    }
+    
+    // Group data theo nhóm
+    const groupData = {};
+    const groupTotals = {};
+    
+    rows.forEach(row => {
+        if (row[0] === 'TỔNG CỘNG') return; // Skip total row
+        
+        const group = row[0] || 'Không có nhóm';
+        const tvbh = row[1] || '';
+        
+        if (!groupData[group]) {
+            groupData[group] = [];
+            groupTotals[group] = {};
+            carModels.forEach(model => {
+                groupTotals[group][model] = { hopDong: 0, xhd: 0, doanhThu: 0 };
+            });
+        }
+        
+        groupData[group].push({
+            tvbh: tvbh,
+            stats: {}
+        });
+        
+        // Parse stats cho mỗi car model
+        carModels.forEach((model, modelIndex) => {
+            const startIndex = 2 + (modelIndex * 3);
+            const hopDong = parseInt(row[startIndex]) || 0;
+            const xhd = parseInt(row[startIndex + 1]) || 0;
+            const doanhThu = parseFloat(String(row[startIndex + 2]).replace(/[^0-9.-]/g, '')) || 0;
+            
+            groupData[group][groupData[group].length - 1].stats[model] = {
+                hopDong: hopDong,
+                xhd: xhd,
+                doanhThu: doanhThu
+            };
+            
+            // Cộng vào tổng nhóm
+            groupTotals[group][model].hopDong += hopDong;
+            groupTotals[group][model].xhd += xhd;
+            groupTotals[group][model].doanhThu += doanhThu;
+        });
+    });
+    
+    // Render HTML
+    let html = '';
+    
+    // Summary Cards cho mỗi nhóm
+    html += '<div class="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
+    Object.keys(groupData).sort().forEach(group => {
+        const totals = groupTotals[group];
+        let totalDoanhThu = 0;
+        let totalHopDong = 0;
+        let totalXhd = 0;
+        
+        Object.values(totals).forEach(modelStats => {
+            totalHopDong += modelStats.hopDong;
+            totalXhd += modelStats.xhd;
+            totalDoanhThu += modelStats.doanhThu;
+        });
+        
+        html += `<div class="bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">`;
+        html += `<div class="flex items-center justify-between mb-3">`;
+        html += `<h3 class="font-bold text-orange-900 text-lg">${escapeHtml(group)}</h3>`;
+        html += `<span class="bg-orange-200 text-orange-800 text-xs font-semibold px-2 py-1 rounded-full">${groupData[group].length} TVBH</span>`;
+        html += `</div>`;
+        
+        html += `<div class="space-y-2">`;
+        html += `<div class="flex justify-between items-center">`;
+        html += `<span class="text-xs text-gray-600">Tổng Hợp Đồng:</span>`;
+        html += `<span class="font-bold text-orange-900">${totalHopDong.toLocaleString('vi-VN')}</span>`;
+        html += `</div>`;
+        html += `<div class="flex justify-between items-center">`;
+        html += `<span class="text-xs text-gray-600">Tổng XHĐ:</span>`;
+        html += `<span class="font-bold text-orange-900">${totalXhd.toLocaleString('vi-VN')}</span>`;
+        html += `</div>`;
+        html += `<div class="flex justify-between items-center pt-2 border-t border-orange-200">`;
+        html += `<span class="text-sm font-semibold text-orange-800">Tổng Doanh Thu:</span>`;
+        html += `<span class="font-bold text-lg text-orange-900">${totalDoanhThu.toLocaleString('vi-VN')} đ</span>`;
+        html += `</div>`;
+        html += `</div>`;
+        html += `</div>`;
+    });
+    html += '</div>';
+    
+    // Bảng tổng hợp theo nhóm
+    html += '<div class="mb-6">';
+    html += '<h3 class="text-base md:text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">';
+    html += '<i class="fa-solid fa-chart-bar text-orange-600"></i>';
+    html += '<span>Tổng Hợp Theo Nhóm</span>';
+    html += '</h3>';
+    
+    // Mobile: Cards view
+    html += '<div class="lg:hidden space-y-4">';
+    Object.keys(groupData).sort().forEach((group, groupIndex) => {
+        html += `<div class="bg-white border-2 border-orange-200 rounded-xl p-4 shadow-sm">`;
+        html += `<div class="flex items-center justify-between mb-4 pb-3 border-b border-orange-200">`;
+        html += `<h4 class="font-bold text-orange-900 text-lg">${escapeHtml(group)}</h4>`;
+        html += `<span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">${groupData[group].length} TVBH</span>`;
+        html += `</div>`;
+        
+        // Summary by car model
+        html += `<div class="space-y-3 mb-4">`;
+        carModels.forEach(model => {
+            const stats = groupTotals[group][model];
+            html += `<div class="bg-orange-50 rounded-lg p-3 border border-orange-200">`;
+            html += `<div class="font-semibold text-orange-800 mb-2 flex items-center gap-2">`;
+            html += `<i class="fa-solid fa-car"></i>`;
+            html += `<span>${escapeHtml(model)}</span>`;
+            html += `</div>`;
+            html += `<div class="grid grid-cols-3 gap-2 text-xs">`;
+            html += `<div><span class="text-gray-600">HĐ:</span> <span class="font-bold">${stats.hopDong.toLocaleString('vi-VN')}</span></div>`;
+            html += `<div><span class="text-gray-600">XHĐ:</span> <span class="font-bold">${stats.xhd.toLocaleString('vi-VN')}</span></div>`;
+            html += `<div><span class="text-gray-600">DT:</span> <span class="font-bold">${(stats.doanhThu / 1000000).toFixed(1)}M</span></div>`;
+            html += `</div>`;
+            html += `</div>`;
+        });
+        html += `</div>`;
+        
+        // Expandable TVBH list
+        html += `<div class="mt-4">`;
+        html += `<button onclick="toggleGroupTvbhList('group-${groupIndex}')" class="w-full text-left text-sm text-orange-700 font-medium hover:text-orange-900 flex items-center justify-between">`;
+        html += `<span><i class="fa-solid fa-users mr-2"></i>Danh sách TVBH (${groupData[group].length})</span>`;
+        html += `<i class="fa-solid fa-chevron-down" id="group-${groupIndex}-icon"></i>`;
+        html += `</button>`;
+        html += `<div id="group-${groupIndex}-list" class="hidden mt-3 space-y-2">`;
+        groupData[group].forEach(tvbhData => {
+            html += `<div class="bg-gray-50 rounded-lg p-3 border border-gray-200">`;
+            html += `<div class="font-semibold text-gray-800 mb-2">${escapeHtml(tvbhData.tvbh)}</div>`;
+            html += `<div class="grid grid-cols-2 gap-2 text-xs">`;
+            carModels.forEach(model => {
+                const stats = tvbhData.stats[model];
+                html += `<div class="bg-white rounded p-2">`;
+                html += `<div class="text-gray-600 mb-1">${escapeHtml(model)}</div>`;
+                html += `<div>HĐ: ${stats.hopDong} | XHĐ: ${stats.xhd}</div>`;
+                html += `<div class="font-bold text-orange-700">${(stats.doanhThu / 1000000).toFixed(1)}M</div>`;
+                html += `</div>`;
+            });
+            html += `</div>`;
+            html += `</div>`;
+        });
+        html += `</div>`;
+        html += `</div>`;
+        html += `</div>`;
+    });
+    html += '</div>';
+    
+    // Desktop: Table view
+    html += '<div class="hidden lg:block overflow-x-auto border-2 border-orange-200 rounded-lg">';
+    html += '<table class="min-w-full divide-y divide-orange-200 text-sm">';
+    html += '<thead class="bg-orange-100 sticky top-0 z-10">';
+    html += '<tr>';
+    html += '<th class="px-4 py-3 text-left text-xs font-bold text-orange-800 uppercase sticky left-0 z-20 bg-orange-100">Nhóm</th>';
+    html += '<th class="px-4 py-3 text-center text-xs font-bold text-orange-800 uppercase">Số TVBH</th>';
+    carModels.forEach(model => {
+        html += `<th colspan="3" class="px-4 py-3 text-center text-xs font-bold text-orange-800 uppercase border-l border-orange-300">${escapeHtml(model)}</th>`;
+    });
+    html += '<th class="px-4 py-3 text-right text-xs font-bold text-orange-800 uppercase">Tổng Doanh Thu</th>';
+    html += '</tr>';
+    html += '<tr class="bg-orange-50">';
+    html += '<th class="sticky left-0 z-20 bg-orange-50"></th>';
+    html += '<th></th>';
+    carModels.forEach(() => {
+        html += '<th class="px-2 py-2 text-center text-xs font-semibold text-orange-700 border-l border-orange-200">HĐ</th>';
+        html += '<th class="px-2 py-2 text-center text-xs font-semibold text-orange-700">XHĐ</th>';
+        html += '<th class="px-2 py-2 text-center text-xs font-semibold text-orange-700">Doanh Thu</th>';
+    });
+    html += '<th class="px-4 py-2 text-right text-xs font-semibold text-orange-700"></th>';
+    html += '</tr>';
+    html += '</thead>';
+    html += '<tbody class="bg-white divide-y divide-orange-100">';
+    
+    Object.keys(groupData).sort().forEach(group => {
+        const totals = groupTotals[group];
+        let totalDoanhThu = 0;
+        Object.values(totals).forEach(modelStats => {
+            totalDoanhThu += modelStats.doanhThu;
+        });
+        
+        html += '<tr class="hover:bg-orange-50">';
+        html += `<td class="px-4 py-3 font-bold text-orange-900 sticky left-0 z-10 bg-white">${escapeHtml(group)}</td>`;
+        html += `<td class="px-4 py-3 text-center text-gray-700">${groupData[group].length}</td>`;
+        carModels.forEach(model => {
+            const stats = totals[model];
+            html += `<td class="px-4 py-3 text-right text-gray-700 border-l border-orange-100">${stats.hopDong.toLocaleString('vi-VN')}</td>`;
+            html += `<td class="px-4 py-3 text-right text-gray-700">${stats.xhd.toLocaleString('vi-VN')}</td>`;
+            html += `<td class="px-4 py-3 text-right font-semibold text-orange-800">${stats.doanhThu.toLocaleString('vi-VN')}</td>`;
+        });
+        html += `<td class="px-4 py-3 text-right font-bold text-orange-900">${totalDoanhThu.toLocaleString('vi-VN')}</td>`;
+        html += '</tr>';
+    });
+    
+    html += '</tbody>';
+    html += '</table>';
+    html += '</div>';
+    
+    html += '</div>';
+    
+    document.getElementById('mtd-content').innerHTML = html;
+}
+
+/**
+ * Toggle hiển thị danh sách TVBH trong nhóm
+ */
+function toggleGroupTvbhList(groupId) {
+    const list = document.getElementById(`${groupId}-list`);
+    const icon = document.getElementById(`${groupId}-icon`);
+    
+    if (list && icon) {
+        if (list.classList.contains('hidden')) {
+            list.classList.remove('hidden');
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            list.classList.add('hidden');
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+}
+
 function escapeHtml(text) {
     if (text === null || text === undefined) return '';
     const div = document.createElement('div');
@@ -368,6 +681,9 @@ function escapeHtml(text) {
 if (typeof window !== 'undefined') {
     window.loadMtdDetailReport = loadMtdDetailReport;
     window.renderMtdDetailTable = renderMtdDetailTable;
+    window.renderMtdGroupSummary = renderMtdGroupSummary;
+    window.switchMtdView = switchMtdView;
+    window.toggleGroupTvbhList = toggleGroupTvbhList;
     window.populateSelect = populateSelect;
 
     window.addEventListener('load', () => {
