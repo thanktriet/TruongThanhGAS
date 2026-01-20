@@ -11,12 +11,22 @@
             <div class="mb-4 space-y-3 md:space-y-0 md:flex md:gap-3 md:items-end md:flex-wrap">
                 <div class="flex-1 w-full md:max-w-xs">
                     <label class="label text-xs mb-1 block">Chọn ngày báo cáo:</label>
-                    <input 
-                        type="date" 
-                        id="dashboard-date-filter" 
-                        class="input bg-white w-full text-sm md:text-base" 
-                        onchange="loadReportsDashboard()"
-                    >
+                    <div class="flex gap-2">
+                        <input 
+                            type="date" 
+                            id="dashboard-date-filter" 
+                            class="input bg-white w-full text-sm md:text-base flex-1" 
+                            onchange="loadReportsDashboard()"
+                        >
+                        <button 
+                            onclick="setTodayDate()" 
+                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap flex items-center gap-1"
+                            title="Chọn hôm nay"
+                        >
+                            <i class="fa-solid fa-calendar-day"></i>
+                            <span class="hidden md:inline">Hôm nay</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="flex-1 w-full md:max-w-xs">
                     <label class="label text-xs mb-1 block">Chọn tháng (cho MTD):</label>
@@ -460,6 +470,21 @@ async function loadReportsDashboard() {
     }
 }
 
+/**
+ * Set ngày về hôm nay và reload dashboard
+ */
+function setTodayDate() {
+    const dateInput = document.getElementById('dashboard-date-filter');
+    if (dateInput) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        dateInput.value = `${year}-${month}-${day}`;
+        loadReportsDashboard();
+    }
+}
+
 // Expose functions globally
 if (typeof window !== 'undefined') {
     window.loadReportsDashboard = loadReportsDashboard;
@@ -467,6 +492,7 @@ if (typeof window !== 'undefined') {
     window.createDailyCards = createDailyCards;
     window.createMtdTotalTable = createMtdTotalTable;
     window.createMtdTotalCards = createMtdTotalCards;
+    window.setTodayDate = setTodayDate;
 }
 
 // Set default date and month to current and load on tab active
@@ -481,6 +507,13 @@ if (typeof window !== 'undefined') {
             dateInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         }
         
+        // Set max date to today (không cho chọn ngày tương lai)
+        if (dateInput) {
+            const now = new Date();
+            const maxDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            dateInput.setAttribute('max', maxDate);
+        }
+        
         // Set default month to current month
         if (monthInput && !monthInput.value) {
             const now = new Date();
@@ -492,7 +525,7 @@ if (typeof window !== 'undefined') {
             const tab = document.getElementById('tab-reports-dashboard');
             if (tab && tab.classList.contains('active')) {
                 const contentEl = document.getElementById('dashboard-content');
-                if (contentEl && contentEl.innerHTML.includes('đang được phát triển')) {
+                if (contentEl && (!contentEl.innerHTML || contentEl.innerHTML.trim() === '' || contentEl.innerHTML.includes('đang được phát triển'))) {
                     loadReportsDashboard();
                 }
             }
