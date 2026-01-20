@@ -429,55 +429,51 @@ function renderMtdDetailTable(data) {
  * Format doanh thu thành viết tắt (Triệu/Tỷ)
  */
 function formatDoanhThuShort(amount) {
-    // Parse amount thành number nếu là string
+    // Parse amount thành number
     let numAmount = amount;
+    
     if (typeof amount === 'string') {
-        // Remove tất cả ký tự không phải số và dấu chấm/phẩy
-        // Xử lý format Việt Nam: 1.234.567,89 hoặc 1,234,567.89
-        const cleaned = amount.replace(/[^0-9.,]/g, '');
-        // Nếu có cả dấu chấm và phẩy, dấu phẩy cuối cùng là phần thập phân
+        // Remove tất cả ký tự không phải số (bao gồm cả dấu chấm, phẩy vì chúng là separators)
+        // Format VN: "1.234.567" -> "1234567"
+        // Format có phẩy thập phân: "1.234.567,89" -> "1234567.89"
+        let cleaned = amount.trim();
+        
+        // Remove currency symbols, spaces, etc
+        cleaned = cleaned.replace(/[^0-9.,]/g, '');
+        
+        // Xử lý format Việt Nam: dấu chấm là thousands separator, phẩy là decimal separator
         if (cleaned.includes(',') && cleaned.includes('.')) {
-            // Format VN: 1.234.567,89 -> 1234567.89
+            // Format VN: "1.234.567,89" -> remove all dots, replace comma with dot
             numAmount = parseFloat(cleaned.replace(/\./g, '').replace(',', '.'));
         } else if (cleaned.includes(',')) {
-            // Chỉ có phẩy: có thể là format VN hoặc US
-            // Nếu có nhiều hơn 1 phẩy thì là format VN (phẩy là phần thập phân)
-            const commaCount = (cleaned.match(/,/g) || []).length;
-            if (commaCount === 1) {
-                // Có thể là format VN (1,5) hoặc US (1,234)
-                // Nếu sau phẩy có 3 số thì là US format
-                const parts = cleaned.split(',');
-                if (parts[1] && parts[1].length === 3) {
-                    // US format: 1,234 -> 1234
-                    numAmount = parseFloat(cleaned.replace(/,/g, ''));
-                } else {
-                    // VN format: 1,5 -> 1.5
-                    numAmount = parseFloat(cleaned.replace(',', '.'));
-                }
+            // Chỉ có phẩy: có thể là decimal separator hoặc thousands separator
+            const parts = cleaned.split(',');
+            if (parts.length === 2 && parts[1].length <= 2) {
+                // Có vẻ là decimal separator: "1234,56" -> "1234.56"
+                numAmount = parseFloat(cleaned.replace(',', '.'));
             } else {
-                // Format VN: 1,234,567 -> 1234567
+                // Có thể là thousands separator: "1,234,567" -> remove commas
                 numAmount = parseFloat(cleaned.replace(/,/g, ''));
             }
         } else if (cleaned.includes('.')) {
-            // Chỉ có chấm: có thể là format VN (1.234.567) hoặc US (1.234)
-            const dotCount = (cleaned.match(/\./g) || []).length;
-            if (dotCount > 1) {
-                // Format VN: 1.234.567 -> 1234567
+            // Chỉ có chấm: có thể là thousands separator hoặc decimal separator
+            const parts = cleaned.split('.');
+            if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+                // Có nhiều chấm hoặc sau chấm có 3 số -> thousands separator: "1.234.567" -> remove dots
                 numAmount = parseFloat(cleaned.replace(/\./g, ''));
             } else {
-                // Format US: 1.234 -> 1234 hoặc 1.5 -> 1.5
-                // Nếu sau chấm có 3 số thì là US format (thousands separator)
-                const parts = cleaned.split('.');
-                if (parts[1] && parts[1].length === 3) {
-                    numAmount = parseFloat(cleaned.replace(/\./g, ''));
-                } else {
-                    numAmount = parseFloat(cleaned);
-                }
+                // Có thể là decimal separator: "1234.56" -> keep as is
+                numAmount = parseFloat(cleaned);
             }
         } else {
             // Chỉ có số
             numAmount = parseFloat(cleaned);
         }
+    }
+    
+    // Nếu vẫn không parse được, thử parse trực tiếp
+    if (isNaN(numAmount)) {
+        numAmount = parseFloat(String(amount).replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.'));
     }
     
     if (!numAmount || numAmount === 0 || isNaN(numAmount)) return '0';
@@ -488,8 +484,8 @@ function formatDoanhThuShort(amount) {
     if (numAmount >= ty) {
         const tyValue = numAmount / ty;
         // Nếu là số nguyên thì không hiển thị số thập phân
-        if (tyValue % 1 === 0) {
-            return `${tyValue} Tỷ`;
+        if (Math.abs(tyValue % 1) < 0.001) {
+            return `${Math.round(tyValue)} Tỷ`;
         } else {
             // Hiển thị 1 chữ số thập phân
             return `${tyValue.toFixed(1).replace('.', ',')} Tỷ`;
@@ -497,8 +493,8 @@ function formatDoanhThuShort(amount) {
     } else if (numAmount >= trieu) {
         const trieuValue = numAmount / trieu;
         // Nếu là số nguyên thì không hiển thị số thập phân
-        if (trieuValue % 1 === 0) {
-            return `${trieuValue} Triệu`;
+        if (Math.abs(trieuValue % 1) < 0.001) {
+            return `${Math.round(trieuValue)} Triệu`;
         } else {
             // Hiển thị 1 chữ số thập phân
             return `${trieuValue.toFixed(1).replace('.', ',')} Triệu`;
@@ -562,7 +558,36 @@ function renderMtdGroupSummary(data) {
             const startIndex = 2 + (modelIndex * 3);
             const hopDong = parseInt(row[startIndex]) || 0;
             const xhd = parseInt(row[startIndex + 1]) || 0;
-            const doanhThu = parseFloat(String(row[startIndex + 2]).replace(/[^0-9.-]/g, '')) || 0;
+            // Parse doanh thu - có thể là number hoặc string đã format
+            let doanhThu = 0;
+            const doanhThuRaw = row[startIndex + 2];
+            if (typeof doanhThuRaw === 'number') {
+                doanhThu = doanhThuRaw;
+            } else if (typeof doanhThuRaw === 'string') {
+                // Format VN: "1.234.567" -> remove all dots
+                // Format có phẩy: "1.234.567,89" -> remove dots, replace comma with dot
+                const cleaned = doanhThuRaw.replace(/[^0-9.,]/g, '');
+                if (cleaned.includes(',') && cleaned.includes('.')) {
+                    // Format VN với phần thập phân: "1.234.567,89"
+                    doanhThu = parseFloat(cleaned.replace(/\./g, '').replace(',', '.'));
+                } else if (cleaned.includes('.')) {
+                    // Format VN: "1.234.567" -> remove all dots
+                    doanhThu = parseFloat(cleaned.replace(/\./g, ''));
+                } else if (cleaned.includes(',')) {
+                    // Có thể là decimal separator hoặc thousands separator
+                    const parts = cleaned.split(',');
+                    if (parts.length === 2 && parts[1].length <= 2) {
+                        // Decimal: "1234,56"
+                        doanhThu = parseFloat(cleaned.replace(',', '.'));
+                    } else {
+                        // Thousands: "1,234,567"
+                        doanhThu = parseFloat(cleaned.replace(/,/g, ''));
+                    }
+                } else {
+                    doanhThu = parseFloat(cleaned) || 0;
+                }
+            }
+            if (isNaN(doanhThu)) doanhThu = 0;
             
             groupData[group][groupData[group].length - 1].stats[model] = {
                 hopDong: hopDong,
