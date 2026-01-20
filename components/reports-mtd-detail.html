@@ -562,7 +562,7 @@ function renderMtdGroupSummary(data) {
             html += `<div class="grid grid-cols-3 gap-2 text-xs">`;
             html += `<div><span class="text-gray-600">HĐ:</span> <span class="font-bold">${stats.hopDong.toLocaleString('vi-VN')}</span></div>`;
             html += `<div><span class="text-gray-600">XHĐ:</span> <span class="font-bold">${stats.xhd.toLocaleString('vi-VN')}</span></div>`;
-            html += `<div><span class="text-gray-600">DT:</span> <span class="font-bold">${(stats.doanhThu / 1000000).toFixed(1)}M</span></div>`;
+            html += `<div><span class="text-gray-600">DT:</span> <span class="font-bold">${stats.doanhThu.toLocaleString('vi-VN')}</span></div>`;
             html += `</div>`;
             html += `</div>`;
         });
@@ -584,7 +584,7 @@ function renderMtdGroupSummary(data) {
                 html += `<div class="bg-white rounded p-2">`;
                 html += `<div class="text-gray-600 mb-1">${escapeHtml(model)}</div>`;
                 html += `<div>HĐ: ${stats.hopDong} | XHĐ: ${stats.xhd}</div>`;
-                html += `<div class="font-bold text-orange-700">${(stats.doanhThu / 1000000).toFixed(1)}M</div>`;
+                html += `<div class="font-bold text-orange-700">${stats.doanhThu.toLocaleString('vi-VN')}</div>`;
                 html += `</div>`;
             });
             html += `</div>`;
