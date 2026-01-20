@@ -426,6 +426,39 @@ function renderMtdDetailTable(data) {
 }
 
 /**
+ * Format doanh thu thành viết tắt (Triệu/Tỷ)
+ */
+function formatDoanhThuShort(amount) {
+    if (!amount || amount === 0) return '0';
+    
+    const ty = 1000000000; // 1 tỷ
+    const trieu = 1000000; // 1 triệu
+    
+    if (amount >= ty) {
+        const tyValue = amount / ty;
+        // Nếu là số nguyên thì không hiển thị số thập phân
+        if (tyValue % 1 === 0) {
+            return `${tyValue} Tỷ`;
+        } else {
+            // Hiển thị 1 chữ số thập phân
+            return `${tyValue.toFixed(1).replace('.', ',')} Tỷ`;
+        }
+    } else if (amount >= trieu) {
+        const trieuValue = amount / trieu;
+        // Nếu là số nguyên thì không hiển thị số thập phân
+        if (trieuValue % 1 === 0) {
+            return `${trieuValue} Triệu`;
+        } else {
+            // Hiển thị 1 chữ số thập phân
+            return `${trieuValue.toFixed(1).replace('.', ',')} Triệu`;
+        }
+    } else {
+        // Nhỏ hơn 1 triệu thì hiển thị đầy đủ
+        return amount.toLocaleString('vi-VN');
+    }
+}
+
+/**
  * Render tổng hợp theo nhóm
  */
 function renderMtdGroupSummary(data) {
@@ -527,7 +560,7 @@ function renderMtdGroupSummary(data) {
         html += `</div>`;
         html += `<div class="flex justify-between items-center pt-2 border-t border-orange-200">`;
         html += `<span class="text-sm font-semibold text-orange-800">Tổng Doanh Thu:</span>`;
-        html += `<span class="font-bold text-lg text-orange-900">${totalDoanhThu.toLocaleString('vi-VN')} đ</span>`;
+        html += `<span class="font-bold text-lg text-orange-900">${formatDoanhThuShort(totalDoanhThu)}</span>`;
         html += `</div>`;
         html += `</div>`;
         html += `</div>`;
@@ -562,7 +595,7 @@ function renderMtdGroupSummary(data) {
             html += `<div class="grid grid-cols-3 gap-2 text-xs">`;
             html += `<div><span class="text-gray-600">HĐ:</span> <span class="font-bold">${stats.hopDong.toLocaleString('vi-VN')}</span></div>`;
             html += `<div><span class="text-gray-600">XHĐ:</span> <span class="font-bold">${stats.xhd.toLocaleString('vi-VN')}</span></div>`;
-            html += `<div><span class="text-gray-600">DT:</span> <span class="font-bold">${stats.doanhThu.toLocaleString('vi-VN')}</span></div>`;
+            html += `<div><span class="text-gray-600">DT:</span> <span class="font-bold">${formatDoanhThuShort(stats.doanhThu)}</span></div>`;
             html += `</div>`;
             html += `</div>`;
         });
@@ -584,7 +617,7 @@ function renderMtdGroupSummary(data) {
                 html += `<div class="bg-white rounded p-2">`;
                 html += `<div class="text-gray-600 mb-1">${escapeHtml(model)}</div>`;
                 html += `<div>HĐ: ${stats.hopDong} | XHĐ: ${stats.xhd}</div>`;
-                html += `<div class="font-bold text-orange-700">${stats.doanhThu.toLocaleString('vi-VN')}</div>`;
+                html += `<div class="font-bold text-orange-700">${formatDoanhThuShort(stats.doanhThu)}</div>`;
                 html += `</div>`;
             });
             html += `</div>`;
@@ -635,9 +668,9 @@ function renderMtdGroupSummary(data) {
             const stats = totals[model];
             html += `<td class="px-4 py-3 text-right text-gray-700 border-l border-orange-100">${stats.hopDong.toLocaleString('vi-VN')}</td>`;
             html += `<td class="px-4 py-3 text-right text-gray-700">${stats.xhd.toLocaleString('vi-VN')}</td>`;
-            html += `<td class="px-4 py-3 text-right font-semibold text-orange-800">${stats.doanhThu.toLocaleString('vi-VN')}</td>`;
+            html += `<td class="px-4 py-3 text-right font-semibold text-orange-800">${formatDoanhThuShort(stats.doanhThu)}</td>`;
         });
-        html += `<td class="px-4 py-3 text-right font-bold text-orange-900">${totalDoanhThu.toLocaleString('vi-VN')}</td>`;
+        html += `<td class="px-4 py-3 text-right font-bold text-orange-900">${formatDoanhThuShort(totalDoanhThu)}</td>`;
         html += '</tr>';
     });
     
@@ -682,6 +715,7 @@ if (typeof window !== 'undefined') {
     window.loadMtdDetailReport = loadMtdDetailReport;
     window.renderMtdDetailTable = renderMtdDetailTable;
     window.renderMtdGroupSummary = renderMtdGroupSummary;
+    window.formatDoanhThuShort = formatDoanhThuShort;
     window.switchMtdView = switchMtdView;
     window.toggleGroupTvbhList = toggleGroupTvbhList;
     window.populateSelect = populateSelect;
