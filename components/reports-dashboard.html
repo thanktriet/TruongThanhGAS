@@ -8,6 +8,7 @@
         </div>
         <div class="p-3 md:p-6">
             <!-- Filter -->
+            <!-- Filter cho Báo cáo Ngày -->
             <div class="mb-4 space-y-3 md:space-y-0 md:flex md:gap-3 md:items-end md:flex-wrap">
                 <div class="flex-1 w-full md:max-w-xs">
                     <label class="label text-xs mb-1 block">Chọn ngày báo cáo:</label>
@@ -28,6 +29,16 @@
                         </button>
                     </div>
                 </div>
+                <button 
+                    onclick="loadReportsDashboard()" 
+                    class="w-full md:w-auto bg-indigo-600 text-white font-bold px-6 py-2.5 md:py-2 rounded-lg hover:bg-indigo-700 transition touch-manipulation text-sm md:text-base"
+                >
+                    <i class="fa-solid fa-filter mr-2"></i>Lọc
+                </button>
+            </div>
+
+            <!-- Filter cho MTD -->
+            <div class="mb-4 space-y-3 md:space-y-0 md:flex md:gap-3 md:items-end md:flex-wrap bg-gray-50 p-3 rounded-lg border border-gray-200">
                 <div class="flex-1 w-full md:max-w-xs">
                     <label class="label text-xs mb-1 block">Chọn tháng (cho MTD):</label>
                     <input 
@@ -37,12 +48,26 @@
                         onchange="loadReportsDashboard()"
                     >
                 </div>
-                <button 
-                    onclick="loadReportsDashboard()" 
-                    class="w-full md:w-auto bg-indigo-600 text-white font-bold px-6 py-2.5 md:py-2 rounded-lg hover:bg-indigo-700 transition touch-manipulation text-sm md:text-base"
-                >
-                    <i class="fa-solid fa-filter mr-2"></i>Lọc
-                </button>
+                <div class="flex-1 w-full md:max-w-xs">
+                    <label class="label text-xs mb-1 block">Nhóm (MTD):</label>
+                    <select 
+                        id="dashboard-mtd-group-filter" 
+                        class="input bg-white w-full text-sm md:text-base" 
+                        onchange="loadReportsDashboard()"
+                    >
+                        <option value="">Tất cả nhóm</option>
+                    </select>
+                </div>
+                <div class="flex-1 w-full md:max-w-xs">
+                    <label class="label text-xs mb-1 block">TVBH (MTD):</label>
+                    <select 
+                        id="dashboard-mtd-tvbh-filter" 
+                        class="input bg-white w-full text-sm md:text-base" 
+                        onchange="loadReportsDashboard()"
+                    >
+                        <option value="">Tất cả TVBH</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Loading -->
@@ -374,9 +399,257 @@ function createMtdTotalTable(dataArray) {
     return html;
 }
 
+/**
+ * Tạo Summary Cards hiển thị tổng hợp
+ */
+function createSummaryCards(daily, reportedTvbhSet) {
+    if (!daily || daily.length === 0) {
+        return '';
+    }
+    
+    // Đếm tổng số TVBH (bỏ qua dòng TỔNG CỘNG)
+    const totalTvbh = daily.length - 2; // -2 vì có header và TỔNG CỘNG
+    
+    // Convert reportedTvbhSet to Set nếu cần
+    const reportedSet = reportedTvbhSet 
+        ? (reportedTvbhSet instanceof Set ? reportedTvbhSet : new Set(reportedTvbhSet))
+        : new Set();
+    
+    // Đếm số TVBH đã báo cáo
+    let reportedCount = 0;
+    for (let i = 1; i < daily.length - 1; i++) { // Bỏ qua header và TỔNG CỘNG
+        const row = daily[i];
+        const tvbhName = row[1];
+        if (tvbhName && tvbhName !== 'TỔNG CỘNG') {
+            const hasData = row.slice(2).some(val => {
+                if (typeof val === 'number') return val > 0;
+                if (typeof val === 'string') {
+                    const numVal = parseFloat(val.replace(/[^0-9.-]/g, ''));
+                    return !isNaN(numVal) && numVal > 0;
+                }
+                return false;
+            });
+            if (reportedSet.has(tvbhName) || hasData) {
+                reportedCount++;
+            }
+        }
+    }
+    
+    const notReportedCount = totalTvbh - reportedCount;
+    const reportRate = totalTvbh > 0 ? ((reportedCount / totalTvbh) * 100).toFixed(1) : 0;
+    
+    let html = '<div class="mb-6 md:mb-8">';
+    html += '<h3 class="text-base md:text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">';
+    html += '<i class="fa-solid fa-chart-bar text-indigo-600"></i>';
+    html += '<span>Tổng Quan</span>';
+    html += '</h3>';
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">';
+    
+    // Card 1: Tổng số TVBH
+    html += '<div class="bg-gradient-to-br from-indigo-50 to-indigo-100 border-2 border-indigo-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">';
+    html += '<div class="flex items-center justify-between">';
+    html += '<div>';
+    html += '<p class="text-xs text-indigo-600 font-medium mb-1">Tổng số TVBH</p>';
+    html += `<p class="text-2xl md:text-3xl font-bold text-indigo-900">${totalTvbh}</p>`;
+    html += '</div>';
+    html += '<i class="fa-solid fa-users text-indigo-400 text-3xl"></i>';
+    html += '</div>';
+    html += '</div>';
+    
+    // Card 2: Đã báo cáo
+    html += '<div class="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">';
+    html += '<div class="flex items-center justify-between">';
+    html += '<div>';
+    html += '<p class="text-xs text-green-600 font-medium mb-1">Đã báo cáo</p>';
+    html += `<p class="text-2xl md:text-3xl font-bold text-green-900">${reportedCount}</p>`;
+    html += '</div>';
+    html += '<i class="fa-solid fa-check-circle text-green-400 text-3xl"></i>';
+    html += '</div>';
+    html += '</div>';
+    
+    // Card 3: Chưa báo cáo
+    html += '<div class="bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">';
+    html += '<div class="flex items-center justify-between">';
+    html += '<div>';
+    html += '<p class="text-xs text-red-600 font-medium mb-1">Chưa báo cáo</p>';
+    html += `<p class="text-2xl md:text-3xl font-bold text-red-900">${notReportedCount}</p>`;
+    html += '</div>';
+    html += '<i class="fa-solid fa-exclamation-triangle text-red-400 text-3xl"></i>';
+    html += '</div>';
+    html += '</div>';
+    
+    // Card 4: Tỷ lệ báo cáo
+    const rateColor = reportRate >= 80 ? 'text-green-600' : reportRate >= 50 ? 'text-yellow-600' : 'text-red-600';
+    const rateBg = reportRate >= 80 ? 'from-green-50 to-green-100 border-green-200' : reportRate >= 50 ? 'from-yellow-50 to-yellow-100 border-yellow-200' : 'from-red-50 to-red-100 border-red-200';
+    html += `<div class="bg-gradient-to-br ${rateBg} border-2 rounded-xl p-4 shadow-sm hover:shadow-md transition">`;
+    html += '<div class="flex items-center justify-between">';
+    html += '<div>';
+    html += '<p class="text-xs text-gray-600 font-medium mb-1">Tỷ lệ báo cáo</p>';
+    html += `<p class="text-2xl md:text-3xl font-bold ${rateColor}">${reportRate}%</p>`;
+    html += '</div>';
+    html += '<i class="fa-solid fa-chart-pie text-gray-400 text-3xl"></i>';
+    html += '</div>';
+    html += '</div>';
+    
+    html += '</div>';
+    html += '</div>';
+    
+    return html;
+}
+
+/**
+ * Tạo bảng danh sách TVBH chưa báo cáo
+ */
+function createNotReportedTable(daily, reportedTvbhSet) {
+    if (!daily || daily.length === 0) {
+        return '';
+    }
+    
+    // Convert reportedTvbhSet to Set nếu cần
+    const reportedSet = reportedTvbhSet 
+        ? (reportedTvbhSet instanceof Set ? reportedTvbhSet : new Set(reportedTvbhSet))
+        : new Set();
+    
+    // Lọc danh sách TVBH chưa báo cáo
+    const notReportedList = [];
+    for (let i = 1; i < daily.length - 1; i++) { // Bỏ qua header và TỔNG CỘNG
+        const row = daily[i];
+        const tvbhName = row[1];
+        const group = row[0];
+        
+        if (tvbhName && tvbhName !== 'TỔNG CỘNG') {
+            const hasData = row.slice(2).some(val => {
+                if (typeof val === 'number') return val > 0;
+                if (typeof val === 'string') {
+                    const numVal = parseFloat(val.replace(/[^0-9.-]/g, ''));
+                    return !isNaN(numVal) && numVal > 0;
+                }
+                return false;
+            });
+            
+            if (!reportedSet.has(tvbhName) && !hasData) {
+                notReportedList.push({
+                    group: group || '',
+                    tvbh: tvbhName
+                });
+            }
+        }
+    }
+    
+    if (notReportedList.length === 0) {
+        return '<div class="mb-6 md:mb-8 bg-green-50 border-2 border-green-200 rounded-xl p-6 text-center">' +
+               '<i class="fa-solid fa-check-circle text-green-500 text-4xl mb-3"></i>' +
+               '<p class="text-green-800 font-bold text-lg">Tất cả TVBH đã báo cáo!</p>' +
+               '<p class="text-green-600 text-sm mt-2">Không có TVBH nào chưa báo cáo trong ngày này.</p>' +
+               '</div>';
+    }
+    
+    let html = '<div class="mb-6 md:mb-8">';
+    html += '<h3 class="text-base md:text-lg font-bold text-red-800 mb-3 md:mb-4 flex items-center gap-2">';
+    html += '<i class="fa-solid fa-exclamation-triangle text-red-600"></i>';
+    html += `<span>Danh Sách TVBH Chưa Báo Cáo (${notReportedList.length} người)</span>`;
+    html += '</h3>';
+    
+    // Mobile: Cards view
+    html += '<div class="lg:hidden">';
+    html += '<div class="grid grid-cols-1 gap-3">';
+    notReportedList.forEach((item, index) => {
+        html += '<div class="bg-red-50 border-2 border-red-200 rounded-lg p-4 hover:shadow-md transition">';
+        html += '<div class="flex items-center justify-between">';
+        html += '<div class="flex items-center gap-3">';
+        html += `<span class="text-sm font-bold text-gray-500">${index + 1}</span>`;
+        html += '<div>';
+        html += `<p class="font-bold text-red-800">${item.tvbh}</p>`;
+        if (item.group) {
+            html += `<p class="text-xs text-gray-600">${item.group}</p>`;
+        }
+        html += '</div>';
+        html += '</div>';
+        html += '<span class="bg-red-200 text-red-800 text-xs font-semibold px-2 py-1 rounded-full">Chưa báo cáo</span>';
+        html += '</div>';
+        html += '</div>';
+    });
+    html += '</div>';
+    html += '</div>';
+    
+    // Desktop: Table view
+    html += '<div class="hidden lg:block overflow-x-auto border-2 border-red-200 rounded-lg">';
+    html += '<table class="min-w-full divide-y divide-red-200 text-sm">';
+    html += '<thead class="bg-red-100 sticky top-0 z-10">';
+    html += '<tr>';
+    html += '<th class="px-4 py-3 text-left text-xs font-bold text-red-800 uppercase">STT</th>';
+    html += '<th class="px-4 py-3 text-left text-xs font-bold text-red-800 uppercase">Nhóm</th>';
+    html += '<th class="px-4 py-3 text-left text-xs font-bold text-red-800 uppercase">TVBH</th>';
+    html += '<th class="px-4 py-3 text-center text-xs font-bold text-red-800 uppercase">Trạng thái</th>';
+    html += '</tr>';
+    html += '</thead>';
+    html += '<tbody class="bg-white divide-y divide-red-100">';
+    notReportedList.forEach((item, index) => {
+        html += '<tr class="hover:bg-red-50">';
+        html += `<td class="px-4 py-3 text-sm font-medium text-gray-700">${index + 1}</td>`;
+        html += `<td class="px-4 py-3 text-sm text-gray-700">${item.group || '-'}</td>`;
+        html += `<td class="px-4 py-3 text-sm font-bold text-red-700">${item.tvbh}</td>`;
+        html += '<td class="px-4 py-3 text-center">';
+        html += '<span class="bg-red-200 text-red-800 text-xs font-semibold px-3 py-1 rounded-full">Chưa báo cáo</span>';
+        html += '</td>';
+        html += '</tr>';
+    });
+    html += '</tbody>';
+    html += '</table>';
+    html += '</div>';
+    
+    html += '</div>';
+    
+    return html;
+}
+
+/**
+ * Filter MTD data theo nhóm và TVBH
+ */
+function filterMtdData(mtdTotal, filterGroup, filterTvbh) {
+    if (!mtdTotal || mtdTotal.length === 0) {
+        return mtdTotal;
+    }
+    
+    const headers = mtdTotal[0];
+    const filtered = [headers];
+    const hasFilter = (filterGroup && filterGroup !== '') || (filterTvbh && filterTvbh !== '');
+    
+    for (let i = 1; i < mtdTotal.length; i++) {
+        const row = mtdTotal[i];
+        const isTotal = row[1] === 'TỔNG CỘNG';
+        const group = row[1] || '';
+        const tvbh = row[2] || '';
+        
+        // Ẩn dòng TỔNG CỘNG nếu có filter (vì tổng không còn chính xác)
+        if (isTotal) {
+            if (!hasFilter) {
+                filtered.push(row);
+            }
+            continue;
+        }
+        
+        // Filter theo nhóm
+        if (filterGroup && filterGroup !== '' && group !== filterGroup) {
+            continue;
+        }
+        
+        // Filter theo TVBH
+        if (filterTvbh && filterTvbh !== '' && tvbh !== filterTvbh) {
+            continue;
+        }
+        
+        filtered.push(row);
+    }
+    
+    return filtered;
+}
+
 async function loadReportsDashboard() {
     const filterDate = document.getElementById('dashboard-date-filter').value || null;
     const filterMonth = document.getElementById('dashboard-month-filter').value || null;
+    const filterGroup = document.getElementById('dashboard-mtd-group-filter')?.value || null;
+    const filterTvbh = document.getElementById('dashboard-mtd-tvbh-filter')?.value || null;
     
     const loadingEl = document.getElementById('dashboard-loading');
     const contentEl = document.getElementById('dashboard-content');
@@ -408,7 +681,24 @@ async function loadReportsDashboard() {
                 dateDisplay = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
             }
             
+            // Convert reportedTvbhSet to Set if it's an array
+            const reportedSet = reportedTvbhSet 
+                ? (reportedTvbhSet instanceof Set ? reportedTvbhSet : new Set(reportedTvbhSet))
+                : null;
+            
+            // Populate filter dropdowns từ dữ liệu
+            populateMtdFilters(daily, mtdTotal, filterGroup, filterTvbh);
+            
+            // Filter MTD data
+            const filteredMtdTotal = filterMtdData(mtdTotal, filterGroup, filterTvbh);
+            
             let html = '';
+            
+            // PHẦN MỚI: Summary Cards
+            html += createSummaryCards(daily, reportedSet);
+            
+            // PHẦN MỚI: Bảng TVBH chưa báo cáo
+            html += createNotReportedTable(daily, reportedSet);
             
             // Bảng 1: Báo cáo Ngày
             html += '<div class="mb-6 md:mb-8">';
@@ -416,11 +706,6 @@ async function loadReportsDashboard() {
             html += '<i class="fa-solid fa-calendar-day text-indigo-600"></i>';
             html += `<span class="break-words">Báo Cáo Ngày (${dateDisplay})</span>`;
             html += '</h3>';
-            
-            // Convert reportedTvbhSet to Set if it's an array
-            const reportedSet = reportedTvbhSet 
-                ? (reportedTvbhSet instanceof Set ? reportedTvbhSet : new Set(reportedTvbhSet))
-                : null;
             
             // Mobile: Cards view, Desktop: Table view
             html += '<div class="lg:hidden">';
@@ -435,12 +720,15 @@ async function loadReportsDashboard() {
             html += '<h3 class="text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2 flex-wrap">';
             html += '<i class="fa-solid fa-chart-line text-indigo-600"></i>';
             html += '<span class="break-words">Báo Cáo MTD Tổng Hợp (Từ Đầu Tháng)</span>';
+            if (filterGroup || filterTvbh) {
+                html += '<span class="text-xs text-gray-500 ml-2">(Đã lọc)</span>';
+            }
             html += '</h3>';
             // Mobile: Cards view, Desktop: Table view
             html += '<div class="lg:hidden">';
-            html += createMtdTotalCards(mtdTotal);
+            html += createMtdTotalCards(filteredMtdTotal);
             html += '</div>';
-            html += createMtdTotalTable(mtdTotal);
+            html += createMtdTotalTable(filteredMtdTotal);
             html += '</div>';
             
             contentEl.innerHTML = html;
@@ -485,6 +773,83 @@ function setTodayDate() {
     }
 }
 
+/**
+ * Populate filter dropdowns cho MTD
+ */
+function populateMtdFilters(daily, mtdTotal, selectedGroup, selectedTvbh) {
+    // Lấy danh sách nhóm và TVBH từ mtdTotal data
+    const groups = new Set();
+    const tvbhs = new Set();
+    
+    if (mtdTotal && mtdTotal.length > 1) {
+        for (let i = 1; i < mtdTotal.length; i++) {
+            const row = mtdTotal[i];
+            const isTotal = row[1] === 'TỔNG CỘNG';
+            if (isTotal) continue;
+            
+            const group = row[1] || '';
+            const tvbh = row[2] || '';
+            
+            if (group && group !== '') {
+                groups.add(group);
+            }
+            if (tvbh && tvbh !== '') {
+                tvbhs.add({ value: tvbh, text: tvbh, group: group });
+            }
+        }
+    }
+    
+    // Fallback: nếu mtdTotal không có dữ liệu, lấy từ daily
+    if (groups.size === 0 && daily && daily.length > 1) {
+        for (let i = 1; i < daily.length - 1; i++) {
+            const row = daily[i];
+            if (row[0] && row[0] !== 'TỔNG CỘNG') {
+                groups.add(row[0]);
+            }
+            if (row[1] && row[1] !== 'TỔNG CỘNG') {
+                tvbhs.add({ value: row[1], text: row[1], group: row[0] });
+            }
+        }
+    }
+    
+    // Populate group filter
+    const groupSelect = document.getElementById('dashboard-mtd-group-filter');
+    if (groupSelect) {
+        const currentValue = groupSelect.value;
+        groupSelect.innerHTML = '<option value="">Tất cả nhóm</option>';
+        Array.from(groups).sort().forEach(group => {
+            const option = document.createElement('option');
+            option.value = group;
+            option.textContent = group;
+            if (group === selectedGroup || (!selectedGroup && group === currentValue)) {
+                option.selected = true;
+            }
+            groupSelect.appendChild(option);
+        });
+    }
+    
+    // Populate TVBH filter
+    const tvbhSelect = document.getElementById('dashboard-mtd-tvbh-filter');
+    if (tvbhSelect) {
+        const currentValue = tvbhSelect.value;
+        tvbhSelect.innerHTML = '<option value="">Tất cả TVBH</option>';
+        Array.from(tvbhs).sort((a, b) => {
+            if (a.group !== b.group) {
+                return (a.group || '').localeCompare(b.group || '');
+            }
+            return a.text.localeCompare(b.text);
+        }).forEach(tvbh => {
+            const option = document.createElement('option');
+            option.value = tvbh.value;
+            option.textContent = `${tvbh.text}${tvbh.group ? ' (' + tvbh.group + ')' : ''}`;
+            if (tvbh.value === selectedTvbh || (!selectedTvbh && tvbh.value === currentValue)) {
+                option.selected = true;
+            }
+            tvbhSelect.appendChild(option);
+        });
+    }
+}
+
 // Expose functions globally
 if (typeof window !== 'undefined') {
     window.loadReportsDashboard = loadReportsDashboard;
@@ -492,6 +857,10 @@ if (typeof window !== 'undefined') {
     window.createDailyCards = createDailyCards;
     window.createMtdTotalTable = createMtdTotalTable;
     window.createMtdTotalCards = createMtdTotalCards;
+    window.createSummaryCards = createSummaryCards;
+    window.createNotReportedTable = createNotReportedTable;
+    window.filterMtdData = filterMtdData;
+    window.populateMtdFilters = populateMtdFilters;
     window.setTodayDate = setTodayDate;
 }
 
