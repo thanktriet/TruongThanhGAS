@@ -301,11 +301,18 @@ if (typeof window !== 'undefined') {
     document.addEventListener('click', function(e) {
         const sidebar = document.getElementById('mobile-sidebar');
         const toggleBtn = document.getElementById('mobile-menu-toggle');
+        const bottomMenuBtn = document.getElementById('mobile-nav-bottom-menu');
         
         if (!sidebar || sidebar.classList.contains('hidden')) return;
         
-        // If click is outside sidebar and not on toggle button
-        if (!sidebar.contains(e.target) && !toggleBtn?.contains(e.target)) {
+        // Check if click is on any menu toggle button
+        const isToggleButton = toggleBtn?.contains(e.target) || 
+                              bottomMenuBtn?.contains(e.target) ||
+                              e.target.closest('#mobile-menu-toggle') ||
+                              e.target.closest('#mobile-nav-bottom-menu');
+        
+        // If click is outside sidebar and not on any toggle button
+        if (!sidebar.contains(e.target) && !isToggleButton) {
             closeMobileMenu();
         }
     });
