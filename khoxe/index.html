@@ -417,20 +417,22 @@ border:1px solid var(--border)
         }
 
         function exportToExcel() {
-            // Xuất file Excel (.xls) format
-            const headers = ['VIN', 'Dòng xe', 'Màu', 'NSX', 'Giá', 'Kho', 'Trạng thái', 'Đối soát'];
+            // Xuất file Excel (.xls) format - thứ tự cột theo bảng hiển thị
+            // Thứ tự: VIN, Thông tin xe, Màu sắc, Giá bán, Kho, Đối soát, Trạng thái, Vị trí kho thực tế
+            const headers = ['VIN', 'Thông tin xe', 'Màu sắc', 'Giá bán', 'Kho', 'Đối soát', 'Trạng thái', 'Vị trí kho thực tế'];
             let csvContent = headers.join('\t') + '\n'; // Tab-separated for Excel
 
             allData.forEach(item => {
+                const priceFormat = item.c4 ? Number(item.c4).toLocaleString('vi-VN') + " ₫" : "";
                 const row = [
-                    item.c0,
-                    item.c1,
-                    item.c2,
-                    item.c3 || '',
-                    item.c4 || '',
-                    item.c5,
-                    item.c6,
-                    item.match
+                    item.c0 || '',
+                    item.c1 || '',
+                    item.c2 || '',
+                    priceFormat,
+                    item.c5 || '',
+                    item.match || '',
+                    item.c6 || '',
+                    item.actualLocation || '' // Vị trí kho thực tế
                 ];
                 csvContent += row.join('\t') + '\n';
             });
