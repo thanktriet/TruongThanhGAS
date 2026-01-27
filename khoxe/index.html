@@ -419,8 +419,20 @@ border:1px solid var(--border)
         function exportToExcel() {
             // Xuất file Excel (.xls) format - thứ tự cột theo bảng hiển thị
             // Thứ tự: VIN, Thông tin xe, Màu sắc, Giá bán, Kho, Đối soát, Trạng thái, Vị trí kho thực tế
+            
+            // Hàm escape CSV value (thêm dấu ngoặc kép nếu có dấu phẩy, xuống dòng, hoặc dấu ngoặc kép)
+            function escapeCSV(value) {
+                if (value === null || value === undefined) return '';
+                const str = String(value);
+                // Nếu có dấu phẩy, xuống dòng, hoặc dấu ngoặc kép, cần quote và escape
+                if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+                    return '"' + str.replace(/"/g, '""') + '"';
+                }
+                return str;
+            }
+
             const headers = ['VIN', 'Thông tin xe', 'Màu sắc', 'Giá bán', 'Kho', 'Đối soát', 'Trạng thái', 'Vị trí kho thực tế'];
-            let csvContent = headers.join('\t') + '\n'; // Tab-separated for Excel
+            let csvContent = headers.map(escapeCSV).join(',') + '\n';
 
             allData.forEach(item => {
                 const priceFormat = item.c4 ? Number(item.c4).toLocaleString('vi-VN') + " ₫" : "";
@@ -434,7 +446,7 @@ border:1px solid var(--border)
                     item.c6 || '',
                     item.actualLocation || '' // Vị trí kho thực tế
                 ];
-                csvContent += row.join('\t') + '\n';
+                csvContent += row.map(escapeCSV).join(',') + '\n';
             });
 
             // Tạo BOM để Excel hiểu UTF-8
