@@ -69,7 +69,7 @@
 
     <template id="tpl-pending-list">
         {{#data}}
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-3 cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all relative overflow-hidden group" onclick="openDetail('{{json_string}}')">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3 cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all relative overflow-hidden group" onclick="openDetail('{{json_string}}')">
             {{#can_resubmit}}
             <div class="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
             {{/can_resubmit}}
@@ -85,7 +85,8 @@
                             <i class="fa-solid fa-exclamation-triangle mr-1"></i>Đã bị từ chối - Cần sửa
                         </span>
                         {{/can_resubmit}}
-                </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-1">Người trình: <span class="font-medium text-gray-700">{{requester_fullname}}</span> · Tạo: <span class="text-gray-600">{{created_at_display}}</span></p>
                     <h3 class="font-bold text-gray-800 text-lg mb-1">{{customer}}</h3>
                     <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500">
                         {{#phone}}<span><i class="fa-solid fa-phone mr-1"></i>{{phone}}</span>{{/phone}}
@@ -270,12 +271,12 @@
                         <div>
                             <p class="text-xs text-gray-500">Người tạo</p>
                             <p class="text-sm font-semibold text-blue-700">
-                                {{requester}}
+                                {{#requester_fullname}}{{requester_fullname}}{{/requester_fullname}}{{^requester_fullname}}{{requester}}{{/requester_fullname}}
                             </p>
                     </div>
                     <div class="text-right">
                             <p class="text-xs text-gray-500">Ngày tạo</p>
-                            <p class="text-sm font-semibold text-gray-700">{{date}}</p>
+                            <p class="text-sm font-semibold text-gray-700">{{#created_at_display}}{{created_at_display}}{{/created_at_display}}{{^created_at_display}}{{date}}{{/created_at_display}}</p>
                         </div>
                     </div>
                 </div>

@@ -6,7 +6,7 @@ const $$ = (selector) => document.querySelectorAll(selector);
 
 let cachedUsers = [];
 let approvalData = [];
-let approvalFilters = { search: '', status: 'all' };
+let approvalFilters = { search: '', status: 'all', step: 'all' };
 let myRequestsData = [];
 let myRequestsFilters = { search: '', status: 'all' };
 

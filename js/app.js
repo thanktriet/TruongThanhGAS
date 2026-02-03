@@ -351,15 +351,20 @@ function getApprovalStatus(item) {
 function filterApprovalData() {
     const search = (approvalFilters.search || '').trim().toLowerCase();
     const status = approvalFilters.status || 'all';
+    const step = approvalFilters.step || 'all';
     return approvalData.filter(item => {
         const statusMatch = status === 'all' || getApprovalStatus(item) === status;
         if (!statusMatch) return false;
+        const stepMatch = step === 'all' ||
+            (step === '4' ? (item.step >= 4 || item.is_completed) : (item.step === parseInt(step, 10)));
+        if (!stepMatch) return false;
         if (!search) return true;
         const haystack = [
             item.contract_code,
             item.customer,
             item.phone,
             item.requester,
+            item.requester_fullname,
             item.status_text
         ].filter(Boolean).join(' ').toLowerCase();
         return haystack.includes(search);
@@ -384,12 +389,24 @@ function renderApprovalList() {
         container.innerHTML = '<p class="text-red-500 text-center">Template không khả dụng.</p>';
         return;
     }
-    const filtered = filterApprovalData();
+    let filtered = filterApprovalData();
     if (!filtered.length) {
         container.innerHTML = '<div class="text-center text-gray-400 py-12"><i class="fa-regular fa-folder-open text-4xl mb-2 opacity-30"></i><p>Không có đơn phù hợp bộ lọc.</p></div>';
         return;
     }
-    container.innerHTML = Mustache.render(tpl, { data: filtered });
+    filtered.sort((a, b) => {
+        if (a.step !== b.step) return (a.step || 0) - (b.step || 0);
+        const tA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const tB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return tB - tA;
+    });
+    const dataForTemplate = filtered.map(item => ({
+        ...item,
+        created_at_display: item.created_at
+            ? new Date(item.created_at).toLocaleString('vi-VN')
+            : (item.date || '-')
+    }));
+    container.innerHTML = Mustache.render(tpl, { data: dataForTemplate });
 }
 
 // ===================================
@@ -420,6 +437,11 @@ function renderApprovalList() {
             Swal.fire('Lỗi', 'Dữ liệu không đúng định dạng', 'error');
             return;
         }
+        
+        // Hiển thị ngày tạo giống orders: ngày + giờ (vi-VN)
+        data.created_at_display = data.created_at
+            ? new Date(data.created_at).toLocaleString('vi-VN')
+            : (data.date || '-');
         
         // Đảm bảo các trường mới có giá trị mặc định
         data.other_requirements = data.other_requirements || '';

@@ -376,6 +376,25 @@ async function supabaseGetPendingList(username, role) {
             return { success: false, message: 'Lỗi: ' + error.message };
         }
 
+        // Lấy fullname của các requester (một query, tránh N+1)
+        let userMap = {};
+        const requesters = [...new Set((allApprovals || []).map(r => r.requester).filter(Boolean))];
+        if (requesters.length > 0) {
+            try {
+                const { data: usersData } = await supabase
+                    .from('users')
+                    .select('username, fullname')
+                    .in('username', requesters);
+                if (usersData && Array.isArray(usersData)) {
+                    usersData.forEach(u => {
+                        if (u.username) userMap[u.username] = u.fullname || u.username;
+                    });
+                }
+            } catch (e) {
+                console.warn('[GetPendingList] Error fetching users fullname:', e);
+            }
+        }
+
         // Filter và format data
         const resultList = [];
         const usernameLower = String(username).toLowerCase();
@@ -423,6 +442,8 @@ async function supabaseGetPendingList(username, role) {
                     id: row.id,
                     date: formatDate(row.date),
                     requester: row.requester,
+                    requester_fullname: userMap[row.requester] || row.requester,
+                    created_at: row.created_at,
                     contract_code: row.contract_code,
                     customer: row.customer_name,
                     phone: row.phone || '',
@@ -685,6 +706,25 @@ async function supabaseGetMyRequests(username, role) {
             );
         }
 
+        // Lấy fullname của các requester (một query, tránh N+1)
+        let userMap = {};
+        const requesters = [...new Set((filteredData || []).map(r => r.requester).filter(Boolean))];
+        if (requesters.length > 0) {
+            try {
+                const { data: usersData } = await supabase
+                    .from('users')
+                    .select('username, fullname')
+                    .in('username', requesters);
+                if (usersData && Array.isArray(usersData)) {
+                    usersData.forEach(u => {
+                        if (u.username) userMap[u.username] = u.fullname || u.username;
+                    });
+                }
+            } catch (e) {
+                console.warn('[GetMyRequests] Error fetching users fullname:', e);
+            }
+        }
+
         const resultList = filteredData.map(row => {
             // Kiểm tra xem tờ trình có THỰC SỰ bị từ chối không
             // Tờ trình bị từ chối khi: current_step = 0 VÀ (status_text chứa "từ chối" HOẶC history_log chứa "TỪ CHỐI")
@@ -699,6 +739,8 @@ async function supabaseGetMyRequests(username, role) {
                 id: row.id,
                 date: formatDate(row.date),
                 requester: row.requester,
+                requester_fullname: userMap[row.requester] || row.requester,
+                created_at: row.created_at,
                 contract_code: row.contract_code,
                 customer: row.customer_name,
                 phone: row.phone || '',

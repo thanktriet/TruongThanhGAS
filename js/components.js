@@ -63,7 +63,8 @@ async function loadComponent(componentName, targetElementId) {
 
 async function loadComponentAppend(componentName, targetElementId) {
     try {
-        const response = await fetch(`components/${componentName}.html`);
+        const cacheBuster = `?v=${Date.now()}`;
+        const response = await fetch(`components/${componentName}.html${cacheBuster}`);
         if (!response.ok) {
             console.error(`[Components] Failed to load component ${componentName}: HTTP ${response.status} ${response.statusText}`);
             return;
@@ -391,7 +392,7 @@ async function initializeApp() {
         console.error('Error initializing app:', error);
     }
     
-    // Setup filters
+    // Setup filters (direct bind)
     const approvalSearch = $('approval-search');
     if (approvalSearch) {
         approvalSearch.addEventListener('input', (e) => {
@@ -408,6 +409,28 @@ async function initializeApp() {
             }
         });
     }
+    const approvalStep = $('approval-step-filter');
+    if (approvalStep) {
+        approvalStep.addEventListener('change', (e) => {
+            if (typeof setApprovalFilter === 'function') {
+                setApprovalFilter('step', e.target.value);
+            }
+        });
+    }
+    // Event delegation cho bộ lọc duyệt đơn (phòng component load sau)
+    document.addEventListener('change', (e) => {
+        if (e.target && e.target.id === 'approval-step-filter' && typeof setApprovalFilter === 'function') {
+            setApprovalFilter('step', e.target.value);
+        }
+        if (e.target && e.target.id === 'approval-status-filter' && typeof setApprovalFilter === 'function') {
+            setApprovalFilter('status', e.target.value);
+        }
+    });
+    document.addEventListener('input', (e) => {
+        if (e.target && e.target.id === 'approval-search' && typeof setApprovalFilter === 'function') {
+            setApprovalFilter('search', e.target.value);
+        }
+    });
     
     // My requests filters
     const myRequestsSearch = $('my-requests-search');
