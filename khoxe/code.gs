@@ -69,11 +69,25 @@ function getVehiclesData() {
   const actualSheet = SS.getSheetByName(ACTUAL_SHEET);
   if (!sheet) return [];
 
-  // Lấy VIN bãi thực tế từ sheet 'khoxethucte' - Cột F (index 5)
+  // Tạo map VIN -> vị trí kho thực tế từ sheet 'khoxethucte'
+  // Cấu trúc: timestamp | Productname | Tình trạng | Ghi Chú | Vị Trí Kho (index 4) | Số VIN (index 5)
   let actualVins = [];
+  let vinLocationMap = {}; // Map VIN -> vị trí kho thực tế
+  
   if (actualSheet) {
     const aData = actualSheet.getDataRange().getValues();
-    actualVins = aData.slice(1).map(r => String(r[5] || "").trim().toUpperCase()).filter(v => v !== "");
+    // Lấy VIN và vị trí kho thực tế
+    for (let i = 1; i < aData.length; i++) {
+      const vin = String(aData[i][5] || "").trim().toUpperCase();
+      const location = String(aData[i][4] || "").trim(); // Cột E - Vị Trí Kho
+      if (vin !== "") {
+        actualVins.push(vin);
+        // Lưu vị trí kho thực tế (nếu có nhiều bản ghi, lấy bản ghi mới nhất)
+        if (location !== "") {
+          vinLocationMap[vin] = location;
+        }
+      }
+    }
   }
 
   const values = sheet.getDataRange().getValues().slice(1);
@@ -82,7 +96,8 @@ function getVehiclesData() {
     return {
       c0: vin, c1: row[1], c2: row[2], c3: row[3],
       c4: row[4], c5: row[5], c6: row[6], c7: row[7],
-      match: actualVins.includes(vin) ? "Có" : "Không"
+      match: actualVins.includes(vin) ? "Có" : "Không",
+      actualLocation: vinLocationMap[vin] || "" // Vị trí kho thực tế
     };
   });
 }

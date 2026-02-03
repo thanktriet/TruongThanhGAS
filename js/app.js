@@ -1088,6 +1088,8 @@ async function openEditRequest(id) {
         $('edit_car_version').value = data.car_version || '';
         $('edit_car_color').value = data.car_color || '';
         $('edit_vin_no').value = data.vin_no || '';
+        $('edit_manufacture_year').value = data.manufacture_year ?? '';
+        $('edit_seats').value = data.seats ?? '';
         $('edit_payment_method').value = data.payment || '';
         $('edit_contract_price').value = (data.contract_price || '').replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         $('edit_discount_details').value = data.discount_details || '';
@@ -1182,6 +1184,8 @@ async function handleUpdateRequest(event) {
         car_version: formData.get('edit_car_version'),
         car_color: formData.get('edit_car_color'),
         vin_no: formData.get('edit_vin_no'),
+        manufacture_year: formData.get('edit_manufacture_year') ?? '',
+        seats: formData.get('edit_seats') ?? '',
         payment_method: formData.get('edit_payment_method'),
         contract_price: formData.get('edit_contract_price')?.replace(/\./g, '') || '0',
         discount_details: formData.get('edit_discount_details'),
@@ -1266,6 +1270,8 @@ async function handleUpdateAndResubmit(event) {
         car_version: formData.get('edit_car_version'),
         car_color: formData.get('edit_car_color'),
         vin_no: formData.get('edit_vin_no'),
+        manufacture_year: formData.get('edit_manufacture_year') ?? '',
+        seats: formData.get('edit_seats') ?? '',
         payment_method: formData.get('edit_payment_method'),
         contract_price: formData.get('edit_contract_price')?.replace(/\./g, '') || '0',
         discount_details: formData.get('edit_discount_details'),
@@ -1480,7 +1486,7 @@ function printRequest(id) {
                                 <div>Nhãn hiệu: <span id="print-car-brand">VinFast</span></div>
                                 <div>Ký hiệu xe: <span id="print-car-model"></span><span id="print-car-version"></span></div>
                                 <div>Màu sơn: <span id="print-car-color"></span></div>
-                                <div>Số chỗ ngồi: 5</div>
+                                <div>Số chỗ ngồi: <span id="print-seats">5</span></div>
                                 <div>Năm SX: <span id="print-car-year">2025</span></div>
                             </td>
                             <td id="print-vin"></td>
@@ -1615,6 +1621,8 @@ function printRequest(id) {
             printWindow.document.getElementById('print-car-model').textContent = carModelFull;
             printWindow.document.getElementById('print-car-color').textContent = d.car_color || '';
             printWindow.document.getElementById('print-vin').textContent = d.vin_no || '';
+            printWindow.document.getElementById('print-car-year').textContent = d.manufacture_year ?? '2025';
+            printWindow.document.getElementById('print-seats').textContent = d.seats ?? '5';
             const contractPrice = (d.contract_price || '').replace(/[^\d]/g, '');
             printWindow.document.getElementById('print-contract-price').textContent = contractPrice ? Number(contractPrice).toLocaleString('vi-VN') : '0';
             printWindow.document.getElementById('print-total-contract').textContent = contractPrice ? Number(contractPrice).toLocaleString('vi-VN') : '0';

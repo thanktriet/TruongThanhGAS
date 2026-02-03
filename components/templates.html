@@ -312,6 +312,18 @@
                             {{/vin_no}}
                             {{/can_edit_completed}}
                         </div>
+                        {{#manufacture_year}}
+                        <div>
+                            <p class="text-gray-500 text-xs mb-1">Năm sản xuất</p>
+                            <p class="font-bold text-gray-700">{{manufacture_year}}</p>
+                        </div>
+                        {{/manufacture_year}}
+                        {{#seats}}
+                        <div>
+                            <p class="text-gray-500 text-xs mb-1">Số chỗ ngồi</p>
+                            <p class="font-bold text-gray-700">{{seats}}</p>
+                        </div>
+                        {{/seats}}
                         {{#payment}}
                         <div>
                             <p class="text-gray-500 text-xs mb-1">Phương thức thanh toán</p>

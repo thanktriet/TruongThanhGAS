@@ -311,6 +311,8 @@ async function supabaseCreateRequest(d) {
             car_version: d.car_version || '',
             car_color: d.car_color || '',
             vin_no: d.vin_no || '',
+            manufacture_year: d.manufacture_year != null && d.manufacture_year !== '' ? parseInt(d.manufacture_year, 10) : null,
+            seats: d.seats != null && d.seats !== '' ? parseInt(d.seats, 10) : null,
             payment_method: d.payment_method || '',
             contract_price: contractPrice,
             discount_details: d.discount_details || '',
@@ -431,6 +433,8 @@ async function supabaseGetPendingList(username, role) {
                     car_version: row.car_version || '',
                     car_color: row.car_color || '',
                     vin_no: row.vin_no || '',
+                    manufacture_year: row.manufacture_year ?? '',
+                    seats: row.seats ?? '',
                     payment: row.payment_method || '',
                     contract_price: formatCurrency(row.contract_price || 0),
                     discount_details: row.discount_details || '',
@@ -705,6 +709,8 @@ async function supabaseGetMyRequests(username, role) {
                 car_version: row.car_version || '',
                 car_color: row.car_color || '',
                 vin_no: row.vin_no || '',
+                manufacture_year: row.manufacture_year ?? '',
+                seats: row.seats ?? '',
                 payment: row.payment_method || '',
                 contract_price: formatCurrency(row.contract_price || 0),
                 discount_details: row.discount_details || '',
@@ -812,6 +818,8 @@ async function supabaseGetRequestDetail(id, username) {
             car_version: approval.car_version || '',
             car_color: approval.car_color || '',
             vin_no: approval.vin_no || '',
+            manufacture_year: approval.manufacture_year ?? '',
+            seats: approval.seats ?? '',
             payment: approval.payment_method || '',
             contract_price: formatCurrency(approval.contract_price || 0),
             discount_details: approval.discount_details || '',
@@ -975,9 +983,11 @@ async function supabaseUpdateRequest(d) {
         };
 
         if (isCompleted) {
-            // Chỉ cho phép update contract_code và vin_no
+            // Cho phép update contract_code, vin_no, manufacture_year, seats sau khi duyệt
             if (d.contract_code !== undefined) updateData.contract_code = d.contract_code;
             if (d.vin_no !== undefined) updateData.vin_no = d.vin_no || '';
+            if (d.manufacture_year !== undefined) updateData.manufacture_year = d.manufacture_year != null && d.manufacture_year !== '' ? parseInt(d.manufacture_year, 10) : null;
+            if (d.seats !== undefined) updateData.seats = d.seats != null && d.seats !== '' ? parseInt(d.seats, 10) : null;
 
             // Ghi log thay đổi
             const logChanges = [];
@@ -986,6 +996,12 @@ async function supabaseUpdateRequest(d) {
             }
             if (d.vin_no !== undefined && String(d.vin_no || '') !== String(approval.vin_no || '')) {
                 logChanges.push('Số khung: ' + (approval.vin_no || '') + ' → ' + (d.vin_no || ''));
+            }
+            if (d.manufacture_year !== undefined && String(approval.manufacture_year ?? '') !== String(d.manufacture_year ?? '')) {
+                logChanges.push('Năm SX: ' + (approval.manufacture_year ?? '') + ' → ' + (d.manufacture_year ?? ''));
+            }
+            if (d.seats !== undefined && String(approval.seats ?? '') !== String(d.seats ?? '')) {
+                logChanges.push('Số chỗ ngồi: ' + (approval.seats ?? '') + ' → ' + (d.seats ?? ''));
             }
             if (logChanges.length > 0) {
                 const time = new Date().toLocaleString('vi-VN', { 
@@ -1007,6 +1023,8 @@ async function supabaseUpdateRequest(d) {
                 car_version: d.car_version || '',
                 car_color: d.car_color || '',
                 vin_no: d.vin_no || '',
+                manufacture_year: d.manufacture_year != null && d.manufacture_year !== '' ? parseInt(d.manufacture_year, 10) : null,
+                seats: d.seats != null && d.seats !== '' ? parseInt(d.seats, 10) : null,
                 payment_method: d.payment_method || '',
                 contract_price: contractPrice,
                 discount_details: d.discount_details || '',
