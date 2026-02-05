@@ -4656,6 +4656,8 @@ async function supabaseCreateTestDriveVehicle(data) {
         if (!supabase) return { success: false, message: 'Supabase chưa được khởi tạo' };
         const role = (data.role || '').toUpperCase();
         if (!['ADMIN', 'BKS', 'BGD'].includes(role)) return { success: false, message: 'Không có quyền tạo xe lái thử' };
+        const pinVal = data.pin_hien_tai != null && data.pin_hien_tai !== '' ? parseInt(data.pin_hien_tai, 10) : null;
+        const pinHienTai = pinVal != null && !isNaN(pinVal) && pinVal >= 0 && pinVal <= 100 ? pinVal : null;
         const payload = {
             bien_so_xe: (data.bien_so_xe || '').trim().toUpperCase(),
             loai_xe: data.loai_xe || '',
@@ -4667,6 +4669,7 @@ async function supabaseCreateTestDriveVehicle(data) {
             tinh_trang_hien_tai: data.tinh_trang_hien_tai || {},
             trang_thai_su_dung: 'ranh'
         };
+        if (pinHienTai !== null) payload.pin_hien_tai = pinHienTai;
         const { data: row, error } = await supabase.from('test_drive_vehicles').insert(payload).select().single();
         if (error) throw error;
         return { success: true, data: row };
@@ -5020,21 +5023,26 @@ async function supabaseCompleteTestDriveReturn(data) {
         }
         const odoTruoc = parseInt(req.odo_truoc, 10) || 0;
         const quangDuong = Math.max(0, odoSau - odoTruoc);
+        const pinSau = data.pin_sau_hoan_tra != null && data.pin_sau_hoan_tra !== '' ? parseInt(data.pin_sau_hoan_tra, 10) : null;
+        const pinValid = pinSau != null && !isNaN(pinSau) && pinSau >= 0 && pinSau <= 100 ? pinSau : null;
         const { data: v } = await supabase.from('test_drive_vehicles').select('tong_quang_duong_da_di').eq('id', req.vehicle_id).single();
         const newTong = (v?.tong_quang_duong_da_di || 0) + quangDuong;
-        const { error: ev } = await supabase.from('test_drive_vehicles').update({
+        const vehicleUpdate = {
             odo_hien_tai: odoSau,
             tong_quang_duong_da_di: newTong,
             trang_thai_su_dung: 'ranh',
             tinh_trang_hien_tai: postCheck,
             updated_at: new Date().toISOString()
-        }).eq('id', req.vehicle_id);
+        };
+        if (pinValid !== null) vehicleUpdate.pin_hien_tai = pinValid;
+        const { error: ev } = await supabase.from('test_drive_vehicles').update(vehicleUpdate).eq('id', req.vehicle_id);
         if (ev) throw ev;
         const timeStr = new Date().toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
-        const completeLog = timeStr + ' | ' + (username || '') + ' | HOÀN THÀNH | ODO sau: ' + odoSau + ' km, quãng đường: ' + quangDuong + ' km';
+        let completeLog = timeStr + ' | ' + (username || '') + ' | HOÀN THÀNH | ODO sau: ' + odoSau + ' km, quãng đường: ' + quangDuong + ' km';
+        if (pinValid !== null) completeLog += ', pin: ' + pinValid + '%';
         const updatedLog = (req.history_log || '') ? req.history_log + '\n' + completeLog : completeLog;
         const noiTraChiaKhoa = (data.noi_tra_chia_khoa && String(data.noi_tra_chia_khoa).trim()) ? String(data.noi_tra_chia_khoa).trim() : 'Tủ đựng chìa khoá';
-        const { error: e2 } = await supabase.from('test_drive_requests').update({
+        const requestUpdate = {
             odo_sau: odoSau,
             quang_duong: quangDuong,
             thoi_gian_ve_thuc_te: data.thoi_gian_ve_thuc_te || new Date().toISOString(),
@@ -5044,7 +5052,9 @@ async function supabaseCompleteTestDriveReturn(data) {
             trang_thai_to_trinh: 'Hoan_Thanh',
             history_log: updatedLog,
             updated_at: new Date().toISOString()
-        }).eq('id', id);
+        };
+        if (pinValid !== null) requestUpdate.pin_sau_hoan_tra = pinValid;
+        const { error: e2 } = await supabase.from('test_drive_requests').update(requestUpdate).eq('id', id);
         if (e2) throw e2;
         // Ghi vehicle_inspections (post) + inspection_images + approval_log (completed)
         const REQUIRED_POINTS_POST = ['ben_trai', 'ben_phai', 'phia_truoc', 'phia_sau', 'noi_that'];

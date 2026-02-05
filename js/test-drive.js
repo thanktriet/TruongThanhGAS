@@ -212,6 +212,8 @@ async function loadTestDriveVehicles(retryCount) {
             const hetHan = (hanBH && hanBH < today) || (hanDK && hanDK < today);
             const statusLbl = v.trang_thai_su_dung === 'tam_khoa' && hetHan ? 'Tạm khóa (hết hạn BH/ĐK)' : (v.trang_thai_su_dung === 'ranh' ? 'Rảnh' : v.trang_thai_su_dung === 'dang_su_dung' ? 'Đang sử dụng' : 'Tạm khóa');
             const statusClass = v.trang_thai_su_dung === 'ranh' ? 'bg-green-100 text-green-800' : v.trang_thai_su_dung === 'dang_su_dung' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800';
+            const pinVal = v.pin_hien_tai != null && v.pin_hien_tai !== '' ? parseInt(v.pin_hien_tai, 10) : null;
+            const pinDisplay = (pinVal != null && !isNaN(pinVal) && pinVal >= 0 && pinVal <= 100) ? (pinVal + '%') : '-';
             return `
         <div class="p-4 sm:p-5 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
@@ -221,9 +223,10 @@ async function loadTestDriveVehicles(retryCount) {
                     <span class="text-xs font-bold px-2.5 py-1 rounded-lg ${statusClass}">${statusLbl}</span>
                 </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm text-gray-600 pt-2 border-t border-gray-100">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-sm text-gray-600 pt-2 border-t border-gray-100">
                 <div class="flex items-start gap-1.5"><i class="fa-solid fa-shield-halved text-slate-400 mt-0.5"></i><span>BH ${v.han_bao_hiem_fmt || '-'} · ĐK ${v.han_dang_kiem_fmt || '-'}</span></div>
                 <div class="flex items-start gap-1.5"><i class="fa-solid fa-gauge-high text-slate-400 mt-0.5"></i><span>ODO: ${v.odo_hien_tai ?? 0} km</span></div>
+                <div class="flex items-start gap-1.5"><i class="fa-solid fa-battery-full text-slate-400 mt-0.5"></i><span>Pin: ${pinDisplay}</span></div>
                 <div class="flex items-start gap-1.5"><i class="fa-solid fa-road text-slate-400 mt-0.5"></i><span>Tổng: ${v.tong_quang_duong_da_di ?? 0} km</span></div>
                 <div class="flex items-start gap-1.5"><i class="fa-solid fa-clipboard-check text-slate-400 mt-0.5"></i><span class="text-gray-700">${tinhTrangSummary(v.tinh_trang_hien_tai)}</span></div>
             </div>
@@ -531,7 +534,7 @@ function openTestDriveDetail(id) {
                 ${workflowStepper}
                 ${sectionCard('fa-gauge-high', 'bg-indigo-50 text-indigo-600', 'ODO & Quãng đường', '<div class="space-y-0">' +
                     (d.odo_truoc != null ? row('ODO trước khi đi', d.odo_truoc + ' km') : '<div class="py-3 text-slate-500 text-sm">Chưa nhập (nhập khi gửi duyệt)</div>') +
-                    (d.current_step >= 4 ? (row('ODO sau khi trả', d.odo_sau != null ? d.odo_sau + ' km' : '-') + (d.quang_duong != null ? row('Quãng đường', d.quang_duong + ' km') : '') + (d.noi_tra_chia_khoa ? row('Nơi trả chìa khoá', esc(d.noi_tra_chia_khoa)) : '')) : '') +
+                    (d.current_step >= 4 ? (row('ODO sau khi trả', d.odo_sau != null ? d.odo_sau + ' km' : '-') + (d.pin_sau_hoan_tra != null ? row('Pin sau khi trả', d.pin_sau_hoan_tra + '%') : '') + (d.quang_duong != null ? row('Quãng đường', d.quang_duong + ' km') : '') + (d.noi_tra_chia_khoa ? row('Nơi trả chìa khoá', esc(d.noi_tra_chia_khoa)) : '')) : '') +
                     (d.thoi_gian_ve_thuc_te ? row('Thời gian về thực tế', new Date(d.thoi_gian_ve_thuc_te).toLocaleString('vi-VN')) : '') +
                 '</div>')}
                 ${sectionCard('fa-clipboard-check', 'bg-amber-50 text-amber-600', 'Kiểm tra trước đi (5 điểm)', preCheckStr ? '<div class="bg-amber-50/50 rounded-lg p-4 space-y-0 border border-amber-100">' + preCheckStr + '</div>' : '<p class="text-slate-500 text-sm py-3">Chưa kiểm tra (nhập khi gửi duyệt)</p>')}
@@ -624,6 +627,7 @@ async function doTdrAction(id, action, session) {
     } else if (action === 'complete') {
         const completeHtml = '<div class="text-left space-y-4 py-1">' +
             '<div class="grid grid-cols-1 gap-3"><div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">ODO sau khi trả (km) *</label><input type="number" id="tdr-complete-odo" class="input w-full border-gray-300 rounded-lg" min="0" placeholder="VD: 15100" required></div>' +
+            '<div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">% pin (xe điện)</label><input type="number" id="tdr-complete-pin" class="input w-full border-gray-300 rounded-lg" min="0" max="100" placeholder="VD: 80"></div>' +
             '<div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Thời gian về thực tế</label><input type="datetime-local" id="tdr-complete-ve" class="input w-full border-gray-300 rounded-lg"></div>' +
             '<div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Nơi trả chìa khoá <span class="text-red-500">*</span></label><select id="tdr-complete-noi-tra-chia-khoa" class="input w-full border-gray-300 rounded-lg" required><option value="Tu_dung_chia_khoa" selected>Tủ đựng chìa khoá</option><option value="Gui_truc_tiep_BKS">Gửi trực tiếp cho BKS</option><option value="Khac">Khác</option></select><input type="text" id="tdr-complete-noi-tra-chia-khoa-khac" class="input w-full border-gray-300 rounded-lg mt-2 hidden" placeholder="Ghi rõ nơi trả..."></div></div>' +
             '<p class="text-sm font-medium text-gray-700">Kiểm tra tình trạng xe sau khi trả (5 điểm) — nếu không Tốt phải đính kèm ảnh:</p>' +
@@ -668,22 +672,33 @@ async function doTdrAction(id, action, session) {
                         }
                     } else if (noiTraEl.value === 'Gui_truc_tiep_BKS') noiTraChiaKhoa = 'Gửi trực tiếp cho BKS';
                 }
+                const pinEl = document.getElementById('tdr-complete-pin');
+                let pinVal = null;
+                if (pinEl && pinEl.value.trim() !== '') {
+                    const p = parseInt(pinEl.value, 10);
+                    if (isNaN(p) || p < 0 || p > 100) {
+                        Swal.showValidationMessage('% pin phải từ 0 đến 100.');
+                        return false;
+                    }
+                    pinVal = p;
+                }
                 const thoiGianVe = veEl && veEl.value ? veEl.value : null;
                 const collected = await collectTdrCheckWithUpload('tdr_post');
                 if (collected.error) {
                     Swal.showValidationMessage(collected.error);
                     return false;
                 }
-                return { odoSau, thoiGianVe: thoiGianVe || new Date().toISOString(), postCheck: collected.preCheck, noiTraChiaKhoa: noiTraChiaKhoa || 'Tủ đựng chìa khoá' };
+                return { odoSau, pinSau: pinVal, thoiGianVe: thoiGianVe || new Date().toISOString(), postCheck: collected.preCheck, noiTraChiaKhoa: noiTraChiaKhoa || 'Tủ đựng chìa khoá' };
             }
         });
         if (!res.isConfirmed || !res.value) return;
-        const { odoSau, thoiGianVe, postCheck, noiTraChiaKhoa } = res.value;
+        const { odoSau, pinSau, thoiGianVe, postCheck, noiTraChiaKhoa } = res.value;
         const x = await callAPI({
             action: 'complete_test_drive_return',
             id,
             username: session.username,
             odo_sau: odoSau,
+            pin_sau_hoan_tra: pinSau != null ? pinSau : undefined,
             thoi_gian_ve_thuc_te: thoiGianVe,
             post_check: postCheck,
             noi_tra_chia_khoa: noiTraChiaKhoa || 'Tủ đựng chìa khoá'
