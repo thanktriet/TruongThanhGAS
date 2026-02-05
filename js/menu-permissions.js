@@ -137,10 +137,10 @@ function updateMenuItemsByPermissions(user) {
     toggleMenuByPermission('nav-coc-requests', 'view_coc_requests', ['TVBH', 'SALE', 'SALEADMIN', 'KETOAN']);
     
     // =====================================================
-    // XE LÁI THỬ MENUS — Tất cả role tạo + xem danh sách; chỉ BKS/BGD/ADMIN duyệt
+    // XE LÁI THỬ MENUS — Tất cả user đăng nhập tạo + xem; duyệt theo approve_test_drive
     // =====================================================
-    const roleUpper = (user.role || '').toUpperCase();
-    const canCreateAndViewTestDrive = !!(user && (user.username || user.role)); // Mọi user đã đăng nhập đều thấy
+    const canCreateAndViewTestDrive = !!(user && (user.username || user.role));
+    const canApproveTestDrive = typeof hasPermission === 'function' && hasPermission(user, 'approve_test_drive');
     const navTestDriveRequestCreate = $('nav-test-drive-request-create');
     if (navTestDriveRequestCreate) {
         if (canCreateAndViewTestDrive) navTestDriveRequestCreate.classList.remove('hidden');
@@ -153,7 +153,7 @@ function updateMenuItemsByPermissions(user) {
     }
     const navTestDriveVehicles = $('nav-test-drive-vehicles');
     if (navTestDriveVehicles) {
-        if (['ADMIN', 'BKS', 'BGD'].includes(roleUpper)) navTestDriveVehicles.classList.remove('hidden');
+        if (canApproveTestDrive) navTestDriveVehicles.classList.remove('hidden');
         else navTestDriveVehicles.classList.add('hidden');
     }
     

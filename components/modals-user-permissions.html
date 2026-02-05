@@ -208,16 +208,29 @@ function renderPermissionsByGroup(permissions) {
         return;
     }
 
-    const groups = window.Permissions.getPermissionsByGroup();
-    const groupOrder = ['approval', 'orders', 'documents', 'coc', 'reports', 'system'];
+    // Xây danh sách quyền CHỈ từ ALL_PERMISSIONS để luôn hiển thị đủ (Duyệt tờ trình, Duyệt trình xe lái thử, ...)
+    const allPerms = window.Permissions.ALL_PERMISSIONS || {};
+    const groups = {};
+    Object.keys(allPerms).forEach(key => {
+        const perm = allPerms[key];
+        const g = perm.group || 'other';
+        if (!groups[g]) groups[g] = [];
+        groups[g].push({ key: key, label: perm.label });
+    });
+    // Fallback: luôn có 2 quyền duyệt trong nhóm TỜ TRÌNH (Duyệt tờ trình, Duyệt trình xe lái thử)
+    if (!groups.approval) groups.approval = [];
+    const approvalKeys = groups.approval.map(p => p.key);
+    if (!approvalKeys.includes('approve_request')) groups.approval.push({ key: 'approve_request', label: 'Duyệt tờ trình' });
+    if (!approvalKeys.includes('approve_test_drive')) groups.approval.push({ key: 'approve_test_drive', label: 'Duyệt trình xe lái thử' });
+
+    const groupOrder = ['approval', 'orders', 'documents', 'coc', 'reports', 'system', 'other'];
     const container = document.getElementById('permissions-groups');
     container.innerHTML = '';
 
     groupOrder.forEach(groupKey => {
-        if (!groups[groupKey]) return;
+        if (!groups[groupKey] || groups[groupKey].length === 0) return;
 
-        const groupInfo = window.Permissions.PERMISSION_GROUPS[groupKey];
-        if (!groupInfo) return;
+        const groupInfo = window.Permissions.PERMISSION_GROUPS[groupKey] || { label: 'Khác', icon: 'fa-key' };
 
         const groupDiv = document.createElement('div');
         groupDiv.className = 'bg-gray-50 rounded-lg p-5 border border-gray-200';

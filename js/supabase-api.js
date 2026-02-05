@@ -40,6 +40,28 @@ if (typeof window !== 'undefined') {
     }
 }
 
+/**
+ * Lấy user kèm permissions từ DB (để kiểm tra quyền duyệt tờ trình / xe lái thử)
+ * @param {string} username
+ * @returns {Promise<{ username, fullname, role, permissions }|null>}
+ */
+async function supabaseGetUserWithPermissions(username) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase || !username) return null;
+        const { data: u, error } = await supabase
+            .from('users')
+            .select('username, fullname, role, permissions')
+            .eq('username', String(username).toLowerCase())
+            .single();
+        if (error || !u) return null;
+        return { ...u, permissions: u.permissions || {} };
+    } catch (e) {
+        console.warn('supabaseGetUserWithPermissions error:', e);
+        return null;
+    }
+}
+
 // Utility functions
 // Password hashing functions are now in password-hash.js
 // Legacy MD5 function kept for backward compatibility during migration
@@ -365,6 +387,8 @@ async function supabaseGetPendingList(username, role) {
             return { success: false, message: 'Supabase chưa được khởi tạo' };
         }
 
+        const userWithPerms = await supabaseGetUserWithPermissions(username);
+
         // Workflow steps
         const WORKFLOW = [
             { step: 0, role: 'TPKD', label: 'Chờ TPKD duyệt', next: 1 },
@@ -416,22 +440,19 @@ async function supabaseGetPendingList(username, role) {
             const isCompleted = row.current_step >= 4;
             const canViewCompleted = (role === 'GDKD' || role === 'BGD' || role === 'BKS' || role === 'KETOAN') && isCompleted;
 
-            // Logic hiển thị theo role:
-            // - TPKD: chỉ xem tờ trình của chính mình hoặc tờ trình được TVBH trình cho họ
-            // - Admin, GĐKD, BKS, BGĐ, KT: xem được tất cả tờ trình
+            // Logic hiển thị: theo quyền approve_request hoặc theo role
             let show = false;
-            
-            if (role === 'TPKD') {
-                // TPKD chỉ xem được:
-                // 1. Tờ trình của chính mình (mình là requester)
-                // 2. Tờ trình mà TVBH trình cho họ (approver_step0 = username của họ)
+            const canApproveRequest = userWithPerms && typeof hasPermission === 'function' && hasPermission(userWithPerms, 'approve_request');
+
+            if (canApproveRequest) {
+                show = true;
+            } else if (role === 'TPKD') {
                 const isMyRequest = String(row.requester).toLowerCase() === usernameLower;
                 const isAssignedToMe = String(row.approver_step0 || '').toLowerCase() === usernameLower;
                 show = isMyRequest || isAssignedToMe;
             } else if (role === 'ADMIN' || role === 'SALEADMIN' || role === 'GDKD' || role === 'BKS' || role === 'BGD' || role === 'KETOAN') {
-                // Admin, SaleAdmin, GĐKD, BKS, BGĐ, KT: xem được tất cả tờ trình
                 show = true;
-            } else {
+            } else if (role !== 'TPKD') {
                 // TVBH/SALE: chỉ xem tờ trình của mình
                 show = isRejectedAndRequester ||
                        (isRequester && row.current_step >= 0) ||
@@ -488,16 +509,13 @@ async function supabaseGetPendingList(username, role) {
                     can_print: false // Sẽ được tính ở đây
                 };
 
-                // Tính can_print dựa vào role và quyền sở hữu
+                // Tính can_print: có quyền approve_request thì in được tất cả đã hoàn tất; không thì theo role
                 if (isCompleted) {
-                    if (role === 'ADMIN' || role === 'GDKD' || role === 'BKS' || role === 'BGD' || role === 'KETOAN') {
-                        // Admin, GĐKD, BKS, BGĐ, KT: in được tất cả
+                    if (canApproveRequest) {
                         item.can_print = true;
                     } else if (role === 'TVBH' || role === 'SALE') {
-                        // TVBH/SALE: chỉ in được tờ trình của chính mình
                         item.can_print = isRequester;
                     } else if (role === 'TPKD') {
-                        // TPKD: in được tờ trình của mình hoặc được giao cho họ
                         const isMyRequest = String(row.requester).toLowerCase() === usernameLower;
                         const isAssignedToMe = String(row.approver_step0 || '').toLowerCase() === usernameLower;
                         item.can_print = isMyRequest || isAssignedToMe;
@@ -554,6 +572,11 @@ async function supabaseProcessApproval(d) {
             return { success: false, message: 'Vui lòng nhập lý do từ chối' };
         }
 
+        const userWithPerms = await supabaseGetUserWithPermissions(d.username);
+        if (!userWithPerms || (typeof hasPermission === 'function' && !hasPermission(userWithPerms, 'approve_request'))) {
+            return { success: false, message: 'Không có quyền duyệt tờ trình' };
+        }
+
         // Lấy approval hiện tại
         const { data: approval, error: getError } = await supabase
             .from('approvals')
@@ -585,9 +608,8 @@ async function supabaseProcessApproval(d) {
 
         const currentStep = approval.current_step || 0;
         const stepConfig = WORKFLOW.find(w => w.step === currentStep);
-
-        if (d.role !== 'ADMIN' && (!stepConfig || stepConfig.role !== d.role)) {
-            return { success: false, message: 'Không có quyền duyệt!' };
+        if (!stepConfig) {
+            return { success: false, message: 'Trạng thái tờ trình không hợp lệ' };
         }
 
         // Tạo log entry
@@ -4908,6 +4930,10 @@ async function supabaseProcessTestDriveApproval(data) {
     try {
         const supabase = initSupabase();
         if (!supabase) return { success: false, message: 'Supabase chưa được khởi tạo' };
+        const userWithPerms = await supabaseGetUserWithPermissions(data.username);
+        if (!userWithPerms || (typeof hasPermission === 'function' && !hasPermission(userWithPerms, 'approve_test_drive'))) {
+            return { success: false, message: 'Không có quyền duyệt xe lái thử' };
+        }
         const role = (data.role || '').toUpperCase();
         const id = data.id;
         const decision = data.decision;
@@ -4916,8 +4942,7 @@ async function supabaseProcessTestDriveApproval(data) {
         const { data: req, error: e1 } = await supabase.from('test_drive_requests').select('*, test_drive_vehicles(*)').eq('id', id).single();
         if (e1 || !req) return { success: false, message: 'Không tìm thấy tờ trình' };
         const step = req.current_step || 0;
-        if (step === 1 && role !== 'BKS' && role !== 'ADMIN') return { success: false, message: 'Chỉ BKS mới có quyền duyệt bước này' };
-        if (step === 2 && role !== 'BGD' && role !== 'ADMIN') return { success: false, message: 'Chỉ BGĐ mới có quyền duyệt bước này' };
+        if (step !== 1 && step !== 2) return { success: false, message: 'Tờ trình không ở trạng thái chờ duyệt' };
         const time = new Date().toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
         const actionText = decision === 'approve' ? 'DUYỆT' : 'TỪ CHỐI';
         const newLog = time + ' | ' + (data.username || '') + ' (' + role + ') | ' + actionText + (comment ? ' | Lý do: ' + comment : '');
@@ -5008,11 +5033,13 @@ async function supabaseCompleteTestDriveReturn(data) {
         const timeStr = new Date().toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
         const completeLog = timeStr + ' | ' + (username || '') + ' | HOÀN THÀNH | ODO sau: ' + odoSau + ' km, quãng đường: ' + quangDuong + ' km';
         const updatedLog = (req.history_log || '') ? req.history_log + '\n' + completeLog : completeLog;
+        const noiTraChiaKhoa = (data.noi_tra_chia_khoa && String(data.noi_tra_chia_khoa).trim()) ? String(data.noi_tra_chia_khoa).trim() : 'Tủ đựng chìa khoá';
         const { error: e2 } = await supabase.from('test_drive_requests').update({
             odo_sau: odoSau,
             quang_duong: quangDuong,
             thoi_gian_ve_thuc_te: data.thoi_gian_ve_thuc_te || new Date().toISOString(),
             post_check: postCheck,
+            noi_tra_chia_khoa: noiTraChiaKhoa,
             current_step: 4,
             trang_thai_to_trinh: 'Hoan_Thanh',
             history_log: updatedLog,

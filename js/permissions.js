@@ -13,6 +13,7 @@ const ALL_PERMISSIONS = {
     'view_my_requests': { label: 'Xem tờ trình của mình', group: 'approval' },
     'view_all_requests': { label: 'Xem tất cả tờ trình', group: 'approval' },
     'approve_request': { label: 'Duyệt tờ trình', group: 'approval' },
+    'approve_test_drive': { label: 'Duyệt trình xe lái thử', group: 'approval' },
     'edit_request': { label: 'Sửa tờ trình', group: 'approval' },
     'print_request': { label: 'In tờ trình', group: 'approval' },
     'resubmit_request': { label: 'Gửi lại tờ trình', group: 'approval' },
@@ -50,14 +51,15 @@ const ALL_PERMISSIONS = {
     'manage_themes': { label: 'Quản lý themes/chủ đề', group: 'system' }
 };
 
-// Permission groups
+// Permission groups (thứ tự hiển thị trong modal quản lý quyền)
 const PERMISSION_GROUPS = {
     'approval': { label: 'TỜ TRÌNH', icon: 'fa-file-circle-plus' },
     'orders': { label: 'ĐƠN HÀNG', icon: 'fa-cart-shopping' },
     'documents': { label: 'TÀI LIỆU', icon: 'fa-file-contract' },
     'coc': { label: 'COC', icon: 'fa-certificate' },
     'reports': { label: 'BÁO CÁO', icon: 'fa-chart-line' },
-    'system': { label: 'HỆ THỐNG', icon: 'fa-cog' }
+    'system': { label: 'HỆ THỐNG', icon: 'fa-cog' },
+    'other': { label: 'Khác', icon: 'fa-key' }
 };
 
 // ======================================================
@@ -95,7 +97,8 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
         create_coc_request: false,
         view_coc_requests: true,
         issue_coc: true,
-        disburse_coc: true
+        disburse_coc: true,
+        approve_test_drive: true
     },
     'TVBH': {
         create_request: true,
@@ -229,6 +232,7 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
         view_my_requests: true,
         view_all_requests: true,
         approve_request: true,
+        approve_test_drive: true,
         edit_request: true,
         print_request: true,
         resubmit_request: false,
@@ -252,6 +256,7 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
         view_my_requests: true,
         view_all_requests: true,
         approve_request: true,
+        approve_test_drive: true,
         edit_request: true,
         print_request: true,
         resubmit_request: false,

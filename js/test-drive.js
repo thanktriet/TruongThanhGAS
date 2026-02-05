@@ -21,7 +21,7 @@ const TDR_MUC_DICH_OPTIONS = [
 ];
 const TDR_STATUS_OPTIONS = [
     { value: 'Tot', label: 'Tốt' },
-    { value: 'Xe_xuoc_tray_mop_dinh_dinh', label: 'Xe xước trầy móp dính dính' },
+    { value: 'Xe_xuoc_tray_mop_dinh_dinh', label: 'Xe hư hỏng, móp, trầy, xước' },
     { value: 'Xe_do', label: 'Xe dơ' },
     { value: 'Xe_bao_loi', label: 'Xe báo lỗi' }
 ];
@@ -119,10 +119,11 @@ async function collectMucDichData() {
     };
 }
 
-function bindTdrStatusToggle(prefix) {
-    document.querySelectorAll('.tdr-status-select').forEach(sel => {
+function bindTdrStatusToggle(prefix, container) {
+    const root = container || document;
+    root.querySelectorAll('.tdr-status-select').forEach(sel => {
         const point = sel.getAttribute('data-point');
-        const wrap = document.querySelector('.tdr-file-wrap[data-point="' + point + '"]');
+        const wrap = root.querySelector('.tdr-file-wrap[data-point="' + point + '"]');
         const toggle = () => {
             if (wrap) wrap.classList.toggle('hidden', sel.value === 'Tot' || sel.value === 'tot');
         };
@@ -201,7 +202,7 @@ async function loadTestDriveVehicles(retryCount) {
         const tinhTrangSummary = (obj) => {
             if (!obj || typeof obj !== 'object') return '-';
             const pts = ['ben_trai', 'ben_phai', 'phia_truoc', 'phia_sau', 'noi_that'];
-            const labels = { Tot: 'Tốt', Xe_xuoc_tray_mop_dinh_dinh: 'Xước', Xe_do: 'Dơ', Xe_bao_loi: 'Lỗi' };
+            const labels = { Tot: 'Tốt', Xe_xuoc_tray_mop_dinh_dinh: 'Hư hỏng, móp, trầy, xước', Xe_do: 'Dơ', Xe_bao_loi: 'Lỗi' };
             const arr = pts.map(k => { const e = obj[k]; return e && e.status ? (labels[e.status] || e.status) : null; }).filter(Boolean);
             return arr.length ? arr.join(', ') : '-';
         };
@@ -275,10 +276,29 @@ async function loadTestDriveRequestCreate() {
         list.forEach(v => {
             const opt = document.createElement('option');
             opt.value = v.id;
+            opt.setAttribute('data-odo', String(v.odo_hien_tai != null ? v.odo_hien_tai : 0));
             opt.textContent = `${v.bien_so_xe || ''} - ${v.loai_xe || ''} ${v.phien_ban || ''}`.trim() || v.id;
             sel.appendChild(opt);
         });
         if (statusEl) statusEl.textContent = list.length ? list.length + ' xe đủ điều kiện' : 'Chưa có xe rảnh và còn hạn BH/ĐK';
+        const odoHintEl = document.getElementById('tdr-odo-system-hint');
+        const updateOdoHint = () => {
+            if (!odoHintEl) return;
+            const chosen = sel.options[sel.selectedIndex];
+            if (!chosen || !chosen.value) {
+                odoHintEl.textContent = '';
+                return;
+            }
+            const odoSys = chosen.getAttribute('data-odo');
+            const odoNum = odoSys != null && odoSys !== '' ? parseInt(odoSys, 10) : null;
+            if (odoNum != null && !isNaN(odoNum)) {
+                odoHintEl.textContent = 'ODO trong hệ thống (quản lý xe lái thử, chỉ tham khảo — không phải số thực tế): ' + odoNum.toLocaleString('vi-VN') + ' km';
+            } else {
+                odoHintEl.textContent = '';
+            }
+        };
+        sel.addEventListener('change', updateOdoHint);
+        updateOdoHint();
         const preCheckContainer = document.getElementById('tdr-create-pre-check-container');
         if (preCheckContainer && !preCheckContainer.querySelector('.tdr-status-select')) {
             preCheckContainer.innerHTML = buildTdrCheckFormHtml('tdr_create_pre');
@@ -400,7 +420,7 @@ function openTestDriveDetail(id) {
         const d = res.data;
         const roleUpper = (session.role || '').toUpperCase();
         const isAdmin = roleUpper === 'ADMIN';
-        const canApprove = (d.current_step === 1 && (session.role === 'BKS' || isAdmin)) || (d.current_step === 2 && (session.role === 'BGD' || isAdmin));
+        const canApprove = (d.current_step === 1 || d.current_step === 2) && (typeof hasPermission === 'function' && hasPermission(session, 'approve_test_drive'));
         const isRequester = (d.requester_username || d.nguoi_tao) === session.username;
         const canSubmit = d.current_step === 0 && (isRequester || isAdmin);
         const canComplete = d.current_step === 3 && (isRequester || isAdmin);
@@ -413,14 +433,14 @@ function openTestDriveDetail(id) {
         if (canComplete) btns.push('<button id="tdr-btn-complete" class="mr-2 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Hoàn trả xe</button>');
         const statusLbl = (s) => ({
             Tot: 'Tốt', tot: 'Tốt',
-            Xe_xuoc_tray_mop_dinh_dinh: 'Xe xước trầy móp dính dính',
+            Xe_xuoc_tray_mop_dinh_dinh: 'Xe hư hỏng, móp, trầy, xước',
             Xe_do: 'Xe dơ', do: 'Dơ',
             Xe_bao_loi: 'Xe báo lỗi', bao_loi: 'Báo lỗi'
         }[s] || s);
         const toImageUrl = (item) => (item == null ? '' : (typeof item === 'string' ? item : (item && item.url) || ''));
         const fmtCheck = (obj, withLinks) => {
             if (!obj || typeof obj !== 'object') return '';
-            const badgeClass = (st) => (st === 'Tốt' || st === 'tot') ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : (st.indexOf('xước') >= 0 || st.indexOf('Xước') >= 0 ? 'bg-amber-100 text-amber-800 border border-amber-200' : (st === 'Dơ' || st === 'dơ' ? 'bg-slate-200 text-slate-800 border border-slate-300' : 'bg-red-100 text-red-800 border border-red-200'));
+            const badgeClass = (st) => (st === 'Tốt' || st === 'tot') ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : (st.indexOf('xước') >= 0 || st.indexOf('Xước') >= 0 || st.indexOf('hư hỏng') >= 0 || st.indexOf('Hư hỏng') >= 0 ? 'bg-amber-100 text-amber-800 border border-amber-200' : (st === 'Dơ' || st === 'dơ' ? 'bg-slate-200 text-slate-800 border border-slate-300' : 'bg-red-100 text-red-800 border border-red-200'));
             return TDR_CHECK_POINTS.map(p => {
                 const e = obj[p.key];
                 if (!e) return '';
@@ -511,7 +531,7 @@ function openTestDriveDetail(id) {
                 ${workflowStepper}
                 ${sectionCard('fa-gauge-high', 'bg-indigo-50 text-indigo-600', 'ODO & Quãng đường', '<div class="space-y-0">' +
                     (d.odo_truoc != null ? row('ODO trước khi đi', d.odo_truoc + ' km') : '<div class="py-3 text-slate-500 text-sm">Chưa nhập (nhập khi gửi duyệt)</div>') +
-                    (d.current_step >= 4 ? (row('ODO sau khi trả', d.odo_sau != null ? d.odo_sau + ' km' : '-') + (d.quang_duong != null ? row('Quãng đường', d.quang_duong + ' km') : '')) : '') +
+                    (d.current_step >= 4 ? (row('ODO sau khi trả', d.odo_sau != null ? d.odo_sau + ' km' : '-') + (d.quang_duong != null ? row('Quãng đường', d.quang_duong + ' km') : '') + (d.noi_tra_chia_khoa ? row('Nơi trả chìa khoá', esc(d.noi_tra_chia_khoa)) : '')) : '') +
                     (d.thoi_gian_ve_thuc_te ? row('Thời gian về thực tế', new Date(d.thoi_gian_ve_thuc_te).toLocaleString('vi-VN')) : '') +
                 '</div>')}
                 ${sectionCard('fa-clipboard-check', 'bg-amber-50 text-amber-600', 'Kiểm tra trước đi (5 điểm)', preCheckStr ? '<div class="bg-amber-50/50 rounded-lg p-4 space-y-0 border border-amber-100">' + preCheckStr + '</div>' : '<p class="text-slate-500 text-sm py-3">Chưa kiểm tra (nhập khi gửi duyệt)</p>')}
@@ -566,7 +586,7 @@ async function doTdrAction(id, action, session) {
                 cancelButtonText: 'Hủy',
                 width: '560px',
                 customClass: { popup: 'rounded-2xl shadow-xl', confirmButton: 'rounded-xl', cancelButton: 'rounded-xl' },
-                didOpen: () => bindTdrStatusToggle('tdr_pre'),
+                didOpen: () => { const popup = document.querySelector('.swal2-popup'); bindTdrStatusToggle('tdr_pre', popup); },
                 preConfirm: async () => {
                     const odoEl = document.getElementById('tdr-submit-odo');
                     odoTruoc = odoEl ? parseInt(odoEl.value, 10) : null;
@@ -604,7 +624,8 @@ async function doTdrAction(id, action, session) {
     } else if (action === 'complete') {
         const completeHtml = '<div class="text-left space-y-4 py-1">' +
             '<div class="grid grid-cols-1 gap-3"><div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">ODO sau khi trả (km) *</label><input type="number" id="tdr-complete-odo" class="input w-full border-gray-300 rounded-lg" min="0" placeholder="VD: 15100" required></div>' +
-            '<div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Thời gian về thực tế</label><input type="datetime-local" id="tdr-complete-ve" class="input w-full border-gray-300 rounded-lg"></div></div>' +
+            '<div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Thời gian về thực tế</label><input type="datetime-local" id="tdr-complete-ve" class="input w-full border-gray-300 rounded-lg"></div>' +
+            '<div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Nơi trả chìa khoá <span class="text-red-500">*</span></label><select id="tdr-complete-noi-tra-chia-khoa" class="input w-full border-gray-300 rounded-lg" required><option value="Tu_dung_chia_khoa" selected>Tủ đựng chìa khoá</option><option value="Gui_truc_tiep_BKS">Gửi trực tiếp cho BKS</option><option value="Khac">Khác</option></select><input type="text" id="tdr-complete-noi-tra-chia-khoa-khac" class="input w-full border-gray-300 rounded-lg mt-2 hidden" placeholder="Ghi rõ nơi trả..."></div></div>' +
             '<p class="text-sm font-medium text-gray-700">Kiểm tra tình trạng xe sau khi trả (5 điểm) — nếu không Tốt phải đính kèm ảnh:</p>' +
             buildTdrCheckFormHtml('tdr_post') + '</div>';
         const res = await Swal.fire({
@@ -616,14 +637,36 @@ async function doTdrAction(id, action, session) {
             confirmButtonText: 'Hoàn thành',
             cancelButtonText: 'Hủy',
             width: '520px',
-            didOpen: () => bindTdrStatusToggle('tdr_post'),
+            didOpen: () => {
+                const popup = document.querySelector('.swal2-popup');
+                bindTdrStatusToggle('tdr_post', popup);
+                const selNoiTra = document.getElementById('tdr-complete-noi-tra-chia-khoa');
+                const inputKhac = document.getElementById('tdr-complete-noi-tra-chia-khoa-khac');
+                if (selNoiTra && inputKhac) {
+                    const toggleKhac = () => { inputKhac.classList.toggle('hidden', selNoiTra.value !== 'Khac'); if (selNoiTra.value !== 'Khac') inputKhac.value = ''; };
+                    toggleKhac();
+                    selNoiTra.addEventListener('change', toggleKhac);
+                }
+            },
             preConfirm: async () => {
                 const odoEl = document.getElementById('tdr-complete-odo');
                 const veEl = document.getElementById('tdr-complete-ve');
+                const noiTraEl = document.getElementById('tdr-complete-noi-tra-chia-khoa');
+                const noiTraKhacEl = document.getElementById('tdr-complete-noi-tra-chia-khoa-khac');
                 const odoSau = odoEl ? parseInt(odoEl.value, 10) : null;
                 if (odoSau == null || isNaN(odoSau) || odoSau < 0) {
                     Swal.showValidationMessage('Vui lòng nhập ODO sau khi trả (số km hợp lệ).');
                     return false;
+                }
+                let noiTraChiaKhoa = 'Tủ đựng chìa khoá';
+                if (noiTraEl) {
+                    if (noiTraEl.value === 'Khac') {
+                        if (noiTraKhacEl && noiTraKhacEl.value.trim()) noiTraChiaKhoa = noiTraKhacEl.value.trim();
+                        else {
+                            Swal.showValidationMessage('Vui lòng ghi rõ nơi trả chìa khoá khi chọn Khác.');
+                            return false;
+                        }
+                    } else if (noiTraEl.value === 'Gui_truc_tiep_BKS') noiTraChiaKhoa = 'Gửi trực tiếp cho BKS';
                 }
                 const thoiGianVe = veEl && veEl.value ? veEl.value : null;
                 const collected = await collectTdrCheckWithUpload('tdr_post');
@@ -631,18 +674,19 @@ async function doTdrAction(id, action, session) {
                     Swal.showValidationMessage(collected.error);
                     return false;
                 }
-                return { odoSau, thoiGianVe: thoiGianVe || new Date().toISOString(), postCheck: collected.preCheck };
+                return { odoSau, thoiGianVe: thoiGianVe || new Date().toISOString(), postCheck: collected.preCheck, noiTraChiaKhoa: noiTraChiaKhoa || 'Tủ đựng chìa khoá' };
             }
         });
         if (!res.isConfirmed || !res.value) return;
-        const { odoSau, thoiGianVe, postCheck } = res.value;
+        const { odoSau, thoiGianVe, postCheck, noiTraChiaKhoa } = res.value;
         const x = await callAPI({
             action: 'complete_test_drive_return',
             id,
             username: session.username,
             odo_sau: odoSau,
             thoi_gian_ve_thuc_te: thoiGianVe,
-            post_check: postCheck
+            post_check: postCheck,
+            noi_tra_chia_khoa: noiTraChiaKhoa || 'Tủ đựng chìa khoá'
         });
         Swal.fire(x.success ? 'Thành công' : 'Lỗi', x.message || '', x.success ? 'success' : 'error');
         if (x.success) loadTestDriveRequests();

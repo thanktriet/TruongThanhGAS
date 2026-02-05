@@ -162,7 +162,7 @@ function checkSession() {
                 $('nav-test-drive-request-create')?.classList.add('hidden');
                 $('nav-test-drive-requests')?.classList.add('hidden');
             }
-            if (['ADMIN', 'BKS', 'BGD'].includes(user.role)) {
+            if (typeof hasPermission === 'function' && hasPermission(user, 'approve_test_drive')) {
                 $('nav-test-drive-vehicles')?.classList.remove('hidden');
             } else {
                 $('nav-test-drive-vehicles')?.classList.add('hidden');
