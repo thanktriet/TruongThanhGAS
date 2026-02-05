@@ -297,6 +297,16 @@ async function supabaseCreateRequest(d) {
         const finalGiftDetails = giftDescriptionArr.join('\n') || "Không có quà";
         const finalPrice = contractPrice - discountAmount;
 
+        // Bắt buộc năm sản xuất và số chỗ ngồi
+        const yearVal = d.manufacture_year != null && d.manufacture_year !== '' ? parseInt(d.manufacture_year, 10) : null;
+        const seatsVal = d.seats != null && d.seats !== '' ? parseInt(d.seats, 10) : null;
+        if (yearVal == null || isNaN(yearVal) || yearVal < 2018 || yearVal > 2030) {
+            return { success: false, message: 'Vui lòng nhập năm sản xuất (2018–2030)' };
+        }
+        if (seatsVal == null || isNaN(seatsVal) || seatsVal < 2 || seatsVal > 9) {
+            return { success: false, message: 'Vui lòng nhập số chỗ ngồi (2–9)' };
+        }
+
         const approvalData = {
             id: id,
             date: new Date().toISOString(),
@@ -311,8 +321,8 @@ async function supabaseCreateRequest(d) {
             car_version: d.car_version || '',
             car_color: d.car_color || '',
             vin_no: d.vin_no || '',
-            manufacture_year: d.manufacture_year != null && d.manufacture_year !== '' ? parseInt(d.manufacture_year, 10) : null,
-            seats: d.seats != null && d.seats !== '' ? parseInt(d.seats, 10) : null,
+            manufacture_year: yearVal,
+            seats: seatsVal,
             payment_method: d.payment_method || '',
             contract_price: contractPrice,
             discount_details: d.discount_details || '',
@@ -4581,6 +4591,467 @@ async function supabaseDisburseCocRequest(cocRequestId, fileUrl, fileId, account
 }
 
 // ======================================================
+// TEST DRIVE - Xe lái thử
+// ======================================================
+
+const TEST_DRIVE_STATUS_MAP = {
+    0: 'Draft',
+    1: 'Cho_BKS_Duyet',
+    2: 'Cho_BGD_Duyet',
+    3: 'Da_Duyet_Dang_Su_Dung',
+    4: 'Hoan_Thanh'
+};
+
+async function supabaseListTestDriveVehicles(data) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) return { success: false, message: 'Supabase chưa được khởi tạo' };
+        const forRequest = data.for_request === true || data.for_request === 'true';
+        let query = supabase.from('test_drive_vehicles').select('*').order('bien_so_xe');
+        if (forRequest) query = query.eq('trang_thai_su_dung', 'ranh');
+        const { data: rows, error } = await query;
+        if (error) throw error;
+        const today = new Date().toISOString().split('T')[0];
+        let list = (rows || []).map(r => {
+            const hanBH = r.han_bao_hiem ? String(r.han_bao_hiem).split('T')[0] : null;
+            const hanDK = r.han_dang_kiem ? String(r.han_dang_kiem).split('T')[0] : null;
+            const hetHan = (hanBH && hanBH < today) || (hanDK && hanDK < today);
+            const trangThai = hetHan ? 'tam_khoa' : r.trang_thai_su_dung;
+            const canRequest = forRequest && trangThai === 'ranh';
+            return { ...r, trang_thai_su_dung: trangThai, han_bao_hiem_fmt: formatDate(r.han_bao_hiem), han_dang_kiem_fmt: formatDate(r.han_dang_kiem), can_request: !!canRequest };
+        });
+        if (forRequest) list = list.filter(r => r.can_request);
+        return { success: true, data: list };
+    } catch (e) {
+        console.error('List test drive vehicles error:', e);
+        return { success: false, message: e.message };
+    }
+}
+
+async function supabaseCreateTestDriveVehicle(data) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) return { success: false, message: 'Supabase chưa được khởi tạo' };
+        const role = (data.role || '').toUpperCase();
+        if (!['ADMIN', 'BKS', 'BGD'].includes(role)) return { success: false, message: 'Không có quyền tạo xe lái thử' };
+        const payload = {
+            bien_so_xe: (data.bien_so_xe || '').trim().toUpperCase(),
+            loai_xe: data.loai_xe || '',
+            phien_ban: data.phien_ban || '',
+            han_bao_hiem: data.han_bao_hiem || null,
+            han_dang_kiem: data.han_dang_kiem || null,
+            odo_hien_tai: parseInt(data.odo_hien_tai, 10) || 0,
+            tong_quang_duong_da_di: parseInt(data.tong_quang_duong_da_di, 10) || 0,
+            tinh_trang_hien_tai: data.tinh_trang_hien_tai || {},
+            trang_thai_su_dung: 'ranh'
+        };
+        const { data: row, error } = await supabase.from('test_drive_vehicles').insert(payload).select().single();
+        if (error) throw error;
+        return { success: true, data: row };
+    } catch (e) {
+        console.error('Create test drive vehicle error:', e);
+        return { success: false, message: e.message };
+    }
+}
+
+async function supabaseUpdateTestDriveVehicle(data) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) return { success: false, message: 'Supabase chưa được khởi tạo' };
+        const role = (data.role || '').toUpperCase();
+        if (!['ADMIN', 'BKS', 'BGD'].includes(role)) return { success: false, message: 'Không có quyền cập nhật xe lái thử' };
+        const id = data.id;
+        if (!id) return { success: false, message: 'Thiếu id xe' };
+        const payload = {};
+        if (data.bien_so_xe != null) payload.bien_so_xe = String(data.bien_so_xe).trim().toUpperCase();
+        if (data.loai_xe != null) payload.loai_xe = data.loai_xe;
+        if (data.phien_ban != null) payload.phien_ban = data.phien_ban;
+        if (data.han_bao_hiem != null) payload.han_bao_hiem = data.han_bao_hiem || null;
+        if (data.han_dang_kiem != null) payload.han_dang_kiem = data.han_dang_kiem || null;
+        if (data.odo_hien_tai != null) payload.odo_hien_tai = parseInt(data.odo_hien_tai, 10) || 0;
+        if (data.tinh_trang_hien_tai != null) payload.tinh_trang_hien_tai = data.tinh_trang_hien_tai;
+        if (data.trang_thai_su_dung != null) payload.trang_thai_su_dung = data.trang_thai_su_dung;
+        if (Object.keys(payload).length === 0) return { success: true, data: { id } };
+        const { data: row, error } = await supabase.from('test_drive_vehicles').update(payload).eq('id', id).select().single();
+        if (error) throw error;
+        return { success: true, data: row };
+    } catch (e) {
+        console.error('Update test drive vehicle error:', e);
+        return { success: false, message: e.message };
+    }
+}
+
+async function supabaseCreateTestDriveRequest(data) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) return { success: false, message: 'Supabase chưa được khởi tạo' };
+        const vehicleId = data.vehicle_id;
+        if (!vehicleId) return { success: false, message: 'Vui lòng chọn xe lái thử' };
+        const { data: vehicle } = await supabase.from('test_drive_vehicles').select('*').eq('id', vehicleId).single();
+        if (!vehicle) return { success: false, message: 'Không tìm thấy xe' };
+        const today = new Date().toISOString().split('T')[0];
+        const hanBH = vehicle.han_bao_hiem ? String(vehicle.han_bao_hiem).split('T')[0] : null;
+        const hanDK = vehicle.han_dang_kiem ? String(vehicle.han_dang_kiem).split('T')[0] : null;
+        if ((hanBH && hanBH < today) || (hanDK && hanDK < today)) return { success: false, message: 'Xe đã hết hạn bảo hiểm hoặc đăng kiểm, không thể tạo tờ trình' };
+        if (vehicle.trang_thai_su_dung !== 'ranh') return { success: false, message: 'Xe đang được sử dụng' };
+        const nguoiTao = data.nguoi_tao || data.requester_fullname; // fullname để hiển thị
+        const requesterUsername = data.username;
+        if (!nguoiTao) return { success: false, message: 'Thiếu thông tin người tạo' };
+        if (!requesterUsername) return { success: false, message: 'Thiếu thông tin username' };
+        const odoTruoc = data.odo_truoc != null && data.odo_truoc !== '' ? parseInt(data.odo_truoc, 10) : null;
+        const preCheck = data.pre_check && typeof data.pre_check === 'object' ? data.pre_check : {};
+        const REQUIRED_POINTS = ['ben_trai', 'ben_phai', 'phia_truoc', 'phia_sau', 'noi_that'];
+        if (odoTruoc != null && (isNaN(odoTruoc) || odoTruoc < 0)) return { success: false, message: 'ODO trước khi nhận xe không hợp lệ' };
+        if (Object.keys(preCheck).length > 0) {
+            for (const key of REQUIRED_POINTS) {
+                if (!preCheck[key] || !preCheck[key].status) return { success: false, message: 'Vui lòng kiểm tra đủ 5 điểm tình trạng xe khi tạo tờ trình' };
+                const st = (preCheck[key].status || '').toString();
+                const isTot = st === 'Tot' || st === 'tot';
+                if (!isTot && (!preCheck[key].images || !Array.isArray(preCheck[key].images) || preCheck[key].images.length === 0)) {
+                    return { success: false, message: 'Điểm kiểm tra "' + key + '" không Tốt — bắt buộc đính kèm ảnh' };
+                }
+            }
+        }
+        const payload = {
+            nguoi_tao: nguoiTao,
+            requester_username: requesterUsername,
+            muc_dich_su_dung_xe: data.muc_dich_su_dung_xe || '',
+            thoi_gian_di: data.thoi_gian_di || null,
+            thoi_gian_ve_du_kien: data.thoi_gian_ve_du_kien || null,
+            lo_trinh: data.lo_trinh || '',
+            so_dien_thoai: data.so_dien_thoai ? String(data.so_dien_thoai).trim() : null,
+            dia_diem_don: data.dia_diem_don ? String(data.dia_diem_don).trim() : null,
+            dia_diem_tra: data.dia_diem_tra ? String(data.dia_diem_tra).trim() : null,
+            so_km_du_kien: data.so_km_du_kien != null && data.so_km_du_kien !== '' ? parseInt(data.so_km_du_kien, 10) : null,
+            ghi_chu: data.ghi_chu ? String(data.ghi_chu).trim() : null,
+            vehicle_id: vehicleId,
+            trang_thai_to_trinh: 'Draft',
+            current_step: 0
+        };
+        if (odoTruoc != null && !isNaN(odoTruoc)) payload.odo_truoc = odoTruoc;
+        if (Object.keys(preCheck).length) payload.pre_check = preCheck;
+        const { data: row, error } = await supabase.from('test_drive_requests').insert(payload).select().single();
+        if (error) throw error;
+        return { success: true, data: row };
+    } catch (e) {
+        console.error('Create test drive request error:', e);
+        return { success: false, message: e.message };
+    }
+}
+
+function _normalizeInspectionStatus(st) {
+    const s = (st || '').toString().trim();
+    if (s === 'Tot' || s === 'tot') return 'Tot';
+    if (s === 'Xe_xuoc_tray_mop_dinh_dinh' || s === 'xuoc') return 'Xe_xuoc_tray_mop_dinh_dinh';
+    if (s === 'Xe_do' || s === 'do') return 'Xe_do';
+    if (s === 'Xe_bao_loi' || s === 'bao_loi') return 'Xe_bao_loi';
+    return s || 'Tot';
+}
+
+async function supabaseSubmitTestDriveRequest(data) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) return { success: false, message: 'Supabase chưa được khởi tạo' };
+        const id = data.id;
+        const username = data.username;
+        const { data: req, error: e1 } = await supabase.from('test_drive_requests').select('*').eq('id', id).single();
+        if (e1 || !req) return { success: false, message: 'Không tìm thấy tờ trình' };
+        const role = (data.role || '').toUpperCase();
+        const reqUsername = req.requester_username || req.nguoi_tao;
+        if (reqUsername !== username && role !== 'ADMIN') return { success: false, message: 'Chỉ người tạo hoặc Admin mới có thể gửi duyệt' };
+        if (req.current_step !== 0) return { success: false, message: 'Tờ trình đã được gửi' };
+        const odoTruoc = data.odo_truoc != null ? parseInt(data.odo_truoc, 10) : null;
+        if (odoTruoc == null || isNaN(odoTruoc) || odoTruoc < 0) return { success: false, message: 'Vui lòng nhập ODO trước khi nhận xe' };
+        const preCheck = data.pre_check && typeof data.pre_check === 'object' ? data.pre_check : {};
+        const REQUIRED_POINTS = ['ben_trai', 'ben_phai', 'phia_truoc', 'phia_sau', 'noi_that'];
+        for (const key of REQUIRED_POINTS) {
+            if (!preCheck[key] || !preCheck[key].status) return { success: false, message: 'Vui lòng kiểm tra đủ 5 điểm tình trạng xe trước khi gửi duyệt' };
+            const st = (preCheck[key].status || '').toString();
+            const isTot = st === 'Tot' || st === 'tot';
+            if (!isTot && (!preCheck[key].images || !Array.isArray(preCheck[key].images) || preCheck[key].images.length === 0)) {
+                return { success: false, message: 'Điểm kiểm tra "' + key + '" không Tốt — bắt buộc đính kèm ảnh' };
+            }
+        }
+        const payload = {
+            current_step: 1,
+            trang_thai_to_trinh: 'Cho_BKS_Duyet',
+            updated_at: new Date().toISOString()
+        };
+        if (odoTruoc != null && !isNaN(odoTruoc)) payload.odo_truoc = odoTruoc;
+        if (Object.keys(preCheck).length) payload.pre_check = preCheck;
+        const { error: e2 } = await supabase.from('test_drive_requests').update(payload).eq('id', id);
+        if (e2) throw e2;
+        // Ghi vehicle_inspections + inspection_images + approval_log (submitted)
+        const insRows = REQUIRED_POINTS.map(function (point_key) {
+            return { request_id: id, inspection_type: 'pre', point_key: point_key, status: _normalizeInspectionStatus(preCheck[point_key]?.status) };
+        });
+        const { data: inserted, error: eIns } = await supabase.from('vehicle_inspections').insert(insRows).select('id, point_key');
+        if (eIns) {
+            console.error('vehicle_inspections insert error:', eIns);
+            return { success: false, message: 'Lỗi ghi kiểm tra xe. Bạn đã chạy migration 20260127140000 chưa? ' + (eIns.message || '') };
+        }
+        if (inserted && inserted.length) {
+            for (let i = 0; i < inserted.length; i++) {
+                const row = inserted[i];
+                const imgs = preCheck[row.point_key]?.images;
+                if (Array.isArray(imgs) && imgs.length) {
+                    const imgRows = imgs.map(function (item) {
+                        const url = typeof item === 'string' ? item : (item && item.url);
+                        return url ? { vehicle_inspection_id: row.id, image_url: url } : null;
+                    }).filter(Boolean);
+                    if (imgRows.length) await supabase.from('inspection_images').insert(imgRows);
+                }
+            }
+        }
+        const { error: eLog } = await supabase.from('test_drive_approval_logs').insert({
+            request_id: id,
+            approver_username: username,
+            approver_role: data.role || null,
+            action: 'submitted',
+            comment: null
+        });
+        if (eLog) console.warn('test_drive_approval_logs insert (submitted):', eLog);
+        return { success: true, message: 'Đã gửi tờ trình chờ BKS duyệt' };
+    } catch (e) {
+        console.error('Submit test drive request error:', e);
+        return { success: false, message: e.message };
+    }
+}
+
+async function supabaseUpdateTestDriveRequest(data) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) return { success: false, message: 'Supabase chưa được khởi tạo' };
+        const id = data.id;
+        const username = data.username;
+        const { data: req, error: e1 } = await supabase.from('test_drive_requests').select('*').eq('id', id).single();
+        if (e1 || !req) return { success: false, message: 'Không tìm thấy tờ trình' };
+        const role = (data.role || '').toUpperCase();
+        const reqUser = req.requester_username || req.nguoi_tao;
+        if (req.current_step === 0 && reqUser !== username && role !== 'ADMIN') return { success: false, message: 'Không có quyền sửa' };
+        if (req.current_step >= 3 && reqUser !== username && role !== 'ADMIN') return { success: false, message: 'Không có quyền sửa' };
+        const payload = { updated_at: new Date().toISOString() };
+        if (data.odo_truoc != null && req.current_step === 3) payload.odo_truoc = parseInt(data.odo_truoc, 10);
+        if (data.pre_check != null && req.current_step === 3) payload.pre_check = data.pre_check;
+        if (req.current_step === 0) {
+            if (data.muc_dich_su_dung_xe != null) payload.muc_dich_su_dung_xe = data.muc_dich_su_dung_xe;
+            if (data.thoi_gian_di != null) payload.thoi_gian_di = data.thoi_gian_di;
+            if (data.thoi_gian_ve_du_kien != null) payload.thoi_gian_ve_du_kien = data.thoi_gian_ve_du_kien;
+            if (data.lo_trinh != null) payload.lo_trinh = data.lo_trinh;
+            if (data.vehicle_id != null) payload.vehicle_id = data.vehicle_id;
+            if (data.so_dien_thoai !== undefined) payload.so_dien_thoai = data.so_dien_thoai ? String(data.so_dien_thoai).trim() : null;
+            if (data.dia_diem_don !== undefined) payload.dia_diem_don = data.dia_diem_don ? String(data.dia_diem_don).trim() : null;
+            if (data.dia_diem_tra !== undefined) payload.dia_diem_tra = data.dia_diem_tra ? String(data.dia_diem_tra).trim() : null;
+            if (data.so_km_du_kien !== undefined) payload.so_km_du_kien = data.so_km_du_kien != null && data.so_km_du_kien !== '' ? parseInt(data.so_km_du_kien, 10) : null;
+            if (data.ghi_chu !== undefined) payload.ghi_chu = data.ghi_chu ? String(data.ghi_chu).trim() : null;
+        }
+        const { error: e2 } = await supabase.from('test_drive_requests').update(payload).eq('id', id);
+        if (e2) throw e2;
+        return { success: true, message: 'Đã cập nhật' };
+    } catch (e) {
+        console.error('Update test drive request error:', e);
+        return { success: false, message: e.message };
+    }
+}
+
+async function supabaseGetTestDriveRequests(data) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) return { success: false, message: 'Supabase chưa được khởi tạo' };
+        let query = supabase.from('test_drive_requests').select(`
+            *,
+            test_drive_vehicles(bien_so_xe, loai_xe, phien_ban)
+        `).order('ngay_tao', { ascending: false });
+        // Tất cả role xem toàn bộ danh sách; duyệt chỉ BKS/BGD/ADMIN
+        const { data: rows, error } = await query;
+        if (error) throw error;
+        const list = (rows || []).map(r => ({
+            ...r,
+            requester_fullname: r.nguoi_tao || r.requester_username || '',
+            vehicle_label: r.test_drive_vehicles ? `${r.test_drive_vehicles.bien_so_xe || ''} - ${r.test_drive_vehicles.loai_xe || ''} ${r.test_drive_vehicles.phien_ban || ''}`.trim() : '',
+            trang_thai_label: TEST_DRIVE_STATUS_MAP[r.current_step] || r.trang_thai_to_trinh
+        }));
+        return { success: true, data: list };
+    } catch (e) {
+        console.error('Get test drive requests error:', e);
+        return { success: false, message: e.message };
+    }
+}
+
+async function supabaseGetTestDriveRequestDetail(id, username) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) return { success: false, message: 'Supabase chưa được khởi tạo' };
+        const { data: row, error } = await supabase.from('test_drive_requests').select(`
+            *,
+            test_drive_vehicles(*)
+        `).eq('id', id).single();
+        if (error || !row) return { success: false, message: 'Không tìm thấy tờ trình' };
+        row.requester_fullname = row.nguoi_tao || row.requester_username || '';
+        row.vehicle_label = row.test_drive_vehicles ? `${row.test_drive_vehicles.bien_so_xe || ''} - ${row.test_drive_vehicles.loai_xe || ''}`.trim() : '';
+        const { data: logs, error: eLogs } = await supabase.from('test_drive_approval_logs').select('*').eq('request_id', id).order('created_at', { ascending: true });
+        row.approval_logs = eLogs ? [] : (logs || []);
+        return { success: true, data: row };
+    } catch (e) {
+        console.error('Get test drive request detail error:', e);
+        return { success: false, message: e.message };
+    }
+}
+
+async function supabaseProcessTestDriveApproval(data) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) return { success: false, message: 'Supabase chưa được khởi tạo' };
+        const role = (data.role || '').toUpperCase();
+        const id = data.id;
+        const decision = data.decision;
+        const comment = String(data.comment || '').trim();
+        if (decision === 'reject' && !comment) return { success: false, message: 'Vui lòng nhập lý do từ chối' };
+        const { data: req, error: e1 } = await supabase.from('test_drive_requests').select('*, test_drive_vehicles(*)').eq('id', id).single();
+        if (e1 || !req) return { success: false, message: 'Không tìm thấy tờ trình' };
+        const step = req.current_step || 0;
+        if (step === 1 && role !== 'BKS' && role !== 'ADMIN') return { success: false, message: 'Chỉ BKS mới có quyền duyệt bước này' };
+        if (step === 2 && role !== 'BGD' && role !== 'ADMIN') return { success: false, message: 'Chỉ BGĐ mới có quyền duyệt bước này' };
+        const time = new Date().toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+        const actionText = decision === 'approve' ? 'DUYỆT' : 'TỪ CHỐI';
+        const newLog = time + ' | ' + (data.username || '') + ' (' + role + ') | ' + actionText + (comment ? ' | Lý do: ' + comment : '');
+        const updatedLog = (req.history_log || '') ? req.history_log + '\n' + newLog : newLog;
+        if (decision === 'reject') {
+            const { error: e2 } = await supabase.from('test_drive_requests').update({
+                current_step: 0,
+                trang_thai_to_trinh: 'Tu_Choi',
+                status_text: 'Đã từ chối' + (comment ? ': ' + comment : ''),
+                history_log: updatedLog,
+                updated_at: new Date().toISOString()
+            }).eq('id', id);
+            if (e2) throw e2;
+            await supabase.from('test_drive_approval_logs').insert({
+                request_id: id,
+                approver_username: data.username || null,
+                approver_role: role,
+                action: 'rejected',
+                comment: comment || null
+            });
+            return { success: true, message: 'Đã từ chối tờ trình' };
+        }
+        if (step === 2 && decision === 'approve') {
+            const v = req.test_drive_vehicles;
+            const today = new Date().toISOString().split('T')[0];
+            const hanBH = v?.han_bao_hiem ? String(v.han_bao_hiem).split('T')[0] : null;
+            const hanDK = v?.han_dang_kiem ? String(v.han_dang_kiem).split('T')[0] : null;
+            if ((hanBH && hanBH < today) || (hanDK && hanDK < today)) return { success: false, message: 'Xe đã hết hạn bảo hiểm hoặc đăng kiểm. Không thể duyệt.' };
+            await supabase.from('test_drive_vehicles').update({ trang_thai_su_dung: 'dang_su_dung', updated_at: new Date().toISOString() }).eq('id', req.vehicle_id);
+        }
+        const nextStep = step + 1;
+        const nextStatus = nextStep >= 3 ? 'Da_Duyet_Dang_Su_Dung' : (nextStep === 1 ? 'Cho_BKS_Duyet' : 'Cho_BGD_Duyet');
+        const updateReq = { current_step: Math.min(nextStep, 3), trang_thai_to_trinh: nextStatus, history_log: updatedLog, updated_at: new Date().toISOString() };
+        if (step === 1) updateReq.approver_step1 = data.username;
+        if (step === 2) updateReq.approver_step2 = data.username;
+        const { error: e2 } = await supabase.from('test_drive_requests').update(updateReq).eq('id', id);
+        if (e2) throw e2;
+        await supabase.from('test_drive_approval_logs').insert({
+            request_id: id,
+            approver_username: data.username || null,
+            approver_role: role,
+            action: 'approved',
+            comment: comment || null
+        });
+        return { success: true, message: 'Đã duyệt tờ trình' };
+    } catch (e) {
+        console.error('Process test drive approval error:', e);
+        return { success: false, message: e.message };
+    }
+}
+
+async function supabaseCompleteTestDriveReturn(data) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) return { success: false, message: 'Supabase chưa được khởi tạo' };
+        const id = data.id;
+        const username = data.username;
+        const { data: req, error: e1 } = await supabase.from('test_drive_requests').select('*').eq('id', id).single();
+        if (e1 || !req) return { success: false, message: 'Không tìm thấy tờ trình' };
+        const role = (data.role || '').toUpperCase();
+        const reqUser = req.requester_username || req.nguoi_tao;
+        if (reqUser !== username && role !== 'ADMIN') return { success: false, message: 'Chỉ người tạo hoặc Admin mới có thể hoàn thành tờ trình' };
+        if (req.current_step !== 3) return { success: false, message: 'Tờ trình chưa ở trạng thái đang sử dụng xe' };
+        const odoSau = parseInt(data.odo_sau, 10);
+        if (isNaN(odoSau) || odoSau < 0) return { success: false, message: 'Vui lòng nhập ODO sau khi trả xe' };
+        const postCheck = data.post_check || {};
+        const REQUIRED_POINTS = ['ben_trai', 'ben_phai', 'phia_truoc', 'phia_sau', 'noi_that'];
+        for (const key of REQUIRED_POINTS) {
+            if (!postCheck[key] || !postCheck[key].status) return { success: false, message: 'Vui lòng kiểm tra đủ 5 điểm tình trạng xe (Bên trái, Bên phải, Phía trước, Phía sau, Nội thất)' };
+            const st = (postCheck[key].status || '').toString();
+            const isTot = st === 'Tot' || st === 'tot';
+            if (!isTot && (!postCheck[key].images || !Array.isArray(postCheck[key].images) || postCheck[key].images.length === 0)) {
+                return { success: false, message: 'Điểm kiểm tra "' + key + '" không Tốt — bắt buộc đính kèm ảnh' };
+            }
+        }
+        const odoTruoc = parseInt(req.odo_truoc, 10) || 0;
+        const quangDuong = Math.max(0, odoSau - odoTruoc);
+        const { data: v } = await supabase.from('test_drive_vehicles').select('tong_quang_duong_da_di').eq('id', req.vehicle_id).single();
+        const newTong = (v?.tong_quang_duong_da_di || 0) + quangDuong;
+        const { error: ev } = await supabase.from('test_drive_vehicles').update({
+            odo_hien_tai: odoSau,
+            tong_quang_duong_da_di: newTong,
+            trang_thai_su_dung: 'ranh',
+            tinh_trang_hien_tai: postCheck,
+            updated_at: new Date().toISOString()
+        }).eq('id', req.vehicle_id);
+        if (ev) throw ev;
+        const timeStr = new Date().toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+        const completeLog = timeStr + ' | ' + (username || '') + ' | HOÀN THÀNH | ODO sau: ' + odoSau + ' km, quãng đường: ' + quangDuong + ' km';
+        const updatedLog = (req.history_log || '') ? req.history_log + '\n' + completeLog : completeLog;
+        const { error: e2 } = await supabase.from('test_drive_requests').update({
+            odo_sau: odoSau,
+            quang_duong: quangDuong,
+            thoi_gian_ve_thuc_te: data.thoi_gian_ve_thuc_te || new Date().toISOString(),
+            post_check: postCheck,
+            current_step: 4,
+            trang_thai_to_trinh: 'Hoan_Thanh',
+            history_log: updatedLog,
+            updated_at: new Date().toISOString()
+        }).eq('id', id);
+        if (e2) throw e2;
+        // Ghi vehicle_inspections (post) + inspection_images + approval_log (completed)
+        const REQUIRED_POINTS_POST = ['ben_trai', 'ben_phai', 'phia_truoc', 'phia_sau', 'noi_that'];
+        const postInsRows = REQUIRED_POINTS_POST.map(function (point_key) {
+            return { request_id: id, inspection_type: 'post', point_key: point_key, status: _normalizeInspectionStatus(postCheck[point_key]?.status) };
+        });
+        const { data: postInserted, error: ePostIns } = await supabase.from('vehicle_inspections').insert(postInsRows).select('id, point_key');
+        if (ePostIns) {
+            console.error('vehicle_inspections (post) insert error:', ePostIns);
+            return { success: false, message: 'Lỗi ghi kiểm tra xe. Bạn đã chạy migration 20260127140000 chưa? ' + (ePostIns.message || '') };
+        }
+        if (postInserted && postInserted.length) {
+            for (let i = 0; i < postInserted.length; i++) {
+                const row = postInserted[i];
+                const imgs = postCheck[row.point_key]?.images;
+                if (Array.isArray(imgs) && imgs.length) {
+                    const imgRows = imgs.map(function (item) {
+                        const url = typeof item === 'string' ? item : (item && item.url);
+                        return url ? { vehicle_inspection_id: row.id, image_url: url } : null;
+                    }).filter(Boolean);
+                    if (imgRows.length) await supabase.from('inspection_images').insert(imgRows);
+                }
+            }
+        }
+        const { error: eLogComplete } = await supabase.from('test_drive_approval_logs').insert({
+            request_id: id,
+            approver_username: username,
+            approver_role: null,
+            action: 'completed',
+            comment: null
+        });
+        if (eLogComplete) console.warn('test_drive_approval_logs insert (completed):', eLogComplete);
+        return { success: true, message: 'Đã hoàn thành tờ trình' };
+    } catch (e) {
+        console.error('Complete test drive return error:', e);
+        return { success: false, message: e.message };
+    }
+}
+
+// ======================================================
 // WRAPPER FUNCTION - Tương thích với callAPI hiện tại
 // ======================================================
 
@@ -4784,6 +5255,28 @@ async function callSupabaseAPI(data) {
             
             case 'delete_tvbh_target':
                 return await supabaseDeleteTvbhTarget(data.id);
+            
+            // Test Drive - Xe lái thử
+            case 'list_test_drive_vehicles':
+                return await supabaseListTestDriveVehicles(data);
+            case 'create_test_drive_vehicle':
+                return await supabaseCreateTestDriveVehicle(data);
+            case 'update_test_drive_vehicle':
+                return await supabaseUpdateTestDriveVehicle(data);
+            case 'create_test_drive_request':
+                return await supabaseCreateTestDriveRequest(data);
+            case 'submit_test_drive_request':
+                return await supabaseSubmitTestDriveRequest(data);
+            case 'update_test_drive_request':
+                return await supabaseUpdateTestDriveRequest(data);
+            case 'get_test_drive_requests':
+                return await supabaseGetTestDriveRequests(data);
+            case 'get_test_drive_request_detail':
+                return await supabaseGetTestDriveRequestDetail(data.id, data.username);
+            case 'process_test_drive_approval':
+                return await supabaseProcessTestDriveApproval(data);
+            case 'complete_test_drive_return':
+                return await supabaseCompleteTestDriveReturn(data);
             
             default:
                 return { success: false, message: 'Action không được hỗ trợ: ' + action };

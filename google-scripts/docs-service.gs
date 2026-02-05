@@ -17,6 +17,7 @@ const CONFIG = {
   FOLDER_ID_THOA_THUAN: "1SdP-6aZZCi_tmmrjNszt4v6fItOKdeEU",    // Folder lưu thỏa thuận
   FOLDER_ID_DE_NGHI: "1SdP-6aZZCi_tmmrjNszt4v6fItOKdeEU",       // Folder lưu đề nghị giải ngân
   FOLDER_ID_COC: "1lmJ-rnhK6J-EQvFHKtem7XDfbjvGEaRg",           // Folder lưu COC files (ảnh COC, biên bản bàn giao, giải ngân) - dùng chung với đơn hàng
+  FOLDER_ID_XE_LAI_THU: "1qNgARSUwowdT18NOdVX0S_kYlGaTRgnG",    // Folder ảnh kiểm tra xe lái thử (pre/post check)
   
   // Template IDs (Google Docs templates)
   TEMPLATE_ID_HDMB: "1LtX6VQDHMg3-AThj9HKr5MIN5phL5x526O2mUOzKwRE",      // Template Hợp đồng Mua Bán
@@ -164,6 +165,9 @@ function doPost(e) {
     switch (action) {
       case 'upload_files':
         return createJSONResponse(uploadFilesToDrive(data.files, data.folderId || CONFIG.FOLDER_ID_DON_HANG));
+      
+      case 'upload_test_drive_images':
+        return createJSONResponse(uploadFilesToDrive(data.files, CONFIG.FOLDER_ID_XE_LAI_THU));
       
       case 'create_hdmb':
         Logger.log('=== CREATE HDMB ACTION ===');

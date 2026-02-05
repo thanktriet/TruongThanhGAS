@@ -1,0 +1,169 @@
+<div id="tab-test-drive-request-create" class="tab-content max-w-4xl mx-auto px-3 sm:px-4 pb-24 sm:pb-8">
+    <div class="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 sm:px-6 py-4 sm:py-5 border-b">
+            <h2 class="text-lg sm:text-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-file-circle-plus text-blue-200"></i>
+                Đăng ký tờ trình lái thử
+            </h2>
+            <p class="text-xs sm:text-sm text-blue-100 mt-1.5">Workflow: Người tạo → BKS → BGĐ. Chỉ xe rảnh và còn hạn BH/ĐK.</p>
+            <!-- Stepper: 4 bước khoa học -->
+            <div class="mt-4 flex items-center justify-between gap-1 max-w-md" aria-label="Các bước đăng ký">
+                <span class="flex flex-col items-center gap-1">
+                    <span class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">1</span>
+                    <span class="text-[10px] sm:text-xs text-blue-200">Xe</span>
+                </span>
+                <span class="flex-1 h-0.5 bg-blue-400/50 rounded min-w-[12px]"></span>
+                <span class="flex flex-col items-center gap-1">
+                    <span class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">2</span>
+                    <span class="text-[10px] sm:text-xs text-blue-200">Chuyến đi</span>
+                </span>
+                <span class="flex-1 h-0.5 bg-blue-400/50 rounded min-w-[12px]"></span>
+                <span class="flex flex-col items-center gap-1">
+                    <span class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">3</span>
+                    <span class="text-[10px] sm:text-xs text-blue-200">Liên hệ</span>
+                </span>
+                <span class="flex-1 h-0.5 bg-blue-400/50 rounded min-w-[12px]"></span>
+                <span class="flex flex-col items-center gap-1">
+                    <span class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">4</span>
+                    <span class="text-[10px] sm:text-xs text-blue-200">Kiểm tra xe</span>
+                </span>
+            </div>
+        </div>
+
+        <form id="form-test-drive-request" onsubmit="handleCreateTestDriveRequest(event)" class="p-4 sm:p-6 space-y-5">
+            <!-- Bước 1: Chọn xe -->
+            <section class="bg-slate-50/80 rounded-xl p-4 sm:p-5 border border-slate-200" id="tdr-step-1">
+                <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">1</span>
+                    Chọn xe lái thử
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <label class="block text-sm font-medium text-gray-700">Xe <span class="text-red-500">*</span></label>
+                        <button type="button" onclick="loadTestDriveRequestCreate && loadTestDriveRequestCreate()" class="text-xs px-3 py-2 min-h-[44px] sm:min-h-0 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition font-medium touch-manipulation">
+                            <i class="fa-solid fa-arrows-rotate mr-1"></i>Tải lại
+                        </button>
+                    </div>
+                    <select name="vehicle_id" id="test-drive-vehicle-select" class="input w-full border-gray-300 rounded-xl py-3 sm:py-2.5 min-h-[48px] focus:ring-2 focus:ring-blue-500 touch-manipulation" required>
+                        <option value="">-- Chọn xe --</option>
+                    </select>
+                    <p id="test-drive-vehicle-select-status" class="text-xs text-gray-500">Chỉ xe rảnh và còn hạn BH/ĐK</p>
+                </div>
+            </section>
+
+            <!-- Bước 2: Thông tin chuyến đi -->
+            <section class="bg-slate-50/80 rounded-xl p-4 sm:p-5 border border-slate-200" id="tdr-step-2">
+                <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">2</span>
+                    Thông tin chuyến đi
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Mục đích sử dụng xe <span class="text-red-500">*</span></label>
+                        <textarea name="muc_dich_su_dung_xe" class="input w-full border-gray-300 rounded-xl py-3 min-h-[80px] resize-none touch-manipulation" rows="2" placeholder="VD: Đưa khách lái thử" required></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Thời gian đi (dự kiến) <span class="text-red-500">*</span></label>
+                            <input type="datetime-local" name="thoi_gian_di" class="input w-full border-gray-300 rounded-xl py-3 min-h-[48px] touch-manipulation" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Thời gian về (dự kiến) <span class="text-red-500">*</span></label>
+                            <input type="datetime-local" name="thoi_gian_ve_du_kien" class="input w-full border-gray-300 rounded-xl py-3 min-h-[48px] touch-manipulation" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Lộ trình</label>
+                        <input type="text" name="lo_trinh" class="input w-full border-gray-300 rounded-xl py-3 min-h-[48px] touch-manipulation" placeholder="VD: Trương Thành - Rạch Giá">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Số km dự kiến (km)</label>
+                        <input type="number" name="so_km_du_kien" class="input w-full sm:max-w-[140px] border-gray-300 rounded-xl py-3 min-h-[48px] touch-manipulation" min="0" placeholder="VD: 50">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bước 3: Liên hệ & địa điểm -->
+            <section class="bg-slate-50/80 rounded-xl p-4 sm:p-5 border border-slate-200" id="tdr-step-3">
+                <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">3</span>
+                    Liên hệ & địa điểm
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Số điện thoại <span class="text-red-500">*</span></label>
+                        <input type="tel" name="so_dien_thoai" class="input w-full sm:max-w-[220px] border-gray-300 rounded-xl py-3 min-h-[48px] touch-manipulation" placeholder="VD: 0901234567" required inputmode="tel">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Địa điểm lấy xe</label>
+                            <input type="text" name="dia_diem_don" class="input w-full border-gray-300 rounded-xl py-3 min-h-[48px] touch-manipulation" placeholder="VD: Cửa hàng Trương Thành">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Địa điểm trả xe</label>
+                            <input type="text" name="dia_diem_tra" class="input w-full border-gray-300 rounded-xl py-3 min-h-[48px] touch-manipulation" placeholder="VD: Cửa hàng Trương Thành">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Ghi chú</label>
+                        <textarea name="ghi_chu" class="input w-full border-gray-300 rounded-xl py-3 min-h-[72px] resize-none touch-manipulation" rows="2" placeholder="Ghi chú thêm (nếu có)"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bước 4: ODO & Kiểm tra xe trước khi đi -->
+            <section class="bg-amber-50/80 rounded-xl p-4 sm:p-5 border border-amber-200" id="tdr-step-4">
+                <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-amber-200 text-amber-800 flex items-center justify-center text-xs font-bold">4</span>
+                    ODO & Kiểm tra xe trước khi đi
+                </h3>
+                <div class="space-y-4">
+                    <div class="w-full sm:max-w-[200px]">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">ODO trước khi nhận xe (km) <span class="text-red-500">*</span></label>
+                        <input type="number" id="tdr-create-odo" name="odo_truoc" class="input w-full border-gray-300 rounded-xl py-3 min-h-[48px] touch-manipulation" min="0" placeholder="VD: 15000" required inputmode="numeric">
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-600 mb-2">Kiểm tra 5 điểm tình trạng xe — nếu không Tốt phải đính kèm ảnh:</p>
+                        <div id="tdr-create-pre-check-container" class="space-y-3 max-h-[min(72vh,420px)] overflow-y-auto pr-1 -mr-1 touch-manipulation"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Nút gửi -->
+            <div class="pt-2 flex flex-col sm:flex-row gap-3">
+                <button type="submit" class="w-full sm:min-w-[240px] bg-blue-600 text-white px-6 py-4 sm:py-3.5 rounded-xl font-semibold hover:bg-blue-700 transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 min-h-[52px] touch-manipulation">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    Tạo tờ trình
+                </button>
+            </div>
+            <p id="create-request-status" class="text-sm text-gray-500 mt-2"></p>
+        </form>
+    </div>
+
+    <!-- Sticky nút gửi trên mobile (nhân bản để luôn thấy khi scroll) -->
+    <div class="fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur border-t border-gray-200 sm:hidden z-20" id="tdr-mobile-submit-bar" style="display: none;">
+        <button type="button" onclick="document.getElementById('form-test-drive-request').requestSubmit()" class="w-full bg-blue-600 text-white px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 min-h-[52px] touch-manipulation shadow-lg">
+            <i class="fa-solid fa-paper-plane"></i>
+            Tạo tờ trình
+        </button>
+    </div>
+</div>
+
+<script>
+(function() {
+    var tab = document.getElementById('tab-test-drive-request-create');
+    var form = document.getElementById('form-test-drive-request');
+    var bar = document.getElementById('tdr-mobile-submit-bar');
+    if (!form || !bar) return;
+    function checkShowBar() {
+        if (window.innerWidth >= 640 || !tab || tab.offsetParent === null) { bar.style.display = 'none'; return; }
+        var submitBtn = form.querySelector('button[type="submit"]');
+        var btnRect = submitBtn ? submitBtn.getBoundingClientRect() : { bottom: 0 };
+        bar.style.display = btnRect.bottom < 0 ? 'block' : 'none';
+    }
+    window.addEventListener('scroll', checkShowBar, { passive: true });
+    window.addEventListener('resize', checkShowBar);
+    setTimeout(checkShowBar, 500);
+})();
+</script>

@@ -136,6 +136,27 @@ function updateMenuItemsByPermissions(user) {
     toggleMenuByPermission('nav-coc-create', 'create_coc_request', ['TVBH', 'SALE']);
     toggleMenuByPermission('nav-coc-requests', 'view_coc_requests', ['TVBH', 'SALE', 'SALEADMIN', 'KETOAN']);
     
+    // =====================================================
+    // XE LÁI THỬ MENUS — Tất cả role tạo + xem danh sách; chỉ BKS/BGD/ADMIN duyệt
+    // =====================================================
+    const roleUpper = (user.role || '').toUpperCase();
+    const canCreateAndViewTestDrive = !!(user && (user.username || user.role)); // Mọi user đã đăng nhập đều thấy
+    const navTestDriveRequestCreate = $('nav-test-drive-request-create');
+    if (navTestDriveRequestCreate) {
+        if (canCreateAndViewTestDrive) navTestDriveRequestCreate.classList.remove('hidden');
+        else navTestDriveRequestCreate.classList.add('hidden');
+    }
+    const navTestDriveRequests = $('nav-test-drive-requests');
+    if (navTestDriveRequests) {
+        if (canCreateAndViewTestDrive) navTestDriveRequests.classList.remove('hidden');
+        else navTestDriveRequests.classList.add('hidden');
+    }
+    const navTestDriveVehicles = $('nav-test-drive-vehicles');
+    if (navTestDriveVehicles) {
+        if (['ADMIN', 'BKS', 'BGD'].includes(roleUpper)) navTestDriveVehicles.classList.remove('hidden');
+        else navTestDriveVehicles.classList.add('hidden');
+    }
+    
     // Update mobile bottom nav active state after menu update
     if (typeof updateMobileBottomNav === 'function') {
         const activeTab = document.querySelector('.tab-content.active');

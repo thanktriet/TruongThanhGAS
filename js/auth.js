@@ -153,6 +153,20 @@ function checkSession() {
             } else {
                 $('nav-tvbh-targets')?.classList.add('hidden');
             }
+
+            // Xe lái thử — tất cả role đều thấy Đăng ký và Danh sách tờ trình
+            if (user && (user.username || user.role)) {
+                $('nav-test-drive-request-create')?.classList.remove('hidden');
+                $('nav-test-drive-requests')?.classList.remove('hidden');
+            } else {
+                $('nav-test-drive-request-create')?.classList.add('hidden');
+                $('nav-test-drive-requests')?.classList.add('hidden');
+            }
+            if (['ADMIN', 'BKS', 'BGD'].includes(user.role)) {
+                $('nav-test-drive-vehicles')?.classList.remove('hidden');
+            } else {
+                $('nav-test-drive-vehicles')?.classList.add('hidden');
+            }
         }
         
         if (loginView) loginView.classList.add('hidden');

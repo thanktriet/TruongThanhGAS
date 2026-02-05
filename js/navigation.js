@@ -90,6 +90,31 @@ function switchTab(id) {
             }
         }, 300);
     }
+    if (id === 'test-drive-vehicles') {
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                if (typeof window.loadTestDriveVehicles === 'function') {
+                    try {
+                        window.loadTestDriveVehicles();
+                    } catch (err) {
+                        console.error('[Navigation] loadTestDriveVehicles error:', err);
+                    }
+                } else {
+                    setTimeout(() => window.loadTestDriveVehicles && window.loadTestDriveVehicles(), 500);
+                }
+            }, 400);
+        });
+    }
+    if (id === 'test-drive-request-create') {
+        setTimeout(() => {
+            if (typeof window.loadTestDriveRequestCreate === 'function') {
+                try { window.loadTestDriveRequestCreate(); } catch (e) { console.error('[Navigation] loadTestDriveRequestCreate error:', e); }
+            }
+        }, 300);
+    }
+    if (id === 'test-drive-requests' && typeof loadTestDriveRequests === 'function') {
+        loadTestDriveRequests();
+    }
     
     if (id === 'themes') {
         console.log('[Navigation] ========== THEMES TAB ACTIVATED ==========');

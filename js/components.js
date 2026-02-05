@@ -146,6 +146,9 @@ async function loadAllComponents() {
     console.log('[Components] document-files component loaded');
     await loadComponentAppend('coc-create', 'tabs-container');
     await loadComponentAppend('coc-requests', 'tabs-container');
+    await loadComponentAppend('test-drive-vehicles', 'tabs-container');
+    await loadComponentAppend('test-drive-request-create', 'tabs-container');
+    await loadComponentAppend('test-drive-requests', 'tabs-container');
     await loadComponentAppend('reports-dashboard', 'tabs-container');
     await loadComponentAppend('reports-mtd-detail', 'tabs-container');
     await loadComponentAppend('profile', 'tabs-container');
@@ -346,6 +349,11 @@ async function initializeApp() {
         // Khôi phục tab từ localStorage sau khi components đã load xong
         // Xóa tất cả active classes trước để đảm bảo không bị conflict với HTML defaults
         setTimeout(() => {
+            // Refresh menu visibility (sidebar đã load xong)
+            if (typeof updateMenuItemsByPermissions === 'function') {
+                const session = typeof getSession === 'function' ? getSession() : null;
+                if (session) updateMenuItemsByPermissions(session);
+            }
             // Remove all active classes từ HTML defaults
             document.querySelectorAll('.tab-content.active').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item.active').forEach(el => el.classList.remove('active'));

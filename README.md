@@ -1,6 +1,6 @@
 # Hệ Thống Phê Duyệt Giá Xe
 
-Hệ thống quản lý và phê duyệt đề xuất chương trình bán hàng cho công ty Trường Thành.
+Hệ thống quản lý và phê duyệt đề xuất chương trình bán hàng cho công ty Trương Thành.
 
 ## 🚀 Tính năng
 
@@ -169,5 +169,5 @@ Nếu gặp vấn đề, vui lòng kiểm tra:
 
 ## 📄 License
 
-Internal use only - Trường Thành Company
+Internal use only - Trương Thành Company
 

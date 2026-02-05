@@ -617,10 +617,43 @@ function setGoogleAppsScriptURL(url) {
     }
 }
 
+/**
+ * Upload ảnh kiểm tra xe lái thử (pre/post check) lên folder Xe Lái Thử
+ * @param {FileList|Array<File>} files
+ * @returns {Promise<{success: boolean, urls: Array}>}
+ */
+async function uploadTestDriveImages(files) {
+    return uploadFilesToGoogleDriveWithAction(files, 'upload_test_drive_images');
+}
+
+async function uploadFilesToGoogleDriveWithAction(files, action) {
+    if (!GOOGLE_APPS_SCRIPT_URL) return { success: false, message: 'Chưa cấu hình Google Apps Script URL' };
+    if (!files || files.length === 0) return { success: true, urls: [] };
+    const fileArray = Array.from(files);
+    const filePromises = fileArray.map(file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve({ name: file.name, data: e.target.result.split(',')[1], mimeType: file.type || 'application/octet-stream' });
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    }));
+    const fileData = await Promise.all(filePromises);
+    try {
+        const formData = new FormData();
+        formData.append('action', action);
+        formData.append('files', JSON.stringify(fileData));
+        const res = await fetch(GOOGLE_APPS_SCRIPT_URL, { method: 'POST', body: formData });
+        const result = await res.json().catch(() => ({}));
+        return result;
+    } catch (e) {
+        return { success: false, message: e.message };
+    }
+}
+
 // Export functions
 if (typeof window !== 'undefined') {
     window.googleDocsAPI = {
         uploadFiles: uploadFilesToGoogleDrive,
+        uploadTestDriveImages: uploadTestDriveImages,
         createHDMB: createHDMB,
         createThoaThuan: createThoaThuan,
         createDeNghiGiaiNgan: createDeNghiGiaiNgan,

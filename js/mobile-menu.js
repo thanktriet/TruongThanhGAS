@@ -175,6 +175,32 @@ function createMobileMenuItemsFallback() {
         });
     }
     
+    // Xe lái thử
+    if (['TVBH', 'SALE', 'ADMIN'].includes(role)) {
+        menuItems.push({
+            id: 'test-drive-request-create',
+            icon: 'fa-file-circle-plus',
+            text: 'Đăng ký xe lái thử',
+            onclick: "switchTab('test-drive-request-create'); closeMobileMenu();"
+        });
+    }
+    if (['TVBH', 'SALE', 'BKS', 'BGD', 'ADMIN'].includes(role)) {
+        menuItems.push({
+            id: 'test-drive-requests',
+            icon: 'fa-list-check',
+            text: 'Danh sách tờ trình xe lái thử',
+            onclick: "switchTab('test-drive-requests'); closeMobileMenu();"
+        });
+    }
+    if (['ADMIN', 'BKS', 'BGD'].includes(role)) {
+        menuItems.push({
+            id: 'test-drive-vehicles',
+            icon: 'fa-car-side',
+            text: 'Quản lý xe lái thử',
+            onclick: "switchTab('test-drive-vehicles'); closeMobileMenu();"
+        });
+    }
+    
     // Reports
     if (role === 'ADMIN' || permissions.view_reports || permissions.view_dashboard || ['ADMIN', 'GDKD', 'BKS', 'BGD', 'TPKD', 'SALEADMIN', 'KETOAN'].includes(role)) {
         menuItems.push({

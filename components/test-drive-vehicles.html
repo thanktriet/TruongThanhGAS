@@ -1,0 +1,93 @@
+<div id="tab-test-drive-vehicles" class="tab-content max-w-6xl mx-auto px-2 sm:px-4">
+    <div class="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-6 py-5 border-b">
+            <h2 class="text-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-car-side text-indigo-200"></i>
+                Quản lý xe lái thử
+            </h2>
+            <p class="text-sm text-indigo-100 mt-1.5">Quản lý xe lái thử, ODO, hạn bảo hiểm & đăng kiểm</p>
+        </div>
+
+        <div class="p-5 sm:p-6 space-y-6">
+            <!-- Form thêm xe -->
+            <div class="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                <div class="bg-white px-4 sm:px-5 py-3 border-b border-slate-200">
+                    <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle text-green-600"></i>
+                        Thêm xe lái thử
+                    </h3>
+                </div>
+                <form id="form-create-test-drive-vehicle" onsubmit="handleCreateTestDriveVehicle(event)" class="p-4 sm:p-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Thông tin cơ bản</p>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Biển số xe <span class="text-red-500">*</span></label>
+                                    <input type="text" name="bien_so_xe" class="input w-full border-gray-300 rounded-lg uppercase" placeholder="VD: 59A-12345" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Loại xe</label>
+                                    <input type="text" name="loai_xe" class="input w-full border-gray-300 rounded-lg" placeholder="VD: VF 8">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Phiên bản</label>
+                                    <input type="text" name="phien_ban" class="input w-full border-gray-300 rounded-lg" placeholder="VD: Eco, Plus">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Thông tin pháp lý</p>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Hạn bảo hiểm</label>
+                                    <input type="date" name="han_bao_hiem" class="input w-full border-gray-300 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Hạn đăng kiểm</label>
+                                    <input type="date" name="han_dang_kiem" class="input w-full border-gray-300 rounded-lg">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Thông tin vận hành</p>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">ODO hiện tại (km)</label>
+                                    <input type="number" name="odo_hien_tai" class="input w-full border-gray-300 rounded-lg" value="0" min="0">
+                                </div>
+                                <div class="pt-2">
+                                    <button type="submit" class="w-full bg-green-600 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-green-700 transition shadow-sm flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-plus"></i>
+                                        Thêm xe
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p id="create-vehicle-status" class="text-sm text-gray-500 mt-2"></p>
+                </form>
+            </div>
+
+            <!-- Danh sách xe -->
+            <div>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-list text-indigo-600"></i>
+                        Danh sách xe lái thử
+                    </h3>
+                    <button type="button" onclick="loadTestDriveVehicles && loadTestDriveVehicles()" class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition text-sm shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                        Tải lại
+                    </button>
+                </div>
+                <div id="test-drive-vehicles-list" class="space-y-3">
+                    <div class="text-center py-12 text-gray-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        <i class="fa-solid fa-spinner fa-spin text-3xl mb-3 text-indigo-400"></i>
+                        <p>Đang tải danh sách...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

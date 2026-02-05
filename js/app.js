@@ -47,23 +47,9 @@ function initContractLookup() {
 // They are loaded before app.js, so they are available here
 
 // ===================================
-// NAVIGATION
+// NAVIGATION - switchTab được định nghĩa trong navigation.js (bao gồm tất cả handlers cho approval, test-drive, coc, v.v.)
+// Không định nghĩa lại ở đây để tránh ghi đè và mất các handler
 // ===================================
-        function switchTab(id) {
-    $$('.tab-content').forEach(el => el.classList.remove('active'));
-    $$('.nav-item').forEach(el => el.classList.remove('active'));
-    
-    const tab = $(`tab-${id}`);
-    const nav = $(`nav-${id}`);
-    
-    if (tab) tab.classList.add('active');
-    if (nav) nav.classList.add('active');
-    
-    if (id === 'approval') loadApprovalList();
-    if (id === 'my-requests') loadMyRequests();
-    if (id === 'profile') loadProfile();
-    if (id === 'users') loadUserManagement();
-}
 
 
 // ===================================
