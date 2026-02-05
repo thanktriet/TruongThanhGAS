@@ -4698,6 +4698,11 @@ async function supabaseCreateTestDriveRequest(data) {
         const requesterUsername = data.username;
         if (!nguoiTao) return { success: false, message: 'Thiếu thông tin người tạo' };
         if (!requesterUsername) return { success: false, message: 'Thiếu thông tin username' };
+        const loTrinh = (data.lo_trinh || '').trim();
+        if (!loTrinh) return { success: false, message: 'Vui lòng nhập Lộ trình' };
+        const mucDichExtra = data.muc_dich_extra && typeof data.muc_dich_extra === 'object' ? data.muc_dich_extra : {};
+        const mucDichSdXe = (data.muc_dich_su_dung_xe || '').trim();
+        if (!mucDichSdXe && !mucDichExtra.type) return { success: false, message: 'Thiếu mục đích sử dụng xe' };
         const odoTruoc = data.odo_truoc != null && data.odo_truoc !== '' ? parseInt(data.odo_truoc, 10) : null;
         const preCheck = data.pre_check && typeof data.pre_check === 'object' ? data.pre_check : {};
         const REQUIRED_POINTS = ['ben_trai', 'ben_phai', 'phia_truoc', 'phia_sau', 'noi_that'];
@@ -4715,10 +4720,11 @@ async function supabaseCreateTestDriveRequest(data) {
         const payload = {
             nguoi_tao: nguoiTao,
             requester_username: requesterUsername,
-            muc_dich_su_dung_xe: data.muc_dich_su_dung_xe || '',
+            muc_dich_su_dung_xe: mucDichSdXe || (mucDichExtra.type ? String(mucDichExtra.type) : ''),
+            muc_dich_extra: Object.keys(mucDichExtra).length ? mucDichExtra : {},
             thoi_gian_di: data.thoi_gian_di || null,
             thoi_gian_ve_du_kien: data.thoi_gian_ve_du_kien || null,
-            lo_trinh: data.lo_trinh || '',
+            lo_trinh: loTrinh,
             so_dien_thoai: data.so_dien_thoai ? String(data.so_dien_thoai).trim() : null,
             dia_diem_don: data.dia_diem_don ? String(data.dia_diem_don).trim() : null,
             dia_diem_tra: data.dia_diem_tra ? String(data.dia_diem_tra).trim() : null,

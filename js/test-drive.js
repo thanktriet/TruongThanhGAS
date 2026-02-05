@@ -13,12 +13,42 @@ const TDR_CHECK_POINTS = [
     { key: 'phia_sau', label: 'Phía sau' },
     { key: 'noi_that', label: 'Nội thất' }
 ];
+const TDR_MUC_DICH_OPTIONS = [
+    { value: 'Khach_lai_thu', label: 'Khách lái thử' },
+    { value: 'Cong_vu', label: 'Công vụ' },
+    { value: 'Ban_Lanh_Dao', label: 'Ban Lãnh Đạo Sử Dụng' },
+    { value: 'Muc_dich_khac', label: 'Mục đích khác' }
+];
 const TDR_STATUS_OPTIONS = [
     { value: 'Tot', label: 'Tốt' },
     { value: 'Xe_xuoc_tray_mop_dinh_dinh', label: 'Xe xước trầy móp dính dính' },
     { value: 'Xe_do', label: 'Xe dơ' },
     { value: 'Xe_bao_loi', label: 'Xe báo lỗi' }
 ];
+
+function toDrivePreviewUrl(url) {
+    if (!url || typeof url !== 'string') return url || '';
+    return url.replace(/\/file\/d\/([^/]+)\/view/, '/file/d/$1/preview');
+}
+
+function openTestDriveImage(url, label) {
+    if (!url) return;
+    const isMobile = window.innerWidth < 640 || ('ontouchstart' in window);
+    if (isMobile && typeof Swal !== 'undefined') {
+        const previewUrl = toDrivePreviewUrl(url);
+        const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        Swal.fire({
+            html: '<iframe src="' + esc(previewUrl) + '" style="width:100%;height:70vh;border:none;border-radius:8px;"></iframe>',
+            title: label || 'Xem ảnh',
+            showConfirmButton: true,
+            confirmButtonText: 'Đóng',
+            width: '95%',
+            customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl' }
+        });
+    } else {
+        window.open(url, '_blank', 'noopener');
+    }
+}
 
 function buildTdrCheckFormHtml(prefix) {
     let html = '<div class="text-left space-y-3">';
@@ -35,6 +65,58 @@ function buildTdrCheckFormHtml(prefix) {
     });
     html += '</div>';
     return html;
+}
+
+function bindMucDichToggle() {
+    const sel = document.getElementById('tdr-muc-dich-loai');
+    const wrapKhach = document.getElementById('tdr-muc-dich-khach-lai-thu');
+    const wrapChiTiet = document.getElementById('tdr-muc-dich-chi-tiet');
+    const chiTietInput = document.getElementById('tdr-muc-dich-chi-tiet-input');
+    if (!sel || !wrapKhach || !wrapChiTiet) return;
+    const toggle = () => {
+        const v = sel.value;
+        const isKhach = v === 'Khach_lai_thu';
+        const isKhac = v === 'Cong_vu' || v === 'Ban_Lanh_Dao' || v === 'Muc_dich_khac';
+        wrapKhach.classList.toggle('hidden', !isKhach);
+        wrapChiTiet.classList.toggle('hidden', !isKhac);
+        if (chiTietInput) chiTietInput.required = isKhac;
+        if (chiTietInput && !isKhac) chiTietInput.value = '';
+    };
+    toggle();
+    sel.addEventListener('change', toggle);
+}
+
+async function collectMucDichData() {
+    const sel = document.getElementById('tdr-muc-dich-loai');
+    const type = sel && sel.value ? sel.value : '';
+    if (!type) return { error: 'Vui lòng chọn mục đích sử dụng xe' };
+    const uploadApi = typeof window.googleDocsAPI !== 'undefined' && window.googleDocsAPI.uploadTestDriveImages;
+    if (type === 'Khach_lai_thu') {
+        const bangLaiEl = document.getElementById('tdr-anh-bang-lai');
+        const giayDeNghiEl = document.getElementById('tdr-anh-giay-de-nghi');
+        const bangLaiFiles = bangLaiEl && bangLaiEl.files && bangLaiEl.files.length ? bangLaiEl.files : null;
+        const giayFiles = giayDeNghiEl && giayDeNghiEl.files && giayDeNghiEl.files.length ? giayDeNghiEl.files : null;
+        if (!bangLaiFiles || bangLaiFiles.length === 0) return { error: 'Vui lòng đính kèm ảnh Bằng lái xe' };
+        if (!giayFiles || giayFiles.length === 0) return { error: 'Vui lòng đính kèm ảnh Giấy đề nghị lái thử (có đủ chữ ký)' };
+        if (!uploadApi) return { error: 'Chức năng upload ảnh chưa sẵn sàng' };
+        const upBangLai = await uploadApi(bangLaiFiles);
+        if (!upBangLai.success || !upBangLai.urls) return { error: upBangLai.message || 'Lỗi upload ảnh Bằng lái xe' };
+        const upGiay = await uploadApi(giayFiles);
+        if (!upGiay.success || !upGiay.urls) return { error: upGiay.message || 'Lỗi upload ảnh Giấy đề nghị lái thử' };
+        const toUrls = (arr) => Array.isArray(arr) ? arr.map(u => typeof u === 'string' ? u : (u && u.url) || '').filter(Boolean) : [];
+        return {
+            muc_dich_extra: { type, anh_bang_lai: toUrls(upBangLai.urls), anh_giay_de_nghi: toUrls(upGiay.urls) },
+            muc_dich_su_dung_xe: 'Khách lái thử'
+        };
+    }
+    const chiTietInput = document.getElementById('tdr-muc-dich-chi-tiet-input');
+    const chiTiet = (chiTietInput && chiTietInput.value ? chiTietInput.value : '').trim();
+    if (!chiTiet) return { error: 'Vui lòng nhập mục đích cụ thể' };
+    const lbl = TDR_MUC_DICH_OPTIONS.find(o => o.value === type);
+    return {
+        muc_dich_extra: { type, chi_tiet: chiTiet },
+        muc_dich_su_dung_xe: (lbl ? lbl.label : type) + ' - ' + chiTiet
+    };
 }
 
 function bindTdrStatusToggle(prefix) {
@@ -179,6 +261,8 @@ async function loadTestDriveRequestCreate() {
     const sel = document.getElementById('test-drive-vehicle-select');
     const statusEl = document.getElementById('test-drive-vehicle-select-status');
     if (!sel) return;
+    // Bind mục đích toggle ngay để form hiện điều kiện khi chọn Khách lái thử / mục đích khác
+    bindMucDichToggle();
     sel.innerHTML = '<option value="">Đang tải...</option>';
     try {
         const res = await callAPI({ action: 'list_test_drive_vehicles', for_request: true, username: session.username, role: session.role });
@@ -212,6 +296,11 @@ async function handleCreateTestDriveRequest(e) {
     const session = typeof getSession === 'function' ? getSession() : null;
     if (!session) { Swal.fire('Lỗi', 'Phiên đăng nhập đã hết hạn', 'error'); return; }
     const form = e.target;
+    const mucDichRes = await collectMucDichData();
+    if (mucDichRes.error) {
+        Swal.fire('Lỗi', mucDichRes.error, 'error');
+        return;
+    }
     const odoEl = document.getElementById('tdr-create-odo');
     const odoTruoc = odoEl ? parseInt(odoEl.value, 10) : null;
     if (odoTruoc == null || isNaN(odoTruoc) || odoTruoc < 0) {
@@ -224,8 +313,8 @@ async function handleCreateTestDriveRequest(e) {
         return;
     }
     const fd = new FormData(form);
-    const payload = { username: session.username, nguoi_tao: session.fullname || session.username, odo_truoc: odoTruoc, pre_check: collected.preCheck };
-    fd.forEach((v, k) => { if (k !== 'odo_truoc') payload[k] = v; });
+    const payload = { username: session.username, nguoi_tao: session.fullname || session.username, odo_truoc: odoTruoc, pre_check: collected.preCheck, muc_dich_extra: mucDichRes.muc_dich_extra, muc_dich_su_dung_xe: mucDichRes.muc_dich_su_dung_xe };
+    fd.forEach((v, k) => { if (k !== 'odo_truoc' && k !== 'muc_dich_loai' && k !== 'muc_dich_chi_tiet') payload[k] = v; });
     payload.odo_truoc = odoTruoc;
     payload.pre_check = collected.preCheck;
     const res = await callAPI({ action: 'create_test_drive_request', ...payload });
@@ -233,6 +322,7 @@ async function handleCreateTestDriveRequest(e) {
     if (res.success) {
         if (typeof Swal !== 'undefined') Swal.fire('Thành công', 'Đã tạo tờ trình. Bạn có thể gửi duyệt từ danh sách.', 'success');
         form.reset();
+        bindMucDichToggle();
         const preCheckContainer = document.getElementById('tdr-create-pre-check-container');
         if (preCheckContainer) preCheckContainer.innerHTML = buildTdrCheckFormHtml('tdr_create_pre');
         bindTdrStatusToggle('tdr_create_pre');
@@ -339,7 +429,8 @@ function openTestDriveDetail(id) {
                 const imgList = Array.isArray(e.images) ? e.images.map(toImageUrl).filter(Boolean) : [];
                 if (imgList.length) {
                     if (withLinks) {
-                        imgs = ' <span class="inline-flex flex-wrap gap-1">' + imgList.map((url, idx) => '<a href="' + url.replace(/"/g, '&quot;') + '" target="_blank" rel="noopener" class="text-blue-600 hover:underline text-xs font-medium inline-flex items-center gap-0.5"><i class="fa-solid fa-image"></i> ' + (imgList.length > 1 ? 'Ảnh ' + (idx + 1) : 'Xem ảnh') + '</a>').join(' ') + '</span>';
+                        const escUrl = (u) => (u || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        imgs = ' <span class="inline-flex flex-wrap gap-1">' + imgList.map((url, idx) => '<a href="#" onclick="openTestDriveImage(\'' + escUrl(url) + '\', \'' + (imgList.length > 1 ? 'Ảnh ' + (idx + 1) : 'Xem ảnh') + '\'); return false;" class="text-blue-600 hover:underline text-xs font-medium inline-flex items-center gap-0.5"><i class="fa-solid fa-image"></i> ' + (imgList.length > 1 ? 'Ảnh ' + (idx + 1) : 'Xem ảnh') + '</a>').join(' ') + '</span>';
                     } else {
                         imgs = ' <span class="text-slate-500 text-xs">(' + imgList.length + ' ảnh)</span>';
                     }
@@ -375,6 +466,18 @@ function openTestDriveDetail(id) {
                 + '</ul></div>'
             : '';
         const row = (label, value) => value == null || value === '' ? '' : '<div class="flex justify-between gap-4 py-2.5 border-b border-slate-100 last:border-0"><span class="text-slate-500 text-sm shrink-0 min-w-[120px]">' + label + '</span><span class="text-slate-900 text-sm font-medium text-right break-words">' + value + '</span></div>';
+        const me = d.muc_dich_extra || {};
+        const imgLinks = (arr) => Array.isArray(arr) ? arr.map(u => (typeof u === 'string' ? u : (u && u.url) || '')).filter(Boolean) : [];
+        const bangLaiUrls = imgLinks(me.anh_bang_lai);
+        const giayUrls = imgLinks(me.anh_giay_de_nghi);
+        let mucDichBody = row('Mục đích', esc(d.muc_dich_su_dung_xe || '-'));
+        if (me.type === 'Khach_lai_thu' && (bangLaiUrls.length || giayUrls.length)) {
+            const escUrl = (u) => (u || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            let links = '';
+            if (bangLaiUrls.length) links += '<span class="inline-flex items-center gap-1"><i class="fa-solid fa-id-card text-slate-500"></i> Bằng lái: ' + bangLaiUrls.map(u => '<a href="#" onclick="openTestDriveImage(\'' + escUrl(u) + '\', \'Bằng lái xe\'); return false;" class="text-blue-600 hover:underline text-xs">Xem</a>').join(', ') + '</span>';
+            if (giayUrls.length) links += (links ? ' · ' : '') + '<span class="inline-flex items-center gap-1"><i class="fa-solid fa-file-signature text-slate-500"></i> Giấy đề nghị: ' + giayUrls.map(u => '<a href="#" onclick="openTestDriveImage(\'' + escUrl(u) + '\', \'Giấy đề nghị lái thử\'); return false;" class="text-blue-600 hover:underline text-xs">Xem</a>').join(', ') + '</span>';
+            mucDichBody += '<div class="flex flex-wrap gap-x-4 gap-y-1 py-2.5 border-b border-slate-100 text-sm">' + links + '</div>';
+        }
         const sectionCard = (icon, iconColor, title, body) => '<div class="p-5 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">' +
             '<p class="text-xs font-bold text-slate-600 uppercase tracking-wide mb-4 flex items-center gap-2"><span class="w-8 h-8 rounded-lg flex items-center justify-center ' + iconColor + '"><i class="fa-solid ' + icon + ' text-sm"></i></span>' + title + '</p>' + body + '</div>';
         const html = `
@@ -396,7 +499,7 @@ function openTestDriveDetail(id) {
                 ${sectionCard('fa-file-lines', 'bg-blue-50 text-blue-600', 'Thông tin tờ trình', '<div class="space-y-0">' +
                     row('Xe', d.vehicle_label || '-') +
                     row('Người tạo', esc(d.requester_fullname || d.nguoi_tao)) +
-                    row('Mục đích', esc(d.muc_dich_su_dung_xe || '-')) +
+                    mucDichBody +
                     row('Thời gian đi (dự kiến)', d.thoi_gian_di ? new Date(d.thoi_gian_di).toLocaleString('vi-VN') : '-') +
                     row('Thời gian về (dự kiến)', d.thoi_gian_ve_du_kien ? new Date(d.thoi_gian_ve_du_kien).toLocaleString('vi-VN') : '-') +
                     (d.lo_trinh ? row('Lộ trình', esc(d.lo_trinh)) : '') +
@@ -560,5 +663,6 @@ if (typeof window !== 'undefined') {
     window.handleCreateTestDriveRequest = handleCreateTestDriveRequest;
     window.loadTestDriveRequests = loadTestDriveRequests;
     window.openTestDriveDetail = openTestDriveDetail;
+    window.openTestDriveImage = openTestDriveImage;
     window.setupTestDriveFilters = setupTestDriveFilters;
 }
