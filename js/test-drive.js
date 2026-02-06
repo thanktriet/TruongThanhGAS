@@ -340,6 +340,8 @@ async function handleCreateTestDriveRequest(e) {
     fd.forEach((v, k) => { if (k !== 'odo_truoc' && k !== 'muc_dich_loai' && k !== 'muc_dich_chi_tiet') payload[k] = v; });
     payload.odo_truoc = odoTruoc;
     payload.pre_check = collected.preCheck;
+    if (payload.thoi_gian_di) payload.thoi_gian_di = new Date(payload.thoi_gian_di).toISOString();
+    if (payload.thoi_gian_ve_du_kien) payload.thoi_gian_ve_du_kien = new Date(payload.thoi_gian_ve_du_kien).toISOString();
     const res = await callAPI({ action: 'create_test_drive_request', ...payload });
     const statusEl = document.getElementById('create-request-status');
     if (res.success) {
@@ -427,7 +429,9 @@ function openTestDriveDetail(id) {
         const isRequester = (d.requester_username || d.nguoi_tao) === session.username;
         const canSubmit = d.current_step === 0 && (isRequester || isAdmin);
         const canComplete = d.current_step === 3 && (isRequester || isAdmin);
+        const canEdit = d.current_step === 0 && (isRequester || isAdmin);
         const btns = [];
+        if (canEdit) btns.push('<button id="tdr-btn-edit" class="mr-2 px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700">Chỉnh sửa</button>');
         if (canSubmit) btns.push('<button id="tdr-btn-submit" class="mr-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Gửi duyệt</button>');
         if (canApprove) {
             btns.push('<button id="tdr-btn-approve" class="mr-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Duyệt</button>');
@@ -552,10 +556,12 @@ function openTestDriveDetail(id) {
             width: '640px',
             customClass: { popup: 'rounded-2xl shadow-xl pt-4', confirmButton: 'rounded-xl px-5 py-2.5 bg-slate-700 hover:bg-slate-800 text-white' },
             didOpen: () => {
+                const editBtn = document.getElementById('tdr-btn-edit');
                 const submitBtn = document.getElementById('tdr-btn-submit');
                 const approveBtn = document.getElementById('tdr-btn-approve');
                 const rejectBtn = document.getElementById('tdr-btn-reject');
                 const completeBtn = document.getElementById('tdr-btn-complete');
+                if (editBtn) editBtn.onclick = () => { Swal.close(); openTestDriveEditModal(id, d, session); };
                 if (submitBtn) submitBtn.onclick = () => { Swal.close(); doTdrAction(id, 'submit', session); };
                 if (approveBtn) approveBtn.onclick = () => { Swal.close(); doTdrAction(id, 'approve', session); };
                 if (rejectBtn) rejectBtn.onclick = () => { Swal.close(); doTdrAction(id, 'reject', session); };
@@ -563,6 +569,164 @@ function openTestDriveDetail(id) {
             }
         });
     });
+}
+
+function toDatetimeLocal(isoStr) {
+    if (!isoStr) return '';
+    const date = new Date(isoStr);
+    const pad = n => String(n).padStart(2, '0');
+    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+}
+
+function inferMucDichType(d) {
+    const me = d.muc_dich_extra || {};
+    if (me.type) return me.type;
+    const lbl = (d.muc_dich_su_dung_xe || '').toLowerCase();
+    if (lbl.indexOf('khách lái thử') !== -1) return 'Khach_lai_thu';
+    if (lbl.indexOf('công vụ') !== -1) return 'Cong_vu';
+    if (lbl.indexOf('lãnh đạo') !== -1) return 'Ban_Lanh_Dao';
+    return 'Muc_dich_khac';
+}
+
+async function openTestDriveEditModal(id, d, session) {
+    const me = d.muc_dich_extra || {};
+    const mucDichType = inferMucDichType(d);
+    const chiTiet = (me.chi_tiet || '').trim();
+    const editHtml = '<div class="text-left space-y-4 py-1 max-h-[70vh] overflow-y-auto">' +
+        '<div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Xe <span class="text-red-500">*</span></label><select id="tdr-edit-vehicle" class="input w-full border-gray-300 rounded-lg" required><option value="">Đang tải...</option></select></div>' +
+        '<div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Mục đích sử dụng xe <span class="text-red-500">*</span></label><select id="tdr-edit-muc-dich" class="input w-full border-gray-300 rounded-lg" required>' +
+        '<option value="">-- Chọn mục đích --</option>' +
+        TDR_MUC_DICH_OPTIONS.map(o => '<option value="' + o.value + '"' + (mucDichType === o.value ? ' selected' : '') + '>' + o.label + '</option>').join('') +
+        '</select>' +
+        '<div id="tdr-edit-khach-lai-thu" class="hidden mt-3 space-y-3 p-3 bg-amber-50 rounded-lg border border-amber-200"><p class="text-xs font-semibold text-amber-800">Đính kèm (để trống = giữ ảnh hiện tại):</p><div><label class="block text-sm font-medium text-gray-700 mb-1">Bằng lái xe</label><input type="file" id="tdr-edit-anh-bang-lai" accept="image/*" class="input w-full text-sm rounded-lg"></div><div><label class="block text-sm font-medium text-gray-700 mb-1">Giấy đề nghị lái thử</label><input type="file" id="tdr-edit-anh-giay-de-nghi" accept="image/*" class="input w-full text-sm rounded-lg"></div></div>' +
+        '<div id="tdr-edit-muc-dich-chi-tiet" class="hidden mt-3"><label class="block text-sm font-medium text-gray-700 mb-1">Mục đích cụ thể <span class="text-red-500">*</span></label><textarea id="tdr-edit-muc-dich-chi-tiet-input" class="input w-full border-gray-300 rounded-lg min-h-[80px]" rows="2" placeholder="Nhập mục đích cụ thể...">' + (chiTiet || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div></div>' +
+        '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Thời gian đi (dự kiến) *</label><input type="datetime-local" id="tdr-edit-thoi-gian-di" class="input w-full border-gray-300 rounded-lg" value="' + toDatetimeLocal(d.thoi_gian_di) + '" required></div>' +
+        '<div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Thời gian về (dự kiến) *</label><input type="datetime-local" id="tdr-edit-thoi-gian-ve" class="input w-full border-gray-300 rounded-lg" value="' + toDatetimeLocal(d.thoi_gian_ve_du_kien) + '" required></div></div>' +
+        '<div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Lộ trình *</label><input type="text" id="tdr-edit-lo-trinh" class="input w-full border-gray-300 rounded-lg" value="' + (d.lo_trinh || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" placeholder="VD: Trương Thành - Rạch Giá" required></div>' +
+        '<div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại *</label><input type="tel" id="tdr-edit-so-dien-thoai" class="input w-full border-gray-300 rounded-lg" value="' + (d.so_dien_thoai || '').replace(/"/g, '&quot;') + '" placeholder="VD: 0901234567" required></div>' +
+        '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Địa điểm lấy xe</label><input type="text" id="tdr-edit-dia-diem-don" class="input w-full border-gray-300 rounded-lg" value="' + (d.dia_diem_don || '').replace(/"/g, '&quot;') + '"></div>' +
+        '<div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Địa điểm trả xe</label><input type="text" id="tdr-edit-dia-diem-tra" class="input w-full border-gray-300 rounded-lg" value="' + (d.dia_diem_tra || '').replace(/"/g, '&quot;') + '"></div></div>' +
+        '<div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Số km dự kiến</label><input type="number" id="tdr-edit-so-km" class="input w-full border-gray-300 rounded-lg" min="0" value="' + (d.so_km_du_kien != null ? d.so_km_du_kien : '') + '"></div>' +
+        '<div class="bg-slate-50 rounded-lg p-3"><label class="block text-sm font-medium text-gray-700 mb-2">Ghi chú</label><textarea id="tdr-edit-ghi-chu" class="input w-full border-gray-300 rounded-lg min-h-[72px]" rows="2">' + (d.ghi_chu || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div>' +
+        '</div>';
+    const res = await Swal.fire({
+        title: 'Chỉnh sửa tờ trình',
+        html: editHtml,
+        width: '560px',
+        showCancelButton: true,
+        confirmButtonText: 'Lưu thay đổi',
+        cancelButtonText: 'Hủy',
+        customClass: { popup: 'rounded-2xl shadow-xl', confirmButton: 'rounded-xl bg-amber-600 hover:bg-amber-700', cancelButton: 'rounded-xl' },
+        didOpen: () => {
+            const sel = document.getElementById('tdr-edit-vehicle');
+            const mucDichSel = document.getElementById('tdr-edit-muc-dich');
+            const wrapKhach = document.getElementById('tdr-edit-khach-lai-thu');
+            const wrapChiTiet = document.getElementById('tdr-edit-muc-dich-chi-tiet');
+            const chiTietInput = document.getElementById('tdr-edit-muc-dich-chi-tiet-input');
+            const toggleMucDich = () => {
+                const v = mucDichSel.value;
+                if (wrapKhach) wrapKhach.classList.toggle('hidden', v !== 'Khach_lai_thu');
+                if (wrapChiTiet) wrapChiTiet.classList.toggle('hidden', v !== 'Cong_vu' && v !== 'Ban_Lanh_Dao' && v !== 'Muc_dich_khac');
+            };
+            mucDichSel.addEventListener('change', toggleMucDich);
+            toggleMucDich();
+            callAPI({ action: 'list_test_drive_vehicles', username: session.username, role: session.role }).then(r => {
+                if (!sel) return;
+                const list = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
+                sel.innerHTML = '<option value="">-- Chọn xe --</option>';
+                list.forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v.id;
+                    opt.textContent = (v.bien_so_xe || '') + ' - ' + (v.loai_xe || '') + ' ' + (v.phien_ban || '');
+                    if (d.vehicle_id && v.id === d.vehicle_id) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+            });
+        },
+        preConfirm: async () => {
+            const vehicleId = document.getElementById('tdr-edit-vehicle').value;
+            const type = document.getElementById('tdr-edit-muc-dich').value;
+            if (!vehicleId || !type) {
+                Swal.showValidationMessage('Vui lòng chọn xe và mục đích.');
+                return false;
+            }
+            let muc_dich_extra = {};
+            let muc_dich_su_dung_xe = '';
+            if (type === 'Khach_lai_thu') {
+                const bangLaiEl = document.getElementById('tdr-edit-anh-bang-lai');
+                const giayEl = document.getElementById('tdr-edit-anh-giay-de-nghi');
+                const bangLaiFiles = bangLaiEl && bangLaiEl.files && bangLaiEl.files.length ? bangLaiEl.files : null;
+                const giayFiles = giayEl && giayEl.files && giayEl.files.length ? giayEl.files : null;
+                const uploadApi = typeof window.googleDocsAPI !== 'undefined' && window.googleDocsAPI.uploadTestDriveImages;
+                if (bangLaiFiles && bangLaiFiles.length && giayFiles && giayFiles.length && uploadApi) {
+                    const upBang = await uploadApi(bangLaiFiles);
+                    const upGiay = await uploadApi(giayFiles);
+                    if (!upBang.success || !upBang.urls || !upGiay.success || !upGiay.urls) {
+                        Swal.showValidationMessage(upBang.message || upGiay.message || 'Lỗi upload ảnh.');
+                        return false;
+                    }
+                    const toUrls = arr => Array.isArray(arr) ? arr.map(u => typeof u === 'string' ? u : (u && u.url) || '').filter(Boolean) : [];
+                    muc_dich_extra = { type, anh_bang_lai: toUrls(upBang.urls), anh_giay_de_nghi: toUrls(upGiay.urls) };
+                    muc_dich_su_dung_xe = 'Khách lái thử';
+                } else {
+                    muc_dich_extra = (me && me.type === 'Khach_lai_thu') ? me : { type: 'Khach_lai_thu' };
+                    const hasBangLai = muc_dich_extra.anh_bang_lai && (Array.isArray(muc_dich_extra.anh_bang_lai) ? muc_dich_extra.anh_bang_lai.length : true);
+                    const hasGiay = muc_dich_extra.anh_giay_de_nghi && (Array.isArray(muc_dich_extra.anh_giay_de_nghi) ? muc_dich_extra.anh_giay_de_nghi.length : true);
+                    if (!hasBangLai || !hasGiay) {
+                        Swal.showValidationMessage('Mục đích Khách lái thử cần ảnh Bằng lái và Giấy đề nghị. Vui lòng chọn file mới hoặc giữ ảnh hiện tại (không đổi mục đích).');
+                        return false;
+                    }
+                    muc_dich_su_dung_xe = 'Khách lái thử';
+                }
+            } else {
+                const chiTietVal = (document.getElementById('tdr-edit-muc-dich-chi-tiet-input') || {}).value;
+                const ct = (chiTietVal || '').trim();
+                if (!ct) {
+                    Swal.showValidationMessage('Vui lòng nhập mục đích cụ thể.');
+                    return false;
+                }
+                const lbl = TDR_MUC_DICH_OPTIONS.find(o => o.value === type);
+                muc_dich_extra = { type, chi_tiet: ct };
+                muc_dich_su_dung_xe = (lbl ? lbl.label : type) + ' - ' + ct;
+            }
+            const thoiGianDi = document.getElementById('tdr-edit-thoi-gian-di').value;
+            const thoiGianVe = document.getElementById('tdr-edit-thoi-gian-ve').value;
+            if (!thoiGianDi || !thoiGianVe) {
+                Swal.showValidationMessage('Vui lòng nhập thời gian đi và về.');
+                return false;
+            }
+            const soKmEl = document.getElementById('tdr-edit-so-km');
+            const soKm = soKmEl && soKmEl.value !== '' ? parseInt(soKmEl.value, 10) : null;
+            const payload = {
+                action: 'update_test_drive_request',
+                id,
+                username: session.username,
+                role: session.role,
+                vehicle_id: vehicleId,
+                muc_dich_extra,
+                muc_dich_su_dung_xe,
+                thoi_gian_di: new Date(thoiGianDi).toISOString(),
+                thoi_gian_ve_du_kien: new Date(thoiGianVe).toISOString(),
+                lo_trinh: document.getElementById('tdr-edit-lo-trinh').value.trim(),
+                so_dien_thoai: document.getElementById('tdr-edit-so-dien-thoai').value.trim(),
+                dia_diem_don: (document.getElementById('tdr-edit-dia-diem-don') || {}).value.trim() || null,
+                dia_diem_tra: (document.getElementById('tdr-edit-dia-diem-tra') || {}).value.trim() || null,
+                so_km_du_kien: soKm,
+                ghi_chu: (document.getElementById('tdr-edit-ghi-chu') || {}).value.trim() || null
+            };
+            const apiRes = await callAPI(payload);
+            if (!apiRes.success) {
+                Swal.showValidationMessage(apiRes.message || 'Không thể cập nhật.');
+                return false;
+            }
+            return true;
+        }
+    });
+    if (res.isConfirmed) {
+        Swal.fire('Thành công', 'Đã cập nhật tờ trình.', 'success');
+        loadTestDriveRequests();
+        openTestDriveDetail(id);
+    }
 }
 
 async function doTdrAction(id, action, session) {
@@ -699,7 +863,7 @@ async function doTdrAction(id, action, session) {
             username: session.username,
             odo_sau: odoSau,
             pin_sau_hoan_tra: pinSau != null ? pinSau : undefined,
-            thoi_gian_ve_thuc_te: thoiGianVe,
+            thoi_gian_ve_thuc_te: thoiGianVe ? new Date(thoiGianVe).toISOString() : new Date().toISOString(),
             post_check: postCheck,
             noi_tra_chia_khoa: noiTraChiaKhoa || 'Tủ đựng chìa khoá'
         });

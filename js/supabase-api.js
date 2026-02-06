@@ -4866,6 +4866,7 @@ async function supabaseUpdateTestDriveRequest(data) {
         if (data.pre_check != null && req.current_step === 3) payload.pre_check = data.pre_check;
         if (req.current_step === 0) {
             if (data.muc_dich_su_dung_xe != null) payload.muc_dich_su_dung_xe = data.muc_dich_su_dung_xe;
+            if (data.muc_dich_extra !== undefined) payload.muc_dich_extra = (data.muc_dich_extra && typeof data.muc_dich_extra === 'object') ? data.muc_dich_extra : {};
             if (data.thoi_gian_di != null) payload.thoi_gian_di = data.thoi_gian_di;
             if (data.thoi_gian_ve_du_kien != null) payload.thoi_gian_ve_du_kien = data.thoi_gian_ve_du_kien;
             if (data.lo_trinh != null) payload.lo_trinh = data.lo_trinh;

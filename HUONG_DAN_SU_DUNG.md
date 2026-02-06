@@ -14,6 +14,7 @@
    - [Báo Cáo](#báo-cáo)
    - [Tài Liệu](#tài-liệu)
    - [COC (Giấy chứng nhận chất lượng)](#coc-giấy-chứng-nhận-chất-lượng)
+   - [Xe lái thử](#xe-lái-thử)
    - [Hệ Thống](#hệ-thống)
 5. [Câu hỏi thường gặp (FAQ)](#câu-hỏi-thường-gặp-faq)
 
@@ -28,6 +29,7 @@ Hệ thống Trương Thành Sales Portal là nền tảng quản lý toàn di�
 - ✅ Quy trình phê duyệt nhiều cấp
 - ✅ Tạo và quản lý tài liệu (HĐMB, Thỏa thuận, Đề nghị giải ngân)
 - ✅ Quản lý COC (Giấy chứng nhận chất lượng)
+- ✅ Đăng ký & quản lý xe lái thử (công vụ, khách lái thử)
 - ✅ Báo cáo và thống kê
 - ✅ Quản lý hệ thống
 
@@ -445,6 +447,21 @@ Hệ thống có các vai trò sau với quyền hạn khác nhau:
 - Lãi suất: 8%/năm
 - Trễ: 10 ngày làm việc
 - Lãi = (200,000,000 × 8% / 260) × 10 = 615,385 VNĐ
+
+---
+
+### 🚗 Xe lái thử
+
+Module **Xe lái thử** dùng để đăng ký, duyệt và theo dõi việc sử dụng xe lái thử (công vụ, khách lái thử, v.v.) với quy trình: **Người tạo → BKS duyệt → BGĐ duyệt → Sử dụng xe → Hoàn trả xe**.
+
+**Chức năng chính:**
+- **Đăng ký sử dụng xe lái thử:** Mọi user đăng ký tờ trình (chọn xe, mục đích, lộ trình, ODO, kiểm tra 5 điểm). Nếu mục đích là **Khách lái thử** thì bắt buộc đính kèm ảnh Bằng lái xe và Giấy đề nghị lái thử.
+- **Danh sách tờ trình:** Xem và lọc theo trạng thái (Nháp, Chờ BKS/BGĐ, Đang sử dụng, Hoàn thành, Từ chối).
+- **Quản lý xe lái thử:** Dành cho user có quyền *Duyệt trình xe lái thử* (thường BKS, BGĐ, ADMIN): thêm/sửa xe, ODO, % pin (xe điện), BH/ĐK.
+- **Duyệt tờ trình:** User có quyền *Duyệt trình xe lái thử* duyệt hoặc từ chối tại từng bước BKS/BGĐ.
+- **Hoàn trả xe:** Khi đang sử dụng xe, người tạo (hoặc ADMIN) thực hiện hoàn trả: nhập ODO sau, % pin (xe điện), nơi trả chìa khoá, kiểm tra 5 điểm sau trả.
+
+📄 **Hướng dẫn chi tiết từng bước:** xem file [**docs/HUONG_DAN_XE_LAI_THU.md**](docs/HUONG_DAN_XE_LAI_THU.md).
 
 ---
 
