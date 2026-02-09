@@ -612,6 +612,12 @@ async function supabaseProcessApproval(d) {
             return { success: false, message: 'Trạng thái tờ trình không hợp lệ' };
         }
 
+        // Chỉ role đúng với bước hiện tại (hoặc ADMIN) mới được duyệt: TPKD=bước 0, GDKD=bước 1, BKS=2, BGD=3, KETOAN=4
+        const roleUpper = (d.role || '').toUpperCase();
+        if (roleUpper !== 'ADMIN' && stepConfig.role !== roleUpper) {
+            return { success: false, message: 'Chỉ ' + (stepConfig.label || stepConfig.role) + ' mới có quyền duyệt bước này. Role của bạn: ' + (d.role || '') };
+        }
+
         // Tạo log entry
         const time = new Date().toLocaleString('vi-VN', { 
             hour: '2-digit', 
