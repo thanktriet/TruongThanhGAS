@@ -4975,7 +4975,8 @@ async function supabaseProcessTestDriveApproval(data) {
             });
             return { success: true, message: 'Đã từ chối tờ trình' };
         }
-        if (step === 2 && decision === 'approve') {
+        // BKS duyệt (step 1) = xe đang sử dụng → chặn đăng ký mới ngay
+        if (step === 1 && decision === 'approve') {
             const v = req.test_drive_vehicles;
             const today = new Date().toISOString().split('T')[0];
             const hanBH = v?.han_bao_hiem ? String(v.han_bao_hiem).split('T')[0] : null;
@@ -5018,6 +5019,9 @@ async function supabaseCompleteTestDriveReturn(data) {
         if (req.current_step !== 3) return { success: false, message: 'Tờ trình chưa ở trạng thái đang sử dụng xe' };
         const odoSau = parseInt(data.odo_sau, 10);
         if (isNaN(odoSau) || odoSau < 0) return { success: false, message: 'Vui lòng nhập ODO sau khi trả xe' };
+        const anhGiayHoanTra = data.anh_giay_de_nghi_hoan_tra;
+        const giayUrls = Array.isArray(anhGiayHoanTra) ? anhGiayHoanTra.map(u => typeof u === 'string' ? u : (u && u.url) || '').filter(Boolean) : [];
+        if (giayUrls.length === 0) return { success: false, message: 'Vui lòng đính kèm ảnh Giấy đề nghị lái thử (có đủ chữ ký) khi hoàn trả xe' };
         const postCheck = data.post_check || {};
         const REQUIRED_POINTS = ['ben_trai', 'ben_phai', 'phia_truoc', 'phia_sau', 'noi_that'];
         for (const key of REQUIRED_POINTS) {
@@ -5055,6 +5059,7 @@ async function supabaseCompleteTestDriveReturn(data) {
             thoi_gian_ve_thuc_te: data.thoi_gian_ve_thuc_te || new Date().toISOString(),
             post_check: postCheck,
             noi_tra_chia_khoa: noiTraChiaKhoa,
+            anh_giay_de_nghi_hoan_tra: giayUrls,
             current_step: 4,
             trang_thai_to_trinh: 'Hoan_Thanh',
             history_log: updatedLog,
