@@ -121,62 +121,52 @@ async function loadComponentAppend(componentName, targetElementId) {
     }
 }
 
-async function loadAllComponents() {
-    // Load login view
+/** Ẩn màn hình loading (gọi sau khi shell + checkSession xong) */
+function hideAppLoading() {
+    const el = document.getElementById('app-loading');
+    if (el) {
+        el.style.opacity = '0';
+        setTimeout(function () { el.remove(); }, 300);
+    }
+}
+
+/** Chỉ tải shell: login + sidebar + header → hiển thị màn hình sớm, tránh trắng lâu */
+async function loadCriticalComponents() {
     await loadComponent('login', 'login-container');
-    
-    // Load dashboard components
     await loadComponent('sidebar', 'sidebar-container');
     await loadComponent('header', 'header-container');
-    
-    // Load tabs (append to container - all tabs go into tabs-container)
-    await loadComponentAppend('create', 'tabs-container');
-    await loadComponentAppend('approval', 'tabs-container');
-    await loadComponentAppend('my-requests', 'tabs-container');
-    // New tabs for integration
-    await loadComponentAppend('order-create', 'tabs-container');
-    await loadComponentAppend('my-orders', 'tabs-container');
-    await loadComponentAppend('orders-admin', 'tabs-container');
-    await loadComponentAppend('daily-report', 'tabs-container');
-    await loadComponentAppend('hdmb-create', 'tabs-container');
-    await loadComponentAppend('thoa-thuan-create', 'tabs-container');
-    await loadComponentAppend('de-nghi-create', 'tabs-container');
-    console.log('[Components] Loading document-files component...');
-    await loadComponentAppend('document-files', 'tabs-container');
-    console.log('[Components] document-files component loaded');
-    await loadComponentAppend('coc-create', 'tabs-container');
-    await loadComponentAppend('coc-requests', 'tabs-container');
-    await loadComponentAppend('test-drive-vehicles', 'tabs-container');
-    await loadComponentAppend('test-drive-request-create', 'tabs-container');
-    await loadComponentAppend('test-drive-requests', 'tabs-container');
-    await loadComponentAppend('reports-dashboard', 'tabs-container');
-    await loadComponentAppend('reports-mtd-detail', 'tabs-container');
-    await loadComponentAppend('profile', 'tabs-container');
-    await loadComponentAppend('users', 'tabs-container');
-    await loadComponentAppend('car-models', 'tabs-container');
-    await loadComponentAppend('sales-policies', 'tabs-container');
-    await loadComponentAppend('tvbh-targets', 'tabs-container');
-    await loadComponentAppend('themes', 'tabs-container');
-    
-    // Load modals and templates
+}
+
+/** Tải toàn bộ tab (song song), rồi modals, templates */
+async function loadRemainingComponents() {
+    const tabComponents = [
+        ['create', 'tabs-container'], ['approval', 'tabs-container'], ['my-requests', 'tabs-container'],
+        ['order-create', 'tabs-container'], ['my-orders', 'tabs-container'], ['orders-admin', 'tabs-container'],
+        ['daily-report', 'tabs-container'], ['hdmb-create', 'tabs-container'], ['thoa-thuan-create', 'tabs-container'],
+        ['de-nghi-create', 'tabs-container'], ['document-files', 'tabs-container'], ['coc-create', 'tabs-container'],
+        ['coc-requests', 'tabs-container'], ['test-drive-vehicles', 'tabs-container'], ['test-drive-request-create', 'tabs-container'],
+        ['test-drive-requests', 'tabs-container'], ['reports-dashboard', 'tabs-container'], ['reports-mtd-detail', 'tabs-container'],
+        ['profile', 'tabs-container'], ['users', 'tabs-container'], ['car-models', 'tabs-container'],
+        ['sales-policies', 'tabs-container'], ['tvbh-targets', 'tabs-container'], ['themes', 'tabs-container']
+    ];
+    await Promise.all(tabComponents.map(([name, target]) => loadComponentAppend(name, target)));
+
     await loadComponent('modals', 'modals-container');
-    await loadComponentAppend('modals-hdmb', 'modals-container');
-    await loadComponentAppend('modals-thoa-thuan', 'modals-container');
-    await loadComponentAppend('modals-de-nghi', 'modals-container');
-    await loadComponentAppend('modals-order-detail', 'modals-container');
-    await loadComponentAppend('modals-user-permissions', 'modals-container');
-    await loadComponentAppend('modals-change-password', 'modals-container');
-    await loadComponentAppend('modals-coc-issue', 'modals-container');
-    await loadComponentAppend('modals-coc-disburse', 'modals-container');
-    await loadComponentAppend('modals-coc-financial', 'modals-container');
-    await loadComponentAppend('modals-coc-detail', 'modals-container');
+    const modalExtras = [
+        ['modals-hdmb', 'modals-container'], ['modals-thoa-thuan', 'modals-container'], ['modals-de-nghi', 'modals-container'],
+        ['modals-order-detail', 'modals-container'], ['modals-user-permissions', 'modals-container'], ['modals-change-password', 'modals-container'],
+        ['modals-coc-issue', 'modals-container'], ['modals-coc-disburse', 'modals-container'], ['modals-coc-financial', 'modals-container'],
+        ['modals-coc-detail', 'modals-container']
+    ];
+    await Promise.all(modalExtras.map(([name, target]) => loadComponentAppend(name, target)));
     await loadComponent('templates', 'templates-container');
-    
-    // Wait a bit for DOM to update after loading components
+
     await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Không cần initFormatMoneyInputs nữa vì dùng inline handler trong HTML
-    // initFormatMoneyInputs();
+}
+
+async function loadAllComponents() {
+    await loadCriticalComponents();
+    await loadRemainingComponents();
 }
 
 /**
@@ -334,18 +324,17 @@ function initFormatMoneyInputs() {
 // Load components when DOM is ready
 async function initializeApp() {
     try {
-        // First load all components
-        await loadAllComponents();
-        
-        // Wait a bit more to ensure DOM is fully updated
-        await new Promise(resolve => setTimeout(resolve, 150));
-        
-        // Check session FIRST before loading other components
-        // This prevents login view from flashing
+        // Bước 1: Tải shell (login, sidebar, header) → hiển thị màn hình ngay, tránh trắng lâu
+        await loadCriticalComponents();
         if (typeof checkSession === 'function') {
             checkSession();
         }
-        
+        hideAppLoading();
+
+        // Bước 2: Tải các tab + modals song song (nền), không chặn giao diện
+        await loadRemainingComponents();
+        await new Promise(resolve => setTimeout(resolve, 50));
+
         // Khôi phục tab từ localStorage sau khi components đã load xong
         // Xóa tất cả active classes trước để đảm bảo không bị conflict với HTML defaults
         setTimeout(() => {
