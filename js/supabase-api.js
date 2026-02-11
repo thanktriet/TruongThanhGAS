@@ -5019,9 +5019,10 @@ async function supabaseCompleteTestDriveReturn(data) {
         if (req.current_step !== 3) return { success: false, message: 'Tờ trình chưa ở trạng thái đang sử dụng xe' };
         const odoSau = parseInt(data.odo_sau, 10);
         if (isNaN(odoSau) || odoSau < 0) return { success: false, message: 'Vui lòng nhập ODO sau khi trả xe' };
+        const isKhachLaiThu = (req.muc_dich_extra && req.muc_dich_extra.type === 'Khach_lai_thu') || (String(req.muc_dich_su_dung_xe || '').toLowerCase().indexOf('khách lái thử') >= 0);
         const anhGiayHoanTra = data.anh_giay_de_nghi_hoan_tra;
         const giayUrls = Array.isArray(anhGiayHoanTra) ? anhGiayHoanTra.map(u => typeof u === 'string' ? u : (u && u.url) || '').filter(Boolean) : [];
-        if (giayUrls.length === 0) return { success: false, message: 'Vui lòng đính kèm ảnh Giấy đề nghị lái thử (có đủ chữ ký) khi hoàn trả xe' };
+        if (isKhachLaiThu && giayUrls.length === 0) return { success: false, message: 'Vui lòng đính kèm ảnh Giấy đề nghị lái thử (có đủ chữ ký) khi hoàn trả xe' };
         const postCheck = data.post_check || {};
         const REQUIRED_POINTS = ['ben_trai', 'ben_phai', 'phia_truoc', 'phia_sau', 'noi_that'];
         for (const key of REQUIRED_POINTS) {
