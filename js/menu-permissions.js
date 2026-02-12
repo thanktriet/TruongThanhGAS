@@ -129,6 +129,7 @@ function updateMenuItemsByPermissions(user) {
     toggleMenuByPermission('nav-sales-policies', 'manage_sales_policies', ['ADMIN']);
     toggleMenuByPermission('nav-tvbh-targets', 'manage_tvbh_targets', ['ADMIN']);
     toggleMenuByPermission('nav-themes', 'manage_themes', ['ADMIN']);
+    toggleMenuByPermission('nav-login-promo', 'manage_login_promo', ['ADMIN']);
     
     // =====================================================
     // COC REQUESTS MENUS

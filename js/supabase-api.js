@@ -3003,6 +3003,60 @@ async function supabaseListThemes() {
 }
 
 /**
+ * Lấy cấu hình dialog nhắc nhở/quảng cáo đăng nhập
+ */
+async function supabaseGetLoginPromo() {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+        const { data, error } = await supabase
+            .from('login_promo')
+            .select('*')
+            .limit(1)
+            .maybeSingle();
+
+        if (error) throw error;
+        return { success: true, data: data || { enabled: false } };
+    } catch (e) {
+        console.error('Get login promo error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
+ * Cập nhật cấu hình dialog nhắc nhở đăng nhập
+ */
+async function supabaseUpdateLoginPromo(id, payload) {
+    try {
+        const supabase = initSupabase();
+        if (!supabase) {
+            return { success: false, message: 'Supabase chưa được khởi tạo' };
+        }
+        const { data, error } = await supabase
+            .from('login_promo')
+            .update({
+                title: payload.title,
+                message: payload.message || null,
+                image_url: payload.image_url != null ? payload.image_url : undefined,
+                enabled: payload.enabled != null ? payload.enabled : undefined,
+                updated_at: new Date().toISOString(),
+                updated_by: (typeof getSession === 'function' ? getSession() : null)?.username || null
+            })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return { success: true, data };
+    } catch (e) {
+        console.error('Update login promo error:', e);
+        return { success: false, message: 'Lỗi: ' + e.message };
+    }
+}
+
+/**
  * Lấy theme đang active
  */
 async function supabaseGetActiveTheme() {
@@ -5285,6 +5339,12 @@ async function callSupabaseAPI(data) {
             
             case 'activate_theme':
                 return await supabaseActivateTheme(data.id);
+            
+            // Login Promo API
+            case 'get_login_promo':
+                return await supabaseGetLoginPromo();
+            case 'update_login_promo':
+                return await supabaseUpdateLoginPromo(data.id, data.payload || data);
             
             // Dashboard & Reports API
             case 'get_dashboard_data':

@@ -147,7 +147,8 @@ async function loadRemainingComponents() {
         ['coc-requests', 'tabs-container'], ['test-drive-vehicles', 'tabs-container'], ['test-drive-request-create', 'tabs-container'],
         ['test-drive-requests', 'tabs-container'], ['reports-dashboard', 'tabs-container'], ['reports-mtd-detail', 'tabs-container'],
         ['profile', 'tabs-container'], ['users', 'tabs-container'], ['car-models', 'tabs-container'],
-        ['sales-policies', 'tabs-container'], ['tvbh-targets', 'tabs-container'], ['themes', 'tabs-container']
+        ['sales-policies', 'tabs-container'], ['tvbh-targets', 'tabs-container'], ['themes', 'tabs-container'],
+        ['login-promo', 'tabs-container']
     ];
     await Promise.all(tabComponents.map(([name, target]) => loadComponentAppend(name, target)));
 
@@ -374,6 +375,11 @@ async function initializeApp() {
                 }
             }
         }, 400); // Tăng timeout lên 400ms để đảm bảo components đã render hoàn toàn
+        
+        // Dialog nhắc nhở sau đăng nhập (nếu có)
+        if (typeof showLoginPromo === 'function') {
+            setTimeout(() => showLoginPromo(), 500);
+        }
         
         // Then initialize app functions after components are loaded
         if (typeof loadTPKDUsers === 'function') {

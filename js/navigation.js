@@ -116,6 +116,11 @@ function switchTab(id) {
         loadTestDriveRequests();
     }
     
+    if (id === 'login-promo') {
+        setTimeout(() => {
+            if (typeof window.loadLoginPromo === 'function') window.loadLoginPromo();
+        }, 300);
+    }
     if (id === 'themes') {
         console.log('[Navigation] ========== THEMES TAB ACTIVATED ==========');
         console.log('[Navigation] Switching to themes tab');

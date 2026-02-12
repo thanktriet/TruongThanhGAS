@@ -234,6 +234,7 @@ async function handleLogin(e) {
                     allowEscapeKey: false
                 });
                 
+                sessionStorage.setItem('show_login_promo', '1');
                 location.reload();
             }
         } else {
@@ -246,8 +247,22 @@ async function handleLogin(e) {
                 passwordInput.value = '';
             }
             
-            // Show error message
-            await Swal.fire('Lỗi', res.message || 'Đăng nhập thất bại', 'error');
+            // Khi lỗi do cache JS cũ (Supabase chưa sẵn sàng), gợi ý tải lại
+            const msg = res.message || 'Đăng nhập thất bại';
+            const needReload = msg.includes('reload') || msg.includes('Supabase chưa') || msg.includes('tải lại');
+            if (needReload) {
+                const r = await Swal.fire({
+                    icon: 'warning',
+                    title: 'Có thể JS chưa cập nhật',
+                    text: msg + ' Nhấn "Tải lại trang" để thử.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Tải lại trang',
+                    cancelButtonText: 'Đóng'
+                });
+                if (r.isConfirmed) location.reload(true);
+            } else {
+                await Swal.fire('Lỗi', msg, 'error');
+            }
             
             // Re-enable button and focus password field
             if (loginBtn) {
@@ -272,7 +287,21 @@ async function handleLogin(e) {
             passwordInput.value = '';
         }
         
-        await Swal.fire('Lỗi', 'Không thể kết nối đến server', 'error');
+        const errMsg = (error && error.message) || 'Không thể kết nối đến server';
+        const needReload = errMsg.includes('reload') || errMsg.includes('Supabase') || errMsg.includes('tải lại');
+        if (needReload) {
+            const r = await Swal.fire({
+                icon: 'warning',
+                title: 'Có thể JS chưa cập nhật',
+                text: errMsg + ' Thử Ctrl+Shift+R để tải lại trang.',
+                showCancelButton: true,
+                confirmButtonText: 'Tải lại trang',
+                cancelButtonText: 'Đóng'
+            });
+            if (r.isConfirmed) location.reload(true);
+        } else {
+            await Swal.fire('Lỗi', errMsg, 'error');
+        }
         
         // Re-enable button and focus password field
         if (loginBtn) {

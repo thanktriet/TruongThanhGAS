@@ -48,7 +48,8 @@ const ALL_PERMISSIONS = {
     'manage_car_models': { label: 'Quản lý dòng xe', group: 'system' },
     'manage_sales_policies': { label: 'Quản lý chính sách bán hàng', group: 'system' },
     'manage_tvbh_targets': { label: 'Quản lý chỉ tiêu TVBH', group: 'system' },
-    'manage_themes': { label: 'Quản lý themes/chủ đề', group: 'system' }
+    'manage_themes': { label: 'Quản lý themes/chủ đề', group: 'system' },
+    'manage_login_promo': { label: 'Quản lý dialog đăng nhập (nhắc nhở/quảng cáo)', group: 'system' }
 };
 
 // Permission groups (thứ tự hiển thị trong modal quản lý quyền)
@@ -94,6 +95,7 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
         manage_sales_policies: true,
         manage_tvbh_targets: true,
         manage_themes: true,
+        manage_login_promo: true,
         create_coc_request: false,
         view_coc_requests: true,
         issue_coc: true,

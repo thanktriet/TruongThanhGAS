@@ -158,5 +158,78 @@ if (typeof window !== 'undefined') {
     window.showToast = showToast;
 }
 
+/**
+ * Hiển thị dialog nhắc nhở/quảng cáo sau khi đăng nhập.
+ * Chỉ đóng được sau 5 giây (nút "Đã xem" bị disable).
+ */
+async function showLoginPromo() {
+    const flag = sessionStorage.getItem('show_login_promo');
+    if (flag !== '1') return;
+
+    sessionStorage.removeItem('show_login_promo');
+
+    let res;
+    try {
+        res = await callAPI({ action: 'get_login_promo' });
+    } catch (e) {
+        console.warn('[showLoginPromo] API error:', e);
+        return;
+    }
+    if (!res.success || !res.data || !res.data.enabled) return;
+
+    const promo = res.data;
+    const title = promo.title || 'Thông báo';
+    const message = promo.message || '';
+    const imageUrl = promo.image_url || null;
+
+    const htmlParts = [];
+    if (imageUrl) {
+        htmlParts.push(`<img src="${imageUrl}" alt="Promo" class="swal2-login-promo-img">`);
+    }
+    if (message) {
+        const escaped = message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const paragraphs = escaped.split(/\n\n+/).filter(p => p.trim());
+        const inner = paragraphs.length > 1
+            ? paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('')
+            : escaped.replace(/\n/g, '<br>');
+        htmlParts.push(`<div class="swal2-login-promo-text">${inner}</div>`);
+    }
+
+    await Swal.fire({
+        title: title,
+        html: htmlParts.length ? htmlParts.join('') : null,
+        icon: imageUrl ? null : 'info',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonText: 'Đã xem',
+        confirmButtonColor: '#2563eb',
+        customClass: {
+            popup: 'swal2-login-promo'
+        },
+        didOpen: () => {
+            const btn = Swal.getConfirmButton();
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Đã xem (5)';
+                let sec = 5;
+                const t = setInterval(() => {
+                    sec--;
+                    if (sec <= 0) {
+                        clearInterval(t);
+                        btn.disabled = false;
+                        btn.textContent = 'Đã xem';
+                    } else {
+                        btn.textContent = `Đã xem (${sec})`;
+                    }
+                }, 1000);
+            }
+        }
+    });
+}
+
+if (typeof window !== 'undefined') {
+    window.showLoginPromo = showLoginPromo;
+}
+
 
 

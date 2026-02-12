@@ -243,6 +243,14 @@ function createMobileMenuItemsFallback() {
             onclick: "switchTab('car-models'); closeMobileMenu();"
         });
     }
+    if (role === 'ADMIN' || permissions.manage_login_promo) {
+        menuItems.push({
+            id: 'login-promo',
+            icon: 'fa-bell',
+            text: 'Dialog đăng nhập',
+            onclick: "switchTab('login-promo'); closeMobileMenu();"
+        });
+    }
     
     // Render menu items
     mobileNav.innerHTML = '';

@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta name="app-version" content="20260227">
     <title>Trương Thành Sales Portal - VinFast Trương Thành Kiên Giang</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -45,6 +48,86 @@
             border-color: #2563eb !important;
             outline: none;
             box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        
+        /* Login Promo Dialog - ảnh lớn, khung nhỏ */
+        .swal2-login-promo {
+            width: min(720px, 96vw) !important;
+            max-width: 800px !important;
+            padding: 0 !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+        }
+        .swal2-login-promo .swal2-title {
+            font-size: 1.1rem !important;
+            font-weight: 600 !important;
+            padding: 0.5rem 0.75rem !important;
+            margin: 0 !important;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+            color: white !important;
+            border-radius: 0 !important;
+        }
+        .swal2-login-promo .swal2-html-container {
+            padding: 0.5rem 0.75rem !important;
+            margin: 0 !important;
+            font-size: 0.95rem !important;
+            line-height: 1.5 !important;
+            color: #374151 !important;
+            max-height: 75vh !important;
+            overflow-y: auto !important;
+        }
+        .swal2-login-promo .swal2-login-promo-img {
+            width: 100% !important;
+            max-height: 65vh !important;
+            min-height: 280px !important;
+            object-fit: contain !important;
+            border-radius: 4px !important;
+            margin: 0.25rem 0 !important;
+            display: block !important;
+        }
+        .swal2-login-promo .swal2-login-promo-text {
+            font-size: 1.05rem !important;
+            line-height: 1.8 !important;
+            color: #374151 !important;
+            white-space: pre-wrap !important;
+            text-align: left !important;
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif !important;
+            letter-spacing: 0.01em !important;
+            padding: 0.75rem 1rem !important;
+            margin: 0 !important;
+            background: linear-gradient(to bottom, #fafafa 0%, #f8fafc 100%) !important;
+            border-radius: 8px !important;
+            border-left: 4px solid #f59e0b !important;
+        }
+        .swal2-login-promo .swal2-login-promo-text p {
+            margin: 0 0 0.75rem 0 !important;
+        }
+        .swal2-login-promo .swal2-login-promo-text p:last-child {
+            margin-bottom: 0 !important;
+        }
+        .swal2-login-promo .swal2-actions {
+            padding: 0.5rem 0.75rem 0.75rem !important;
+            margin: 0 !important;
+            gap: 0.25rem !important;
+        }
+        .swal2-login-promo .swal2-confirm {
+            padding: 0.5rem 2rem !important;
+            font-size: 1rem !important;
+            font-weight: 600 !important;
+            border-radius: 10px !important;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+            border: none !important;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4) !important;
+        }
+        .swal2-login-promo .swal2-confirm:hover:not(:disabled) {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5) !important;
+        }
+        .swal2-login-promo .swal2-confirm:disabled {
+            opacity: 0.7 !important;
+            cursor: not-allowed !important;
         }
         
         /* Custom Scrollbar cho Modal */
@@ -170,32 +253,30 @@
     <!-- Templates Container -->
     <div id="templates-container"></div>
 
-    <!-- Load JavaScript Modules -->
-    <script src="js/config.js"></script>
-    <script src="js/supabase-config.js"></script>
-    <script src="js/google-docs-config.js"></script>
-    <script src="js/google-docs-api.js"></script>
-    <script src="js/password-hash.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/utils-numbers.js"></script>
-    <script src="js/utils-coc.js"></script>
-    <script src="js/utils-theme.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/supabase-api.js"></script>
-    <script src="js/supabase-storage-api.js"></script>
-    <script src="js/permissions.js"></script>
-    <script src="js/menu-permissions.js"></script>
-    <script src="js/gifts.js"></script>
-    <script src="js/navigation.js"></script>
-    <script src="js/mobile-menu.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/init.js"></script>
-    <script src="js/components.js"></script>
-    <script src="js/car-models.js"></script>
-    <script src="js/sales-policies.js"></script>
-    <script src="js/test-drive.js"></script>
-    
-    <!-- Main Application Script (remaining code) -->
-    <script src="js/app.js"></script>
+    <!-- Load JavaScript Modules - ?v= cùng meta app-version, tăng mỗi lần deploy để tránh cache JS cũ -->
+    <script src="js/config.js?v=20260227"></script>
+    <script src="js/supabase-config.js?v=20260227"></script>
+    <script src="js/google-docs-config.js?v=20260227"></script>
+    <script src="js/google-docs-api.js?v=20260227"></script>
+    <script src="js/password-hash.js?v=20260227"></script>
+    <script src="js/utils.js?v=20260227"></script>
+    <script src="js/utils-numbers.js?v=20260227"></script>
+    <script src="js/utils-coc.js?v=20260227"></script>
+    <script src="js/utils-theme.js?v=20260227"></script>
+    <script src="js/api.js?v=20260227"></script>
+    <script src="js/supabase-api.js?v=20260227"></script>
+    <script src="js/supabase-storage-api.js?v=20260227"></script>
+    <script src="js/permissions.js?v=20260227"></script>
+    <script src="js/menu-permissions.js?v=20260227"></script>
+    <script src="js/gifts.js?v=20260227"></script>
+    <script src="js/navigation.js?v=20260227"></script>
+    <script src="js/mobile-menu.js?v=20260227"></script>
+    <script src="js/auth.js?v=20260227"></script>
+    <script src="js/init.js?v=20260227"></script>
+    <script src="js/components.js?v=20260227"></script>
+    <script src="js/car-models.js?v=20260227"></script>
+    <script src="js/sales-policies.js?v=20260227"></script>
+    <script src="js/test-drive.js?v=20260227"></script>
+    <script src="js/app.js?v=20260227"></script>
 </body>
 </html>
