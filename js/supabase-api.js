@@ -613,9 +613,14 @@ async function supabaseProcessApproval(d) {
         }
 
         // Chỉ role đúng với bước hiện tại (hoặc ADMIN) mới được duyệt: TPKD=bước 0, GDKD=bước 1, BKS=2, BGD=3, KETOAN=4
-        const roleUpper = (d.role || '').toUpperCase();
-        if (roleUpper !== 'ADMIN' && stepConfig.role !== roleUpper) {
-            return { success: false, message: 'Chỉ ' + (stepConfig.label || stepConfig.role) + ' mới có quyền duyệt bước này. Role của bạn: ' + (d.role || '') };
+        // Cho phép TPKD duyệt thay GDKD ở step 1
+        const canApprove = roleUpper === 'ADMIN' || 
+                           stepConfig.role === roleUpper || 
+                           (stepConfig.step === 1 && roleUpper === 'TPKD');
+        
+        if (!canApprove) {
+            const allowedRoles = stepConfig.step === 1 ? 'GDKD hoặc TPKD' : stepConfig.role;
+            return { success: false, message: 'Chỉ ' + allowedRoles + ' mới có quyền duyệt bước này. Role của bạn: ' + (d.role || '') };
         }
 
         // Tạo log entry
